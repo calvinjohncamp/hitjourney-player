@@ -213,7 +213,32 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(6,20,32,.98);
 }
 
-</style>
+
+    /* --- ABSOLUTER PORTRAIT-LOCK FIX --- */
+    @media screen and (orientation: landscape) {
+        html {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vh !important;
+            height: 100vw !important;
+            transform: rotate(-90deg);
+            transform-origin: 50vw 50vw;
+            overflow: hidden;
+            background: #02111E;
+        }
+        body {
+            width: 100vh !important;
+            height: 100vw !important;
+            overflow: hidden;
+            position: fixed;
+            margin: 0;
+            padding: 0;
+        }
+    }
+    /* ---------------------------------- */
+
+    </style>
 
 
 
