@@ -219,33 +219,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 <style id="landscape-blocker-clean">
 /*
-  Querformat-Freeze:
-  - html bekommt transform:rotate(0deg) → verhindert, dass iOS
-    das Layout dreht; das Koordinatensystem bleibt Hochformat
-  - Ein blickdichtes ::before-Overlay legt sich sofort darüber,
-    noch bevor irgendeine Animations-Geste sichtbar wird
-  - Kein Text, kein Wackeln, kein "Sich-wehren" — einfach eingefroren
+  iOS Querformat-Freeze via Gegenrotation:
+  Wenn iOS auf Landscape dreht, rotiert die App um -90° zurück
+  und tauscht width/height — der Nutzer sieht exakt das Hochformat-Layout,
+  als wäre nichts passiert. Kein Overlay, kein Wackeln, keine Meldung.
 */
 @media screen and (orientation: landscape) {
   html {
-    transform: rotate(0deg) !important;
-    transform-origin: center center !important;
+    transform: rotate(-90deg) !important;
+    transform-origin: left top !important;
     width: 100vh !important;
     height: 100vw !important;
+    position: fixed !important;
+    top: 100% !important;
+    left: 0 !important;
     overflow: hidden !important;
-  }
-
-  body {
-    overflow: hidden !important;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: -100vmax;
-    z-index: 2147483647;
-    background: #02111E;
-    pointer-events: all;
   }
 }
 </style>
