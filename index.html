@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#02111E"/>
 <link rel="apple-touch-icon" href="icon.png"/>
 <title>hitjourney</title>
-<!-- Version: bottom-tuning-v3, 14.05.2026 -->
+<!-- Version: portrait-frame-v2, 14.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:#02111E;color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -218,37 +218,52 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 
-<style id="portrait-lock-style">
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+
+
+<style id="portrait-frame-style">
+:root{
+  --hj-portrait-max-width: 430px;
 }
 
+/* Kein aktives Drehen, kein Warnscreen: Die App bleibt als Hochformat-Fläche stehen */
 @media screen and (orientation: landscape) {
-  body::before{
-    content:'Bitte Gerät hochkant halten';
-    position:fixed;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+  html{
+    width:100%;
+    height:100%;
     background:#02111E;
-    color:#cfe5f5;
-    font-size:22px;
-    font-weight:700;
-    letter-spacing:.04em;
-    z-index:999999;
-    text-align:center;
-    padding:40px;
+    overflow:hidden;
   }
 
-  #mainHeader,
-  #screenHome,
-  #screenTracklist,
+  body{
+    width:min(var(--hj-portrait-max-width), calc(100vh * 0.56));
+    height:100vh;
+    min-height:100vh;
+    max-height:100vh;
+    margin:0 auto;
+    overflow:hidden;
+    background:#02111E;
+    box-shadow:0 0 40px rgba(0,0,0,.35);
+  }
+
+  .hj-header,
+  .screen,
   #screenNowPlaying,
-  #playerBar{
-    display:none !important;
+  .hj-player{
+    width:100%;
+    max-width:100%;
+  }
+
+  .hj-player{
+    left:50%;
+    right:auto;
+    width:min(var(--hj-portrait-max-width), calc(100vh * 0.56));
+    transform:translateX(-50%);
+  }
+
+  .np-cover{
+    width:min(52vh, 88%);
+    height:min(52vh, 88vw);
+    max-height:52vh;
   }
 }
 </style>
@@ -917,17 +932,6 @@ previewSong(0);
 curAlbum=null;
 </script>
 
-<script>
-(async function () {
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      await screen.orientation.lock('portrait');
-    }
-  } catch (e) {
-    // iOS/Safari fallback handled by CSS overlay
-  }
-})();
-</script>
 
 </body>
 </html>
