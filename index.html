@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="hitjourney"/>
 <meta name="theme-color" content="#02111E"/>
-<link rel="apple-touch-icon" href="icon.png"/>
-<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="./icon.png"/>
+<link rel="manifest" href="./manifest.json"/>
 <title>hitjourney</title>
-<!-- Version: portrait-lock-v3, 14.05.2026 -->
+<!-- Version: portrait-lock-v4, 14.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:#02111E;color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -219,18 +219,32 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 <style id="landscape-blocker-clean">
-/* Fallback für Browser ohne Manifest-Support: schwarze Wand */
-@media screen and (orientation: landscape) {
-  body::before {
+/* Sofort-Overlay bei Querformat — greift so früh wie CSS kann */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  html::before {
     content: '';
     position: fixed;
     inset: 0;
     background: #02111E;
     z-index: 2147483647;
-    pointer-events: all;
+    display: block;
   }
 }
 </style>
+<script>
+// Orientation Lock via Screen Orientation API (funktioniert in installierten PWAs)
+(function(){
+  function lockPortrait(){
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock('portrait').catch(function(){});
+    }
+  }
+  // Sofort versuchen
+  lockPortrait();
+  // Erneut nach User-Interaktion (iOS braucht das manchmal)
+  document.addEventListener('touchstart', lockPortrait, {once: true});
+})();
+</script>
 
 </head>
 <body>

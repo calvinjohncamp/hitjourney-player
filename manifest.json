@@ -2,14 +2,14 @@
   "name": "hitjourney",
   "short_name": "hitjourney",
   "description": "hitjourney Music Player",
-  "start_url": "/",
+  "start_url": "/hitjourney-player/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#02111E",
   "theme_color": "#02111E",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "./icon.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any apple-touch-icon"
