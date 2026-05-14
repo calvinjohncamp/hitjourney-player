@@ -219,60 +219,33 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 <style id="landscape-blocker-clean">
 /*
-  Saubere Querformat-Lösung:
-  - kein JavaScript-Orientation-Lock
-  - kein CSS-Rotieren der App
-  - kein Manifest-Zwang
-  - im Querformat wird die App vollständig verdeckt
+  Querformat-Freeze:
+  - html bekommt transform:rotate(0deg) → verhindert, dass iOS
+    das Layout dreht; das Koordinatensystem bleibt Hochformat
+  - Ein blickdichtes ::before-Overlay legt sich sofort darüber,
+    noch bevor irgendeine Animations-Geste sichtbar wird
+  - Kein Text, kein Wackeln, kein "Sich-wehren" — einfach eingefroren
 */
 @media screen and (orientation: landscape) {
-  html,
-  body {
-    width: 100%;
-    height: 100%;
+  html {
+    transform: rotate(0deg) !important;
+    transform-origin: center center !important;
+    width: 100vh !important;
+    height: 100vw !important;
     overflow: hidden !important;
-    background: #02111E !important;
   }
 
-  body > * {
-    visibility: hidden !important;
-    pointer-events: none !important;
+  body {
+    overflow: hidden !important;
   }
 
   body::before {
-    content: "Bitte Gerät hochkant halten";
-    visibility: visible !important;
+    content: '';
     position: fixed;
-    inset: 0;
+    inset: -100vmax;
     z-index: 2147483647;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background: #02111E;
-    color: #cfe5f5;
-    font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: .02em;
-    text-align: center;
-    padding: 32px;
-  }
-
-  body::after {
-    content: "hitjourney";
-    visibility: visible !important;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 28px;
-    z-index: 2147483647;
-    color: rgba(133,172,201,.55);
-    font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    text-align: center;
+    pointer-events: all;
   }
 }
 </style>
