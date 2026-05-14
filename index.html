@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="hitjourney"/>
+<meta name="theme-color" content="#02111E"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<title>hitjourney</title>
+<!-- Version: bottom-tuning-v3, 14.05.2026 -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#02111E;color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:0}
+
+/* ── Header ── */
+.hj-header{display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;}
+.hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
+.hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
+.hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
+.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;opacity:.65;line-height:1;padding-bottom:4px;margin-left:auto;}
+.hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
+.hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hj-back-btn.visible{display:flex}
+.hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
+
+/* ── Screens ── */
+.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0}
+.screen.active{display:block}
+.screen::-webkit-scrollbar{display:none}
+
+/* ══ HOME ══ */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
+.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
+.home-card:active{transform:scale(.95);opacity:.85}
+.home-card.wide{grid-column:1/-1}
+.home-card img{width:100%;display:block;object-fit:cover}
+.home-card.wide img{aspect-ratio:2/1}
+.home-card.square img{aspect-ratio:1/1}
+.home-bottom-pad{height:10px}
+
+/* ══ TRACKLIST ══ */
+/* Album header: cover centered, title+meta centered below */
+.tl-top{
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 16px 16px;
+  background:linear-gradient(180deg,#0d2a3e 0%,#02111E 100%);
+  border-bottom:1px solid rgba(133,172,201,.08);
+  gap:12px;
+}
+.tl-top-cover{
+  width:min(200px,45vw);height:min(200px,45vw);
+  border-radius:8px;object-fit:cover;
+  background:#0B2A42;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.tl-top-info{text-align:center;}
+.tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;}
+.tl-top-meta{font-size:12px;color:rgba(133,172,201,.6)}
+
+/* Track rows — bigger, Spotify-sized */
+.tl-track{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s}
+.tl-track:active{background:rgba(133,172,201,.07)}
+.tl-track.active{background:rgba(133,172,201,.06)}
+.tl-num-wrap{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.tl-track-num{font-size:15px;color:rgba(133,172,201,.35)}
+.tl-track.active .tl-track-num{display:none}
+.tl-bars{display:none;align-items:flex-end;gap:2px;height:16px;width:24px;justify-content:flex-end}
+.tl-track.active .tl-bars{display:flex}
+.tl-bar{width:3px;background:#85ACC9;border-radius:1px;animation:bar .8s ease-in-out infinite alternate}
+.tl-bar:nth-child(1){height:5px;animation-delay:0s}
+.tl-bar:nth-child(2){height:13px;animation-delay:.15s}
+.tl-bar:nth-child(3){height:8px;animation-delay:.3s}
+.tl-bar:nth-child(4){height:15px;animation-delay:.1s}
+@keyframes bar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.tl-track.active:not(.playing) .tl-bar{animation:none;height:8px;opacity:.4}
+.tl-thumb{width:52px;height:52px;border-radius:5px;object-fit:cover;flex-shrink:0;background:#0B2A42}
+.tl-info{flex:1;min-width:0}
+.tl-title{font-size:17px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-track.active .tl-title{color:#85ACC9}
+.tl-artist{font-size:13px;color:rgba(133,172,201,.45);margin-top:2px}
+.tl-bottom-pad{height:132px}
+
+/* ══ NOW PLAYING SCREEN ══ */
+#screenNowPlaying{
+  background:#02111E;
+  display:none;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+}
+#screenNowPlaying.active{display:flex;}
+.np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
+.np-down-btn{position:absolute;left:18px;top:82px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
+.np-down-btn svg{width:28px;height:28px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.np-album-label{
+  position:absolute;left:0;right:0;top:152px;text-align:center;
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.45)
+}
+/* Swipeable cover area */
+.np-cover-wrap{
+  display:flex;align-items:center;justify-content:center;
+  padding:126px 20px 0;
+  touch-action:pan-y;
+  user-select:none;
+  flex-shrink:0;
+}
+.np-cover{
+  width:min(58vh,88vw);height:min(58vh,88vw);
+  border-radius:12px;object-fit:cover;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  background:#0B2A42;
+  transition:transform .18s ease,opacity .18s ease;
+  display:block;
+}
+.np-cover.swipe-left{transform:translateX(-60px);opacity:0}
+.np-cover.swipe-right{transform:translateX(60px);opacity:0}
+/* Song info below cover */
+.np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
+.np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-artist{font-size:14px;color:rgba(133,172,201,.6)}
+/* Bottom section: pushed well down */
+.np-bottom{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:0 0 4px;
+}
+/* Progress */
+.np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
+.np-prog-fill{height:100%;background:#85ACC9;border-radius:2px;width:0%;transition:width .1s linear;pointer-events:none}
+.np-time{display:flex;justify-content:space-between;padding:8px 24px 0;font-size:12px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums;flex-shrink:0}
+/* NP Controls */
+.np-controls{display:flex;align-items:center;justify-content:space-between;padding:24px 16px 0;flex-shrink:0}
+.np-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:10px;position:relative;transition:color .15s,transform .1s}
+.np-btn:active{transform:scale(.84)}
+.np-btn svg{display:block;width:26px;height:26px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.np-btn.filled svg{fill:currentColor;stroke:none}
+.np-btn.active{color:#85ACC9}
+.np-btn.active::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
+.np-btn-play{width:62px;height:62px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 20px rgba(133,172,201,.3);padding:0;transition:background .15s,transform .1s}
+.np-btn-play:active{transform:scale(.9)}
+.np-btn-play svg{width:28px;height:28px;fill:currentColor;stroke:none}
+.np-btn-play .icon-pause{display:none}
+.np-btn-play.playing .icon-play{display:none}
+.np-btn-play.playing .icon-pause{display:block}
+.np-btn-repeat .icon-rpt-all,.np-btn-repeat .icon-rpt-one{display:none}
+.np-btn-repeat.repeat-all .icon-rpt-off{display:none}
+.np-btn-repeat.repeat-all .icon-rpt-all{display:block}
+.np-btn-repeat.repeat-one .icon-rpt-off{display:none}
+.np-btn-repeat.repeat-one .icon-rpt-one{display:block}
+
+/* ══ PLAYER BAR ══ */
+.hj-player{
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:200;
+  display:flex;flex-direction:column;
+  background:rgba(6,20,32,.98);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+/* Upper now-playing strip: slightly lighter */
+.hj-now-strip{
+  background:rgba(18,48,72,.98);
+  border-top:1px solid rgba(133,172,201,.18);
+  cursor:pointer;
+}
+.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15)}
+.hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
+.hj-now{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.hj-now-numtxt{display:none}
+.hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0}
+.hj-now-info{flex:1;min-width:0}
+.hj-now-title{font-size:17px;font-weight:500;color:#85ACC9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hj-now-artist{font-size:13px;color:rgba(133,172,201,.5);margin-top:2px}
+/* Lower controls strip: compact, anchored to the physical bottom */
+.hj-controls-strip{
+  background:transparent;
+  padding-bottom:0;
+}
+.hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 0}
+
+.hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
+.hj-btn:active{transform:scale(.84)}
+.hj-btn:hover{color:rgba(207,229,245,.9)}
+.hj-btn svg{display:block;width:25px;height:25px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.hj-btn.filled svg{fill:currentColor;stroke:none}
+.hj-btn.active{color:#85ACC9}
+.hj-btn.active::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
+.hj-btn-play{width:54px;height:54px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 18px rgba(133,172,201,.28);transition:background .15s,transform .1s;padding:0}
+.hj-btn-play:active{transform:scale(.9)}
+.hj-btn-play:hover{background:#a8c8de}
+.hj-btn-play svg{width:24px;height:24px;fill:currentColor;stroke:none}
+.hj-btn-play .icon-pause{display:none}
+.hj-btn-play.playing .icon-play{display:none}
+.hj-btn-play.playing .icon-pause{display:block}
+.hj-btn-repeat .icon-rpt-all,.hj-btn-repeat .icon-rpt-one{display:none}
+.hj-btn-repeat.repeat-all .icon-rpt-off{display:none}
+.hj-btn-repeat.repeat-all .icon-rpt-all{display:block}
+.hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
+.hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
+
+/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
+.hj-player::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:calc(-1 * max(env(safe-area-inset-bottom), 34px));
+  height:max(env(safe-area-inset-bottom), 34px);
+  background:rgba(6,20,32,.98);
+}
+
+</style>
+
+
+
+
+<style id="portrait-lock-style">
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+@media screen and (orientation: landscape) {
+  body::before{
+    content:'Bitte Gerät hochkant halten';
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#02111E;
+    color:#cfe5f5;
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:.04em;
+    z-index:999999;
+    text-align:center;
+    padding:40px;
+  }
+
+  #mainHeader,
+  #screenHome,
+  #screenTracklist,
+  #screenNowPlaying,
+  #playerBar{
+    display:none !important;
+  }
+}
+</style>
+
+</head>
+<body>
+
+<!-- Header -->
+<div class="hj-header" id="mainHeader">
+  <div class="hj-back-btn" id="backBtn">
+    <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+    <span>Alben</span>
+  </div>
+  <div class="hj-logo" id="logoHome">
+    <span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span>
+  </div>
+  <span class="hj-logo-sub" id="makingWaves">making waves</span>
+  <div class="hj-header-right" id="headerRight"></div>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screenHome">
+  <div class="home-grid">
+    <div class="home-card square" data-album="grad30">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad" loading="eager"/>
+    </div>
+    <div class="home-card square" data-album="stories30">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
+    </div>
+    <div class="home-card square" data-album="top50">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
+    </div>
+    <div class="home-card square" data-album="top100">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100" loading="eager"/>
+    </div>
+  </div>
+  <div class="home-bottom-pad"></div>
+</div>
+
+<!-- TRACKLIST -->
+<div class="screen" id="screenTracklist">
+  <div class="tl-top">
+    <img class="tl-top-cover" id="tlCover" src="" alt=""/>
+    <div class="tl-top-info">
+      <div class="tl-top-title" id="tlTitle"></div>
+      <div class="tl-top-meta" id="tlMeta"></div>
+    </div>
+  </div>
+  <div id="tlList"></div>
+  <div class="tl-bottom-pad"></div>
+</div>
+
+<!-- NOW PLAYING -->
+<div id="screenNowPlaying">
+  <div class="np-header">
+    <button class="np-down-btn" id="npDownBtn">
+      <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+    </button>
+    <span class="np-album-label" id="npAlbumLabel"></span>
+  </div>
+  <div class="np-cover-wrap" id="npCoverWrap">
+    <img class="np-cover" id="npCover" src="" alt=""/>
+  </div>
+  <div class="np-info">
+    <div class="np-title" id="npTitle"></div>
+    <div class="np-artist">BRO · Jörn Kämper</div>
+  </div>
+  <div class="np-spacer"></div>
+  <div class="np-bottom">
+    <div class="np-prog-wrap" id="npProgWrap"><div class="np-prog-fill" id="npProgFill"></div></div>
+    <div class="np-time"><span id="npElapsed">0:00</span><span id="npRemain">—</span></div>
+    <div class="np-controls">
+      <button class="np-btn" id="npBtnShuffle">
+        <svg viewBox="0 0 24 24"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      </button>
+      <button class="np-btn filled" id="npBtnPrev">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="np-btn np-btn-play" id="npBtnPlay">
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="np-btn filled" id="npBtnNext">
+        <svg viewBox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"/></svg>
+      </button>
+      <button class="np-btn np-btn-repeat" id="npBtnRepeat">
+        <svg class="icon-rpt-off" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
+        <svg class="icon-rpt-all" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
+        <svg class="icon-rpt-one" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/><text x="12" y="15.5" font-size="5.5" font-weight="900" font-family="sans-serif" fill="currentColor" text-anchor="middle" stroke="none">1</text></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<audio id="hjAudio" preload="none"></audio>
+
+<!-- Player Bar -->
+<div class="hj-player" id="playerBar">
+  <!-- Upper strip: now playing (clickable → Now Playing screen) -->
+  <div class="hj-now-strip" id="nowStrip">
+    <div class="hj-prog-wrap"><div class="hj-prog-fill" id="progFill"></div></div>
+    <div class="hj-now">
+      <div class="hj-now-num">
+        <span class="hj-now-numtxt" id="nowNum">—</span>
+      </div>
+      <img class="hj-now-cover" id="nowCover" src="" alt=""/>
+      <div class="hj-now-info">
+        <div class="hj-now-title" id="nowTitle">hitjourney · making waves</div>
+        <div class="hj-now-artist">Jörn Kämper</div>
+      </div>
+    </div>
+  </div>
+  <!-- Lower strip: controls -->
+  <div class="hj-controls-strip">
+    <div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
+    <div class="hj-controls">
+      <button class="hj-btn" id="btnShuffle">
+        <svg viewBox="0 0 24 24"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      </button>
+      <button class="hj-btn filled" id="btnPrev">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="hj-btn hj-btn-play" id="btnPlay">
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="hj-btn filled" id="btnNext">
+        <svg viewBox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"/></svg>
+      </button>
+      <button class="hj-btn hj-btn-repeat" id="btnRepeat">
+        <svg class="icon-rpt-off" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
+        <svg class="icon-rpt-all" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
+        <svg class="icon-rpt-one" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/><text x="12" y="15.5" font-size="5.5" font-weight="900" font-family="sans-serif" fill="currentColor" text-anchor="middle" stroke="none">1</text></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SONGS_TOP50 = [
+  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg' },
+  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg' },
+  { title: 'Real', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/real.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/real%20-%20Cover.jpg' },
+  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg' },
+  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg' },
+  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg' },
+  { title: 'Ashes In The Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ashes-in-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Cover.jpg' },
+  { title: 'Im Kiosk brennt noch Licht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-kiosk-brennt-noch-licht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Cover.jpg' },
+  { title: 'Johnny (Song for my mother)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg' },
+  { title: 'unscharf', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Cover.jpg' },
+  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg' },
+  { title: 'An der Haltestelle', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-der-haltestelle.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20der%20Haltestelle%20-%20Cover.jpg' },
+  { title: 'Red Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/red-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Cover.jpg' },
+  { title: 'Gleich zurück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Cover.jpg' },
+  { title: 'Anywhere you were with me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Cover.jpg' },
+  { title: 'Bar am Meer', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bar-am-meer.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg' },
+  { title: 'Tell Me Why', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Cover.jpg' },
+  { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg' },
+  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg' },
+  { title: 'Nur ein Zucken von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-ein-zucken-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Cover.jpg' },
+  { title: 'The Quiet Wars', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-quiet-wars.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/the%20quiet%20wars%20-%20Cover.jpg' },
+  { title: 'So ist das', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/so-ist-das.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Cover.jpg' },
+  { title: 'The Cold Don\'t Lie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg' },
+  { title: 'Du fehlst mir nicht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-fehlst-mir-nicht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Cover.jpg' },
+  { title: 'This world is wide', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/this-world-is-wide.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover.jpg' },
+  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg' },
+  { title: 'Late September Heart', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Cover.jpg' },
+  { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg' },
+  { title: 'I Write You A Song', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-write-you-a-song.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Cover.jpg' },
+  { title: 'alles rot alles tot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-rot-alles-tot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Cover%2025%20Ultimate.jpg' },
+  { title: 'Pine & Snow', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg' },
+  { title: 'Picobello', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/picobello.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Cover.jpg' },
+  { title: 'Nothing but Stories', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/in%20the%20end%20-%20sadie%20cover%202.jpg' },
+  { title: 'Sommer in Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommer-in-berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Cover.jpg' },
+  { title: 'Still Smells Like June', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-smells-like-june.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Cover.jpg' },
+  { title: 'Siebzehn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/siebzehn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Cover.jpg' },
+  { title: 'Midnight Breeze', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/midnight-breeze.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Cover.jpg' },
+  { title: 'Concrete Kids', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/concrete-kids.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Cover.jpg' },
+  { title: 'Streets with No Name', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Cover.jpg' },
+  { title: 'Weltuntergang', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/weltuntergang.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%202026%20-%20Cover.jpg' },
+  { title: 'Back Then Somewhere', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/back-then-somewhere.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Cover.jpg' },
+  { title: 'Tricks', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tricks.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tricks%20-%20Cover%20NEU.jpg' },
+  { title: 'To the Broken Hearts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/to-the-broken-hearts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/To%20the%20broken%20hearts%20-%20Cover.jpg' },
+  { title: 'Kein Rückspiegel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kein-rueckspiegel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kein%20Rueckspiegel%20-%20Cover.jpg' },
+  { title: 'Broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Cover.jpg' },
+  { title: 'Jeden verdammten Tag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/jeden-verdammten-tag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jeden%20verdammten%20Tag%20-%20Cover.jpg' },
+  { title: 'No one tells you when it starts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/no%20one%20-%20Cover.jpg' },
+  { title: 'Mein Stück vom Glück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mein-stueck-vom-glueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Cover.jpg' },
+  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/BERLIN%20-%20Cover.jpg' },
+  { title: 'Kein Himmel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kein-himmel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kein%20Himmel%20-%20Cover.jpg' },
+];
+
+const SONGS_GRAD30 = [
+  { title: 'Nur noch Augen für sie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg' },
+  { title: 'problematisch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Cover.jpg' },
+  { title: 'Neues Licht, dieselben Scheiben', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Cover.jpg' },
+  { title: 'Achterbahn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/achterbahn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Achterbahn%20-%20Cover.jpg' },
+  { title: '8 Stunden', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/8-stunden.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/8%20Stunden%20-%20Cover.jpg' },
+  { title: 'Magdalena kann tanzen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/magdalena-kann-tanzen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magdalena%20kann%20tanzen%20-%20Cover.jpg' },
+  { title: 'Herbstlaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbstlaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Cover.jpg' },
+  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg' },
+  { title: 'Sommer in Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommer-in-berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Cover.jpg' },
+  { title: 'Im Kiosk brennt noch Licht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-kiosk-brennt-noch-licht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Cover.jpg' },
+  { title: 'Ruf mich an', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ruf-mich-an.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/ruf%20mich%20an%20-%20Cover.jpg' },
+  { title: 'Weltuntergang', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/weltuntergang.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%202026%20-%20Cover.jpg' },
+  { title: 'Magie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/magie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Cover.jpg' },
+  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg' },
+  { title: 'Nicht von hier', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nicht-von-hier.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nicht%20von%20hier%20-%20Cover.jpg' },
+  { title: 'Noch dabei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/noch-dabei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noch%20dabei%20-%20Cover.jpg' },
+  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg' },
+  { title: 'Klartext', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/klartext.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Cover.jpg' },
+  { title: 'Zu Sehr', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zu-sehr.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Cover.jpg' },
+  { title: 'Polaroid von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/polaroid-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Polaroid%20von%20dir%20-%20Cover.jpg' },
+  { title: 'Gefährlich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gefaehrlich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/gefaehrlich%20-%20Cover.jpg' },
+  { title: '10000 Schritte', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/10000-schritte.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/10000%20Schritte%20-%20Cover.jpg' },
+  { title: 'Jein', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/jein.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/jein%20-%20cover.jpg' },
+  { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg' },
+  { title: 'Licht aus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/licht-aus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Cover.jpg' },
+  { title: 'Piece of Heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Piece%20of%20Heaven%20-%20Cover.jpg' },
+  { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg' },
+  { title: 'Unter der Laterne', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unter-der-laterne.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Cover%20ultimate.jpg' },
+  { title: 'Kirre', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kirre.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kirre%20-%20Cover.jpg' },
+  { title: 'Flaschenpost von Dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/flaschenpost-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flaschenpost%20von%20Dir%20-%20Cover.jpg' },
+];
+
+const SONGS_STORIES30 = [
+  { title: 'Half Past Nine on Main Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg' },
+  { title: 'keys on the floor', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/keys%20on%20the%20floor%20-%20Cover%20Lara%20Wolff.jpg' },
+  { title: 'Almost', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/almost.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Almost%20-%20Final%20Cover.jpg' },
+  { title: 'First Drop of Color', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/first-drop-of-color.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/First%20Drop%20of%20Color%20-%20Cover.jpg' },
+  { title: 'Talking to a Different Blue', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/talking-to-a-different-blue.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Cover.jpg' },
+  { title: 'Quiet Knife', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/quiet-knife.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Quiet%20Knife%20-%20Cover%20Plain.jpg' },
+  { title: 'What If Tonight', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/what-if-tonight.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Cover.jpg' },
+  { title: 'The City After Two', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-city-after-two.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20City%20After%20Two%20-%20Cover.jpg' },
+  { title: 'That\'s how it goes', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/thats-how-it-goes.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/That%27s%20how%20it%20goes%20-%20Cover%201.jpg' },
+  { title: 'Fixing the Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/fixing-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Fixing%20the%20Wind%20-%20Cover.jpg' },
+  { title: 'Hung up a thought', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hung-up-a-thought.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hung%20up%20a%20thought%20-%20Cover.jpg' },
+  { title: 'I pay in hurt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-pay-in-hurt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20pay%20in%20hurt%20-%20Cover.jpg' },
+  { title: 'Most Nights', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/most-nights.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Most%20Nights%20-%20Cover.jpg' },
+  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg' },
+  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg' },
+  { title: 'Call Me Up', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/call-me-up.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Call%20Me%20Up%20-%20Cover.jpg' },
+  { title: 'Johnny', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg' },
+  { title: 'half of you', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-you.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/half%20of%20you%20-%20Cover.jpg' },
+  { title: 'Josephine 1815', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/josephine-1815.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Cover.jpg' },
+  { title: 'Real', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/real.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/real%20-%20Cover.jpg' },
+  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg' },
+  { title: 'Where I Left Me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/where-i-left-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Where%20I%20Left%20Me%20-%20Cover.jpg' },
+  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg' },
+  { title: 'broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces-2.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/broken%20pieces%20-%20emma%20-%20cover.jpg' },
+  { title: 'Stay With Me Tonight', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/stay-with-me-tonight.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stay%20With%20Me%20Tonight%20-%20Cover.jpg' },
+  { title: 'Old Bear', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/old-bear.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/old%20bear%20-%20Cover.jpg' },
+  { title: 'Opium', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/opium.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Opium%20-%20Cover.jpg' },
+  { title: 'Too Late For Love', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/too-late-for-love.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Cover.jpg' },
+  { title: 'My piece of heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover%2026.jpg' },
+  { title: 'Stays for Good', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/stays-for-good.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stays%20for%20Good%20-%20Cover.jpg' },
+];
+
+const SONGS_TOP100 = [
+  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/BERLIN%20-%20Cover.jpg' },
+  { title: 'No one tells you when it starts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/no%20one%20-%20Cover.jpg' },
+  { title: 'Late September Heart', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Cover.jpg' },
+  { title: 'Pine & Snow', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg' },
+  { title: 'Und der Wind pfeift', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/und-der-wind-pfeift.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20der%20Wind%20pfeift%20-%20Cover.jpg' },
+  { title: 'alles rot alles tot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-rot-alles-tot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Cover%2025%20Ultimate.jpg' },
+  { title: 'Waves', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/waves.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Waves%20-%20Cover.jpg' },
+  { title: 'Vintage Shirts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/vintage-shirts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vintage%20Shirts%20-%20Cover.jpg' },
+  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg' },
+  { title: 'Tell Me Why', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Cover.jpg' },
+  { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
+  { title: 'Streets with No Name', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Cover.jpg' },
+  { title: 'Berlin (Alte Braut)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg' },
+  { title: 'Same Old Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/same-old-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Same%20Old%20Moon%20-%20Cover.jpg' },
+  { title: 'Wenn ich dich seh', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wenn-ich-dich-seh.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20ich%20dich%20seh%20-%20Cover.jpg' },
+  { title: 'Josephine 1815', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/josephine-1815.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Cover.jpg' },
+  { title: 'Still Standing', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-standing.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Standing%20-%20Cover%20NEW.jpg' },
+  { title: 'Anywhere you were with me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Cover.jpg' },
+  { title: 'My piece of heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover%2026.jpg' },
+  { title: 'Ich tanze im Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ich-tanze-im-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20tanze%20im%20Regen%20-%20Jule%20-%20Cover.jpg' },
+  { title: 'Panoptikum', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/panoptikum.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panoptikum%20-%20Cover.jpg' },
+  { title: 'Nur ein Zucken von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-ein-zucken-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Cover.jpg' },
+  { title: 'The Cold Don\'t Lie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg' },
+  { title: 'Nachtexpress', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nachtexpress.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nachtexpress%20%28Durch%20die%20Nacht%29%20-%20Cover.jpg' },
+  { title: 'So ist das', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/so-ist-das.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Cover.jpg' },
+  { title: 'I Write You A Song', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-write-you-a-song.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Cover.jpg' },
+  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg' },
+  { title: 'Nothing but Stories', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/in%20the%20end%20-%20sadie%20cover%202.jpg' },
+  { title: 'Concrete Kids', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/concrete-kids.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Cover.jpg' },
+  { title: 'Du fehlst mir nicht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-fehlst-mir-nicht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Cover.jpg' },
+  { title: 'Midnight Breeze', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/midnight-breeze.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Cover.jpg' },
+  { title: 'Siebzehn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/siebzehn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Cover.jpg' },
+  { title: 'Chelsea Hotel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/chelsea-hotel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Chelsea%20Hotel%20-%20Cover.jpg' },
+  { title: 'Gleich zurück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Cover.jpg' },
+  { title: 'No Surrender', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-surrender.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Surrender%20-%20Cover.jpg' },
+  { title: 'Three Blocks Down', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/three-blocks-down.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Three%20Blocks%20Down%20-%20Cover.jpg' },
+  { title: 'This world is wide', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/this-world-is-wide.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover.jpg' },
+  { title: 'Picobello', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/picobello.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Cover.jpg' },
+  { title: 'Red Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/red-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Cover.jpg' },
+  { title: 'The Sway', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-sway.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Sway%20-%20Cover.jpg' },
+  { title: 'Side Street Confessions', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/side-street-confessions.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Side%20Street%20Confessions%20-%20Cover.jpg' },
+  { title: 'unscharf', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Cover.jpg' },
+  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
+  { title: 'Dein Kleid', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dein-kleid.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Cover.jpg' },
+  { title: 'Ashes In The Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ashes-in-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Cover.jpg' },
+  { title: 'Nothing but Stories (male)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories-male.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/nothing%20but%20stories%20-%20cover.jpg' },
+  { title: 'Cracks in a Silver Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/cracks-in-a-silver-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silver%20Moon%20-%20Cover.jpg' },
+  { title: 'Isabelle', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/isabelle.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Isabelle%20-%20Cover.jpg' },
+  { title: 'Aus und vorbei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/aus-und-vorbei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20und%20vorbei%20-%20Cover.jpg' },
+  { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg' },
+  { title: 'Panopticum (English)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/panopticum-english.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panopticum%20-%20Cover.jpg' },
+  { title: 'The Last Honest Man', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-last-honest-man.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Honest%20Man%20-%20Cover.jpg' },
+  { title: 'Late September Heart (MJD)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart-female.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20%28MJD%29%20-%20Cover.jpg' },
+  { title: 'Ocean City', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ocean-city.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ocean%20City%20-%20Cover.jpg' },
+  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg' },
+  { title: 'Forever Ago', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/forever-ago.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Forever%20Ago%20-%20Cover.jpg' },
+  { title: 'Over the Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/over-the-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Over%20the%20Moon%20-%20Cover.jpg' },
+  { title: 'Coming Home', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/coming-home.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Coming%20Home%20-%20Cover.jpg' },
+  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg' },
+  { title: 'House of Mirrors', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/house-of-mirrors.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/House%20of%20Mirrors%20-%20Cover.jpg' },
+  { title: 'Out of Soda', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/out-of-soda.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20Soda%20-%20Cover.jpg' },
+  { title: 'Back Then Somewhere', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/back-then-somewhere.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Cover.jpg' },
+  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg' },
+  { title: 'No Time to Run', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-time-to-run.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Time%20to%20Run%20-%20Cover.jpg' },
+  { title: 'problematisch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Cover.jpg' },
+  { title: 'The Quiet Wars', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-quiet-wars.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/the%20quiet%20wars%20-%20Cover.jpg' },
+  { title: 'Tante Paula', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tante%20Paula%20-%20Cover.jpg' },
+  { title: 'Zu krass', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zu-krass.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20krass%20-%20Cover.jpg' },
+  { title: 'keys on the floor', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/keys%20on%20the%20floor%20-%20Cover%20Lara%20Wolff.jpg' },
+  { title: 'Still Smells Like June', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-smells-like-june.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Cover.jpg' },
+  { title: 'Tommy und ich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tommy-und-ich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tommy%20und%20ich%20-%20Cover.jpg' },
+  { title: 'Her mit dem Sommer', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/her-mit-dem-sommer.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Her%20mit%20dem%20Sommer%20NEU%20-%20Cover.jpg' },
+  { title: 'Silent Damn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/silent-damn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Damn%20-%20Cover.jpg' },
+  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg' },
+  { title: 'When Pigs Fly', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/when-pigs-fly.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/When%20Pigs%20Fly%20-%20Cover.jpg' },
+  { title: 'Dreams don\'t wait', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dreams-dont-wait.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dreams%20don’t%20wait%20-%20Cover.jpg' },
+  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg' },
+  { title: 'einer geht noch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/einer-geht-noch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/einer%20geht%20noch%20-%20Cover.jpg' },
+  { title: 'Buenos Dias', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/buenos-dias.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buenos%20Dias%20-%20Cover.jpg' },
+  { title: 'Über den Wolken', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ueber-den-wolken.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ueber%20den%20Wolken%20-%20Cover.jpg' },
+  { title: 'Streets with No Name (Annie)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name-2.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Annie%20-%20Cover.jpg' },
+  { title: 'Johnny', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg' },
+  { title: 'New York', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/new-york.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/New%20York%20-%20Cover.jpg' },
+  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg' },
+  { title: 'Vancouver Crossing', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/vancouver-crossing.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vancouver%20Crossing%20-%20Cover.jpg' },
+  { title: 'The girl who stole you', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-girl-who-stole-you.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20girl%20who%20stole%20you%20-%20Cover.jpg' },
+  { title: 'Liebe mich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/liebe-mich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Liebe%20mich%20-%20Cover%20NEU.jpg' },
+  { title: 'Aus die Maus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/aus-die-maus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20die%20Maus%20-%20Cover.jpg' },
+  { title: 'Drive Me Out of Here', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/drive-me-out-of-here.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Drive%20Me%20Out%20of%20Here%20-%20Cover.jpg' },
+  { title: 'Lost in Paradise', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/lost-in-paradise.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lost%20in%20Paradise%20-%20Cover.jpg' },
+  { title: 'Talking to a Different Blue', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/talking-to-a-different-blue.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Cover.jpg' },
+  { title: 'Tell Me Why (Annie Cole)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why-female.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Annie%20Cole%20-%20Cover.jpg' },
+  { title: 'Do You Remember', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/do-you-remember.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Do%20You%20Remember%20-%20Cover.jpg' },
+  { title: 'Broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Cover.jpg' },
+  { title: 'Too Late For Love', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/too-late-for-love.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Cover.jpg' },
+  { title: 'Zihuatanejo', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zihuatanejo.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zihuatanejo%20-%20Cover.jpg' },
+  { title: 'Hey Schöne', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hey-schoene.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%20Schoene%20-%20Cover.jpg' },
+  { title: 'Bevor das Licht ausgeht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bevor-das-licht-ausgeht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bevor%20das%20Licht%20ausgeht%20-%20Cover.jpg' },
+  { title: 'Half Past Nine on Main Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg' },
+  { title: 'She\'s a Knockout', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/shes-a-knockout.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She’s%20a%20Knockout%20-%20Cover.jpg' },
+];
+const ALBUMS = {
+  top50:    { title:"Top 50",     meta:"Songwriter's Picks · 50 Songs", songs:SONGS_TOP50,    cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" },
+  grad30:   { title:"30° Grad",   meta:"BRO · 30 Songs",               songs:SONGS_GRAD30,   cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" },
+  stories30:{ title:"30 Stories", meta:"BRO · 30 Songs",               songs:SONGS_STORIES30,cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" },
+  top100:   { title:"Top 100",    meta:"Hitjourney · 100 Songs",        songs:SONGS_TOP100,   cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" },
+};
+
+// ── DOM ──
+const audio        = document.getElementById('hjAudio');
+const backBtn      = document.getElementById('backBtn');
+const logoHome     = document.getElementById('logoHome');
+const makingWaves  = document.getElementById('makingWaves');
+const headerRight  = document.getElementById('headerRight');
+const mainHeader   = document.getElementById('mainHeader');
+const tlCover      = document.getElementById('tlCover');
+const tlTitle      = document.getElementById('tlTitle');
+const tlMeta       = document.getElementById('tlMeta');
+const tlList       = document.getElementById('tlList');
+const nowCover     = document.getElementById('nowCover');
+const nowTitle     = document.getElementById('nowTitle');
+const nowNum       = document.getElementById('nowNum');
+const progFill     = document.getElementById('progFill');
+const tElapsed     = document.getElementById('tElapsed');
+const tRemain      = document.getElementById('tRemain');
+const nowStrip     = document.getElementById('nowStrip');
+const playerBar    = document.getElementById('playerBar');
+// Bar buttons
+const btnPlay      = document.getElementById('btnPlay');
+const btnPrev      = document.getElementById('btnPrev');
+const btnNext      = document.getElementById('btnNext');
+const btnShuffle   = document.getElementById('btnShuffle');
+const btnRepeat    = document.getElementById('btnRepeat');
+// Now Playing screen
+const npCover      = document.getElementById('npCover');
+const npTitle      = document.getElementById('npTitle');
+const npAlbumLabel = document.getElementById('npAlbumLabel');
+const npProgFill   = document.getElementById('npProgFill');
+const npElapsed    = document.getElementById('npElapsed');
+const npRemain     = document.getElementById('npRemain');
+const npBtnPlay    = document.getElementById('npBtnPlay');
+const npBtnPrev    = document.getElementById('npBtnPrev');
+const npBtnNext    = document.getElementById('npBtnNext');
+const npBtnShuffle = document.getElementById('npBtnShuffle');
+const npBtnRepeat  = document.getElementById('npBtnRepeat');
+const npDownBtn    = document.getElementById('npDownBtn');
+const npCoverWrap  = document.getElementById('npCoverWrap');
+const npCoverImg   = document.getElementById('npCover');
+
+const screenHome = document.getElementById('screenHome');
+const screenTL   = document.getElementById('screenTracklist');
+const screenNP   = document.getElementById('screenNowPlaying');
+
+// ── State ──
+let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
+let prevScreen = 'home'; // track where to go back from NP
+
+// ── Helpers ──
+function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+function shuffleArr(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildQueue(keep){
+  const idxs=ALBUMS[curAlbum].songs.map((_,i)=>i);
+  if(!shuffleOn)return idxs;
+  const q=shuffleArr(idxs);
+  if(keep!==undefined){const p=q.indexOf(keep);if(p>0){q.splice(p,1);q.unshift(keep);}}
+  return q;
+}
+
+// ── Navigation ──
+function showHome(){
+  screenHome.classList.add('active');
+  screenTL.classList.remove('active');
+  screenNP.classList.remove('active');
+  backBtn.classList.remove('visible');
+  logoHome.style.display='';
+  makingWaves.style.display='';
+  headerRight.textContent='';
+  mainHeader.style.display='';
+  prevScreen='home';
+}
+function showAlbum(key){
+  const alb=ALBUMS[key]; curAlbum=key;
+  tlCover.src=alb.cover; tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
+  tlList.innerHTML='';
+  alb.songs.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='tl-track'; row.dataset.idx=i;
+    row.innerHTML=
+      '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
+      '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
+      '<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>'+
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+    row.addEventListener('click',()=>playIdx(i));
+    tlList.appendChild(row);
+  });
+  screenHome.classList.remove('active');
+  screenNP.classList.remove('active');
+  screenTL.classList.add('active');
+  backBtn.classList.add('visible');
+  logoHome.style.display='none';
+  makingWaves.style.display='none';
+  headerRight.textContent=alb.title;
+  mainHeader.style.display='';
+  screenTL.scrollTop=0;
+  previewSong(0);
+  refreshHighlight();
+  prevScreen='tracklist';
+}
+function showNowPlaying(){
+  if(!curAlbum) return;
+  screenHome.classList.remove('active');
+  screenTL.classList.remove('active');
+  screenNP.classList.add('active');
+  mainHeader.style.display='none';
+  playerBar.style.display='none';
+  updateNPScreen();
+}
+function hideNowPlaying(){
+  mainHeader.style.display='';
+  playerBar.style.display='';
+  screenNP.classList.remove('active');
+  if(prevScreen==='home'){ screenHome.classList.add('active'); }
+  else { screenTL.classList.add('active'); }
+}
+
+// ── Click handlers ──
+document.querySelectorAll('[data-album]').forEach(el=>el.addEventListener('click',()=>showAlbum(el.dataset.album)));
+backBtn.addEventListener('click',()=>{
+  if(screenNP.classList.contains('active')) hideNowPlaying();
+  else showHome();
+});
+logoHome.addEventListener('click',showHome);
+nowStrip.addEventListener('click', showNowPlaying);
+npDownBtn.addEventListener('click', hideNowPlaying);
+
+// ── Now Playing screen update ──
+function updateNPScreen(){
+  if(queueIdx<0||!curAlbum)return;
+  const s=ALBUMS[curAlbum].songs[queue[queueIdx]];
+  npCover.src=s.cover;
+  npTitle.textContent=s.title;
+  npAlbumLabel.textContent=ALBUMS[curAlbum].title;
+  npBtnPlay.classList.toggle('playing',!audio.paused);
+  npBtnShuffle.classList.toggle('active',shuffleOn);
+  syncRepeatBtn(npBtnRepeat);
+}
+
+// ── Swipe on NP cover ──
+let swipeStartX=0, swipeStartY=0;
+npCoverWrap.addEventListener('touchstart',e=>{
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+},{passive:true});
+npCoverWrap.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-swipeStartX;
+  const dy=e.changedTouches[0].clientY-swipeStartY;
+  if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
+    if(dx<0){ // swipe left → next
+      npCoverImg.classList.add('swipe-left');
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
+    } else { // swipe right → prev
+      npCoverImg.classList.add('swipe-right');
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-right');btnPrev.click();},180);
+    }
+  }
+},{passive:true});
+
+// ── NP screen buttons mirror bar buttons ──
+npBtnPlay.addEventListener('click',()=>btnPlay.click());
+npBtnPrev.addEventListener('click',()=>btnPrev.click());
+npBtnNext.addEventListener('click',()=>btnNext.click());
+npBtnShuffle.addEventListener('click',()=>btnShuffle.click());
+npBtnRepeat.addEventListener('click',()=>btnRepeat.click());
+const npProgWrap = document.getElementById('npProgWrap');
+npProgWrap && npProgWrap.addEventListener('click',e=>{
+  const r=npProgWrap.getBoundingClientRect();
+  if(!audio.duration)return;
+  audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
+});
+
+// ── Playback ──
+function previewSong(i){
+  const s=ALBUMS[curAlbum].songs[i];
+  nowCover.src=s.cover; nowTitle.textContent=s.title;
+  nowNum.textContent=i+1;
+}
+function playIdx(songIdx){
+  let pos=queue.indexOf(songIdx);
+  if(pos===-1){queue=buildQueue(songIdx);pos=queue.indexOf(songIdx);}
+  queueIdx=pos; loadPlay(songIdx);
+}
+function loadPlay(songIdx){
+  const s=ALBUMS[curAlbum].songs[songIdx];
+  audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
+  nowCover.src=s.cover; nowTitle.textContent=s.title;
+  nowNum.textContent=songIdx+1;
+  refreshHighlight(); updateMS(songIdx);
+  if(screenNP.classList.contains('active')) updateNPScreen();
+}
+function refreshHighlight(){
+  const cur=queueIdx>=0?queue[queueIdx]:-1;
+  document.querySelectorAll('.tl-track').forEach(row=>{
+    const i=parseInt(row.dataset.idx);
+    row.classList.toggle('active',i===cur);
+    row.classList.toggle('playing',i===cur&&!audio.paused);
+  });
+  const active=tlList.querySelector('.tl-track.active');
+  if(active)active.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function updatePlayBtns(){
+  const p=!audio.paused;
+  btnPlay.classList.toggle('playing',p);
+  npBtnPlay.classList.toggle('playing',p);
+  refreshHighlight();
+}
+function syncRepeatBtn(btn){
+  btn.classList.remove('repeat-all','repeat-one','active');
+  if(repeatMode==='all') btn.classList.add('repeat-all','active');
+  else if(repeatMode==='one') btn.classList.add('repeat-one','active');
+}
+
+// ── Audio events ──
+audio.addEventListener('play', updatePlayBtns);
+audio.addEventListener('pause',updatePlayBtns);
+audio.addEventListener('timeupdate',()=>{
+  if(!audio.duration)return;
+  const pct=(audio.currentTime/audio.duration*100)+'%';
+  progFill.style.width=pct;
+  npProgFill.style.width=pct;
+  const e=fmt(audio.currentTime), r='-'+fmt(audio.duration-audio.currentTime);
+  tElapsed.textContent=e; tRemain.textContent=r;
+  npElapsed.textContent=e; npRemain.textContent=r;
+});
+audio.addEventListener('ended',()=>{
+  if(repeatMode==='one'){audio.currentTime=0;audio.play().catch(()=>{});return;}
+  let next=queueIdx+1;
+  if(next>=queue.length){
+    if(repeatMode==='all'){if(shuffleOn)queue=buildQueue();next=0;}
+    else{updatePlayBtns();return;}
+  }
+  queueIdx=next; loadPlay(queue[queueIdx]);
+});
+
+// ── Controls ──
+btnPlay.addEventListener('click',()=>{
+  if(!curAlbum)return;
+  if(queueIdx===-1){queue=buildQueue();queueIdx=0;loadPlay(queue[0]);return;}
+  audio.paused?audio.play().catch(()=>{}):audio.pause();
+});
+btnPrev.addEventListener('click',()=>{
+  if(queueIdx===-1)return;
+  if(audio.currentTime>3){audio.currentTime=0;if(audio.paused)audio.play().catch(()=>{});return;}
+  queueIdx=queueIdx>0?queueIdx-1:queue.length-1;
+  loadPlay(queue[queueIdx]);
+});
+btnNext.addEventListener('click',()=>{
+  if(!curAlbum)return;
+  if(queueIdx===-1){queue=buildQueue();queueIdx=0;}
+  else queueIdx=(queueIdx+1)%queue.length;
+  loadPlay(queue[queueIdx]);
+});
+btnShuffle.addEventListener('click',()=>{
+  shuffleOn=!shuffleOn;
+  btnShuffle.classList.toggle('active',shuffleOn);
+  npBtnShuffle.classList.toggle('active',shuffleOn);
+  if(!curAlbum)return;
+  if(shuffleOn){
+    queue=shuffleArr(ALBUMS[curAlbum].songs.map((_,i)=>i));
+    queueIdx=0; loadPlay(queue[0]);
+  } else {
+    const cur=queueIdx>=0?queue[queueIdx]:undefined;
+    queue=buildQueue(cur);
+    if(cur!==undefined)queueIdx=queue.indexOf(cur);
+  }
+});
+btnRepeat.addEventListener('click',()=>{
+  repeatMode=repeatMode==='off'?'all':repeatMode==='all'?'one':'off';
+  syncRepeatBtn(btnRepeat);
+  syncRepeatBtn(npBtnRepeat);
+});
+
+// Progress bar
+document.querySelector('.hj-prog-wrap').addEventListener('click',e=>{
+  if(!audio.duration)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
+});
+
+// ── MediaSession ──
+function updateMS(i){
+  if(!('mediaSession' in navigator)||!curAlbum)return;
+  const s=ALBUMS[curAlbum].songs[i];
+  navigator.mediaSession.metadata=new MediaMetadata({
+    title:s.title,artist:'BRO · Jörn Kämper',
+    album:ALBUMS[curAlbum].title,
+    artwork:[{src:s.cover,sizes:'400x400',type:'image/jpeg'}]
+  });
+  navigator.mediaSession.setActionHandler('play',()=>audio.play());
+  navigator.mediaSession.setActionHandler('pause',()=>audio.pause());
+  navigator.mediaSession.setActionHandler('previoustrack',()=>btnPrev.click());
+  navigator.mediaSession.setActionHandler('nexttrack',()=>btnNext.click());
+}
+
+// ── Init: preview first song of 30° Grad ──
+curAlbum='grad30';
+previewSong(0);
+curAlbum=null;
+</script>
+
+<script>
+(async function () {
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('portrait');
+    }
+  } catch (e) {
+    // iOS/Safari fallback handled by CSS overlay
+  }
+})();
+</script>
+
+</body>
+</html>
