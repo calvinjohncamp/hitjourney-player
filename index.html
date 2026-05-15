@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v13i-hash, 15.05.2026 -->
+<!-- Version: v13j-fix, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -812,7 +812,13 @@ function showAlbum(key){
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       (s.cover==="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"?'<div class="tl-thumb no-cover"></div>':'<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>')+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
-    row.addEventListener('click',()=>playIdx(i));
+    row.addEventListener('click',()=>{
+      if(queueIdx>=0 && queue[queueIdx]===i){
+        showNowPlaying(); // bereits aktiver Song → NP öffnen
+      } else {
+        playIdx(i);
+      }
+    });
     tlList.appendChild(row);
   });
   screenHome.classList.remove('active');
@@ -858,7 +864,8 @@ backBtn.addEventListener('click',()=>{
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
-// nowStrip tap → showNowPlaying handled in swipe block below
+// nowStrip click → showNowPlaying (für Mouse/Desktop und alle Touch-Geräte)
+nowStrip.addEventListener('click', showNowPlaying);
 npDownBtn.addEventListener('click', hideNowPlaying);
 
 // ── Now Playing screen update ──
@@ -929,12 +936,12 @@ nowStrip.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-stripStartX;
   const dy=e.changedTouches[0].clientY-stripStartY;
   if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
+    e.preventDefault(); // verhindert nachfolgendes click-Event
     if(dx<0){ btnNext.click(); } // swipe left → next
     else     { btnPrev.click(); } // swipe right → prev
-  } else if(!stripTouchMoved){
-    showNowPlaying(); // kein Swipe → normaler Tap → NP öffnen
   }
-},{passive:true});
+  // Einfacher Tap: click-Event übernimmt das NP-Öffnen
+},{passive:false});
 
 // ── Playback ──
 function previewSong(i){
@@ -1366,7 +1373,13 @@ function renderArchiveList(songs){
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       (s.cover==="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"?'<div class="tl-thumb no-cover"></div>':'<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>')+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
-    row.addEventListener('click',()=>playArchiveSong(i,songs));
+    row.addEventListener('click',()=>{
+      if(prevScreen==='archive' && arcQueueIdx===i){
+        showNowPlaying();
+      } else {
+        playArchiveSong(i,songs);
+      }
+    });
     arcList.appendChild(row);
   });
 }
@@ -1454,7 +1467,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v13i-hash';
+  const VERSION = 'v13j-fix';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
