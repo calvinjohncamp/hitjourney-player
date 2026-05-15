@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v5-coverfix2, 15.05.2026 -->
+<!-- Version: v6-coverfix-scroll, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -27,19 +27,18 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
 
 /* ── Screens ── */
-.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0}
+.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;overscroll-behavior:none}
 .screen.active{display:block}
 .screen::-webkit-scrollbar{display:none}
 
 /* ══ HOME ══ */
-.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
-.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 140px}
+.home-bottom-pad{display:none}.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
 .home-card:active{transform:scale(.95);opacity:.85}
 .home-card.wide{grid-column:1/-1}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:120px}
 
 /* ══ TRACKLIST ══ */
 /* Album header: cover centered, title+meta centered below */
@@ -525,7 +524,7 @@ const SONGS_TOP100 = [
   { title: 'The Sway', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-sway.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Sway%20-%20Cover.jpg' },
   { title: 'Side Street Confessions', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/side-street-confessions.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Side%20Street%20Confessions%20-%20Cover.jpg' },
   { title: 'unscharf', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Cover.jpg' },
-  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
+  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Cover.jpg' },
   { title: 'Dein Kleid', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dein-kleid.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Cover.jpg' },
   { title: 'Ashes In The Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ashes-in-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Cover.jpg' },
   { title: 'Nothing but Stories (male)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories-male.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/nothing%20but%20stories%20-%20cover.jpg' },
@@ -596,7 +595,7 @@ const SONGS_GROSSE_LIEBE = [
   { title: 'Wunder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wunder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wunder%20-%20Cover.jpg' },
   { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg' },
   { title: 'Licht aus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/licht-aus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Cover.jpg' },
-  { title: 'Im Rückspiegel schön', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-rueckspiegel-schoen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Rueckspiegel%20schoen%20-%20Cover.jpg' },
+  { title: 'Im Rückspiegel schön', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-rueckspiegel-schoen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kein%20Rueckspiegel%20-%20Cover.jpg' },
   { title: 'Sternenstaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sternenstaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sternenstaub%20-%20Cover.jpg' },
   { title: 'Prinzessin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/prinzessin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Lara%20Wolff%20-%20Cover.jpg' },
   { title: 'Nebelmond', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nebelmond.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nebelmond%20-%20Cover.jpg' },
@@ -608,7 +607,7 @@ const SONGS_GROSSE_LIEBE = [
   { title: 'Salz auf meinen Lippen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/salz-auf-meinen-lippen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Salz%20auf%20meinen%20Lippen%20-%20Cover.jpg' },
   { title: 'Alles klar', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-klar.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alles%20klar%20-%20Cover.jpg' },
   { title: 'Knistern', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/knistern.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Knistern%20-%20Cover.jpg' },
-  { title: 'Krokusse im März', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/krokusse-im-maerz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20Maerz%20-%20Cover.jpg' },
+  { title: 'Krokusse im März', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/krokusse-im-maerz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20M%C3%A4rz%20-%20Cover.jpg' },
   { title: 'Dann kam der Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dann-kam-der-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dann%20kam%20der%20Regen%20-%20Cover.jpg' },
   { title: 'Keine Orchideen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keine-orchideen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keine%20Orchideen%20-%20Cover.jpg' },
   { title: 'Milchglas', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/milchglas.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Milchglas%20-%20Cover.jpg' },
@@ -621,7 +620,7 @@ const SONGS_POESIE = [
   { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg' },
   { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
   { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg' },
-  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Erlkoenig%20-%20Cover.jpg' },
+  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Cover.jpg' },
   { title: 'Willkommen und Abschied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/willkommen-und-abschied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Willkommen%20und%20Abschied%20-%20Cover.jpg' },
   { title: 'Röslein Rot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/roeslein-rot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Roeslein%20Rot%20-%20Cover.jpg' },
   { title: 'Abendlied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/abendlied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/abendlied%20-%20cover.jpg' },
