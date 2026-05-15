@@ -9,18 +9,18 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v13c-letters, 15.05.2026 -->
+<!-- Version: v13g-align, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
 body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:0}
 
 /* ── Header ── */
-.hj-header{display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;background:rgba(6,20,32,1);box-shadow:0 4px 16px rgba(6,20,32,.9);position:relative;z-index:10}
+.hj-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;background:rgba(6,20,32,1);position:relative;z-index:10}
 .hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
 .hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
 .hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
-.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;opacity:.65;line-height:1;padding-bottom:4px;margin-left:auto;}
+.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;line-height:1;padding-bottom:4px;margin-left:auto;}
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
@@ -81,16 +81,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   height:28px;
   display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:700;
-  color:rgba(133,172,201,.55);
+  color:#85ACC9;
   border-radius:6px;cursor:pointer;
   transition:background .12s,color .12s;
   -webkit-tap-highlight-color:transparent;
 }
 .arc-letter:active,.arc-letter.active{background:rgba(133,172,201,.18);color:#cfe5f5}
+.arc-letter.dim{opacity:0.3}
 .arc-section-label{
   padding:10px 16px 4px 16px;
   font-size:12px;font-weight:700;
-  color:rgba(133,172,201,.4);
+  color:#85ACC9;
   letter-spacing:.1em;text-transform:uppercase;
 }
 .arc-no-results{
@@ -126,7 +127,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-track:active{background:rgba(133,172,201,.07)}
 .tl-track.active{background:rgba(133,172,201,.06)}
 .tl-num-wrap{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
-.tl-track-num{font-size:16px;color:rgba(133,172,201,.35)}
+.tl-track-num{font-size:16px;color:#85ACC9}
 .tl-track.active .tl-track-num{display:none}
 .tl-bars{display:none;align-items:flex-end;gap:2px;height:16px;width:28px;justify-content:flex-end}
 .tl-track.active .tl-bars{display:flex}
@@ -341,6 +342,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     </div>
     <div class="arc-letters" id="arcLetters"></div>
   </div>
+  <div id="arcSongCount" style="text-align:center;padding:10px 0 2px;font-size:13px;font-weight:600;color:rgba(133,172,201,.5);letter-spacing:.05em"></div>
   <div id="arcList"></div>
   <div class="home-bottom-pad"></div>
 </div>
@@ -1084,16 +1086,15 @@ function buildAllSongs(){
 }
 const ALL_SONGS = buildAllSongs();
 
-// Letter strip: 3 rows × 10 cols = 30 cells; pad with empty cells after Z
+// Letter strip: 3 rows × 9 cols
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
 ALPHABET.forEach(l=>{
   const el = document.createElement('span');
   const available = availLetters.includes(l);
-  el.className = 'arc-letter';
+  el.className = 'arc-letter' + (available ? '' : ' dim');
   el.textContent = l;
-  if(!available){ el.style.opacity='0.18'; el.style.pointerEvents='none'; }
-  else { el.addEventListener('click',()=>scrollToLetter(l)); }
+  el.addEventListener('click',()=>scrollToLetter(l));
   arcLetters.appendChild(el);
 });
 // pad to 27 cells (3 rows × 9)
@@ -1109,15 +1110,16 @@ function renderArchiveList(songs){
     arcList.innerHTML='<div class="arc-no-results">Kein Song gefunden</div>';
     return;
   }
-  let lastLetter='';
+  let lastLabel='';
   songs.forEach((s,i)=>{
-    const letter = s.title[0].toUpperCase();
-    if(letter!==lastLetter){
-      lastLetter=letter;
+    const firstChar = s.title[0].toUpperCase();
+    const label = /[A-Z]/.test(firstChar) ? firstChar : '#';
+    if(label!==lastLabel){
+      lastLabel=label;
       const lbl=document.createElement('div');
       lbl.className='arc-section-label';
-      lbl.dataset.letter=letter;
-      lbl.textContent=letter;
+      lbl.dataset.letter=label;
+      lbl.textContent=label;
       arcList.appendChild(lbl);
     }
     const row=document.createElement('div');
@@ -1165,21 +1167,29 @@ function scrollToLetter(l){
   arcInput.value=''; arcSearchWrap.classList.remove('has-value');
   renderArchiveList(ALL_SONGS);
   setTimeout(()=>{
-    const lbl=arcList.querySelector('[data-letter="'+l+'"]');
-    if(lbl) lbl.scrollIntoView({behavior:'smooth',block:'start'});
+    // Try exact label first, then scan forward for next available
+    let target = arcList.querySelector('[data-letter="'+l+'"]');
+    if(!target){
+      // find next label after l alphabetically
+      const all = [...arcList.querySelectorAll('[data-letter]')];
+      target = all.find(el => el.dataset.letter > l) || all[all.length-1];
+    }
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
   },50);
 }
 
 arcInput.addEventListener('input',()=>{
   const q=arcInput.value.trim().toLowerCase();
   arcSearchWrap.classList.toggle('has-value',q.length>0);
-  if(!q){ renderArchiveList(ALL_SONGS); return; }
-  renderArchiveList(ALL_SONGS.filter(s=>s.title.toLowerCase().includes(q)));
+  const filtered = q ? ALL_SONGS.filter(s=>s.title.toLowerCase().includes(q)) : ALL_SONGS;
+  renderArchiveList(filtered);
+  document.getElementById('arcSongCount').textContent = filtered.length + ' songs';
 });
 arcClear.addEventListener('click',()=>{
   arcInput.value='';
   arcSearchWrap.classList.remove('has-value');
   renderArchiveList(ALL_SONGS);
+  document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
   arcInput.focus();
 });
 
@@ -1193,8 +1203,11 @@ function showArchive(){
   logoHome.style.display='none';
   makingWaves.style.display='none';
   headerRight.textContent='the archive';
+  headerRight.style='';
+  mainHeader.style.position='';
   mainHeader.style.display='';
   screenArchive.scrollTop=0;
+  document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
   prevScreen='archive';
 }
 function hideArchive(){
@@ -1214,7 +1227,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v13c-letters';
+  const VERSION = 'v13g-align';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
