@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14b-lyrics-swipe, 15.05.2026 -->
+<!-- Version: v14c-lyrics-pan, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -916,6 +916,11 @@ let swipeStartX=0, swipeStartY=0;
 let lyricsOpen = false;
 let lyricsCoverSrc = '';
 let npPinchScale = 1, npPinchLast = 1, npPinchDist0 = 0, npPinching = false;
+let npTransX = 0, npTransY = 0, npDragStartX = 0, npDragStartY = 0, npDragging = false;
+
+function applyLyricsTransform() {
+  npCoverImg.style.transform = 'scale('+npPinchScale+') translate('+npTransX+'px,'+npTransY+'px)';
+}
 
 function openLyrics() {
   const song = isArchiveMode()
@@ -926,6 +931,7 @@ function openLyrics() {
   npCoverImg.src = song.lyrics;
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
+  npTransX = 0; npTransY = 0;
   npCoverImg.style.transform = 'scale(1)';
   npPinchScale = 1; npPinchLast = 1;
   lyricsOpen = true;
@@ -935,6 +941,7 @@ function closeLyrics() {
   npCoverImg.src = lyricsCoverSrc;
   npCoverImg.classList.remove('lyrics-active');
   npCoverWrap.classList.remove('lyrics-mode');
+  npTransX = 0; npTransY = 0;
   npCoverImg.style.transform = 'scale(1)';
   npPinchScale = 1; npPinchLast = 1;
   lyricsOpen = false;
@@ -945,8 +952,14 @@ npCoverWrap.addEventListener('touchstart',e=>{
   swipeStartY=e.touches[0].clientY;
   if(e.touches.length===2 && lyricsOpen){
     npPinching=true;
+    npDragging=false;
     npPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     npPinchLast=npPinchScale;
+    e.preventDefault();
+  } else if(e.touches.length===1 && lyricsOpen && npPinchScale>1){
+    npDragging=true;
+    npDragStartX=e.touches[0].clientX - npTransX;
+    npDragStartY=e.touches[0].clientY - npTransY;
     e.preventDefault();
   }
 },{passive:false});
@@ -955,15 +968,24 @@ npCoverWrap.addEventListener('touchmove',e=>{
   if(npPinching && e.touches.length===2 && lyricsOpen){
     const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     npPinchScale=Math.min(Math.max(npPinchLast*(d/npPinchDist0),0.9),4.0);
-    npCoverImg.style.transform='scale('+npPinchScale+')';
+    applyLyricsTransform();
+    e.preventDefault();
+  } else if(npDragging && e.touches.length===1 && lyricsOpen && npPinchScale>1){
+    npTransX=e.touches[0].clientX - npDragStartX;
+    npTransY=e.touches[0].clientY - npDragStartY;
+    applyLyricsTransform();
     e.preventDefault();
   }
 },{passive:false});
 
 npCoverWrap.addEventListener('touchend',e=>{
+  if(npDragging && e.touches.length===0){
+    npDragging=false;
+    return;
+  }
   if(npPinching){
     if(e.touches.length<2){
-      if(npPinchScale<1){npPinchScale=1;npCoverImg.style.transform='scale(1)';}
+      if(npPinchScale<1){npPinchScale=1;npTransX=0;npTransY=0;applyLyricsTransform();}
       setTimeout(()=>{npPinching=false;},80);
     }
     return;
@@ -1342,7 +1364,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14b-lyrics-swipe';
+  const VERSION = 'v14c-lyrics-pan';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
