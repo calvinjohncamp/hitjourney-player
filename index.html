@@ -169,9 +169,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   transform:translateY(100%);
   transition:transform .3s ease;
+  pointer-events:none;
 }
 .hj-player.visible{
   transform:translateY(0);
+  pointer-events:auto;
 }
 /* Upper now-playing strip: slightly lighter */
 .hj-now-strip{
