@@ -39,7 +39,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:10px}
+.home-bottom-pad{height:38px}
 
 /* ══ TRACKLIST ══ */
 /* Album header: cover centered, title+meta centered below */
@@ -49,6 +49,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:linear-gradient(180deg,#0d2a3e 0%,#02111E 100%);
   border-bottom:1px solid rgba(133,172,201,.08);
   gap:12px;
+  max-width:680px;
+  margin:0 auto;
+  width:100%;
 }
 .tl-top-cover{
   width:min(200px,45vw);height:min(200px,45vw);
@@ -61,13 +64,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-top-meta{font-size:12px;color:rgba(133,172,201,.6)}
 
 /* Track rows — bigger, Spotify-sized */
-.tl-track{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s}
+.tl-track{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 32px;cursor:pointer;transition:background .12s}
 .tl-track:active{background:rgba(133,172,201,.07)}
 .tl-track.active{background:rgba(133,172,201,.06)}
-.tl-num-wrap{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
-.tl-track-num{font-size:15px;color:rgba(133,172,201,.35)}
+.tl-num-wrap{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.tl-track-num{font-size:16px;color:rgba(133,172,201,.35)}
 .tl-track.active .tl-track-num{display:none}
-.tl-bars{display:none;align-items:flex-end;gap:2px;height:16px;width:24px;justify-content:flex-end}
+.tl-bars{display:none;align-items:flex-end;gap:2px;height:16px;width:28px;justify-content:flex-end}
 .tl-track.active .tl-bars{display:flex}
 .tl-bar{width:3px;background:#85ACC9;border-radius:1px;animation:bar .8s ease-in-out infinite alternate}
 .tl-bar:nth-child(1){height:5px;animation-delay:0s}
@@ -76,14 +79,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-bar:nth-child(4){height:15px;animation-delay:.1s}
 @keyframes bar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
 .tl-track.active:not(.playing) .tl-bar{animation:none;height:8px;opacity:.4}
-.tl-thumb{width:52px;height:52px;border-radius:5px;object-fit:cover;flex-shrink:0;background:#0B2A42}
+.tl-thumb{width:62px;height:62px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#0B2A42}
 .tl-info{flex:1;min-width:0}
-.tl-title{font-size:17px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
-.tl-artist{font-size:13px;color:rgba(133,172,201,.45);margin-top:2px}
-.tl-bottom-pad{height:132px}
+.tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
+.tl-bottom-pad{height:160px}
 
-/* ══ NOW PLAYING SCREEN ══ */
+/* Tracklist container: max-width for iPad readability */
+#tlList{max-width:680px;margin:0 auto;width:100%}
 #screenNowPlaying{
   background:#02111E;
   display:none;
@@ -127,7 +131,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 4px;
+  padding:0 0 max(env(safe-area-inset-bottom) + 10px, 20px);
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -179,7 +183,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* Lower controls strip: compact, anchored to the physical bottom */
 .hj-controls-strip{
   background:transparent;
-  padding-bottom:0;
+  padding-bottom:max(env(safe-area-inset-bottom), 10px);
 }
 .hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
 .hj-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 0}
