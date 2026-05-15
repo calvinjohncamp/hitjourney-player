@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14b-lyrics-swap, 15.05.2026 -->
+<!-- Version: v14c-lyrics-tap, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -926,11 +926,16 @@ npCoverWrap.addEventListener('touchstart',e=>{
   swipeStartY=e.touches[0].clientY;
 },{passive:true});
 npCoverWrap.addEventListener('touchend',e=>{
+  if(npPinching) return;
   const dx=e.changedTouches[0].clientX-swipeStartX;
   const dy=e.changedTouches[0].clientY-swipeStartY;
-  if(dy>60&&Math.abs(dy)>Math.abs(dx)*1.2){ // swipe down → zurück
+  const absDx=Math.abs(dx), absDy=Math.abs(dy);
+  if(absDx<10 && absDy<10){ // TAP → lyrics toggle
+    if(lyricsOpen) closeLyrics();
+    else openLyrics();
+  } else if(dy>60&&absDy>absDx*1.2){ // swipe down → zurück
     hideNowPlaying();
-  } else if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
+  } else if(absDx>absDy*1.5&&absDx>40){
     if(dx<0){ // swipe left → next
       npCoverImg.classList.add('swipe-left');
       setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
@@ -993,15 +998,7 @@ function closeLyrics() {
 
 function closeLyricsOnSongChange() { if (lyricsOpen) closeLyrics(); }
 
-// Tap on cover: open lyrics / close lyrics
-npCoverWrap.addEventListener('click', e => {
-  const dx = Math.abs((e.clientX||0) - swipeStartX);
-  const dy = Math.abs((e.clientY||0) - swipeStartY);
-  if (dx > 8 || dy > 8) return; // was a swipe, not a tap
-  if (npPinching) return;
-  if (lyricsOpen) closeLyrics();
-  else openLyrics();
-});
+// Tap on cover: handled in unified touchend above
 
 // Pinch-to-zoom (only active when lyrics are showing)
 function pinchDist(touches) {
@@ -1390,7 +1387,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14b-lyrics-swap';
+  const VERSION = 'v14c-lyrics-tap';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
