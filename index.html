@@ -12,7 +12,7 @@
 <!-- Version: portrait-lock-v4, 14.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#02111E;color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
+html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
 body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:0}
 
 /* ── Header ── */
@@ -162,7 +162,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:fixed;bottom:0;left:0;right:0;
   z-index:200;
   display:flex;flex-direction:column;
-  background:rgba(6,20,32,.98);
+  background:rgba(6,20,32,1);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
 }
 /* Upper now-playing strip: slightly lighter */
@@ -214,7 +214,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:absolute;
   left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
   height:env(safe-area-inset-bottom, 0px);
-  background:rgba(6,20,32,.98);
+  background:rgba(6,20,32,1);
 }
 
 </style>
