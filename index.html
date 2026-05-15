@@ -29,9 +29,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Screens ── */
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
+.screen.active{display:block}
+.screen:not(.active){pointer-events:none}
 #screenHome{padding-top:14px}
 #screenTracklist{padding-top:8px}
-.screen.active{display:block}
 .screen::-webkit-scrollbar{display:none}
 
 /* ══ HOME ══ */
