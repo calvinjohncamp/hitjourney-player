@@ -1007,12 +1007,29 @@ btnPlay.addEventListener('click',()=>{
   audio.paused?audio.play().catch(()=>{}):audio.pause();
 });
 btnPrev.addEventListener('click',()=>{
+  if(prevScreen==='archive'&&arcQueueIdx>=0){
+    if(audio.currentTime>3){audio.currentTime=0;if(audio.paused)audio.play().catch(()=>{});return;}
+    arcQueueIdx=arcQueueIdx>0?arcQueueIdx-1:arcQueue.length-1;
+    const s=arcQueue[arcQueueIdx];
+    audio.src=s.mp3;audio.load();audio.play().catch(()=>{});
+    nowCover.src=s.cover;nowTitle.textContent=s.title;nowNum.textContent=arcQueueIdx+1;
+    if(screenNP.classList.contains('active')){npCover.src=s.cover;npTitle.textContent=s.title;}
+    return;
+  }
   if(queueIdx===-1)return;
   if(audio.currentTime>3){audio.currentTime=0;if(audio.paused)audio.play().catch(()=>{});return;}
   queueIdx=queueIdx>0?queueIdx-1:queue.length-1;
   loadPlay(queue[queueIdx]);
 });
 btnNext.addEventListener('click',()=>{
+  if(prevScreen==='archive'&&arcQueueIdx>=0){
+    arcQueueIdx=(arcQueueIdx+1)%arcQueue.length;
+    const s=arcQueue[arcQueueIdx];
+    audio.src=s.mp3;audio.load();audio.play().catch(()=>{});
+    nowCover.src=s.cover;nowTitle.textContent=s.title;nowNum.textContent=arcQueueIdx+1;
+    if(screenNP.classList.contains('active')){npCover.src=s.cover;npTitle.textContent=s.title;}
+    return;
+  }
   if(!curAlbum)return;
   if(queueIdx===-1){queue=buildQueue();queueIdx=0;}
   else queueIdx=(queueIdx+1)%queue.length;
