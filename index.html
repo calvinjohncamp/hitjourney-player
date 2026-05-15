@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v13h-archive-swipe-fix, 15.05.2026 -->
+<!-- Version: v13i-np-swipe-playerbar-fix, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -825,9 +825,7 @@ function showAlbum(key){
   screenTL.scrollTop=0;
   previewSong(0);
   showNowStrip();
-  if(!screenNP.classList.contains('active')){
   playerBar.classList.add('visible');
-}
   refreshHighlight();
   prevScreen='tracklist';
 }
@@ -843,9 +841,7 @@ function showNowPlaying(){
 }
 function hideNowPlaying(){
   mainHeader.style.display='';
-  if(audio.src) if(!screenNP.classList.contains('active')){
-  playerBar.classList.add('visible');
-}
+  if(audio.src) playerBar.classList.add('visible');
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
@@ -895,9 +891,7 @@ function loadArchiveSongByIndex(idx){
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=arcQueueIdx+1;
   showNowStrip();
-  if(!screenNP.classList.contains('active')){
-  playerBar.classList.add('visible');
-}
+  if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
   refreshArchiveHighlight();
   updateMS_archive(s);
   if(screenNP.classList.contains('active')) updateNPScreen();
@@ -991,9 +985,7 @@ function loadPlay(songIdx){
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=songIdx+1;
   showNowStrip();
-  if(!screenNP.classList.contains('active')){
-  playerBar.classList.add('visible');
-}
+  if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
   refreshHighlight(); updateMS(songIdx);
   if(screenNP.classList.contains('active')) updateNPScreen();
 }
