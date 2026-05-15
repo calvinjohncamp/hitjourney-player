@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14d-lyrics-touch, 15.05.2026 -->
+<!-- Version: v14-lyrics, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -180,17 +180,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .np-cover.swipe-left{transform:translateX(-60px);opacity:0}
 .np-cover.swipe-right{transform:translateX(60px);opacity:0}
-/* Lyrics mode: cover becomes lyrics sheet */
-.np-cover.lyrics-active{
-  touch-action:none;
-  cursor:zoom-in;
-  transition:none;
-}
-.np-cover-wrap.lyrics-mode{
-  touch-action:none;
-}
-
-
+.np-cover.lyrics-active{touch-action:none;}
+.np-cover-wrap.lyrics-mode{touch-action:none;}
 /* Song info below cover */
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
 .np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -586,7 +577,7 @@ const SONGS_TOP100 = [
   { title: 'alles rot alles tot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-rot-alles-tot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Cover%2025%20Ultimate.jpg' },
   { title: 'Waves', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/waves.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Waves%20-%20Cover.jpg' },
   { title: 'Vintage Shirts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/vintage-shirts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vintage%20Shirts%20-%20Cover.jpg' },
-  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg' },
+  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Lyrics.jpg' },
   { title: 'Tell Me Why', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Cover.jpg' },
   { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
   { title: 'Streets with No Name', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Cover.jpg' },
@@ -713,7 +704,7 @@ const SONGS_GROSSE_LIEBE = [
 ];
 
 const SONGS_POESIE = [
-  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg' },
+  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Lyrics.jpg' },
   { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
   { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg' },
   { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Cover.jpg' },
@@ -898,7 +889,7 @@ function loadArchiveSongByIndex(idx){
   const s=arcQueue[arcQueueIdx];
   curAlbum=s.albumKey||curAlbum;
   queueIdx=-1;
-  if(typeof closeLyricsOnSongChange==="function") closeLyricsOnSongChange();
+  if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=arcQueueIdx+1;
@@ -921,77 +912,27 @@ function refreshArchiveHighlight(){
 
 // ── Swipe on NP cover ──
 let swipeStartX=0, swipeStartY=0;
-npCoverWrap.addEventListener('touchstart',e=>{
-  swipeStartX=e.touches[0].clientX;
-  swipeStartY=e.touches[0].clientY;
-},{passive:true});
-npCoverWrap.addEventListener('touchend',e=>{
-  if(npPinching) return;
-  const dx=e.changedTouches[0].clientX-swipeStartX;
-  const dy=e.changedTouches[0].clientY-swipeStartY;
-  const absDx=Math.abs(dx), absDy=Math.abs(dy);
-  if(absDx<10 && absDy<10){ // TAP → lyrics toggle
-    // Debug: kurzer Farbblitz damit wir sehen ob Tap erkannt wird
-    npCoverImg.style.opacity='0.4';
-    setTimeout(()=>{ npCoverImg.style.opacity='1'; },200);
-    if(lyricsOpen) closeLyrics();
-    else openLyrics();
-  } else if(dy>60&&absDy>absDx*1.2){ // swipe down → zurück
-    hideNowPlaying();
-  } else if(absDx>absDy*1.5&&absDx>40){
-    if(dx<0){ // swipe left → next
-      npCoverImg.classList.add('swipe-left');
-      setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
-    } else { // swipe right → prev
-      npCoverImg.classList.add('swipe-right');
-      setTimeout(()=>{npCoverImg.classList.remove('swipe-right');btnPrev.click();},180);
-    }
-  }
-},{passive:true});
-
-// ── Lyrics Sheet — Cover-Swap (Phase 11) ──
+// ── Lyrics state ──
 let lyricsOpen = false;
-let lyricsCoverUrl = '';   // saved original cover src
-let npPinchScale = 1;
-let npPinchLast  = 1;
-let npPinchDist0 = 0;
-let npPinching   = false;
-
-function getLyricsUrl(song) {
-  if (!song || !song.cover) return null;
-  // Pattern: "…/artwork/Sehnsucht - Cover.jpg" → "…/artwork/Sehnsucht - Lyrics.jpg"
-  return song.cover.replace(/ - Cover\.jpg$/i, ' - Lyrics.jpg');
-}
-
-function getCurrentSong() {
-  if (isArchiveMode()) return arcQueue[arcQueueIdx] || null;
-  if (curAlbum && queueIdx >= 0) return ALBUMS[curAlbum].songs[queue[queueIdx]] || null;
-  return null;
-}
+let lyricsCoverSrc = '';
+let npPinchScale = 1, npPinchLast = 1, npPinchDist0 = 0, npPinching = false;
 
 function openLyrics() {
-  const song = getCurrentSong();
-  if (!song) return;
-  const url = getLyricsUrl(song);
-  if (!url || url === song.cover) return;
-  // Pre-check: only swap if the lyrics image actually exists on S3
-  const test = new Image();
-  test.onload = () => {
-    lyricsCoverUrl = npCoverImg.src;
-    npCoverImg.src = url;
-    npCoverImg.classList.add('lyrics-active');
-    npCoverWrap.classList.add('lyrics-mode');
-    npCoverImg.style.transform = 'scale(1)';
-    npPinchScale = 1; npPinchLast = 1;
-    lyricsOpen = true;
-  };
-  test.onerror = () => {}; // no lyrics for this song — silent
-  test.src = url;
+  const song = isArchiveMode()
+    ? arcQueue[arcQueueIdx]
+    : (curAlbum && queueIdx >= 0 ? ALBUMS[curAlbum].songs[queue[queueIdx]] : null);
+  if (!song || !song.lyrics) return;
+  lyricsCoverSrc = npCoverImg.src;
+  npCoverImg.src = song.lyrics;
+  npCoverImg.classList.add('lyrics-active');
+  npCoverWrap.classList.add('lyrics-mode');
+  npCoverImg.style.transform = 'scale(1)';
+  npPinchScale = 1; npPinchLast = 1;
+  lyricsOpen = true;
 }
 
 function closeLyrics() {
-  if (!lyricsOpen) return;
-  npCoverImg.src = lyricsCoverUrl;
+  npCoverImg.src = lyricsCoverSrc;
   npCoverImg.classList.remove('lyrics-active');
   npCoverWrap.classList.remove('lyrics-mode');
   npCoverImg.style.transform = 'scale(1)';
@@ -999,42 +940,53 @@ function closeLyrics() {
   lyricsOpen = false;
 }
 
-function closeLyricsOnSongChange() { if (lyricsOpen) closeLyrics(); }
-
-// Tap on cover: handled in unified touchend above
-
-// Pinch-to-zoom (only active when lyrics are showing)
-function pinchDist(touches) {
-  const dx = touches[0].clientX - touches[1].clientX;
-  const dy = touches[0].clientY - touches[1].clientY;
-  return Math.sqrt(dx*dx + dy*dy);
-}
-npCoverWrap.addEventListener('touchstart', e => {
-  if (!lyricsOpen) return;
-  if (e.touches.length === 2) {
-    npPinching = true;
-    npPinchDist0 = pinchDist(e.touches);
-    npPinchLast = npPinchScale;
+npCoverWrap.addEventListener('touchstart',e=>{
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+  if(e.touches.length===2 && lyricsOpen){
+    npPinching=true;
+    npPinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    npPinchLast=npPinchScale;
     e.preventDefault();
   }
-}, { passive: false });
-npCoverWrap.addEventListener('touchmove', e => {
-  if (!lyricsOpen || !npPinching || e.touches.length < 2) return;
-  const ratio = pinchDist(e.touches) / npPinchDist0;
-  npPinchScale = Math.min(Math.max(npPinchLast * ratio, 0.9), 4.0);
-  npCoverImg.style.transform = `scale(${npPinchScale})`;
-  e.preventDefault();
-}, { passive: false });
-npCoverWrap.addEventListener('touchend', e => {
-  if (e.touches.length < 2) {
-    if (npPinchScale < 1) {
-      npPinchScale = 1;
-      npCoverImg.style.transform = 'scale(1)';
-    }
-    setTimeout(() => { npPinching = false; }, 50);
-  }
-}, { passive: true });
+},{passive:false});
 
+npCoverWrap.addEventListener('touchmove',e=>{
+  if(npPinching && e.touches.length===2 && lyricsOpen){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    npPinchScale=Math.min(Math.max(npPinchLast*(d/npPinchDist0),0.9),4.0);
+    npCoverImg.style.transform='scale('+npPinchScale+')';
+    e.preventDefault();
+  }
+},{passive:false});
+
+npCoverWrap.addEventListener('touchend',e=>{
+  if(npPinching){
+    if(e.touches.length<2){
+      if(npPinchScale<1){npPinchScale=1;npCoverImg.style.transform='scale(1)';}
+      setTimeout(()=>{npPinching=false;},80);
+    }
+    return;
+  }
+  const dx=e.changedTouches[0].clientX-swipeStartX;
+  const dy=e.changedTouches[0].clientY-swipeStartY;
+  const absDx=Math.abs(dx), absDy=Math.abs(dy);
+  if(absDx<12&&absDy<12){ // TAP
+    if(lyricsOpen) closeLyrics();
+    else openLyrics();
+  } else if(dy>60&&absDy>absDx*1.2){ // swipe down
+    if(lyricsOpen) closeLyrics();
+    else hideNowPlaying();
+  } else if(absDx>absDy*1.5&&absDx>40){ // swipe left/right
+    if(dx<0){
+      npCoverImg.classList.add('swipe-left');
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
+    } else {
+      npCoverImg.classList.add('swipe-right');
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-right');btnPrev.click();},180);
+    }
+  }
+},{passive:true});
 
 // ── NP screen buttons mirror bar buttons ──
 npBtnPlay.addEventListener('click',()=>btnPlay.click());
@@ -1088,7 +1040,7 @@ function playIdx(songIdx){
 }
 function loadPlay(songIdx){
   const s=ALBUMS[curAlbum].songs[songIdx];
-  if(typeof closeLyricsOnSongChange==="function") closeLyricsOnSongChange();
+  if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=songIdx+1;
@@ -1390,7 +1342,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14d-lyrics-touch';
+  const VERSION = 'v14-lyrics';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
