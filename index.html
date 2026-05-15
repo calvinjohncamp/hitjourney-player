@@ -20,7 +20,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
 .hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
 .hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
-.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;line-height:1;padding-bottom:2px;margin-left:auto;align-self:flex-end;}
+.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;line-height:1;padding-bottom:4px;margin-left:auto;}
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
@@ -113,14 +113,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   width:100%;
 }
 .tl-top-cover{
-  width:min(160px,40vw);height:min(160px,40vw);
+  width:min(200px,45vw);height:min(200px,45vw);
   border-radius:8px;object-fit:cover;
   background:#0B2A42;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
-}
-@media(min-width:600px){
-  .tl-top-cover{width:160px;height:160px;}
-  .tl-top{gap:14px;padding:24px 16px 16px;}
 }
 .tl-top-info{text-align:center;}
 .tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;}
@@ -1377,7 +1373,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14g-ui-fixes2';
+  const VERSION = 'v14e-poesie-lyrics-complete';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
