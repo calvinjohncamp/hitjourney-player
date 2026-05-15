@@ -186,7 +186,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 .hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 14px}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 18px}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
@@ -323,9 +323,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <div class="hj-now-num">
         <span class="hj-now-numtxt" id="nowNum">—</span>
       </div>
-      <img class="hj-now-cover" id="nowCover" src="" alt=""/>
-      <div class="hj-now-info">
-        <div class="hj-now-title" id="nowTitle">hitjourney · making waves</div>
+      <img class="hj-now-cover" id="nowCover" src="" alt="" style="display:none"/>
+      <div class="hj-now-info" id="nowInfo" style="display:none">
+        <div class="hj-now-title" id="nowTitle"></div>
         <div class="hj-now-artist">Jörn Kämper</div>
       </div>
     </div>
@@ -763,6 +763,10 @@ function previewSong(i){
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=i+1;
 }
+function showNowStrip(){
+  nowCover.style.display='';
+  document.getElementById('nowInfo').style.display='';
+}
 function playIdx(songIdx){
   let pos=queue.indexOf(songIdx);
   if(pos===-1){queue=buildQueue(songIdx);pos=queue.indexOf(songIdx);}
@@ -773,6 +777,7 @@ function loadPlay(songIdx){
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=songIdx+1;
+  showNowStrip();
   refreshHighlight(); updateMS(songIdx);
   if(screenNP.classList.contains('active')) updateNPScreen();
 }
@@ -880,9 +885,7 @@ function updateMS(i){
   navigator.mediaSession.setActionHandler('nexttrack',()=>btnNext.click());
 }
 
-// ── Init: preview first song of 30° Grad ──
-curAlbum='grad30';
-previewSong(0);
+// ── Init ──
 curAlbum=null;
 </script>
 </body>
