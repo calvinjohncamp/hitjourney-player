@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14c-lyrics-pan, 15.05.2026 -->
+<!-- Version: v14d-lyrics-smooth, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -160,8 +160,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-down-btn svg{width:28px;height:28px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .np-album-label{
   position:absolute;left:0;right:0;top:152px;text-align:center;
-  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.45)
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.45);
+  transition:opacity .2s;
 }
+#screenNowPlaying.lyrics-open .np-album-label{ opacity:0; pointer-events:none; }
 /* Swipeable cover area */
 .np-cover-wrap{
   display:flex;align-items:center;justify-content:center;
@@ -177,10 +179,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:#0B2A42;
   transition:transform .18s ease,opacity .18s ease;
   display:block;
+  will-change:transform;
 }
 .np-cover.swipe-left{transform:translateX(-60px);opacity:0}
 .np-cover.swipe-right{transform:translateX(60px);opacity:0}
 .np-cover.lyrics-active{touch-action:none;}
+.np-cover.lyrics-active.no-transition{transition:none!important;}
 .np-cover-wrap.lyrics-mode{touch-action:none;}
 /* Song info below cover */
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
@@ -919,7 +923,8 @@ let npPinchScale = 1, npPinchLast = 1, npPinchDist0 = 0, npPinching = false;
 let npTransX = 0, npTransY = 0, npDragStartX = 0, npDragStartY = 0, npDragging = false;
 
 function applyLyricsTransform() {
-  npCoverImg.style.transform = 'scale('+npPinchScale+') translate('+npTransX+'px,'+npTransY+'px)';
+  // translate first, then scale — avoids amplified movement
+  npCoverImg.style.transform = 'translate('+npTransX+'px,'+npTransY+'px) scale('+npPinchScale+')';
 }
 
 function openLyrics() {
@@ -931,6 +936,7 @@ function openLyrics() {
   npCoverImg.src = song.lyrics;
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
+  screenNP.classList.add('lyrics-open');
   npTransX = 0; npTransY = 0;
   npCoverImg.style.transform = 'scale(1)';
   npPinchScale = 1; npPinchLast = 1;
@@ -941,6 +947,7 @@ function closeLyrics() {
   npCoverImg.src = lyricsCoverSrc;
   npCoverImg.classList.remove('lyrics-active');
   npCoverWrap.classList.remove('lyrics-mode');
+  screenNP.classList.remove('lyrics-open');
   npTransX = 0; npTransY = 0;
   npCoverImg.style.transform = 'scale(1)';
   npPinchScale = 1; npPinchLast = 1;
@@ -960,6 +967,7 @@ npCoverWrap.addEventListener('touchstart',e=>{
     npDragging=true;
     npDragStartX=e.touches[0].clientX - npTransX;
     npDragStartY=e.touches[0].clientY - npTransY;
+    npCoverImg.classList.add('no-transition');
     e.preventDefault();
   }
 },{passive:false});
@@ -981,6 +989,7 @@ npCoverWrap.addEventListener('touchmove',e=>{
 npCoverWrap.addEventListener('touchend',e=>{
   if(npDragging && e.touches.length===0){
     npDragging=false;
+    npCoverImg.classList.remove('no-transition');
     return;
   }
   if(npPinching){
@@ -1364,7 +1373,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14c-lyrics-pan';
+  const VERSION = 'v14d-lyrics-smooth';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
