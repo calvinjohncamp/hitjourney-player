@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v11-albumpreview, 15.05.2026 -->
+<!-- Version: albums-grosse-liebe-poesie-v12-swipegimmicks, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -791,8 +791,7 @@ function updateNPScreen(){
 
 // ── Swipe on NP cover ──
 let swipeStartX=0, swipeStartY=0;
-npCoverWrap.addEventListener('touchstart',e=>{
-  swipeStartX=e.touches[0].clientX;
+npCoverWrap.addEventListener('touchstart',e=>{\n  swipeStartX=e.touches[0].clientX;
   swipeStartY=e.touches[0].clientY;
 },{passive:true});
 npCoverWrap.addEventListener('touchend',e=>{
@@ -806,6 +805,23 @@ npCoverWrap.addEventListener('touchend',e=>{
       npCoverImg.classList.add('swipe-right');
       setTimeout(()=>{npCoverImg.classList.remove('swipe-right');btnPrev.click();},180);
     }
+  } else if(dy>60&&Math.abs(dy)>Math.abs(dx)*1.5){ // swipe down → back
+    hideNowPlaying();
+  }
+},{passive:true});
+
+// ── Swipe on player strip: left = next, right = prev ──
+let stripStartX=0, stripStartY=0;
+nowStrip.addEventListener('touchstart',e=>{
+  stripStartX=e.touches[0].clientX;
+  stripStartY=e.touches[0].clientY;
+},{passive:true});
+nowStrip.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-stripStartX;
+  const dy=e.changedTouches[0].clientY-stripStartY;
+  if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
+    if(dx<0) btnNext.click(); // swipe left → next
+    else btnPrev.click();     // swipe right → prev
   }
 },{passive:true});
 
@@ -957,7 +973,7 @@ curAlbum=null;
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v11-albumpreview';
+  const VERSION = 'v12-swipegimmicks';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
