@@ -46,8 +46,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-top{
   display:flex;flex-direction:column;align-items:center;
   padding:20px 16px 16px;
-  background:linear-gradient(180deg,#0d2a3e 0%,#02111E 100%);
-  border-bottom:1px solid rgba(133,172,201,.08);
+  background:transparent;
+  border-bottom:none;
   gap:12px;
   max-width:680px;
   margin:0 auto;
@@ -131,7 +131,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 max(env(safe-area-inset-bottom) + 10px, 20px);
+  padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 14px);
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -183,10 +183,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* Lower controls strip: compact, anchored to the physical bottom */
 .hj-controls-strip{
   background:transparent;
-  padding-bottom:max(env(safe-area-inset-bottom), 10px);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 .hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 0}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 14px}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
@@ -212,8 +212,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-player::after{
   content:'';
   position:absolute;
-  left:0;right:0;bottom:calc(-1 * max(env(safe-area-inset-bottom), 34px));
-  height:max(env(safe-area-inset-bottom), 34px);
+  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
   background:rgba(6,20,32,.98);
 }
 
