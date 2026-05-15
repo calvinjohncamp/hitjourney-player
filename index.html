@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14-lyrics, 15.05.2026 -->
+<!-- Version: v14b-lyrics-swipe, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -977,7 +977,7 @@ npCoverWrap.addEventListener('touchend',e=>{
   } else if(dy>60&&absDy>absDx*1.2){ // swipe down
     if(lyricsOpen) closeLyrics();
     else hideNowPlaying();
-  } else if(absDx>absDy*1.5&&absDx>40){ // swipe left/right
+  } else if(!lyricsOpen && absDx>absDy*1.5&&absDx>40){ // swipe left/right — nur ohne Lyrics
     if(dx<0){
       npCoverImg.classList.add('swipe-left');
       setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
@@ -1342,7 +1342,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14-lyrics';
+  const VERSION = 'v14b-lyrics-swipe';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
