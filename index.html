@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v12-swipe-gimmicks, 15.05.2026 -->
+<!-- Version: v13-archive, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -43,6 +43,59 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
 .home-bottom-pad{height:220px}
+
+/* ══ ARCHIVE ══ */
+#screenArchive{padding-top:0}
+.arc-sticky{
+  position:sticky;top:0;z-index:10;
+  background:rgba(6,20,32,1);
+  padding:10px 14px 0;
+  box-shadow:0 4px 12px rgba(6,20,32,.9);
+}
+.arc-search{
+  display:flex;align-items:center;gap:8px;
+  background:#0B2A42;border-radius:10px;
+  padding:8px 12px;margin-bottom:8px;
+}
+.arc-search svg{width:16px;height:16px;stroke:#85ACC9;stroke-width:2;fill:none;flex-shrink:0}
+.arc-search input{
+  flex:1;background:none;border:none;outline:none;
+  color:#f1ecdf;font-size:15px;
+  caret-color:#85ACC9;
+}
+.arc-search input::placeholder{color:rgba(133,172,201,.4)}
+.arc-search .arc-clear{
+  display:none;width:18px;height:18px;
+  align-items:center;justify-content:center;
+  color:rgba(133,172,201,.5);font-size:18px;cursor:pointer;line-height:1;
+  flex-shrink:0;
+}
+.arc-search.has-value .arc-clear{display:flex}
+.arc-letters{
+  display:flex;gap:0;justify-content:space-between;
+  padding:0 2px 8px;overflow-x:auto;
+}
+.arc-letters::-webkit-scrollbar{display:none}
+.arc-letter{
+  min-width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  color:rgba(133,172,201,.45);
+  border-radius:5px;cursor:pointer;transition:background .12s,color .12s;
+  flex-shrink:0;
+}
+.arc-letter:active,.arc-letter.active{background:rgba(133,172,201,.15);color:#cfe5f5}
+.arc-section-label{
+  padding:10px 16px 4px 16px;
+  font-size:12px;font-weight:700;
+  color:rgba(133,172,201,.4);
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.arc-no-results{
+  text-align:center;color:rgba(133,172,201,.35);
+  font-size:15px;padding:40px 20px;
+}
+#arcList{max-width:680px;margin:0 auto;width:100%}
 
 /* ══ TRACKLIST ══ */
 /* Album header: cover centered, title+meta centered below */
@@ -251,6 +304,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- HOME -->
 <div class="screen active" id="screenHome">
   <div class="home-grid">
+    <div class="home-card wide" id="archiveCard">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
+    </div>
     <div class="home-card square" data-album="grad30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad" loading="eager"/>
     </div>
@@ -270,6 +326,20 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
     </div>
   </div>
+  <div class="home-bottom-pad"></div>
+</div>
+
+<!-- ARCHIVE -->
+<div class="screen" id="screenArchive">
+  <div class="arc-sticky">
+    <div class="arc-search" id="arcSearchWrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="arcInput" placeholder="Song suchen …" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <span class="arc-clear" id="arcClear">×</span>
+    </div>
+    <div class="arc-letters" id="arcLetters"></div>
+  </div>
+  <div id="arcList"></div>
   <div class="home-bottom-pad"></div>
 </div>
 
@@ -698,6 +768,7 @@ const screenNP   = document.getElementById('screenNowPlaying');
 // ── State ──
 let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
 let prevScreen = 'home'; // track where to go back from NP
+let arcQueue=[], arcQueueIdx=-1;
 
 // ── Helpers ──
 function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
@@ -714,6 +785,7 @@ function buildQueue(keep){
 function showHome(){
   screenHome.classList.add('active');
   screenTL.classList.remove('active');
+  screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
   backBtn.classList.remove('visible');
   logoHome.style.display='';
@@ -739,6 +811,7 @@ function showAlbum(key){
   });
   screenHome.classList.remove('active');
   screenNP.classList.remove('active');
+  screenArchive.classList.remove('active');
   screenTL.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
@@ -756,6 +829,7 @@ function showNowPlaying(){
   if(!curAlbum) return;
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
+  screenArchive.classList.remove('active');
   screenNP.classList.add('active');
   mainHeader.style.display='none';
   playerBar.classList.remove('visible');
@@ -766,6 +840,7 @@ function hideNowPlaying(){
   if(audio.src) playerBar.classList.add('visible');
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
+  else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
   else { screenTL.classList.add('active'); }
 }
 
@@ -781,11 +856,18 @@ npDownBtn.addEventListener('click', hideNowPlaying);
 
 // ── Now Playing screen update ──
 function updateNPScreen(){
-  if(queueIdx<0||!curAlbum)return;
-  const s=ALBUMS[curAlbum].songs[queue[queueIdx]];
+  if(queueIdx<0&&arcQueueIdx<0)return;
+  let s;
+  if(prevScreen==='archive'&&arcQueueIdx>=0){
+    s=arcQueue[arcQueueIdx];
+    npAlbumLabel.textContent='the archive';
+  } else {
+    if(!curAlbum||queueIdx<0)return;
+    s=ALBUMS[curAlbum].songs[queue[queueIdx]];
+    npAlbumLabel.textContent=ALBUMS[curAlbum].title;
+  }
   npCover.src=s.cover;
   npTitle.textContent=s.title;
-  npAlbumLabel.textContent=ALBUMS[curAlbum].title;
   npBtnPlay.classList.toggle('playing',!audio.paused);
   npBtnShuffle.classList.toggle('active',shuffleOn);
   syncRepeatBtn(npBtnRepeat);
@@ -976,13 +1058,155 @@ function updateMS(i){
   navigator.mediaSession.setActionHandler('nexttrack',()=>btnNext.click());
 }
 
-// ── Init ──
-curAlbum=null;
+// ── Archive ──
+const screenArchive = document.getElementById('screenArchive');
+const arcInput      = document.getElementById('arcInput');
+const arcClear      = document.getElementById('arcClear');
+const arcSearchWrap = document.getElementById('arcSearchWrap');
+const arcLetters    = document.getElementById('arcLetters');
+const arcList       = document.getElementById('arcList');
+
+// Build flat list of all unique songs from every album, sorted A→Z
+function buildAllSongs(){
+  const seen = new Set();
+  const all = [];
+  const albumOrder = ['top50','grad30','stories30','grosseLiebe','poesie','top100'];
+  albumOrder.forEach(key=>{
+    ALBUMS[key].songs.forEach(s=>{
+      const id = s.mp3; // use mp3 URL as unique key
+      if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:key}); }
+    });
+  });
+  all.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
+  return all;
+}
+const ALL_SONGS = buildAllSongs();
+
+// Available first letters
+const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+ALPHABET.forEach(l=>{
+  const el = document.createElement('span');
+  el.className = 'arc-letter' + (availLetters.includes(l)?'':' unavailable');
+  el.textContent = l;
+  el.style.opacity = availLetters.includes(l)?'1':'0.2';
+  el.style.pointerEvents = availLetters.includes(l)?'':'none';
+  el.addEventListener('click',()=>scrollToLetter(l));
+  arcLetters.appendChild(el);
+});
+
+function renderArchiveList(songs){
+  arcList.innerHTML='';
+  if(!songs.length){
+    arcList.innerHTML='<div class="arc-no-results">Kein Song gefunden</div>';
+    return;
+  }
+  let lastLetter='';
+  songs.forEach((s,i)=>{
+    const letter = s.title[0].toUpperCase();
+    if(letter!==lastLetter){
+      lastLetter=letter;
+      const lbl=document.createElement('div');
+      lbl.className='arc-section-label';
+      lbl.dataset.letter=letter;
+      lbl.textContent=letter;
+      arcList.appendChild(lbl);
+    }
+    const row=document.createElement('div');
+    row.className='tl-track'; row.dataset.arcIdx=i;
+    row.innerHTML=
+      '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
+      '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
+      '<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>'+
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+    row.addEventListener('click',()=>playArchiveSong(i,songs));
+    arcList.appendChild(row);
+  });
+}
+
+function playArchiveSong(idx, songList){
+  curAlbum = songList[idx].albumKey;
+  const targetSong = songList[idx];
+  // build queue from this song list
+  arcQueue = songList.map(s=>s);
+  arcQueueIdx = idx;
+  // load directly
+  audio.src=targetSong.mp3; audio.load(); audio.play().catch(()=>{});
+  nowCover.src=targetSong.cover; nowTitle.textContent=targetSong.title;
+  nowNum.textContent=idx+1;
+  showNowStrip();
+  playerBar.classList.add('visible');
+  // Highlight
+  document.querySelectorAll('#arcList .tl-track').forEach(row=>{
+    const i=parseInt(row.dataset.arcIdx);
+    row.classList.toggle('active',i===arcQueueIdx);
+    row.classList.toggle('playing',i===arcQueueIdx);
+  });
+  updateMS_archive(targetSong);
+  prevScreen='archive';
+}
+function updateMS_archive(s){
+  if(!('mediaSession' in navigator))return;
+  navigator.mediaSession.metadata=new MediaMetadata({
+    title:s.title,artist:'BRO · Jörn Kämper',album:'the archive',
+    artwork:[{src:s.cover,sizes:'400x400',type:'image/jpeg'}]
+  });
+}
+
+function scrollToLetter(l){
+  arcInput.value=''; arcSearchWrap.classList.remove('has-value');
+  renderArchiveList(ALL_SONGS);
+  setTimeout(()=>{
+    const lbl=arcList.querySelector('[data-letter="'+l+'"]');
+    if(lbl) lbl.scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
+}
+
+arcInput.addEventListener('input',()=>{
+  const q=arcInput.value.trim().toLowerCase();
+  arcSearchWrap.classList.toggle('has-value',q.length>0);
+  if(!q){ renderArchiveList(ALL_SONGS); return; }
+  renderArchiveList(ALL_SONGS.filter(s=>s.title.toLowerCase().includes(q)));
+});
+arcClear.addEventListener('click',()=>{
+  arcInput.value='';
+  arcSearchWrap.classList.remove('has-value');
+  renderArchiveList(ALL_SONGS);
+  arcInput.focus();
+});
+
+function showArchive(){
+  renderArchiveList(ALL_SONGS);
+  screenHome.classList.remove('active');
+  screenTL.classList.remove('active');
+  screenNP.classList.remove('active');
+  screenArchive.classList.add('active');
+  backBtn.classList.add('visible');
+  logoHome.style.display='none';
+  makingWaves.style.display='none';
+  headerRight.textContent='the archive';
+  mainHeader.style.display='';
+  screenArchive.scrollTop=0;
+  prevScreen='archive';
+}
+function hideArchive(){
+  screenArchive.classList.remove('active');
+  arcInput.value='';
+  arcSearchWrap.classList.remove('has-value');
+  showHome();
+}
+
+document.getElementById('archiveCard').addEventListener('click',showArchive);
+
+// Back button: archive → home (runs before existing TL → home handler, guard by active check)
+backBtn.addEventListener('click',()=>{
+  if(screenArchive.classList.contains('active')) hideArchive();
+});
 </script>
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v12-swipe-gimmicks';
+  const VERSION = 'v13-archive';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
