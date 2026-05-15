@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v13j-fix, 15.05.2026 -->
+<!-- Version: v13k-clean, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -235,8 +235,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* Upper now-playing strip: slightly lighter */
 .hj-now-strip{
   background:rgba(18,48,72,.98);
+  border:none;
   border-top:1px solid rgba(133,172,201,.18);
   cursor:pointer;
+  width:100%;
+  text-align:left;
+  padding:0;
+  display:block;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
 }
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15)}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
@@ -408,7 +415,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- Player Bar -->
 <div class="hj-player" id="playerBar">
   <!-- Upper strip: now playing (clickable → Now Playing screen) -->
-  <div class="hj-now-strip" id="nowStrip">
+  <button class="hj-now-strip" id="nowStrip">
     <div class="hj-prog-wrap"><div class="hj-prog-fill" id="progFill"></div></div>
     <div class="hj-now">
       <div class="hj-now-num">
@@ -420,7 +427,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
         <div class="hj-now-artist">Jörn Kämper</div>
       </div>
     </div>
-  </div>
+  </button>
   <!-- Lower strip: controls -->
   <div class="hj-controls-strip">
     <div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
@@ -813,11 +820,8 @@ function showAlbum(key){
       (s.cover==="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"?'<div class="tl-thumb no-cover"></div>':'<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>')+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
     row.addEventListener('click',()=>{
-      if(queueIdx>=0 && queue[queueIdx]===i){
-        showNowPlaying(); // bereits aktiver Song → NP öffnen
-      } else {
-        playIdx(i);
-      }
+      if(queueIdx>=0 && queue[queueIdx]===i) showNowPlaying();
+      else playIdx(i);
     });
     tlList.appendChild(row);
   });
@@ -861,11 +865,11 @@ function hideNowPlaying(){
 document.querySelectorAll('[data-album]').forEach(el=>el.addEventListener('click',()=>showAlbum(el.dataset.album)));
 backBtn.addEventListener('click',()=>{
   if(screenNP.classList.contains('active')) hideNowPlaying();
+  else if(screenArchive.classList.contains('active')) hideArchive();
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
-// nowStrip click → showNowPlaying (für Mouse/Desktop und alle Touch-Geräte)
-nowStrip.addEventListener('click', showNowPlaying);
+// nowStrip tap → showNowPlaying handled in swipe block below
 npDownBtn.addEventListener('click', hideNowPlaying);
 
 // ── Now Playing screen update ──
@@ -936,12 +940,12 @@ nowStrip.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-stripStartX;
   const dy=e.changedTouches[0].clientY-stripStartY;
   if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
-    e.preventDefault(); // verhindert nachfolgendes click-Event
     if(dx<0){ btnNext.click(); } // swipe left → next
     else     { btnPrev.click(); } // swipe right → prev
+  } else if(!stripTouchMoved){
+    showNowPlaying(); // kein Swipe → normaler Tap → NP öffnen
   }
-  // Einfacher Tap: click-Event übernimmt das NP-Öffnen
-},{passive:false});
+},{passive:true});
 
 // ── Playback ──
 function previewSong(i){
@@ -1374,11 +1378,8 @@ function renderArchiveList(songs){
       (s.cover==="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"?'<div class="tl-thumb no-cover"></div>':'<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>')+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
     row.addEventListener('click',()=>{
-      if(prevScreen==='archive' && arcQueueIdx===i){
-        showNowPlaying();
-      } else {
-        playArchiveSong(i,songs);
-      }
+      if(prevScreen==='archive' && arcQueueIdx===i) showNowPlaying();
+      else playArchiveSong(i,songs);
     });
     arcList.appendChild(row);
   });
@@ -1458,16 +1459,11 @@ function hideArchive(){
 }
 
 document.getElementById('archiveCard').addEventListener('click',showArchive);
-
-// Back button: archive → home (runs before existing TL → home handler, guard by active check)
-backBtn.addEventListener('click',()=>{
-  if(screenArchive.classList.contains('active')) hideArchive();
-});
 </script>
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v13j-fix';
+  const VERSION = 'v13k-clean';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
