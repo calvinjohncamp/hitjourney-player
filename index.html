@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v9-scrollfix2, 15.05.2026 -->
+<!-- Version: albums-grosse-liebe-poesie-v10-playershow, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -28,11 +28,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Screens ── */
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
+#screenHome{padding-top:14px}
+#screenTracklist{padding-top:8px}
 .screen.active{display:block}
 .screen::-webkit-scrollbar{display:none}
 
 /* ══ HOME ══ */
-.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;padding-top:16px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;padding-top:0}
 
 .home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
 .home-card:active{transform:scale(.95);opacity:.85}
@@ -165,6 +167,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;flex-direction:column;
   background:rgba(6,20,32,1);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transform:translateY(100%);
+  transition:transform .3s ease;
+}
+.hj-player.visible{
+  transform:translateY(0);
 }
 /* Upper now-playing strip: slightly lighter */
 .hj-now-strip{
@@ -747,12 +754,12 @@ function showNowPlaying(){
   screenTL.classList.remove('active');
   screenNP.classList.add('active');
   mainHeader.style.display='none';
-  playerBar.style.display='none';
+  playerBar.classList.remove('visible');
   updateNPScreen();
 }
 function hideNowPlaying(){
   mainHeader.style.display='';
-  playerBar.style.display='';
+  if(audio.src) playerBar.classList.add('visible');
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else { screenTL.classList.add('active'); }
@@ -834,6 +841,7 @@ function loadPlay(songIdx){
   nowCover.src=s.cover; nowTitle.textContent=s.title;
   nowNum.textContent=songIdx+1;
   showNowStrip();
+  playerBar.classList.add('visible');
   refreshHighlight(); updateMS(songIdx);
   if(screenNP.classList.contains('active')) updateNPScreen();
 }
@@ -947,7 +955,7 @@ curAlbum=null;
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v9-scrollfix2';
+  const VERSION = 'v10-playershow';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
