@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14i-ipad-label-fix2, 15.05.2026 -->
+<!-- Version: v14d-lyrics-smooth, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -159,7 +159,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   overflow:hidden;
 }
 #screenNowPlaying.active{display:flex;}
-/* ── Now Playing: iPhone default (original, unverändert) ── */
 .np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
 .np-down-btn{position:absolute;left:18px;top:82px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
 .np-down-btn svg{width:28px;height:28px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -176,21 +175,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   touch-action:manipulation;
   user-select:none;
   flex-shrink:0;
-}
-
-/* ── Now Playing: iPad (≥600px) – Album-Label im Flex-Flow, kein Overlap ── */
-@media(min-width:600px){
-  .np-header{position:relative;width:100%;height:auto;flex-shrink:0;overflow:visible}
-  .np-down-btn{top:14px}
-  .np-album-label{
-    position:static;
-    display:block;
-    padding:50px 20px 0;
-    flex-shrink:0;
-  }
-  .np-cover-wrap{
-    padding:20px 20px 0;
-  }
 }
 .np-cover{
   width:min(58vh,88vw);height:min(58vh,88vw);
@@ -1393,7 +1377,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14i-ipad-label-fix2';
+  const VERSION = 'v14g-ui-fixes2';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
