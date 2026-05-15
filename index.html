@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14i-ipad-label-fix2, 15.05.2026 -->
+<!-- Version: v14j-ipad-spacing, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -185,7 +185,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .np-album-label{
     position:static;
     display:block;
-    padding:50px 20px 0;
+    padding:75px 20px 0;
     flex-shrink:0;
   }
   .np-cover-wrap{
@@ -1393,7 +1393,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14i-ipad-label-fix2';
+  const VERSION = 'v14j-ipad-spacing';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
