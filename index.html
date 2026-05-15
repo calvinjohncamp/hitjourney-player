@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14h-ipad-albumlabel-fix, 15.05.2026 -->
+<!-- Version: v14i-ipad-label-fix2, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -159,24 +159,38 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   overflow:hidden;
 }
 #screenNowPlaying.active{display:flex;}
-.np-header{position:relative;width:100%;height:54px;flex-shrink:0;z-index:5}
-.np-down-btn{position:absolute;left:18px;top:14px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
+/* ── Now Playing: iPhone default (original, unverändert) ── */
+.np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
+.np-down-btn{position:absolute;left:18px;top:82px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
 .np-down-btn svg{width:28px;height:28px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .np-album-label{
-  display:block;text-align:center;
+  position:absolute;left:0;right:0;top:152px;text-align:center;
   font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.45);
   transition:opacity .2s;
-  padding:10px 20px 0;
-  flex-shrink:0;
 }
 #screenNowPlaying.lyrics-open .np-album-label{ opacity:0; pointer-events:none; }
 /* Swipeable cover area */
 .np-cover-wrap{
   display:flex;align-items:center;justify-content:center;
-  padding:12px 20px 0;
+  padding:126px 20px 0;
   touch-action:manipulation;
   user-select:none;
   flex-shrink:0;
+}
+
+/* ── Now Playing: iPad (≥600px) – Album-Label im Flex-Flow, kein Overlap ── */
+@media(min-width:600px){
+  .np-header{position:relative;width:100%;height:auto;flex-shrink:0;overflow:visible}
+  .np-down-btn{top:14px}
+  .np-album-label{
+    position:static;
+    display:block;
+    padding:50px 20px 0;
+    flex-shrink:0;
+  }
+  .np-cover-wrap{
+    padding:20px 20px 0;
+  }
 }
 .np-cover{
   width:min(58vh,88vw);height:min(58vh,88vw);
@@ -378,8 +392,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <button class="np-down-btn" id="npDownBtn">
       <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
     </button>
+    <span class="np-album-label" id="npAlbumLabel"></span>
   </div>
-  <span class="np-album-label" id="npAlbumLabel"></span>
   <div class="np-cover-wrap" id="npCoverWrap">
     <img class="np-cover" id="npCover" src="" alt=""/>
   </div>
@@ -1379,7 +1393,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14h-ipad-albumlabel-fix';
+  const VERSION = 'v14i-ipad-label-fix2';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
