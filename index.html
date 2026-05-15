@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v1, 15.05.2026 -->
+<!-- Version: albums-grosse-liebe-poesie-v3-coverfix, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -247,17 +247,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="home-card square" data-album="stories30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
     </div>
-    <div class="home-card square" data-album="grosseLiebe">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="poesie">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
-    </div>
     <div class="home-card square" data-album="top50">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
     </div>
     <div class="home-card square" data-album="top100">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100" loading="eager"/>
+    </div>
+    <div class="home-card square" data-album="grosseLiebe">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe" loading="eager"/>
+    </div>
+    <div class="home-card square" data-album="poesie">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
     </div>
   </div>
   <div class="home-bottom-pad"></div>
@@ -596,9 +596,9 @@ const SONGS_GROSSE_LIEBE = [
   { title: 'Wunder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wunder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wunder%20-%20Cover.jpg' },
   { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg' },
   { title: 'Licht aus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/licht-aus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Cover.jpg' },
-  { title: 'Im Rückspiegel schön', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-rueckspiegel-schoen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Rueckspiegel%20schoen%20-%20Cover.jpg' },
+  { title: 'Im Rückspiegel schön', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-rueckspiegel-schoen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20R%C3%BCckspiegel%20sch%C3%B6n%20-%20Cover.jpg' },
   { title: 'Sternenstaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sternenstaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sternenstaub%20-%20Cover.jpg' },
-  { title: 'Prinzessin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/prinzessin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Cover.jpg' },
+  { title: 'Prinzessin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/prinzessin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Lara%20Wolff%20-%20Cover.jpg' },
   { title: 'Nebelmond', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nebelmond.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nebelmond%20-%20Cover.jpg' },
   { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg' },
   { title: 'Klartext', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/klartext.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Cover.jpg' },
@@ -608,12 +608,12 @@ const SONGS_GROSSE_LIEBE = [
   { title: 'Salz auf meinen Lippen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/salz-auf-meinen-lippen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Salz%20auf%20meinen%20Lippen%20-%20Cover.jpg' },
   { title: 'Alles klar', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-klar.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alles%20klar%20-%20Cover.jpg' },
   { title: 'Knistern', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/knistern.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Knistern%20-%20Cover.jpg' },
-  { title: 'Krokusse im März', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/krokusse-im-maerz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20Maerz%20-%20Cover.jpg' },
+  { title: 'Krokusse im März', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/krokusse-im-maerz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20M%C3%A4rz%20-%20Cover.jpg' },
   { title: 'Dann kam der Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dann-kam-der-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dann%20kam%20der%20Regen%20-%20Cover.jpg' },
   { title: 'Keine Orchideen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keine-orchideen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keine%20Orchideen%20-%20Cover.jpg' },
   { title: 'Milchglas', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/milchglas.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Milchglas%20-%20Cover.jpg' },
   { title: 'Flipperkugeln', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/flipperkugeln.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flipperkugeln%20-%20Cover.jpg' },
-  { title: 'Susie 19 vermisst', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/susie-19-vermisst.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Susie%2019%20vermisst%20-%20Cover.jpg' },
+  { title: 'Susie, 19, vermisst', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/susie-19-vermisst.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Susie%2C%2019%2C%20vermisst%20-%20Cover.jpg' },
   { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg' },
 ];
 
@@ -623,12 +623,12 @@ const SONGS_POESIE = [
   { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg' },
   { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
   { title: 'Willkommen und Abschied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/willkommen-und-abschied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Willkommen%20und%20Abschied%20-%20Cover.jpg' },
-  { title: 'Röslein Rot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/roeslein-rot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Roeslein%20Rot%20-%20Cover.jpg' },
-  { title: 'Abendlied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/abendlied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abendlied%20-%20Cover.jpg' },
+  { title: 'Röslein Rot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/roeslein-rot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/R%C3%B6slein%20Rot%20-%20Cover.jpg' },
+  { title: 'Abendlied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/abendlied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/abendlied%20-%20cover.jpg' },
   { title: 'Mondnacht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mondnacht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mondnacht%20-%20Cover.jpg' },
   { title: 'Der Lindenbaum', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-lindenbaum.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Lindenbaum%20-%20Cover.jpg' },
   { title: 'Lorelei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/lorelei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lorelei%20-%20Cover.jpg' },
-  { title: 'Hörst du', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hoerst-du.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hoerst%20du%20-%20Cover.jpg' },
+  { title: 'Hörst du', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hoerst-du.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/H%C3%B6rst%20du%20-%20Cover.jpg' },
 ];
 
 const ALBUMS = {
