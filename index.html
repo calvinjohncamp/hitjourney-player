@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v13-archive, 15.05.2026 -->
+<!-- Version: v13c-letters, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -72,19 +72,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .arc-search.has-value .arc-clear{display:flex}
 .arc-letters{
-  display:flex;gap:0;justify-content:space-between;
-  padding:0 2px 8px;overflow-x:auto;
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  gap:3px 2px;
+  padding:0 0 10px;
 }
-.arc-letters::-webkit-scrollbar{display:none}
 .arc-letter{
-  min-width:24px;height:24px;
+  height:28px;
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;
-  color:rgba(133,172,201,.45);
-  border-radius:5px;cursor:pointer;transition:background .12s,color .12s;
-  flex-shrink:0;
+  font-size:12px;font-weight:700;
+  color:rgba(133,172,201,.55);
+  border-radius:6px;cursor:pointer;
+  transition:background .12s,color .12s;
+  -webkit-tap-highlight-color:transparent;
 }
-.arc-letter:active,.arc-letter.active{background:rgba(133,172,201,.15);color:#cfe5f5}
+.arc-letter:active,.arc-letter.active{background:rgba(133,172,201,.18);color:#cfe5f5}
 .arc-section-label{
   padding:10px 16px 4px 16px;
   font-size:12px;font-weight:700;
@@ -304,14 +306,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- HOME -->
 <div class="screen active" id="screenHome">
   <div class="home-grid">
-    <div class="home-card wide" id="archiveCard">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
-    </div>
     <div class="home-card square" data-album="grad30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad" loading="eager"/>
     </div>
     <div class="home-card square" data-album="stories30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
+    </div>
+    <div class="home-card wide" id="archiveCard">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
     </div>
     <div class="home-card square" data-album="top50">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
@@ -1082,18 +1084,24 @@ function buildAllSongs(){
 }
 const ALL_SONGS = buildAllSongs();
 
-// Available first letters
-const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
+// Letter strip: 3 rows × 10 cols = 30 cells; pad with empty cells after Z
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
 ALPHABET.forEach(l=>{
   const el = document.createElement('span');
-  el.className = 'arc-letter' + (availLetters.includes(l)?'':' unavailable');
+  const available = availLetters.includes(l);
+  el.className = 'arc-letter';
   el.textContent = l;
-  el.style.opacity = availLetters.includes(l)?'1':'0.2';
-  el.style.pointerEvents = availLetters.includes(l)?'':'none';
-  el.addEventListener('click',()=>scrollToLetter(l));
+  if(!available){ el.style.opacity='0.18'; el.style.pointerEvents='none'; }
+  else { el.addEventListener('click',()=>scrollToLetter(l)); }
   arcLetters.appendChild(el);
 });
+// pad to 27 cells (3 rows × 9)
+for(let i=ALPHABET.length; i<27; i++){
+  const sp=document.createElement('span');
+  sp.className='arc-letter';
+  arcLetters.appendChild(sp);
+}
 
 function renderArchiveList(songs){
   arcList.innerHTML='';
@@ -1206,7 +1214,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v13-archive';
+  const VERSION = 'v13c-letters';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
