@@ -185,7 +185,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:transparent;
   padding-bottom:env(safe-area-inset-bottom, 0px);
 }
-.hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
+.hj-time{display:flex;justify-content:space-between;padding:10px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
 .hj-controls{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 18px}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
@@ -323,8 +323,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <div class="hj-now-num">
         <span class="hj-now-numtxt" id="nowNum">—</span>
       </div>
-      <img class="hj-now-cover" id="nowCover" src="" alt="" style="display:none"/>
-      <div class="hj-now-info" id="nowInfo" style="display:none">
+      <img class="hj-now-cover" id="nowCover" src="" alt="" style="visibility:hidden"/>
+      <div class="hj-now-info" id="nowInfo" style="visibility:hidden">
         <div class="hj-now-title" id="nowTitle"></div>
         <div class="hj-now-artist">Jörn Kämper</div>
       </div>
@@ -764,8 +764,8 @@ function previewSong(i){
   nowNum.textContent=i+1;
 }
 function showNowStrip(){
-  nowCover.style.display='';
-  document.getElementById('nowInfo').style.display='';
+  nowCover.style.visibility='';
+  document.getElementById('nowInfo').style.visibility='';
 }
 function playIdx(songIdx){
   let pos=queue.indexOf(songIdx);
