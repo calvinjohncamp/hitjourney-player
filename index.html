@@ -9,14 +9,14 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v8-cachebust, 15.05.2026 -->
+<!-- Version: albums-grosse-liebe-poesie-v9-scrollfix2, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
 body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:0}
 
 /* ── Header ── */
-.hj-header{display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;box-shadow:0 4px 16px rgba(6,20,32,.6)}
+.hj-header{display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;background:rgba(6,20,32,1);box-shadow:0 4px 16px rgba(6,20,32,.9);position:relative;z-index:10}
 .hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
 .hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
 .hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
@@ -40,7 +40,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:24px;padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+.home-bottom-pad{height:220px}
 
 /* ══ TRACKLIST ══ */
 /* Album header: cover centered, title+meta centered below */
@@ -85,7 +85,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:24px;padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+.tl-bottom-pad{height:220px}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -947,7 +947,7 @@ curAlbum=null;
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v8-cachebust';
+  const VERSION = 'v9-scrollfix2';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
