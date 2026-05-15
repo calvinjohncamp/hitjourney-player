@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14c-lyrics-tap, 15.05.2026 -->
+<!-- Version: v14d-lyrics-touch, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -166,7 +166,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-cover-wrap{
   display:flex;align-items:center;justify-content:center;
   padding:126px 20px 0;
-  touch-action:pan-y;
+  touch-action:manipulation;
   user-select:none;
   flex-shrink:0;
 }
@@ -931,6 +931,9 @@ npCoverWrap.addEventListener('touchend',e=>{
   const dy=e.changedTouches[0].clientY-swipeStartY;
   const absDx=Math.abs(dx), absDy=Math.abs(dy);
   if(absDx<10 && absDy<10){ // TAP → lyrics toggle
+    // Debug: kurzer Farbblitz damit wir sehen ob Tap erkannt wird
+    npCoverImg.style.opacity='0.4';
+    setTimeout(()=>{ npCoverImg.style.opacity='1'; },200);
     if(lyricsOpen) closeLyrics();
     else openLyrics();
   } else if(dy>60&&absDy>absDx*1.2){ // swipe down → zurück
@@ -1387,7 +1390,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14c-lyrics-tap';
+  const VERSION = 'v14d-lyrics-touch';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
