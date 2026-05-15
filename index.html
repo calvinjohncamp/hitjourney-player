@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v14a-lyrics-sheet, 15.05.2026 -->
+<!-- Version: v14b-lyrics-swap, 15.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -153,7 +153,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-direction:column;
   height:100%;
   overflow:hidden;
-  position:relative;
 }
 #screenNowPlaying.active{display:flex;}
 .np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
@@ -181,45 +180,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .np-cover.swipe-left{transform:translateX(-60px);opacity:0}
 .np-cover.swipe-right{transform:translateX(60px);opacity:0}
-
-/* ── Lyrics Sheet ── */
-.np-lyrics-wrap{
-  position:absolute;
-  top:0;left:0;right:0;bottom:0;
-  background:rgba(6,20,32,1);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:50;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .25s ease;
-  overflow:hidden;
-}
-.np-lyrics-wrap.visible{
-  opacity:1;
-  pointer-events:auto;
-}
-.np-lyrics-img{
-  width:100%;
-  max-height:100%;
-  object-fit:contain;
-  display:block;
-  transform-origin:center center;
+/* Lyrics mode: cover becomes lyrics sheet */
+.np-cover.lyrics-active{
   touch-action:none;
-  user-select:none;
-  -webkit-user-select:none;
+  cursor:zoom-in;
+  transition:none;
 }
-.np-lyrics-hint{
-  position:absolute;
-  bottom:14px;right:16px;
-  font-size:10px;font-weight:600;letter-spacing:.12em;
-  color:rgba(133,172,201,.38);
-  text-transform:uppercase;
-  pointer-events:none;
-  opacity:0;transition:opacity .6s;
+.np-cover-wrap.lyrics-mode{
+  touch-action:none;
 }
-.np-lyrics-hint.show{opacity:1;}
+
 
 /* Song info below cover */
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
@@ -411,11 +381,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </div>
   <div class="np-cover-wrap" id="npCoverWrap">
     <img class="np-cover" id="npCover" src="" alt=""/>
-  </div>
-  <!-- Lyrics Sheet Overlay -->
-  <div class="np-lyrics-wrap" id="npLyricsWrap">
-    <img class="np-lyrics-img" id="npLyricsImg" src="" alt="Lyrics Sheet"/>
-    <span class="np-lyrics-hint" id="npLyricsHint">tippen zum schließen</span>
   </div>
   <div class="np-info">
     <div class="np-title" id="npTitle"></div>
@@ -976,128 +941,100 @@ npCoverWrap.addEventListener('touchend',e=>{
   }
 },{passive:true});
 
-// ── Lyrics Sheet (Phase 11) ──
-const npLyricsWrap = document.getElementById('npLyricsWrap');
-const npLyricsImg  = document.getElementById('npLyricsImg');
-const npLyricsHint = document.getElementById('npLyricsHint');
+// ── Lyrics Sheet — Cover-Swap (Phase 11) ──
 let lyricsOpen = false;
-let lyricsHintTimer = null;
+let lyricsCoverUrl = '';   // saved original cover src
+let npPinchScale = 1;
+let npPinchLast  = 1;
+let npPinchDist0 = 0;
+let npPinching   = false;
 
-// Derive lyrics URL from mp3 path
 function getLyricsUrl(song) {
-  if (!song || !song.mp3) return null;
-  return song.mp3
-    .replace('/songs/', '/artwork/')
-    .replace('.mp3', '-lyrics.jpg');
+  if (!song || !song.cover) return null;
+  // Pattern: "…/artwork/Sehnsucht - Cover.jpg" → "…/artwork/Sehnsucht - Lyrics.jpg"
+  return song.cover.replace(/ - Cover\.jpg$/i, ' - Lyrics.jpg');
 }
 
-// Current song helper
 function getCurrentSong() {
-  if (isArchiveMode()) {
-    return arcQueue[arcQueueIdx] || null;
-  }
-  if (curAlbum && queueIdx >= 0) {
-    return ALBUMS[curAlbum].songs[queue[queueIdx]] || null;
-  }
+  if (isArchiveMode()) return arcQueue[arcQueueIdx] || null;
+  if (curAlbum && queueIdx >= 0) return ALBUMS[curAlbum].songs[queue[queueIdx]] || null;
   return null;
 }
 
-// Open lyrics sheet
 function openLyrics() {
   const song = getCurrentSong();
   if (!song) return;
   const url = getLyricsUrl(song);
-  if (!url) return;
-
-  // Pre-load image — only show if it actually exists on S3
-  const testImg = new Image();
-  testImg.onload = () => {
-    npLyricsImg.src = url;
-    // reset any previous zoom
-    npLyricsImg.style.transform = 'scale(1)';
-    npLyricsImg.style.transformOrigin = 'center center';
-    currentScale = 1;
-    lastScale = 1;
-    npLyricsWrap.classList.add('visible');
-    screenNP.classList.add('lyrics-open');
+  if (!url || url === song.cover) return;
+  // Pre-check: only swap if the lyrics image actually exists on S3
+  const test = new Image();
+  test.onload = () => {
+    lyricsCoverUrl = npCoverImg.src;
+    npCoverImg.src = url;
+    npCoverImg.classList.add('lyrics-active');
+    npCoverWrap.classList.add('lyrics-mode');
+    npCoverImg.style.transform = 'scale(1)';
+    npPinchScale = 1; npPinchLast = 1;
     lyricsOpen = true;
-    // Show hint briefly
-    if (lyricsHintTimer) clearTimeout(lyricsHintTimer);
-    npLyricsHint.classList.add('show');
-    lyricsHintTimer = setTimeout(() => npLyricsHint.classList.remove('show'), 2200);
   };
-  testImg.onerror = () => {
-    // No lyrics image for this song — do nothing
-  };
-  testImg.src = url;
+  test.onerror = () => {}; // no lyrics for this song — silent
+  test.src = url;
 }
 
-// Close lyrics sheet
 function closeLyrics() {
-  npLyricsWrap.classList.remove('visible');
-  screenNP.classList.remove('lyrics-open');
+  if (!lyricsOpen) return;
+  npCoverImg.src = lyricsCoverUrl;
+  npCoverImg.classList.remove('lyrics-active');
+  npCoverWrap.classList.remove('lyrics-mode');
+  npCoverImg.style.transform = 'scale(1)';
+  npPinchScale = 1; npPinchLast = 1;
   lyricsOpen = false;
-  npLyricsImg.style.transform = 'scale(1)';
-  currentScale = 1;
-  lastScale = 1;
 }
 
-// Tap on cover → open; tap on lyrics → close
+function closeLyricsOnSongChange() { if (lyricsOpen) closeLyrics(); }
+
+// Tap on cover: open lyrics / close lyrics
 npCoverWrap.addEventListener('click', e => {
-  // Don't react if a swipe just happened
-  if (Math.abs(swipeStartX - e.clientX) > 5 || Math.abs(swipeStartY - e.clientY) > 5) return;
-  if (!lyricsOpen) openLyrics();
-});
-npLyricsWrap.addEventListener('click', e => {
+  const dx = Math.abs((e.clientX||0) - swipeStartX);
+  const dy = Math.abs((e.clientY||0) - swipeStartY);
+  if (dx > 8 || dy > 8) return; // was a swipe, not a tap
+  if (npPinching) return;
   if (lyricsOpen) closeLyrics();
+  else openLyrics();
 });
 
-// Close lyrics when song changes
-function closeLyricsOnSongChange() {
-  if (lyricsOpen) closeLyrics();
-}
-
-// ── Pinch-to-Zoom on Lyrics Sheet ──
-let currentScale = 1;
-let lastScale = 1;
-let initialDistance = 0;
-let isPinching = false;
-
-function getDistance(touches) {
+// Pinch-to-zoom (only active when lyrics are showing)
+function pinchDist(touches) {
   const dx = touches[0].clientX - touches[1].clientX;
   const dy = touches[0].clientY - touches[1].clientY;
-  return Math.sqrt(dx * dx + dy * dy);
+  return Math.sqrt(dx*dx + dy*dy);
 }
-
-npLyricsWrap.addEventListener('touchstart', e => {
+npCoverWrap.addEventListener('touchstart', e => {
+  if (!lyricsOpen) return;
   if (e.touches.length === 2) {
-    isPinching = true;
-    initialDistance = getDistance(e.touches);
-    lastScale = currentScale;
+    npPinching = true;
+    npPinchDist0 = pinchDist(e.touches);
+    npPinchLast = npPinchScale;
     e.preventDefault();
   }
 }, { passive: false });
-
-npLyricsWrap.addEventListener('touchmove', e => {
-  if (isPinching && e.touches.length === 2) {
-    const dist = getDistance(e.touches);
-    const ratio = dist / initialDistance;
-    currentScale = Math.min(Math.max(lastScale * ratio, 0.8), 4.0);
-    npLyricsImg.style.transform = `scale(${currentScale})`;
-    e.preventDefault();
-  }
+npCoverWrap.addEventListener('touchmove', e => {
+  if (!lyricsOpen || !npPinching || e.touches.length < 2) return;
+  const ratio = pinchDist(e.touches) / npPinchDist0;
+  npPinchScale = Math.min(Math.max(npPinchLast * ratio, 0.9), 4.0);
+  npCoverImg.style.transform = `scale(${npPinchScale})`;
+  e.preventDefault();
 }, { passive: false });
-
-npLyricsWrap.addEventListener('touchend', e => {
+npCoverWrap.addEventListener('touchend', e => {
   if (e.touches.length < 2) {
-    isPinching = false;
-    // Snap back if too small
-    if (currentScale < 1) {
-      currentScale = 1;
-      npLyricsImg.style.transform = 'scale(1)';
+    if (npPinchScale < 1) {
+      npPinchScale = 1;
+      npCoverImg.style.transform = 'scale(1)';
     }
+    setTimeout(() => { npPinching = false; }, 50);
   }
 }, { passive: true });
+
 
 // ── NP screen buttons mirror bar buttons ──
 npBtnPlay.addEventListener('click',()=>btnPlay.click());
@@ -1453,7 +1390,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v14a-lyrics-sheet';
+  const VERSION = 'v14b-lyrics-swap';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
