@@ -9,7 +9,224 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: albums-grosse-liebe-poesie-v5-scroll-coverfix, 15.05.2026"hj-header" id="mainHeader">
+<!-- Version: albums-grosse-liebe-poesie-v6-coverfix-only-rollback, 15.05.2026 -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:0}
+
+/* ── Header ── */
+.hj-header{display:flex;align-items:flex-end;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;}
+.hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
+.hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
+.hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
+.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;opacity:.65;line-height:1;padding-bottom:4px;margin-left:auto;}
+.hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
+.hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hj-back-btn.visible{display:flex}
+.hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
+
+/* ── Screens ── */
+.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0}
+.screen.active{display:block}
+.screen::-webkit-scrollbar{display:none}
+
+/* ══ HOME ══ */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
+.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
+.home-card:active{transform:scale(.95);opacity:.85}
+.home-card.wide{grid-column:1/-1}
+.home-card img{width:100%;display:block;object-fit:cover}
+.home-card.wide img{aspect-ratio:2/1}
+.home-card.square img{aspect-ratio:1/1}
+.home-bottom-pad{height:38px}
+
+/* ══ TRACKLIST ══ */
+/* Album header: cover centered, title+meta centered below */
+.tl-top{
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 16px 16px;
+  background:transparent;
+  border-bottom:none;
+  gap:12px;
+  max-width:680px;
+  margin:0 auto;
+  width:100%;
+}
+.tl-top-cover{
+  width:min(200px,45vw);height:min(200px,45vw);
+  border-radius:8px;object-fit:cover;
+  background:#0B2A42;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.tl-top-info{text-align:center;}
+.tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;}
+.tl-top-meta{font-size:12px;color:rgba(133,172,201,.6)}
+
+/* Track rows — bigger, Spotify-sized */
+.tl-track{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 32px;cursor:pointer;transition:background .12s}
+.tl-track:active{background:rgba(133,172,201,.07)}
+.tl-track.active{background:rgba(133,172,201,.06)}
+.tl-num-wrap{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.tl-track-num{font-size:16px;color:rgba(133,172,201,.35)}
+.tl-track.active .tl-track-num{display:none}
+.tl-bars{display:none;align-items:flex-end;gap:2px;height:16px;width:28px;justify-content:flex-end}
+.tl-track.active .tl-bars{display:flex}
+.tl-bar{width:3px;background:#85ACC9;border-radius:1px;animation:bar .8s ease-in-out infinite alternate}
+.tl-bar:nth-child(1){height:5px;animation-delay:0s}
+.tl-bar:nth-child(2){height:13px;animation-delay:.15s}
+.tl-bar:nth-child(3){height:8px;animation-delay:.3s}
+.tl-bar:nth-child(4){height:15px;animation-delay:.1s}
+@keyframes bar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.tl-track.active:not(.playing) .tl-bar{animation:none;height:8px;opacity:.4}
+.tl-thumb{width:62px;height:62px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#0B2A42}
+.tl-info{flex:1;min-width:0}
+.tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-track.active .tl-title{color:#85ACC9}
+.tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
+.tl-bottom-pad{height:160px}
+
+/* Tracklist container: max-width for iPad readability */
+#tlList{max-width:680px;margin:0 auto;width:100%}
+#screenNowPlaying{
+  background:rgba(6,20,32,1);
+  display:none;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+}
+#screenNowPlaying.active{display:flex;}
+.np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
+.np-down-btn{position:absolute;left:18px;top:82px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
+.np-down-btn svg{width:28px;height:28px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.np-album-label{
+  position:absolute;left:0;right:0;top:152px;text-align:center;
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.45)
+}
+/* Swipeable cover area */
+.np-cover-wrap{
+  display:flex;align-items:center;justify-content:center;
+  padding:126px 20px 0;
+  touch-action:pan-y;
+  user-select:none;
+  flex-shrink:0;
+}
+.np-cover{
+  width:min(58vh,88vw);height:min(58vh,88vw);
+  border-radius:12px;object-fit:cover;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  background:#0B2A42;
+  transition:transform .18s ease,opacity .18s ease;
+  display:block;
+}
+.np-cover.swipe-left{transform:translateX(-60px);opacity:0}
+.np-cover.swipe-right{transform:translateX(60px);opacity:0}
+/* Song info below cover */
+.np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
+.np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-artist{font-size:14px;color:rgba(133,172,201,.6)}
+/* Bottom section: pushed well down */
+.np-bottom{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 14px);
+}
+/* Progress */
+.np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
+.np-prog-fill{height:100%;background:#85ACC9;border-radius:2px;width:0%;transition:width .1s linear;pointer-events:none}
+.np-time{display:flex;justify-content:space-between;padding:8px 24px 0;font-size:12px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums;flex-shrink:0}
+/* NP Controls */
+.np-controls{display:flex;align-items:center;justify-content:space-between;padding:24px 16px 0;flex-shrink:0}
+.np-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:10px;position:relative;transition:color .15s,transform .1s}
+.np-btn:active{transform:scale(.84)}
+.np-btn svg{display:block;width:26px;height:26px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.np-btn.filled svg{fill:currentColor;stroke:none}
+.np-btn.active{color:#85ACC9}
+.np-btn.active::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
+.np-btn-play{width:62px;height:62px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 20px rgba(133,172,201,.3);padding:0;transition:background .15s,transform .1s}
+.np-btn-play:active{transform:scale(.9)}
+.np-btn-play svg{width:28px;height:28px;fill:currentColor;stroke:none}
+.np-btn-play .icon-pause{display:none}
+.np-btn-play.playing .icon-play{display:none}
+.np-btn-play.playing .icon-pause{display:block}
+.np-btn-repeat .icon-rpt-all,.np-btn-repeat .icon-rpt-one{display:none}
+.np-btn-repeat.repeat-all .icon-rpt-off{display:none}
+.np-btn-repeat.repeat-all .icon-rpt-all{display:block}
+.np-btn-repeat.repeat-one .icon-rpt-off{display:none}
+.np-btn-repeat.repeat-one .icon-rpt-one{display:block}
+
+/* ══ PLAYER BAR ══ */
+.hj-player{
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:200;
+  display:flex;flex-direction:column;
+  background:rgba(6,20,32,1);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+/* Upper now-playing strip: slightly lighter */
+.hj-now-strip{
+  background:rgba(18,48,72,.98);
+  border-top:1px solid rgba(133,172,201,.18);
+  cursor:pointer;
+}
+.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15)}
+.hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
+.hj-now{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.hj-now-numtxt{display:none}
+.hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0}
+.hj-now-info{flex:1;min-width:0}
+.hj-now-title{font-size:17px;font-weight:500;color:#85ACC9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hj-now-artist{font-size:13px;color:rgba(133,172,201,.5);margin-top:2px}
+/* Lower controls strip: compact, anchored to the physical bottom */
+.hj-controls-strip{
+  background:transparent;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+.hj-time{display:flex;justify-content:space-between;padding:10px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 18px}
+
+.hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
+.hj-btn:active{transform:scale(.84)}
+.hj-btn:hover{color:rgba(207,229,245,.9)}
+.hj-btn svg{display:block;width:25px;height:25px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.hj-btn.filled svg{fill:currentColor;stroke:none}
+.hj-btn.active{color:#85ACC9}
+.hj-btn.active::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
+.hj-btn-play{width:54px;height:54px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 18px rgba(133,172,201,.28);transition:background .15s,transform .1s;padding:0}
+.hj-btn-play:active{transform:scale(.9)}
+.hj-btn-play:hover{background:#a8c8de}
+.hj-btn-play svg{width:24px;height:24px;fill:currentColor;stroke:none}
+.hj-btn-play .icon-pause{display:none}
+.hj-btn-play.playing .icon-play{display:none}
+.hj-btn-play.playing .icon-pause{display:block}
+.hj-btn-repeat .icon-rpt-all,.hj-btn-repeat .icon-rpt-one{display:none}
+.hj-btn-repeat.repeat-all .icon-rpt-off{display:none}
+.hj-btn-repeat.repeat-all .icon-rpt-all{display:block}
+.hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
+.hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
+
+/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
+.hj-player::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
+}
+
+</style>
+
+
+
+
+</head>
+<body>
+
+<!-- Header -->
+<div class="hj-header" id="mainHeader">
   <div class="hj-back-btn" id="backBtn">
     <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
     <span>Alben</span>
