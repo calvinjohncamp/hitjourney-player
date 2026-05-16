@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v15i-lyrics-final, 16.05.2026 -->
+<!-- Version: v15j-lyrics-global, 16.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -949,6 +949,260 @@ function setImgSrcWithFallback(img, urls){
   img.src = list[0];
 }
 
+// ── Global Lyrics fallback map (v15j) ──
+// Wichtig: Annie's/Annies Fire und An und für/fuer sich werden hier bewusst NICHT ergänzt,
+// damit ihre bestehenden funktionierenden Song-Einträge exakt unangetastet bleiben.
+const LYRICS_BY_TITLE = {
+  "10000 schritte": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/10000%20Schritte%20-%20Lyrics.jpg",
+  "17": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Lyrics.jpg",
+  "3 47": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/3-47%20-%20Lyrics.jpg",
+  "347": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/347%20-%20Lyrics.jpg",
+  "8 stunden": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/8%20Stunden%20-%20Lyrics.jpg",
+  "abendlied": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abendlied%20-%20Lyrics.jpg",
+  "abgestuerzt": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abgestuerzt%20-%20Lyrics.jpg",
+  "achterbahn": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Achterbahn%20-%20Lyrics.jpg",
+  "all i need": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Lyrics.jpg",
+  "all in sandy": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Lyrics.jpg",
+  "alles klar": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alles%20klar%20-%20Lyrics.jpg",
+  "almost": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Almost%20-%20Lyrics.jpg",
+  "alte bilder": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Lyrics.jpg",
+  "an der haltestelle": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20der%20Haltestelle%20-%20Lyrics.jpg",
+  "anywhere you were with me": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Lyrics.jpg",
+  "ashes in the wind": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Lyrics.jpg",
+  "astronauts pirates kings of the street": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Lyrics.jpg",
+  "aus die maus": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20die%20Maus%20-%20Lyrics.jpg",
+  "aus und vorbei": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20und%20Vorbei%20-%20Lyrics.jpg",
+  "back then somewhere": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Lyrics.jpg",
+  "bar am meer ladies version": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Ladies%20Version%20-%20Lyrics.jpg",
+  "barfuss durch den flur": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Lyrics.jpg",
+  "berlin alte braut": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Lyrics.jpg",
+  "berlin": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20-%20Lyrics.jpg",
+  "beste freunde": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Beste%20Freunde%20-%20Lyrics.jpg",
+  "bevor das licht ausgeht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bevor%20das%20Licht%20ausgeht%20-%20Lyrics.jpg",
+  "big time baby": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Lyrics.jpg",
+  "broken pieces": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Lyrics.jpg",
+  "buenos dias": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buenos%20Dias%20-%20Lyrics.jpg",
+  "call me up": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Call%20Me%20Up%20-%20Lyrics.jpg",
+  "cassandra neu": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Cassandra%20NEU%20-%20Lyrics.jpg",
+  "chelsea hotel": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Chelsea%20Hotel%20-%20Lyrics.jpg",
+  "come on mia": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Come%20on%2C%20Mia%20-%20Lyrics.jpg",
+  "coming home": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Coming%20Home%20-%20Lyrics.jpg",
+  "concrete kids": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Lyrics.jpg",
+  "could if i wanted": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Could%20If%20I%20Wanted%20-%20Lyrics.jpg",
+  "da bist du ja": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Da%20bist%20du%20ja%20-%20Lyrics.jpg",
+  "da ist kein himmel": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Da%20ist%20kein%20Himmel%20-%20Lyrics.jpg",
+  "dann kam der regen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dann%20kam%20der%20Regen%20-%20Lyrics.jpg",
+  "dein kleid": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Lyrics.jpg",
+  "denim dreams": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Denim%20Dreams%20-%20Lyrics.jpg",
+  "der himmel hat ne delle": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Himmel%20hat%20%E2%80%99ne%20Delle%20-%20Lyrics.jpg",
+  "der lindenbaum": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Lindenbaum%20-%20Lyrics.jpg",
+  "devils grin": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Lyrics.jpg",
+  "do you remember": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Do%20You%20Remember%20-%20Lyrics.jpg",
+  "dreams don t wait": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dreams%20don%27t%20wait%20-%20Lyrics.jpg",
+  "drive me out of here": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Drive%20Me%20Out%20of%20Here%20-%20Lyrics.jpg",
+  "du fehlst mir nicht lara wolff": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Lara%20Wolff%20-%20Lyrics.jpg",
+  "du klebst an mir shirt": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20klebst%20an%20mir%20-%20Shirt%20-%20Lyrics.jpg",
+  "du mein geheimnis": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%2C%20mein%20Geheimnis%20-%20Lyrics.jpg",
+  "ein jahr": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Jahr%20-%20Lyrics.jpg",
+  "ein kuss im dunkeln": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Kuss%20im%20Dunkeln%20-%20Lyrics.jpg",
+  "erlkoenig": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Lyrics.jpg",
+  "erlko nig": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlko%CC%88nig%20-%20Lyrics.jpg",
+  "ewig her": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ewig%20her%20-%20Lyrics.jpg",
+  "ferris wheel": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ferris%20Wheel%20-%20Lyrics.jpg",
+  "first drop of color": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/First%20Drop%20of%20Color%20-%20Lyrics.jpg",
+  "fixing the wind": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Fixing%20the%20Wind%20-%20Lyrics.jpg",
+  "flaschenpost von dir": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flaschenpost%20von%20Dir%20-%20Lyrics.jpg",
+  "flipperkugeln": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flipperkugeln%20-%20Lyrics.jpg",
+  "forever ago": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Forever%20Ago%20-%20Lyrics.jpg",
+  "freefall": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Freefall%20-%20Lyrics.jpg",
+  "gefaehrlich": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gefaehrlich%20-%20Lyrics.jpg",
+  "gleich zurueck": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Lyrics.jpg",
+  "gone like the wind": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gone%20Like%20the%20Wind%20-%20Lyrics.jpg",
+  "guten morgen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Guten%20Morgen%20-%20Lyrics.jpg",
+  "half of everything": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Lyrics.jpg",
+  "harbor lights": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Harbor%20lights%20-%20Lyrics.jpg",
+  "her mit dem sommer": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Her%20mit%20dem%20Sommer%21%20-%20Lyrics.jpg",
+  "herbstlaub": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Lyrics.jpg",
+  "herbsttag": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Lyrics.jpg",
+  "herr von ribbeck": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Lyrics.jpg",
+  "herz bleibt stehen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herz%20bleibt%20stehen%20-%20Lyrics.jpg",
+  "hey komm schon her": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%2C%20komm%20schon%20her%20-%20Lyrics.jpg",
+  "hoerst du": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hoerst%20du%20-%20Lyrics.jpg",
+  "house of mirrors": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/House%20of%20Mirrors%20-%20Lyrics.jpg",
+  "hung up a thought": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hung%20up%20a%20thought%20-%20Lyrics.jpg",
+  "i fall": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Fall%20-%20Lyrics.jpg",
+  "i write you a song": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Lyrics.jpg",
+  "i pay in hurt": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20pay%20in%20hurt%20-%20Lyrics.jpg",
+  "ich tanze im regen jule": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20tanze%20im%20Regen%20-%20Jule%20-%20Lyrics.jpg",
+  "ich will dich": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20will%20dich%20-%20Lyrics.jpg",
+  "im kiosk brennt noch licht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Lyrics.jpg",
+  "im rueckspiegel schoen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Rueckspiegel%20schoen%20-%20Lyrics.jpg",
+  "in meiner stadt": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/In%20meiner%20Stadt%20-%20Lyrics.jpg",
+  "isabelle": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Isabelle%20-%20Lyrics.jpg",
+  "it is what it is": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/It%20Is%20What%20It%20Is%20-%20Lyrics.jpg",
+  "jeden verdammten tag": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jeden%20verdammten%20Tag%20-%20Lyrics.jpg",
+  "jein": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jein%20-%20Lyrics.jpg",
+  "johnny song for my mother": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20%28Song%20for%20my%20mother%29%20-%20Lyrics.jpg",
+  "josephine 1815": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Lyrics.jpg",
+  "klartext": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/KLARTEXT%20-%20Lyrics.jpg",
+  "keine orchideen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keine%20Orchideen%20-%20Lyrics.jpg",
+  "kirre": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kirre%20-%20Lyrics.jpg",
+  "knistern": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Knistern%20-%20Lyrics.jpg",
+  "krokusse im maerz": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20Maerz%20-%20Lyrics.jpg",
+  "kurz davor": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurz%20davor%20-%20Lyrics.jpg",
+  "late september heart mjd": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20%28MJD%29%20-%20Lyrics.jpg",
+  "let me in": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Let%20me%20in%20-%20Lyrics.jpg",
+  "licht aus": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Lyrics.jpg",
+  "liebe mich": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Liebe%20mich%20-%20Lyrics.jpg",
+  "life s a thriller": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Life%27s%20a%20Thriller%20-%20Lyrics.jpg",
+  "lorelei": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lorelei%20-%20Lyrics.jpg",
+  "lost in paradise": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lost%20in%20Paradise%20-%20Lyrics.jpg",
+  "love is what remains": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Love%20is%20what%20remains%20-%20Lyrics.jpg",
+  "maedchen mit den sommersprossen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Maedchen%20mit%20den%20Sommersprossen%20-%20Lyrics.jpg",
+  "magdalena kann tanzen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magdalena%20kann%20tanzen%20-%20Lyrics.jpg",
+  "magie": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Lyrics.jpg",
+  "mehr mut zwerg": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mehr%20Mut%20-%20Zwerg%20-%20Lyrics.jpg",
+  "mein stueck vom glueck": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Lyrics.jpg",
+  "meine worte": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Meine%20Worte%20-%20Lyrics.jpg",
+  "midnight breeze": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Lyrics.jpg",
+  "milchglas": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Milchglas%20-%20Lyrics.jpg",
+  "missed that train": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Missed%20that%20Train%20-%20Lyrics.jpg",
+  "mondnacht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mondnacht%20-%20Lyrics.jpg",
+  "most nights": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Most%20Nights%20-%20Lyrics.jpg",
+  "my piece of heaven": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Lyrics.jpg",
+  "nachtexpress durch die nacht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nachtexpress%20%28Durch%20die%20Nacht%29%20-%20Lyrics.jpg",
+  "nebelmond": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nebelmond%20-%20Lyrics.jpg",
+  "neues licht dieselben scheiben": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Lyrics.jpg",
+  "never quite mine": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Never%20Quite%20Mine%20-%20Lyrics.jpg",
+  "new york": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/New%20York%20-%20Lyrics.jpg",
+  "nicht von hier": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nicht%20von%20hier%20-%20Lyrics.jpg",
+  "no surrender": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Surrender%20-%20Lyrics.jpg",
+  "no time to run": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Time%20to%20Run%20-%20Lyrics.jpg",
+  "no one tells you when it starts": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20one%20tells%20you%20when%20it%20starts%20-%20Lyrics.jpg",
+  "noch dabei": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noch%20dabei%20-%20Lyrics.jpg",
+  "noe noe": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noe%20Noe%20-%20Lyrics.jpg",
+  "nur der himmel": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20der%20Himmel%20-%20Lyrics.jpg",
+  "nur die ruhe": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20die%20Ruhe%20-%20Lyrics.jpg",
+  "nur ein zucken von dir": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Lyrics.jpg",
+  "nur noch augen fuer sie": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Lyrics.jpg",
+  "ocean city": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ocean%20City%20-%20Lyrics.jpg",
+  "old bear": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Old%20Bear%20-%20Lyrics.jpg",
+  "opium": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Opium%20-%20Lyrics.jpg",
+  "out of soda": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20Soda%20-%20Lyrics.jpg",
+  "out of the blue 2025": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20the%20Blue%202025%20-%20Lyrics.jpg",
+  "over the moon": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Over%20the%20Moon%20-%20Lyrics.jpg",
+  "panikherz": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panikherz%20-%20Lyrics.jpg",
+  "panoptikum": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panoptikum%20-%20Lyrics.jpg",
+  "perfect 10": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Perfect%2010%20-%20Lyrics.jpg",
+  "picobello": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Lyrics.jpg",
+  "pictures that burn": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pictures%20That%20Burn%20-%20Lyrics.jpg",
+  "piece of heaven": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Piece%20of%20Heaven%20-%20Lyrics.jpg",
+  "pine and snow": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Lyrics.jpg",
+  "polaroid von dir": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Polaroid%20von%20dir%20-%20Lyrics.jpg",
+  "prinzessin": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Lyrics.jpg",
+  "quiet knife": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Quiet%20Knife%20-%20Lyrics.jpg",
+  "real": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Real%20-%20Lyrics.jpg",
+  "red moon": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Lyrics.jpg",
+  "rita 4ever": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Lyrics.jpg",
+  "roeslein rot": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Roeslein%20Rot%20-%20Lyrics.jpg",
+  "ruf mich an": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ruf%20mich%20an%20-%20Lyrics.jpg",
+  "sag mir wann wann wann": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sag%20mir%20wann%20wann%20wann%20-%20Lyrics.jpg",
+  "salz auf meinen lippen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Salz%20auf%20meinen%20Lippen%20-%20Lyrics.jpg",
+  "same old moon": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Same%20Old%20Moon%20-%20Lyrics.jpg",
+  "schattenland ist abgebrannt": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Schattenland%20ist%20abgebrannt%20-%20Lyrics.jpg",
+  "sehnsucht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Lyrics.jpg",
+  "she still flies": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She%20still%20flies%20-%20Lyrics.jpg",
+  "she s a knockout": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She%27s%20a%20Knockout%20-%20Lyrics.jpg",
+  "shine baby": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Shine%20Baby%20-%20Lyrics.jpg",
+  "side street confessions": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Side%20Street%20Confessions%20-%20Lyrics.jpg",
+  "sie ist der hammer": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sie%20ist%20der%20Hammer%20-%20Lyrics.jpg",
+  "silent damn": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Damn%20-%20Lyrics.jpg",
+  "silent trap": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Trap%20-%20Lyrics.jpg",
+  "slow burn woman": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Slow%20Burn%20Woman%20-%20Lyrics.jpg",
+  "so ist das": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Lyrics.jpg",
+  "sommer in berlin": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Lyrics.jpg",
+  "sommerblues": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommerblues%20-%20Lyrics.jpg",
+  "son": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Son%20-%20Lyrics.jpg",
+  "son what will the people say": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Son%20What%20Will%20the%20People%20Say%20-%20Lyrics.jpg",
+  "stay with me tonight": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stay%20With%20Me%20Tonight%20-%20Lyrics.jpg",
+  "stays for good": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stays%20for%20Good%20-%20Lyrics.jpg",
+  "sternenstaub": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sternenstaub%20-%20Lyrics.jpg",
+  "still smells like june": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Lyrics.jpg",
+  "still standing": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Standing%20-%20Lyrics.jpg",
+  "susie 19 vermisst": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Susie%2019%20vermisst%20-%20Lyrics.jpg",
+  "sweet dreams baby": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Lyrics.jpg",
+  "talking to a different blue": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Lyrics.jpg",
+  "tante paula": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tante%20Paula%20-%20Lyrics.jpg",
+  "tell me why bro": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20Me%20Why%20-%20BRO%20-%20Lyrics.jpg",
+  "tell me why annie cole": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Annie%20Cole%20-%20Lyrics.jpg",
+  "thats how it goes": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Thats%20how%20it%20goes%20-%20Lyrics.jpg",
+  "the city after two": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20City%20After%20Two%20-%20Lyrics.jpg",
+  "the cold dont lie": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Lyrics.jpg",
+  "the last honest man": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Honest%20Man%20-%20Lyrics.jpg",
+  "the last song": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Song%20-%20Lyrics.jpg",
+  "the life we never lived": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Life%20We%20Never%20Lived%20-%20Lyrics.jpg",
+  "the quiet wars": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Quiet%20Wars%20-%20Lyrics.jpg",
+  "the sway": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Sway%20-%20Lyrics.jpg",
+  "the dust don t lie": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20dust%20don%E2%80%99t%20lie%20-%20Lyrics.jpg",
+  "the girl who stole you": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20girl%20who%20stole%20you%20-%20Lyrics.jpg",
+  "the place we keep": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20place%20we%20keep%20-%20Lyrics.jpg",
+  "this world is wide": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Lyrics.jpg",
+  "three blocks down": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Three%20Blocks%20Down%20-%20Lyrics.jpg",
+  "time on our side": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Time%20on%20our%20side%20-%20Lyrics.jpg",
+  "to the broken hearts": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/To%20the%20Broken%20Hearts%20-%20Lyrics.jpg",
+  "tommy und ich": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tommy%20und%20ich%20-%20Lyrics.jpg",
+  "too late for love": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Lyrics.jpg",
+  "tricks": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tricks%20-%20Lyrics.jpg",
+  "und dann tanz ich im regen": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20dann%20tanz%20ich%20im%20Regen%20-%20Lyrics.jpg",
+  "und der wind pfeift": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20der%20Wind%20pfeift%20-%20Lyrics.jpg",
+  "unter der laterne": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Lyrics.jpg",
+  "vancouver crossing": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vancouver%20Crossing%20-%20Lyrics.jpg",
+  "vintage shirts": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vintage%20Shirts%20-%20Lyrics.jpg",
+  "waves": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Waves%20-%20Lyrics.jpg",
+  "weltuntergang": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%20-%20Lyrics.jpg",
+  "wenn ich dich seh": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20ich%20dich%20seh%20-%20Lyrics.jpg",
+  "wenn schon": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20schon%20-%20Lyrics.jpg",
+  "what if tonight": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Lyrics.jpg",
+  "when pigs fly": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/When%20Pigs%20Fly%20-%20Lyrics.jpg",
+  "where i left me": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Where%20I%20Left%20Me%20-%20Lyrics.jpg",
+  "willkommen und abschied": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Willkommen%20und%20Abschied%20-%20Lyrics.jpg",
+  "wunder": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wunder%20-%20Lyrics.jpg",
+  "you were my world my everything": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/You%20were%20my%20world%2C%20my%20everything%20-%20Lyrics.jpg",
+  "zihuatanejo": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zihuatanejo%20-%20Lyrics.jpg",
+  "zimmer ohne aussicht": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zimmer%20ohne%20Aussicht%20-%20Lyrics.jpg",
+  "zu sehr": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Lyrics.jpg",
+  "zu krass": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20krass%20-%20Lyrics.jpg",
+  "zurueck zu mir": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zurueck%20zu%20mir%20-%20Lyrics.jpg",
+  "alles rot alles tot": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Lyrics.jpg",
+  "an und fu r sich": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fu%CC%88r%20sich%20-%20Lyrics.jpg",
+  "einer geht noch": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/einer%20geht%20noch%20-%20Lyrics.jpg",
+  "half of you": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/half%20of%20you%20-%20Lyrics.jpg",
+  "problematisch": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Lyrics.jpg",
+  "suboptimal neu": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/suboptimal%20NEU%20-%20Lyrics.jpg",
+  "unscharf": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Lyrics.jpg",
+  "wann wann wann": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/wann%20wann%20wann%20-%20Lyrics.jpg"
+};
+
+function normalizeLyricsTitle(title) {
+  return String(title || '')
+    .replace(/[’‘´`]/g,"'")
+    .replace(/Ä/g,'ae').replace(/Ö/g,'oe').replace(/Ü/g,'ue')
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function getLyricsUrlsForSong(song) {
+  if(!song) return [];
+  const existing = getImgUrls(song,'lyrics');
+  if(existing.length) return existing;
+  const fallback = LYRICS_BY_TITLE[normalizeLyricsTitle(song.title)];
+  return fallback ? [fallback] : [];
+}
+
+
 // ── Navigation ──
 function showHome(){
   screenHome.classList.add('active');
@@ -1090,9 +1344,10 @@ function openLyrics() {
   const song = isArchiveMode()
     ? arcQueue[arcQueueIdx]
     : (curAlbum && queueIdx >= 0 ? ALBUMS[curAlbum].songs[queue[queueIdx]] : null);
-  if (!song || !song.lyrics) return;
+  const lyricsUrls = getLyricsUrlsForSong(song);
+  if (!song || !lyricsUrls.length) return;
   lyricsCoverSrc = npCoverImg.src;
-  setImgSrcWithFallback(npCoverImg, getImgUrls(song,'lyrics'));
+  setImgSrcWithFallback(npCoverImg, lyricsUrls);
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
@@ -1533,7 +1788,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v15f-an-und-fuer-sich-broad-fallback';
+  const VERSION = 'v15j-lyrics-global-20260516';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
