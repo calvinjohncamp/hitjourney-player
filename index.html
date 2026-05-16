@@ -9,7 +9,10 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v15j-lyrics-global, 16.05.2026 -->
+<!-- Version: v15j-test-teaser -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -309,6 +312,162 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(6,20,32,1);
 }
 
+
+/* ══ FEATURED TEASER ══ */
+.featured-teaser {
+  grid-column: 1 / -1;
+  position: relative;
+  aspect-ratio: 2 / 1;
+  background: #f1ecdf;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .13s, opacity .13s;
+  -webkit-tap-highlight-color: transparent;
+}
+.featured-teaser:active { transform: scale(.97); opacity: .9; }
+
+/* The big black circle — centered, 85% of height, offset slightly right */
+.ft-circle {
+  position: absolute;
+  width: 85%;
+  aspect-ratio: 1 / 1;
+  background: #0a0a0a;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-18%, -50%);
+  z-index: 1;
+}
+
+/* Song cover images inside the circle — clipped by it */
+.ft-covers {
+  position: absolute;
+  width: 85%;
+  aspect-ratio: 1 / 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-18%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+}
+.ft-covers img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity .6s ease;
+  border-radius: 50%;
+}
+.ft-covers img.active { opacity: 1; }
+
+/* Text overlay — in front of everything, uses mix-blend-mode */
+.ft-text {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 6%;
+  padding-left: 4%;
+  pointer-events: none;
+}
+.ft-label {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(11px, 2.2vw, 18px);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: #f1ecdf;
+  mix-blend-mode: difference;
+  line-height: 1;
+  margin-bottom: clamp(8px, 2vw, 20px);
+  margin-left: 0;
+}
+.ft-title-line {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(28px, 8vw, 90px);
+  line-height: .97;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  mix-blend-mode: difference;
+  letter-spacing: -.01em;
+}
+.ft-title-line:nth-child(2) { margin-left: 0; }      /* Auf */
+.ft-title-line:nth-child(3) { margin-left: 7%; }     /* der — e startet über Mitte des e von Über */
+.ft-title-line:nth-child(4) { margin-left: 1.5%; }   /* Über */
+.ft-title-line:nth-child(5) { margin-left: 0; }      /* holspur — ganz links */
+
+/* Right side: song title — creme text, black shadow */
+.ft-song-name {
+  position: absolute;
+  right: 3%;
+  bottom: 14%;
+  z-index: 4;
+  text-align: right;
+  pointer-events: none;
+  max-width: 55%;
+}
+.ft-song-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(17px, 3.6vw, 38px);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #f1ecdf;
+  text-shadow:
+    0 1px 4px rgba(0,0,0,.95),
+    0 2px 14px rgba(0,0,0,.8),
+    -1px -1px 0 rgba(0,0,0,.7),
+     1px -1px 0 rgba(0,0,0,.7),
+    -1px  1px 0 rgba(0,0,0,.7),
+     1px  1px 0 rgba(0,0,0,.7);
+  line-height: 1.15;
+}
+.ft-song-artist { display: none; }
+.ft-song-num {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(10px, 1.5vw, 16px);
+  letter-spacing: .15em;
+  color: rgba(241,236,223,.65);
+  text-shadow: 0 1px 4px rgba(0,0,0,.9);
+  margin-top: clamp(3px, .5vw, 5px);
+}
+
+/* Dots — weiter unten, mehr Abstand zum Teaser-Text */
+.ft-dots {
+  position: absolute;
+  bottom: 6%;
+  left: 4%;
+  z-index: 4;
+  display: flex;
+  gap: 6px;
+  mix-blend-mode: difference;
+}
+.ft-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f1ecdf;
+  opacity: .3;
+  transition: opacity .3s, background .3s;
+}
+.ft-dot.active { opacity: 1; background: #f1ecdf; }
+}
+}
+.ft-dot.active { opacity: 1; }
+
+/* Blank intro slide — zeigt nur den schwarzen Kreis */
+.ft-covers img.ft-blank { opacity: 0 !important; }
+.ft-covers img.ft-blank.active { opacity: 0 !important; }
+@keyframes ft-spin-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 </style>
 
 
@@ -339,8 +498,44 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="home-card square" data-album="stories30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
     </div>
-    <div class="home-card wide" id="archiveCard">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
+    <!-- ══ FEATURED TEASER ══ -->
+    <div class="featured-teaser" id="featuredTeaser">
+      <!-- Black circle base -->
+      <div class="ft-circle"></div>
+
+      <!-- 10 Fokus-Cover im Kreis — Index 0 = schwarzer Kreis (kein Bild) -->
+      <div class="ft-covers" id="ftCovers">
+        <img src="" class="active ft-blank" loading="eager"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20(Alte%20Braut)%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20One%20Tells%20You%20When%20It%20Starts%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg" loading="lazy"/>
+      </div>
+
+      <!-- Big bold text overlay — uses mix-blend-mode:difference -->
+      <div class="ft-text">
+        <div class="ft-label">10 Songs im Fokus</div>
+        <div class="ft-title-line">Auf</div>
+        <div class="ft-title-line">der</div>
+        <div class="ft-title-line">Über</div>
+        <div class="ft-title-line">holspur</div>
+      </div>
+
+      <!-- Song title (bottom right) -->
+      <div class="ft-song-name">
+        <div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
+        <div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
+        <div class="ft-song-num" id="ftSongNum">01 / 10</div>
+      </div>
+
+      <!-- Dot indicators -->
+      <div class="ft-dots" id="ftDots"></div>
     </div>
     <div class="home-card square" data-album="top50">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
@@ -356,6 +551,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     </div>
     <div class="home-card square" data-album="poesie">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
+    </div>
+    <div class="home-card wide" id="archiveCard">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
     </div>
   </div>
   <div class="home-bottom-pad"></div>
@@ -1797,6 +1995,125 @@ backBtn.addEventListener('click',()=>{
   }
   localStorage.setItem('hj-version', VERSION);
 })();
+
+// ══ FEATURED TEASER ROTATION ══
+(function(){
+  const FEATURED_SONGS = [
+    { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: nur schwarzer Kreis
+    { title: 'Anywhere you were with me', display: 'Anywhere You Were With Me', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3' },
+    { title: 'Bar am Meer', display: 'Bar am Meer', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bar-am-meer.mp3' },
+    { title: 'Berlin (Alte Braut)', display: 'Berlin (Alte Braut)', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20(Alte%20Braut)%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3' },
+    { title: 'Gleich zurück', display: 'Gleich zurück', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3' },
+    { title: 'Late September Heart', display: 'Late September Heart', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3' },
+    { title: 'My piece of heaven', display: 'My Piece of Heaven', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
+    { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
+    { title: 'No one tells you when it starts', display: 'No One Tells You When It Starts', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20One%20Tells%20You%20When%20It%20Starts%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3' },
+    { title: 'Rita 4ever', display: 'Rita 4ever', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
+    { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
+  ];
+
+  const teaser   = document.getElementById('featuredTeaser');
+  const coversEl = document.getElementById('ftCovers');
+  const imgEls   = coversEl ? Array.from(coversEl.querySelectorAll('img')) : [];
+  const titleEl  = document.getElementById('ftSongTitle');
+  const artistEl = document.getElementById('ftSongArtist');
+  const numEl    = document.getElementById('ftSongNum');
+  const dotsEl   = document.getElementById('ftDots');
+
+  if(!teaser || !imgEls.length) return;
+
+  // Build dots
+  FEATURED_SONGS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'ft-dot' + (i===0?' active':'');
+    dotsEl.appendChild(d);
+  });
+  const dots = Array.from(dotsEl.querySelectorAll('.ft-dot'));
+
+  let current = 0;
+  let timer = null;
+
+  function goTo(idx) {
+    imgEls[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (idx + FEATURED_SONGS.length) % FEATURED_SONGS.length;
+    imgEls[current].classList.add('active');
+    dots[current].classList.add('active');
+    const song = FEATURED_SONGS[current];
+    if(titleEl)  titleEl.textContent  = song.display || '';
+    if(artistEl) artistEl.textContent = song.artist  || '';
+    if(numEl)    numEl.textContent    = song.title ? String(current).padStart(2,'0') + ' / ' + (FEATURED_SONGS.length - 1) : '';
+  }
+
+  function startRotation() {
+    timer = setInterval(() => goTo(current + 1), 3200);
+  }
+  function stopRotation() {
+    clearInterval(timer);
+  }
+
+  if(titleEl)  titleEl.textContent  = '';
+  if(artistEl) artistEl.textContent = '';
+  if(numEl)    numEl.textContent    = '';
+  startRotation();
+
+  // Tap on teaser → play that featured song directly (not on intro slide)
+  teaser.addEventListener('click', () => {
+    const song = FEATURED_SONGS[current];
+    if(!song.mp3) return; // Intro-Slide: kein Song
+    let foundAlbum = null, foundIdx = -1;
+    for(const [key, alb] of Object.entries(ALBUMS)) {
+      const idx = alb.songs.findIndex(s => s.title === song.title);
+      if(idx >= 0){ foundAlbum = key; foundIdx = idx; break; }
+    }
+    if(foundAlbum && foundIdx >= 0) {
+      curAlbum = foundAlbum;
+      queue    = buildQueue();
+      const qi = queue.indexOf(foundIdx);
+      queueIdx = qi >= 0 ? qi : 0;
+      playSong(queue[queueIdx]);
+    } else {
+      audio.src = song.mp3;
+      audio.play();
+      nowCover.src = song.cover;
+      nowTitle.textContent = song.display;
+      playerBar.classList.add('visible');
+      nowStrip.classList.add('visible');
+    }
+  });
+
+  // Swipe left/right on teaser
+  let touchX = null;
+  teaser.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; stopRotation(); }, {passive:true});
+  teaser.addEventListener('touchend',   e => {
+    if(touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 30) goTo(current + (dx < 0 ? 1 : -1));
+    touchX = null;
+    startRotation();
+  }, {passive:true});
+})();
+
 </script>
 </body>
 </html>
