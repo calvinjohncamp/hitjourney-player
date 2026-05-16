@@ -1498,6 +1498,7 @@ function isArchiveMode(){
 }
 
 function loadArchiveSongByIndex(idx){
+  featuredMode = false; // Featured-Modus beenden
   if(!arcQueue.length)return;
   arcQueueIdx=(idx+arcQueue.length)%arcQueue.length;
   const s=arcQueue[arcQueueIdx];
@@ -1681,6 +1682,7 @@ function playIdx(songIdx){
   queueIdx=pos; loadPlay(songIdx);
 }
 function loadPlay(songIdx){
+  featuredMode = false; // Featured-Modus beenden
   const s=ALBUMS[curAlbum].songs[songIdx];
   if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
@@ -1701,7 +1703,10 @@ function refreshHighlight(){
   const active=tlList.querySelector('.tl-track.active');
   if(active)active.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+let featuredMode = false; // true = Fokus-Song läuft, kein Player-Strip
+
 function updatePlayBtns(){
+  if(featuredMode) return; // Featured-Modus: Strip bleibt versteckt
   const p=!audio.paused;
   btnPlay.classList.toggle('playing',p);
   npBtnPlay.classList.toggle('playing',p);
@@ -2093,19 +2098,21 @@ backBtn.addEventListener('click',()=>{
       return;
     }
 
-    // Neuer Song → direkt starten, kein Strip, kein PlayerBar
+    // Neuer Song → Featured-Modus, kein Strip, kein PlayerBar
+    featuredMode = true;
     featuredCurrentMp3 = song.mp3;
+    playerBar.classList.remove('visible'); // sicherheitshalber verstecken
     audio.src = song.mp3;
     audio.load();
     audio.play().catch(()=>{});
-
-    // Wenn normaler Player übernimmt, Featured-Tracking zurücksetzen
-    audio.addEventListener('pause', () => {}, { once: true });
   });
 
-  // Wenn woanders ein Song gestartet wird, Featured-Tracking löschen
+  // Wenn normaler Player woanders übernimmt → Featured-Modus beenden
   audio.addEventListener('play', () => {
-    if(audio.src !== featuredCurrentMp3) featuredCurrentMp3 = null;
+    if(featuredMode && audio.src !== featuredCurrentMp3) {
+      featuredMode = false;
+      featuredCurrentMp3 = null;
+    }
   });
 
   // Swipe left/right on teaser
