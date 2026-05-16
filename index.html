@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v15g-an-und-fuer-sich-fix2, 16.05.2026 -->
+<!-- Version: v15f-an-und-fuer-sich-fix, 16.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -750,8 +750,46 @@ const SONGS_BURIED_DIAMONDS = [
   { title: 'All I need', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-i-need.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Lyrics.jpg' },
   { title: 'All In Sandy', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-in-sandy.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Lyrics.jpg' },
   { title: 'Alte Bilder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alte-bilder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Lyrics.jpg' },
-  { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg' },
-  { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Lyrics.jpg' },
+  { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
+    coverCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Final%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Final%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover%202%201.jpg'
+    ],
+    lyricsCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg'
+    ] },
+  { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Cover.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Lyrics.jpg',
+    coverCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Cover.jpg'
+    ],
+    lyricsCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Lyrics.jpg'
+    ] },
   { title: 'Astronauts, Pirates, Kings of the Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/astronauts-pirates-kings-of-the-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Lyrics.jpg' },
   { title: 'Barfuss durch den Flur', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/barfuss-durch-den-flur.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Lyrics.jpg' },
   { title: 'Big Time Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/big-time-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Lyrics.jpg' },
