@@ -368,13 +368,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* Text overlay — in front of everything, uses mix-blend-mode */
 .ft-text {
   position: absolute;
-  inset: 0;
+  top: 5%;
+  left: 4%;
+  right: 4%;
   z-index: 3;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 6%;
-  padding-left: 4%;
   pointer-events: none;
 }
 .ft-label {
@@ -406,7 +405,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .ft-song-name {
   position: absolute;
   right: 3%;
-  bottom: 14%;
+  bottom: 18%;
   z-index: 4;
   text-align: right;
   pointer-events: none;
@@ -437,10 +436,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   margin-top: clamp(3px, .5vw, 5px);
 }
 
-/* Dots — weiter unten, mehr Abstand zum Teaser-Text */
+/* Dots — am unteren Rand mit Luft */
 .ft-dots {
   position: absolute;
-  bottom: 6%;
+  bottom: 8%;
   left: 4%;
   z-index: 4;
   display: flex;
@@ -2081,24 +2080,33 @@ backBtn.addEventListener('click',()=>{
   teaser.addEventListener('click', () => {
     const song = FEATURED_SONGS[current];
     if(!song.mp3) return; // Intro-Slide: kein Song
+
+    // Suche Song in allen Alben für volle Player-Integration
     let foundAlbum = null, foundIdx = -1;
     for(const [key, alb] of Object.entries(ALBUMS)) {
       const idx = alb.songs.findIndex(s => s.title === song.title);
       if(idx >= 0){ foundAlbum = key; foundIdx = idx; break; }
     }
+
     if(foundAlbum && foundIdx >= 0) {
+      // Vollständige Player-Integration via bestehendes Album
       curAlbum = foundAlbum;
-      queue    = buildQueue();
+      arcQueue = []; arcQueueIdx = -1;
+      queue = buildQueue(foundIdx);
       const qi = queue.indexOf(foundIdx);
       queueIdx = qi >= 0 ? qi : 0;
-      playSong(queue[queueIdx]);
+      loadPlay(foundIdx);
     } else {
+      // Fallback: direkt abspielen ohne Album-Kontext
+      arcQueue = []; arcQueueIdx = -1;
       audio.src = song.mp3;
-      audio.play();
-      nowCover.src = song.cover;
+      audio.load();
+      audio.play().catch(()=>{});
+      setImgSrcWithFallback(nowCover, [song.cover]);
       nowTitle.textContent = song.display;
+      nowNum.textContent = '';
+      showNowStrip();
       playerBar.classList.add('visible');
-      nowStrip.classList.add('visible');
     }
   });
 
