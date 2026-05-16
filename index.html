@@ -2076,38 +2076,36 @@ backBtn.addEventListener('click',()=>{
   if(numEl)    numEl.textContent    = '';
   startRotation();
 
-  // Tap on teaser → play that featured song directly (not on intro slide)
+  // Tap auf Teaser → Song im Hintergrund, kein Player-Strip
+  let featuredCurrentMp3 = null;
+
   teaser.addEventListener('click', () => {
     const song = FEATURED_SONGS[current];
-    if(!song.mp3) return; // Intro-Slide: kein Song
+    if(!song.mp3) return; // Intro-Slide
 
-    // Suche Song in allen Alben für volle Player-Integration
-    let foundAlbum = null, foundIdx = -1;
-    for(const [key, alb] of Object.entries(ALBUMS)) {
-      const idx = alb.songs.findIndex(s => s.title === song.title);
-      if(idx >= 0){ foundAlbum = key; foundIdx = idx; break; }
+    // Derselbe Song läuft gerade → pause/play toggle
+    if(featuredCurrentMp3 === song.mp3) {
+      if(audio.paused) {
+        audio.play().catch(()=>{});
+      } else {
+        audio.pause();
+      }
+      return;
     }
 
-    if(foundAlbum && foundIdx >= 0) {
-      // Vollständige Player-Integration via bestehendes Album
-      curAlbum = foundAlbum;
-      arcQueue = []; arcQueueIdx = -1;
-      queue = buildQueue(foundIdx);
-      const qi = queue.indexOf(foundIdx);
-      queueIdx = qi >= 0 ? qi : 0;
-      loadPlay(foundIdx);
-    } else {
-      // Fallback: direkt abspielen ohne Album-Kontext
-      arcQueue = []; arcQueueIdx = -1;
-      audio.src = song.mp3;
-      audio.load();
-      audio.play().catch(()=>{});
-      setImgSrcWithFallback(nowCover, [song.cover]);
-      nowTitle.textContent = song.display;
-      nowNum.textContent = '';
-      showNowStrip();
-      playerBar.classList.add('visible');
-    }
+    // Neuer Song → direkt starten, kein Strip, kein PlayerBar
+    featuredCurrentMp3 = song.mp3;
+    audio.src = song.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+
+    // Wenn normaler Player übernimmt, Featured-Tracking zurücksetzen
+    audio.addEventListener('pause', () => {}, { once: true });
+  });
+
+  // Wenn woanders ein Song gestartet wird, Featured-Tracking löschen
+  audio.addEventListener('play', () => {
+    if(audio.src !== featuredCurrentMp3) featuredCurrentMp3 = null;
   });
 
   // Swipe left/right on teaser
