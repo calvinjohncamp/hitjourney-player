@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v16f-archive-letter-scroll-fix -->
+<!-- Version: v16j-archive-slow-fade -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -54,6 +54,18 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(6,20,32,1);
   padding:10px 14px 0;
   box-shadow:0 4px 12px rgba(6,20,32,.9);
+  transform:translateY(0);
+  opacity:1;
+  transition:
+    transform .92s cubic-bezier(.22,.61,.36,1),
+    opacity .82s ease;
+  will-change:transform,opacity;
+}
+.arc-sticky.collapsed{
+  transform:translateY(calc(-100% - 2px));
+  opacity:0;
+  pointer-events:none;
+  box-shadow:none;
 }
 .arc-search{
   display:flex;
@@ -130,6 +142,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .arc-no-results{
   text-align:center;color:rgba(133,172,201,.35);
   font-size:15px;padding:40px 20px;
+}
+#screenArchive.archive-compact .arc-sticky{
+  position:absolute;
+  left:0;
+  right:0;
+}
+#screenArchive.archive-compact #arcSongCount{
+  margin-top:0;
 }
 #arcList{max-width:680px;margin:0 auto;width:100%}
 
@@ -263,7 +283,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-btn.filled svg{fill:currentColor;stroke:none}
 .np-btn.active{color:#85ACC9}
 .np-btn.active::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
-.np-btn-play{width:62px;height:62px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 20px rgba(133,172,201,.3);padding:0;transition:background .15s,transform .1s}
+.np-btn-play{width:62px;height:62px;background:#0B2A42;border:1px solid rgba(133,172,201,.35);border-radius:50%;color:#85ACC9;flex-shrink:0;box-shadow:0 4px 22px rgba(0,0,0,.36);padding:0;transition:background .15s,color .15s,transform .1s}
 .np-btn-play:active{transform:scale(.9)}
 .np-btn-play svg{width:28px;height:28px;fill:currentColor;stroke:none}
 .np-btn-play .icon-pause{display:none}
@@ -320,9 +340,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn.filled svg{fill:currentColor;stroke:none}
 .hj-btn.active{color:#85ACC9}
 .hj-btn.active::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
-.hj-btn-play{width:54px;height:54px;background:#85ACC9;border-radius:50%;color:#02111E;flex-shrink:0;box-shadow:0 4px 18px rgba(133,172,201,.28);transition:background .15s,transform .1s;padding:0}
+.hj-btn-play{width:54px;height:54px;background:#0B2A42;border:1px solid rgba(133,172,201,.32);border-radius:50%;color:#85ACC9;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.34);transition:background .15s,color .15s,transform .1s;padding:0}
 .hj-btn-play:active{transform:scale(.9)}
-.hj-btn-play:hover{background:#a8c8de}
+.hj-btn-play:hover{background:#123048;color:#cfe5f5}
 .hj-btn-play svg{width:24px;height:24px;fill:currentColor;stroke:none}
 .hj-btn-play .icon-pause{display:none}
 .hj-btn-play.playing .icon-play{display:none}
@@ -1969,8 +1989,10 @@ function scrollToLetter(l){
   renderArchiveList(ALL_SONGS);
   document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
 
-  requestAnimationFrame(()=>{
-    // Ziel: der erste Song des Buchstabens soll direkt unter dem Suchfeld stehen.
+  setArchiveHeaderCollapsed(true);
+
+  setTimeout(()=>{
+    // Ziel: der erste Song des Buchstabens soll direkt unter der Kopfzeile stehen.
     let target = arcList.querySelector('.tl-track[data-first-letter="'+l+'"]');
 
     // Falls es keinen Song mit diesem Buchstaben gibt: zum nächsten verfügbaren Buchstaben springen.
@@ -1980,17 +2002,16 @@ function scrollToLetter(l){
     }
     if(!target) return;
 
-    const sticky = document.querySelector('#screenArchive .arc-sticky');
     const containerTop = screenArchive.getBoundingClientRect().top;
     const targetTop = target.getBoundingClientRect().top;
-    const stickyHeight = sticky ? sticky.offsetHeight : 0;
+    const y = screenArchive.scrollTop + (targetTop - containerTop) - 8;
 
-    const y = screenArchive.scrollTop + (targetTop - containerTop) - stickyHeight - 4;
     screenArchive.scrollTo({top:Math.max(0,y),behavior:'smooth'});
-  });
+  },360);
 }
 
 arcInput.addEventListener('input',()=>{
+  setArchiveHeaderCollapsed(false);
   const q=arcInput.value.trim().toLowerCase();
   arcSearchWrap.classList.toggle('has-value',q.length>0);
   const filtered = q ? ALL_SONGS.filter(s=>s.title.toLowerCase().includes(q)) : ALL_SONGS;
@@ -1998,6 +2019,7 @@ arcInput.addEventListener('input',()=>{
   document.getElementById('arcSongCount').textContent = filtered.length + ' songs';
 });
 arcClear.addEventListener('click',()=>{
+  setArchiveHeaderCollapsed(false);
   arcInput.value='';
   arcSearchWrap.classList.remove('has-value');
   renderArchiveList(ALL_SONGS);
@@ -2006,6 +2028,7 @@ arcClear.addEventListener('click',()=>{
 });
 
 function showArchive(){
+  setArchiveHeaderCollapsed(false);
   renderArchiveList(ALL_SONGS);
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
@@ -2019,6 +2042,7 @@ function showArchive(){
   mainHeader.style.position='';
   mainHeader.style.display='';
   screenArchive.scrollTop=0;
+  arcLastScrollTop=0;
   document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
   prevScreen='archive';
 }
@@ -2035,11 +2059,51 @@ document.getElementById('archiveCard').addEventListener('click',showArchive);
 backBtn.addEventListener('click',()=>{
   if(screenArchive.classList.contains('active')) hideArchive();
 });
+
+// Archive: A-Z/Suche weich ausblenden, ohne Scroll-Flackern
+let arcLastScrollTop = 0;
+let arcScrollTicking = false;
+let arcHeaderCollapsed = false;
+
+function setArchiveHeaderCollapsed(collapsed){
+  if(arcHeaderCollapsed === collapsed) return;
+  arcHeaderCollapsed = collapsed;
+  const sticky = document.querySelector('#screenArchive .arc-sticky');
+  if(!sticky) return;
+  sticky.classList.toggle('collapsed', collapsed);
+}
+
+screenArchive.addEventListener('scroll',()=>{
+  if(arcScrollTicking) return;
+  arcScrollTicking = true;
+
+  requestAnimationFrame(()=>{
+    const sticky = document.querySelector('#screenArchive .arc-sticky');
+    if(!sticky || !screenArchive.classList.contains('active')){
+      arcScrollTicking=false;
+      return;
+    }
+
+    const y = screenArchive.scrollTop;
+    const delta = y - arcLastScrollTop;
+
+    // Hysterese: erst nach etwas Bewegung reagieren, dadurch kein Flackern.
+    if(y > 52 && delta > 8){
+      setArchiveHeaderCollapsed(true);
+    } else if(y < 18 || (delta < -10 && y < 110)){
+      setArchiveHeaderCollapsed(false);
+    }
+
+    arcLastScrollTop = Math.max(0,y);
+    arcScrollTicking=false;
+  });
+}, {passive:true});
+
 </script>
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v15j-lyrics-global-20260516';
+  const VERSION = 'v16j-archive-slow-fade-20260516';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
