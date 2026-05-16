@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v15d-buried-diamonds-final, 16.05.2026 -->
+<!-- Version: v15e-buried-diamonds-fallbacks, 16.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -750,8 +750,32 @@ const SONGS_BURIED_DIAMONDS = [
   { title: 'All I need', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-i-need.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Lyrics.jpg' },
   { title: 'All In Sandy', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-in-sandy.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Lyrics.jpg' },
   { title: 'Alte Bilder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alte-bilder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Lyrics.jpg' },
-  { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg' },
-  { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Lyrics.jpg' },
+  { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
+    coverCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg'
+    ],
+    lyricsCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg'
+    ] },
+  { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Cover.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Lyrics.jpg',
+    coverCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Cover.jpg'
+    ],
+    lyricsCandidates: [
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Lyrics.jpg'
+    ] },
   { title: 'Astronauts, Pirates, Kings of the Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/astronauts-pirates-kings-of-the-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Lyrics.jpg' },
   { title: 'Barfuss durch den Flur', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/barfuss-durch-den-flur.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Lyrics.jpg' },
   { title: 'Big Time Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/big-time-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Lyrics.jpg' },
@@ -884,6 +908,33 @@ function buildQueue(keep){
   return q;
 }
 
+function getImgUrls(song, field){
+  if(!song)return [];
+  const extra = song[field + 'Candidates'] || [];
+  return [song[field], ...extra].filter((v,i,a)=>v && a.indexOf(v)===i);
+}
+function setImgSrcWithFallback(img, urls){
+  if(!img)return;
+  const list = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  img.onerror = null;
+  img.removeAttribute('data-fallback-index');
+  img.removeAttribute('data-fallback-list');
+  if(!list.length){ img.removeAttribute('src'); return; }
+  img.dataset.fallbackIndex = '0';
+  img.dataset.fallbackList = JSON.stringify(list);
+  img.onerror = function(){
+    const stored = JSON.parse(this.dataset.fallbackList || '[]');
+    const next = Number(this.dataset.fallbackIndex || 0) + 1;
+    if(next < stored.length){
+      this.dataset.fallbackIndex = String(next);
+      this.src = stored[next];
+    } else {
+      this.onerror = null;
+    }
+  };
+  img.src = list[0];
+}
+
 // ── Navigation ──
 function showHome(){
   screenHome.classList.add('active');
@@ -899,7 +950,7 @@ function showHome(){
 }
 function showAlbum(key){
   const alb=ALBUMS[key]; curAlbum=key;
-  tlCover.src=alb.cover; tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
+  setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
     const row=document.createElement('div');
@@ -907,8 +958,9 @@ function showAlbum(key){
     row.innerHTML=
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
-      '<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>'+
+      '<img class="tl-thumb" loading="lazy" alt=""/>'+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+    setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playIdx(i));
     tlList.appendChild(row);
   });
@@ -969,7 +1021,7 @@ function updateNPScreen(){
     s=ALBUMS[curAlbum].songs[queue[queueIdx]];
     npAlbumLabel.textContent=ALBUMS[curAlbum].title;
   }
-  npCover.src=s.cover;
+  setImgSrcWithFallback(npCover, getImgUrls(s,'cover'));
   npTitle.textContent=s.title;
   npBtnPlay.classList.toggle('playing',!audio.paused);
   npBtnShuffle.classList.toggle('active',shuffleOn);
@@ -988,7 +1040,7 @@ function loadArchiveSongByIndex(idx){
   queueIdx=-1;
   if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
-  nowCover.src=s.cover; nowTitle.textContent=s.title;
+  setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
   nowNum.textContent=arcQueueIdx+1;
   showNowStrip();
   if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
@@ -1026,7 +1078,7 @@ function openLyrics() {
     : (curAlbum && queueIdx >= 0 ? ALBUMS[curAlbum].songs[queue[queueIdx]] : null);
   if (!song || !song.lyrics) return;
   lyricsCoverSrc = npCoverImg.src;
-  npCoverImg.src = song.lyrics;
+  setImgSrcWithFallback(npCoverImg, getImgUrls(song,'lyrics'));
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
@@ -1149,7 +1201,7 @@ nowStrip.addEventListener('touchend',e=>{
 // ── Playback ──
 function previewSong(i){
   const s=ALBUMS[curAlbum].songs[i];
-  nowCover.src=s.cover; nowTitle.textContent=s.title;
+  setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
   nowNum.textContent=i+1;
 }
 function showNowStrip(){
@@ -1166,7 +1218,7 @@ function loadPlay(songIdx){
   const s=ALBUMS[curAlbum].songs[songIdx];
   if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
-  nowCover.src=s.cover; nowTitle.textContent=s.title;
+  setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
   nowNum.textContent=songIdx+1;
   showNowStrip();
   if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
@@ -1466,7 +1518,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v15d-buried-diamonds-final';
+  const VERSION = 'v15e-buried-diamonds-fallbacks';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
