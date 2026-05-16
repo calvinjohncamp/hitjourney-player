@@ -751,17 +751,31 @@ const SONGS_BURIED_DIAMONDS = [
   { title: 'All In Sandy', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-in-sandy.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Lyrics.jpg' },
   { title: 'Alte Bilder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alte-bilder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Lyrics.jpg' },
   { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3',
-    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
-    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
     coverCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Final%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Final%20Cover.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
       'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg'
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover%202%201.jpg'
     ],
     lyricsCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
       'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg'
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
+      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg'
     ] },
   { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Cover.jpg',
@@ -1428,8 +1442,9 @@ function renderArchiveList(songs){
     row.innerHTML=
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
-      '<img class="tl-thumb" src="'+s.cover+'" loading="lazy" alt=""/>'+
+      '<img class="tl-thumb" loading="lazy" alt=""/>'+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+    setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playArchiveSong(i,songs));
     arcList.appendChild(row);
   });
@@ -1518,7 +1533,7 @@ backBtn.addEventListener('click',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v15e-buried-diamonds-fallbacks';
+  const VERSION = 'v15f-an-und-fuer-sich-broad-fallback';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
