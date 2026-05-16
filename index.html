@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v15i-history-api, 16.05.2026 -->
+<!-- Version: v15h-home-order, 16.05.2026 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -950,7 +950,7 @@ function setImgSrcWithFallback(img, urls){
 }
 
 // ── Navigation ──
-function showHome(fromPopstate){
+function showHome(){
   screenHome.classList.add('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
@@ -961,7 +961,6 @@ function showHome(fromPopstate){
   headerRight.textContent='';
   mainHeader.style.display='';
   prevScreen='home';
-  if(!fromPopstate) history.pushState({screen:'home'},'');
 }
 function showAlbum(key){
   const alb=ALBUMS[key]; curAlbum=key;
@@ -994,9 +993,8 @@ function showAlbum(key){
   playerBar.classList.add('visible');
   refreshHighlight();
   prevScreen='tracklist';
-  history.pushState({screen:'tracklist', album:key},'');
 }
-function showNowPlaying(fromPopstate){
+function showNowPlaying(){
   if(!curAlbum) return;
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
@@ -1005,7 +1003,6 @@ function showNowPlaying(fromPopstate){
   mainHeader.style.display='none';
   playerBar.classList.remove('visible');
   updateNPScreen();
-  if(!fromPopstate) history.pushState({screen:'nowplaying'},'');
 }
 function hideNowPlaying(){
   mainHeader.style.display='';
@@ -1502,7 +1499,7 @@ arcClear.addEventListener('click',()=>{
   arcInput.focus();
 });
 
-function showArchive(fromPopstate){
+function showArchive(){
   renderArchiveList(ALL_SONGS);
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
@@ -1518,7 +1515,6 @@ function showArchive(fromPopstate){
   screenArchive.scrollTop=0;
   document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
   prevScreen='archive';
-  if(!fromPopstate) history.pushState({screen:'archive'},'');
 }
 function hideArchive(){
   screenArchive.classList.remove('active');
@@ -1532,17 +1528,6 @@ document.getElementById('archiveCard').addEventListener('click',showArchive);
 // Back button: archive → home (runs before existing TL → home handler, guard by active check)
 backBtn.addEventListener('click',()=>{
   if(screenArchive.classList.contains('active')) hideArchive();
-});
-
-// ── History API: iOS-Wischgeste & Browser-Zurück ──
-history.replaceState({screen:'home'},'');
-window.addEventListener('popstate', e=>{
-  const s = e.state;
-  if(!s){ showHome(true); return; }
-  if(s.screen==='home')        showHome(true);
-  else if(s.screen==='archive')     showArchive(true);
-  else if(s.screen==='tracklist')   showAlbum(s.album);
-  else if(s.screen==='nowplaying')  showNowPlaying(true);
 });
 </script>
 <script>
