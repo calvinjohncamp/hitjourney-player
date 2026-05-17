@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v34-ipad-random-button-centered -->
+<!-- Version: v43-shuffle-noscroll -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -46,6 +46,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
 .home-bottom-pad{height:220px}
+
+/* Trio-Container: volle Breite */
+.home-trio{
+  grid-column:1/-1;
+  display:grid;
+  gap:10px;
+  /* Mobile: 2 Spalten, BD darunter full-width */
+  grid-template-columns:1fr 1fr;
+  grid-template-areas:
+    "gl po"
+    "bd bd";
+}
+.home-trio .home-card{border-radius:8px}
+.home-trio .trio-gl{grid-area:gl}
+.home-trio .trio-po{grid-area:po}
+.home-trio .trio-bd{grid-area:bd}
+.home-trio .trio-bd img{aspect-ratio:2/1}
+.home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
@@ -701,6 +719,352 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .ft-dots{bottom:7%;}
 }
 
+/* ══ EDITORIAL CARDS ══ */
+.ed-section{
+  padding:0 14px;
+  margin-bottom:14px;
+}
+.ed-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.ed-card{
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+  background:#0a0a0a;
+  border:0.5px solid rgba(255,255,255,0.07);
+  transition:transform .13s,opacity .13s;
+  text-decoration:none;
+  display:block;
+  color:inherit;
+}
+.ed-card:active{transform:scale(.95);opacity:.85}
+.ed-img{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  filter:grayscale(100%);
+  background:#111;
+}
+.ed-img-placeholder{
+  width:100%;
+  aspect-ratio:2/3;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:8px;
+  border-bottom:0.5px solid rgba(255,255,255,0.05);
+}
+.ed-img-placeholder svg{
+  width:32px;height:32px;
+  stroke:rgba(255,255,255,0.12);
+  stroke-width:1.5;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.ed-img-placeholder span{
+  font-size:9px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.1);
+}
+.ed-body{
+  padding:10px 12px 12px;
+}
+.ed-tag{
+  font-size:9px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+  margin-bottom:5px;
+}
+.ed-title{
+  font-size:13px;
+  font-weight:600;
+  color:rgba(255,255,255,0.82);
+  line-height:1.3;
+  margin-bottom:5px;
+}
+.ed-desc{
+  font-size:11px;
+  color:rgba(255,255,255,0.28);
+  line-height:1.5;
+}
+.ed-arrow{
+  text-align:right;
+  color:rgba(255,255,255,0.18);
+  font-size:12px;
+  padding-top:8px;
+  letter-spacing:1px;
+}
+
+/* ══ KURS NORDWEST SCREEN ══ */
+#screenKursNordwest{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:none;min-height:0;
+  background:rgb(6,20,32);
+}
+#screenKursNordwest.active{ display:block; }
+#screenKursNordwest::-webkit-scrollbar{display:none}
+
+.knw-container{
+  max-width:540px;
+  margin:0 auto;
+  padding:18px 16px 0;
+}
+
+/* Sektion-Label */
+.knw-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:rgba(133,172,201,.45);
+  margin-bottom:10px;
+}
+
+/* Song-Block: Cover + Play + Lyric-Sheet */
+.knw-song{
+  margin-bottom:28px;
+}
+.knw-song-title{
+  font-size:13px;
+  font-weight:700;
+  color:rgba(241,236,223,.55);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+/* Cover (1:1, klickbar → Lightbox) */
+.knw-cover-wrap{
+  position:relative;
+  cursor:pointer;
+  border-radius:8px;
+  overflow:hidden;
+  background:#0B2A42;
+  transition:opacity .13s;
+  width:50%;
+  margin:0 auto;
+}
+.knw-cover-wrap:active{opacity:.85}
+.knw-cover-wrap img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  display:block;
+  border-radius:8px;
+}
+
+/* Play-Zeile zwischen Cover und Lyric-Sheet */
+.knw-play-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding:16px 0 10px;
+  gap:14px;
+  width:100%;
+}
+.knw-play-btn{
+  width:56px;height:56px;
+  border-radius:50%;
+  border:none;
+  background:none;
+  padding:0;
+  cursor:pointer;
+  transition:transform .12s,opacity .13s;
+  flex-shrink:0;
+}
+.knw-play-btn:active{transform:scale(.9);opacity:.8}
+.knw-play-btn img{
+  width:100%;height:100%;
+  object-fit:contain;display:block;
+}
+.knw-play-btn-circle{
+  background:#85ACC9;
+  display:flex;align-items:center;justify-content:center;
+}
+.knw-play-btn-circle svg{
+  width:26px;height:26px;
+  fill:#06141F;
+  flex-shrink:0;
+}
+.knw-play-btn-circle.playing .knw-icon-play{ display:none!important; }
+.knw-play-btn-circle.playing .knw-icon-pause{ display:block!important; }
+.knw-play-info{
+  flex:1;
+  min-width:0;
+}
+.knw-play-name{
+  font-size:15px;
+  font-weight:700;
+  color:#f1ecdf;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.knw-play-artist{
+  font-size:12px;
+  color:rgba(133,172,201,.6);
+  margin-top:2px;
+}
+
+/* Lyric-Sheet (2:1, klickbar → Lightbox) */
+.knw-lyric-wrap{
+  cursor:pointer;
+  border-radius:8px;
+  overflow:hidden;
+  background:#0B2A42;
+  transition:opacity .13s;
+}
+.knw-lyric-wrap:active{opacity:.85}
+.knw-lyric-wrap img{
+  width:100%;
+  aspect-ratio:2/1;
+  object-fit:cover;
+  display:block;
+  border-radius:8px;
+}
+.knw-lyric-label{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(133,172,201,.35);
+  text-align:center;
+  padding:7px 0 0;
+}
+
+/* Divider */
+.knw-divider{
+  height:1px;
+  background:rgba(133,172,201,.08);
+  margin:8px 0 32px;
+}
+
+/* Bottom pad */
+.knw-bottom-pad{ height:200px; }
+
+/* ── Lightbox ── */
+#knwLightbox{
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(6,20,32,.97);
+  display:none;
+  align-items:center;justify-content:center;
+  padding:20px;
+  cursor:pointer;
+}
+#knwLightbox.open{ display:flex; }
+#knwLightbox img{
+  max-width:100%;max-height:100%;
+  border-radius:6px;
+  object-fit:contain;
+  pointer-events:none;
+}
+
+/* ── Ed-Card 1 mit echtem Kurs-Nordwest-Cover ── */
+#edCardKnw{
+  display:flex;
+  flex-direction:column;
+}
+#edCardKnw .ed-img-real{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  flex-shrink:0;
+}
+.ed-body-knw{
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+}
+.ed-knw-label{
+  font-family:'Anton',sans-serif;
+  font-size:27px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.90);
+  text-align:center;
+  width:100%;
+}
+
+/* KNW top row: cover zentriert, play-row darunter */
+.knw-top-row{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+.knw-top-row .knw-cover-wrap{
+  margin:0 auto;
+}
+
+@media(min-width:900px){
+  .knw-container{
+    padding:24px 36px 0;
+    max-width:700px;
+  }
+  .knw-cover-wrap img{ border-radius:10px; }
+  .knw-lyric-wrap img{ border-radius:10px; }
+}
+
+/* ══ DESKTOP RESPONSIVE (>= 900px) ══ */
+@media(min-width:900px){
+  html,body{overflow:hidden}
+
+  /* Wider header */
+  .hj-header{padding:14px 32px 12px}
+  .hj-logo-hit,.hj-logo-journey{font-size:28px}
+
+  /* Home grid: 4 columns */
+  .home-grid{
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    padding:18px 28px 0;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  .home-card.wide{grid-column:1/-1}
+  /* Trio Desktop: Große Liebe · BD 2:1 · Poesie — gleiche Zeilenhöhe */
+  .home-trio{
+    gap:12px;
+    grid-template-columns:1fr 2fr 1fr;
+    grid-template-areas:"gl bd po";
+  }
+  .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
+  .home-trio .trio-bd img{aspect-ratio:2/1}
+  .featured-teaser{grid-column:1/-1}
+
+  /* Editorial row: 3 columns, more padding */
+  .ed-section{
+    padding:14px 28px 0;
+    max-width:1400px;
+    margin:0 auto 14px;
+  }
+  .ed-row{gap:12px}
+
+  /* Player bar: wider layout with progress bar inline */
+  .hj-player{
+    left:0;right:0;
+  }
+  .hj-now-strip .hj-now{padding:12px 32px}
+  .hj-controls{padding:10px 32px 18px}
+
+  /* Bottom pad: slightly less on desktop */
+  .home-bottom-pad{height:180px}
+}
+
+@media(min-width:1200px){
+  .home-grid{grid-template-columns:repeat(4,1fr)}
+  .featured-teaser{grid-column:1/-1}
+}
 </style>
 
 
@@ -725,18 +1089,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- HOME -->
 <div class="screen active" id="screenHome">
   <div class="home-grid">
+
+    <!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
+    <div class="home-card square" data-album="top50">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
+    </div>
     <div class="home-card square" data-album="grad30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad" loading="eager"/>
     </div>
     <div class="home-card square" data-album="stories30">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
     </div>
-    <!-- ══ FEATURED TEASER ══ -->
-    <div class="featured-teaser" id="featuredTeaser">
-      <!-- Black circle base -->
-      <div class="ft-circle"></div>
+    <div class="home-card square" data-album="top100">
+      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100" loading="eager"/>
+    </div>
 
-      <!-- 10 Fokus-Cover im Kreis — Index 0 = schwarzer Kreis (kein Bild) -->
+    <!-- Streifen 2: In The Spotlight (volle Breite) -->
+    <div class="featured-teaser" id="featuredTeaser">
+      <div class="ft-circle"></div>
       <div class="ft-covers" id="ftCovers">
         <img src="" class="active ft-blank" loading="eager"/>
         <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg" loading="lazy"/>
@@ -750,8 +1120,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
         <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg" loading="lazy"/>
         <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg" loading="lazy"/>
       </div>
-
-      <!-- Big bold text overlay — uses mix-blend-mode:difference -->
       <div class="ft-text">
         <div class="ft-label">10 Songs im Fokus</div>
         <div class="ft-title-line ft-in">IN</div>
@@ -759,37 +1127,151 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
         <div class="ft-title-line ft-spot">SPOT</div>
         <div class="ft-title-line ft-light">LIGHT</div>
       </div>
-
-      <!-- Song title (bottom right) -->
       <div class="ft-song-name">
         <div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
         <div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
         <div class="ft-song-num" id="ftSongNum">01 / 10</div>
       </div>
-
-      <!-- Dot indicators -->
       <div class="ft-dots" id="ftDots"></div>
     </div>
-    <div class="home-card square" data-album="top50">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
+
+    <!-- Zeile 3: Große Liebe · Buried Diamonds 2:1 · Poesie -->
+    <div class="home-trio wide">
+      <div class="home-card trio-gl" data-album="grosseLiebe">
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe" loading="eager"/>
+      </div>
+      <div class="home-card trio-bd" data-album="buriedDiamonds">
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds" loading="eager"/>
+      </div>
+      <div class="home-card trio-po" data-album="poesie">
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
+      </div>
     </div>
-    <div class="home-card square" data-album="top100">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100" loading="eager"/>
-    </div>
-    <div class="home-card wide" data-album="buriedDiamonds">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="grosseLiebe">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="poesie">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
-    </div>
+
+    <!-- Streifen 4: The Archive (volle Breite) -->
     <div class="home-card wide" id="archiveCard">
       <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
     </div>
+
   </div>
+
+  <!-- ══ EDITORIAL CARDS ══ -->
+  <div class="ed-section">
+    <div class="ed-row">
+
+      <!-- Card 1: Kurs Nordwest -->
+      <div class="ed-card" id="edCardKnw" onclick="showKursNordwest()">
+        <img class="ed-img-real"
+             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg"
+             alt="Kurs Nordwest"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+        <div class="ed-img-placeholder" style="display:none">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Kurs Nordwest</span>
+        </div>
+        <div class="ed-body ed-body-knw">
+          <div class="ed-knw-label">Kurs Nordwest</div>
+        </div>
+      </div>
+
+      <!-- Card 2: Lyric Sheets (placeholder — eigene Seite folgt) -->
+      <a class="ed-card" href="#" onclick="return false;">
+        <div class="ed-img-placeholder">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          <span>Lyrics</span>
+        </div>
+        <div class="ed-body">
+          <div class="ed-tag">Lyric Sheets</div>
+          <div class="ed-title">Worte,<br>die bleiben.</div>
+          <div class="ed-desc">Ausgewählte Lyrics im 2:1 Format — mit Play.</div>
+          <div class="ed-arrow">→</div>
+        </div>
+      </a>
+
+      <!-- Card 3: Origins (placeholder — eigene Seite folgt) -->
+      <a class="ed-card" href="#" onclick="return false;">
+        <div class="ed-img-placeholder">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 4-4 8-7 13C9 17 2 13 2 9a7 7 0 0 1 10-6.32"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <span>Origins</span>
+        </div>
+        <div class="ed-body">
+          <div class="ed-tag">Entstehung</div>
+          <div class="ed-title">Wo Songs<br>herkommen.</div>
+          <div class="ed-desc">Die Geschichte hinter ausgewählten Titeln.</div>
+          <div class="ed-arrow">→</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
   <div class="home-bottom-pad"></div>
+</div>
+
+<!-- KURS NORDWEST -->
+<div id="screenKursNordwest">
+  <div class="knw-container">
+    <!-- Song 1: Mary-Anne -->
+    <!-- Song 1: Mary-Anne -->
+    <div class="knw-song" id="knwSong0">
+
+      <!-- Lyric-Sheet 2:1 -->
+      <div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover%202%201.jpg"
+             alt="Mary-Anne Lyric Sheet" loading="eager"/>
+      </div>
+
+      <!-- Play-Zeile -->
+      <div class="knw-play-row">
+        <button class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn0"
+                onclick="knwPlaySong(0)" aria-label="Mary-Anne abspielen">
+          <svg class="knw-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="knw-icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <div class="knw-play-info">
+          <div class="knw-play-name">Mary-Anne</div>
+          <div class="knw-play-artist">BRO · Jörn Kämper</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Divider -->
+    <div class="knw-divider"></div>
+
+    <!-- Song 2: Six Hours South of Lighthouse Nine -->
+    <div class="knw-song" id="knwSong1">
+
+      <!-- Lyric-Sheet 2:1 -->
+      <div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover%202%201.jpg"
+             alt="Six Hours South of Lighthouse Nine Lyric Sheet" loading="eager"/>
+      </div>
+
+      <!-- Play-Zeile -->
+      <div class="knw-play-row">
+        <button class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn1"
+                onclick="knwPlaySong(1)" aria-label="Six Hours South of Lighthouse Nine abspielen">
+          <svg class="knw-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="knw-icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <div class="knw-play-info">
+          <div class="knw-play-name">Six Hours South of Lighthouse Nine</div>
+          <div class="knw-play-artist">BRO · Jörn Kämper</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Platzhalter für weitere Songs (Song 3 folgt) -->
+
+    <div class="knw-bottom-pad"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="knwLightbox" onclick="knwCloseLightbox()">
+  <img id="knwLightboxImg" src="" alt=""/>
 </div>
 
 <!-- ARCHIVE -->
@@ -1362,6 +1844,7 @@ const npCoverImg   = document.getElementById('npCover');
 const screenHome = document.getElementById('screenHome');
 const screenTL   = document.getElementById('screenTracklist');
 const screenNP   = document.getElementById('screenNowPlaying');
+const screenKnw  = document.getElementById('screenKursNordwest');
 
 // ── State ──
 let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
@@ -1410,6 +1893,7 @@ function setImgSrcWithFallback(img, urls){
 // Wichtig: Annie's/Annies Fire und An und für/fuer sich werden hier bewusst NICHT ergänzt,
 // damit ihre bestehenden funktionierenden Song-Einträge exakt unangetastet bleiben.
 const LYRICS_BY_TITLE = {
+  "mary-anne": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Lyrics.jpg",
   "10000 schritte": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/10000%20Schritte%20-%20Lyrics.jpg",
   "17": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Lyrics.jpg",
   "3 47": "https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/3-47%20-%20Lyrics.jpg",
@@ -1660,6 +2144,108 @@ function getLyricsUrlsForSong(song) {
 }
 
 
+
+// ── KURS NORDWEST DATA ──
+const KNW_SONGS = [
+  {
+    title: 'Mary-Anne',
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mary-anne.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover.jpg',
+    lyric: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover%202%201.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Lyrics.jpg',
+  },
+  {
+    title: 'Six Hours South of Lighthouse Nine',
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/six-hours-south-of-lighthouse-nine.mp3',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover.jpg',
+    lyric: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover%202%201.jpg',
+    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Lyrics.jpg',
+  },
+  // Song 3 folgt
+];
+
+let knwActiveSongIdx = -1;
+
+function knwPlaySong(idx){
+  const s = KNW_SONGS[idx];
+  if(!s) return;
+
+  const btn = document.getElementById('knwPlayBtn' + idx);
+
+  // Toggle: wenn gleicher Song läuft → Play/Pause
+  if(knwActiveSongIdx === idx && audio.src && audio.src === s.mp3){
+    if(audio.paused){
+      audio.play().catch(()=>{});
+      if(btn) btn.classList.add('playing');
+      btnPlay.classList.add('playing');
+      npBtnPlay.classList.add('playing');
+    } else {
+      audio.pause();
+      if(btn) btn.classList.remove('playing');
+      btnPlay.classList.remove('playing');
+      npBtnPlay.classList.remove('playing');
+    }
+    return;
+  }
+
+  // Neuer Song
+  knwActiveSongIdx = idx;
+  // Reset andere KNW-Buttons
+  document.querySelectorAll('.knw-play-btn-circle').forEach(b=>b.classList.remove('playing'));
+
+  audio.src = s.mp3;
+  audio.load();
+  audio.play().catch(()=>{});
+  if(btn) btn.classList.add('playing');
+
+  // Update Now Strip
+  setImgSrcWithFallback(nowCover, [s.cover]);
+  nowCover.style.visibility = 'visible';
+  nowTitle.textContent = s.title;
+  nowNum.textContent = '';
+  nowInfo.style.visibility = 'visible';
+  playerBar.classList.add('visible');
+  showNowStrip();
+
+  // NP-Screen vorbereiten
+  setImgSrcWithFallback(npCover, [s.cover]);
+  npTitle.textContent = s.title;
+  npAlbumLabel.textContent = 'Kurs Nordwest';
+  prevScreen = 'kursNordwest';
+  queueIdx = -1;
+  arcQueueIdx = -1;
+  curAlbum = null;
+  btnPlay.classList.add('playing');
+  npBtnPlay.classList.add('playing');
+}
+
+function knwOpenLightbox(src){
+  document.getElementById('knwLightboxImg').src = src;
+  document.getElementById('knwLightbox').classList.add('open');
+}
+function knwCloseLightbox(){
+  document.getElementById('knwLightbox').classList.remove('open');
+}
+
+function showKursNordwest(){
+  screenHome.classList.remove('active');
+  screenTL.classList.remove('active');
+  screenArchive.classList.remove('active');
+  screenNP.classList.remove('active');
+  screenKnw.style.display = 'block';
+  backBtn.classList.add('visible');
+  logoHome.style.display = 'none';
+  makingWaves.style.display = 'none';
+  headerRight.textContent = 'Kurs Nordwest';
+  mainHeader.style.display = '';
+  screenKnw.scrollTop = 0;
+  prevScreen = 'kursNordwest';
+}
+function hideKursNordwest(){
+  screenKnw.style.display = 'none';
+  showHome();
+}
+
 // ── Navigation ──
 function showHome(){
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
@@ -1668,6 +2254,7 @@ function showHome(){
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
+  if(screenKnw) screenKnw.style.display='none';
   backBtn.classList.remove('visible');
   logoHome.style.display='';
   makingWaves.style.display='';
@@ -1731,6 +2318,7 @@ function hideNowPlaying(){
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
+  else if(prevScreen==='kursNordwest'){ if(screenKnw) screenKnw.style.display='block'; }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
 }
 
@@ -1738,6 +2326,7 @@ function hideNowPlaying(){
 document.querySelectorAll('[data-album]').forEach(el=>el.addEventListener('click',()=>showAlbum(el.dataset.album)));
 backBtn.addEventListener('click',()=>{
   if(screenNP.classList.contains('active')) hideNowPlaying();
+  else if(screenKnw && screenKnw.style.display==='block') hideKursNordwest();
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
@@ -1809,9 +2398,14 @@ function applyLyricsTransform() {
 }
 
 function openLyrics() {
-  const song = isArchiveMode()
-    ? arcQueue[arcQueueIdx]
-    : (curAlbum && queueIdx >= 0 ? ALBUMS[curAlbum].songs[queue[queueIdx]] : null);
+  let song = null;
+  if(isArchiveMode()){
+    song = arcQueue[arcQueueIdx];
+  } else if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0){
+    song = KNW_SONGS[knwActiveSongIdx];
+  } else if(curAlbum && queueIdx >= 0){
+    song = ALBUMS[curAlbum].songs[queue[queueIdx]];
+  }
   const lyricsUrls = getLyricsUrlsForSong(song);
   if (!song || !lyricsUrls.length) return;
   lyricsCoverSrc = npCoverImg.src;
@@ -1951,6 +2545,12 @@ function playIdx(songIdx){
   if(pos===-1){queue=buildQueue(songIdx);pos=queue.indexOf(songIdx);}
   queueIdx=pos; loadPlay(songIdx);
 }
+let suppressTrackScroll = false;
+function loadPlayNoScroll(songIdx){
+  suppressTrackScroll = true;
+  loadPlay(songIdx);
+  setTimeout(()=>{ suppressTrackScroll = false; }, 500);
+}
 function loadPlay(songIdx){
   featuredMode = false; // Featured-Modus beenden
   const s=ALBUMS[curAlbum].songs[songIdx];
@@ -1971,7 +2571,7 @@ function refreshHighlight(){
     row.classList.toggle('playing',i===cur&&!audio.paused);
   });
   const active=tlList.querySelector('.tl-track.active');
-  if(active)active.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(active && !suppressTrackScroll)active.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 let featuredMode = false; // true = Fokus-Song läuft, kein Player-Strip
 
@@ -1980,6 +2580,10 @@ function updatePlayBtns(){
   const p=!audio.paused;
   btnPlay.classList.toggle('playing',p);
   npBtnPlay.classList.toggle('playing',p);
+  // KNW Play-Buttons sync — nur aktiver Button, alle anderen aus
+  document.querySelectorAll('.knw-play-btn-circle').forEach((b,i)=>{
+    b.classList.toggle('playing', p && i === knwActiveSongIdx);
+  });
   refreshHighlight();
   refreshArchiveHighlight();
 }
@@ -2056,7 +2660,7 @@ tlAlbumShuffleBtn.addEventListener('click',()=>{
   queue = shuffleArr(ALBUMS[curAlbum].songs.map((_,i)=>i));
   queueIdx = 0;
   prevScreen = 'tracklist';
-  loadPlay(queue[0]);
+  loadPlayNoScroll(queue[0]);
 });
 
 btnShuffle.addEventListener('click',()=>{
@@ -2187,6 +2791,11 @@ function buildAllSongs(){
       const id = s.mp3; // use mp3 URL as unique key
       if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:key}); }
     });
+  });
+  // KNW-Songs ins Archiv
+  KNW_SONGS.forEach(s=>{
+    const id = s.mp3;
+    if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:'kursNordwest'}); }
   });
   all.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
   return all;
@@ -2443,7 +3052,7 @@ screenArchive.addEventListener('scroll',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v29-up-button-archive-and-albums-20260517';
+  const VERSION = 'v38-trio-layout-20260517';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
