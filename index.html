@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v45-swf-polish -->
+<!-- Version: v59-swf-banner-responsive-position -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -737,7 +737,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border:0.5px solid rgba(255,255,255,0.07);
   transition:transform .13s,opacity .13s;
   text-decoration:none;
-  display:block;
+  display:flex;
+  flex-direction:column;
   color:inherit;
 }
 .ed-card:active{transform:scale(.95);opacity:.85}
@@ -978,12 +979,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:block;
   flex-shrink:0;
 }
+#edCardKnw{
+  display:flex;
+  flex-direction:column;
+}
 .ed-body-knw{
-  padding:0 14px;
+  padding:20px 14px;
   display:flex;
   align-items:center;
   justify-content:center;
   flex:1;
+  background:#000;
 }
 .ed-knw-label{
   font-family:'Anton',sans-serif;
@@ -1028,12 +1034,45 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-shrink:0;
   filter:grayscale(30%) brightness(.85);
 }
+#edCardSwf .ed-knw-label{
+  line-height:1.18;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100%;
+  text-align:center;
+}
 .ed-body-swf{
-  padding:0 14px;
+  padding:20px 14px;
   display:flex;
   align-items:center;
   justify-content:center;
   flex:1;
+  background:#000;
+}
+
+/* ── Ed-Card 3: Almost One Million Streams ── */
+#edCardStreams{
+  display:flex;
+  flex-direction:column;
+}
+#edCardStreams .ed-img-real{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  flex-shrink:0;
+  filter:grayscale(15%) brightness(.9);
+}
+#edCardStreams .ed-knw-label{
+  font-size:26px;
+  line-height:1.18;
+  letter-spacing:.04em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100%;
+  text-align:center;
 }
 
 /* ══ SONGWRITER'S FAVORITES SCREEN ══ */
@@ -1049,30 +1088,54 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .swf-banner-title{
   position:relative;
   z-index:2;
-  padding:0 20px 16px;
+  padding:20px 20px 16px;
   line-height:1;
+  text-align:left;
+  margin-left:0;
 }
 .swf-banner-play{
   display:block;
   font-family:'Anton',sans-serif;
-  font-size:clamp(30px,8.5vw,56px);
+  font-size:clamp(22px,6vw,40px);
   letter-spacing:.10em;
   text-transform:uppercase;
-  color:rgba(255,255,255,.58);
-  /* P startet zwischen S und T von LIST:
-     LIST ist ~100% breit, S≈60%, T≈75% → P bei ~65% */
-  padding-left:62%;
-  margin-bottom:10px; /* mehr Luft zwischen PLAY und LIST */
+  color:#c8440a;
+  padding-left:55%;
+  margin-bottom:8px;
 }
 .swf-banner-list{
   display:block;
   font-family:'Anton',sans-serif;
-  font-size:clamp(72px,20vw,124px);
+  font-size:clamp(52px,14vw,88px);
   letter-spacing:.03em;
   text-transform:uppercase;
-  color:#fff;
+  color:#1a3d3a;
   line-height:.86;
   padding-left:0;
+}
+/* Banner 2: kleinere Schrift, Farben passend zum bunten Motiv */
+.swf-banner-2 .swf-banner-play{
+  font-size:clamp(16px,4.5vw,30px);
+  color:#b84a00;
+  padding-left:45%;
+}
+.swf-banner-2 .swf-banner-list{
+  font-size:clamp(38px,10vw,66px);
+  color:#1a1a1a;
+}
+/* iPhone: Banner 1 oben rechts — neben Kopf, vor dem Ast */
+@media(max-width:430px){
+  .swf-banner:not(.swf-banner-2){
+    justify-content:flex-end;
+  }
+  .swf-banner:not(.swf-banner-2) .swf-banner-title{
+    text-align:right;
+    margin-left:auto;
+  }
+  .swf-banner:not(.swf-banner-2) .swf-banner-play{
+    padding-left:0;
+    padding-right:0;
+  }
 }
 
 /* ── Intro-Streifen: Spotify CTA links | Zitat rechts ── */
@@ -1156,17 +1219,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   min-height:400px;
   overflow:hidden;
   display:flex;
-  align-items:flex-end;
+  align-items:flex-start;
   justify-content:flex-start;
   background:#0a0a0a;
+}
+/* Banner 2: ebenfalls oben links */
+.swf-banner-2{
+  justify-content:flex-start;
 }
 .swf-banner-bg{
   position:absolute;
   inset:0;
   width:100%;height:100%;
   object-fit:cover;
-  opacity:.5;
-  filter:grayscale(30%) brightness(.7);
+  object-position:center top;
+  opacity:1;
+  filter:none;
   pointer-events:none;
   display:block;
 }
@@ -1174,8 +1242,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   content:'';
   position:absolute;
   inset:0;
-  background:linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.72) 100%);
+  background:none;
   pointer-events:none;
+}
+/* kein Schatten, kein Backdrop */
+.swf-banner-2 .swf-banner-title{
+  text-align:left;
+  margin-left:0;
 }
 
 /* ── Song entry: alternating schwarz/anthrazit ── */
@@ -1344,6 +1417,51 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-header--swf .hj-back-btn svg{ stroke:rgba(255,255,255,.55); }
 .hj-header--swf .hj-header-right{ color:rgba(255,255,255,.3); }
 
+
+/* ══ IPHONE: SWF kleinere Schrift damit weniger Umbrüche ══ */
+@media(max-width:430px){
+  /* ── Home Editorial Cards: kleinere Schrift damit Labels sauber umbrechen ── */
+  .ed-knw-label{
+    font-size:17px;
+    letter-spacing:.04em;
+    line-height:1.15;
+  }
+  #edCardStreams .ed-knw-label{
+    font-size:16px;
+    line-height:1.2;
+  }
+  .ed-body-knw{
+    padding:14px 10px;
+  }
+
+  /* ── SWF Banner ── */
+  .swf-banner-list{
+    font-size:clamp(52px,14vw,68px);
+  }
+  .swf-banner-play{
+    font-size:clamp(22px,6vw,30px);
+  }
+  /* ── SWF Lyric-Zitate: deutlich kleiner ── */
+  .swf-quote{
+    font-size:13px;
+    line-height:1.55;
+  }
+  /* Song-Titel darf umbrechen */
+  .swf-song-title{
+    font-size:10px;
+    white-space:normal;
+    letter-spacing:.10em;
+  }
+  /* Intro-CTA Titel */
+  .swf-intro-cta-title{
+    font-size:12px;
+    letter-spacing:.03em;
+  }
+  /* Playlist-CTA Titel */
+  .swf-playlist-cta-title{
+    font-size:18px;
+  }
+}
 
 /* ══ DESKTOP RESPONSIVE (>= 900px) ══ */
 @media(min-width:900px){
@@ -1515,23 +1633,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
           <span>Favorites</span>
         </div>
         <div class="ed-body ed-body-knw">
-          <div class="ed-knw-label">Songwriter's Favorites</div>
+          <div class="ed-knw-label">Songwriter's<br>Favorites</div>
         </div>
       </div>
 
-      <!-- Card 3: Origins (placeholder — eigene Seite folgt) -->
-      <a class="ed-card" href="#" onclick="return false;">
-        <div class="ed-img-placeholder">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 4-4 8-7 13C9 17 2 13 2 9a7 7 0 0 1 10-6.32"/><circle cx="12" cy="9" r="2.5"/></svg>
-          <span>Origins</span>
+      <!-- Card 3: Almost One Million Streams -->
+      <div class="ed-card" id="edCardStreams" onclick="return false;">
+        <img class="ed-img-real"
+             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg"
+             alt="Almost One Million Streams"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+        <div class="ed-img-placeholder" style="display:none">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18V9"/><path d="M10 18V5"/><path d="M15 18V12"/><path d="M20 18V7"/></svg>
+          <span>Streams</span>
         </div>
-        <div class="ed-body">
-          <div class="ed-tag">Entstehung</div>
-          <div class="ed-title">Wo Songs<br>herkommen</div>
-          <div class="ed-desc">Die Geschichte hinter ausgewählten Titeln</div>
-          <div class="ed-arrow">→</div>
+        <div class="ed-body ed-body-knw">
+          <div class="ed-knw-label">Almost One<br>Million Streams<br>And Counting</div>
         </div>
-      </a>
+      </div>
 
     </div>
   </div>
@@ -1610,7 +1729,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
   <!-- Section Banner: Playlist — Foto-Platzhalter, später befüllen -->
   <div class="swf-banner">
-    <!-- <img class="swf-banner-bg" src="FOTO_URL_HIER" alt=""/> -->
+    <img class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist2.jpg" alt=""/>
     <div class="swf-banner-title">
       <span class="swf-banner-play">PLAY</span>
       <span class="swf-banner-list">LIST</span>
@@ -2202,6 +2321,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       </div>
     </div>
 
+    <!-- ══ ZWEITER PLAYLIST-BANNER (nach Song 20) ══ -->
+    <div class="swf-banner swf-banner-2">
+      <img class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist.jpg" alt=""/>
+      <div class="swf-banner-title">
+        <span class="swf-banner-play">PLAY</span>
+        <span class="swf-banner-list">LIST</span>
+      </div>
+    </div>
 
     <div class="swf-entry">
       <div class="swf-quote">
