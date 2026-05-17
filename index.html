@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v16q-in-the-spotlight-title-final -->
+<!-- Version: v23-random-function-icon-only-150 -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -92,16 +92,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-shrink:0;
 }
 .arc-search.has-value .arc-clear{display:flex}
+
+.arc-hero{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(44px,9vw,104px);
+  padding:10px 8px 10px;
+}
 .arc-letters{
   display:flex;
   flex-direction:column;
   gap:28px;
-  padding:22px 18px 32px;
+  padding:22px 0 32px;
   min-height:43vh;
   justify-content:center;
+  width:min(54vw,390px);
   max-width:390px;
-  margin:0 auto;
-  overflow:hidden;
+  margin:0;
+  overflow:visible;
 }
 .arc-letter-row{
   display:flex;
@@ -110,7 +119,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .arc-letter-row.r1{justify-content:space-between}
 .arc-letter-row.r2{justify-content:space-between;padding-left:8%;padding-right:4%}
-.arc-letter-row.r3{justify-content:space-between;margin-left:-2%;width:104%}
+.arc-letter-row.r3{justify-content:space-between;margin-left:0;width:100%}
 .arc-letter-row.r4{justify-content:space-between;padding-left:2%;padding-right:0}
 .arc-letter-row.r5{justify-content:center;gap:34px}
 
@@ -133,6 +142,47 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   transform:scale(1.06);
 }
 .arc-letter.dim{opacity:0.22}
+
+.arc-shuffle-btn{
+  width:clamp(68px,13vw,104px);
+  height:clamp(68px,13vw,104px);
+  flex:0 0 auto;
+  border-radius:50%;
+  border:0;
+  background:transparent;
+  color:#85ACC9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:none;
+  transition:transform .12s ease, opacity .15s ease;
+  padding:0;
+  overflow:visible;
+}
+.arc-shuffle-btn:active{transform:scale(.92);opacity:.88}
+.arc-shuffle-img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+.custom-random-img{
+  width:39px;
+  height:39px;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+.np-btn .custom-random-img{width:42px;height:42px}
+.hj-btn#btnShuffle svg,.np-btn#npBtnShuffle svg{display:none}
+@media(max-width:599px){
+  .arc-hero{justify-content:center;gap:30px;padding-left:8px;padding-right:8px}
+  .arc-letters{width:min(62vw,330px);min-height:38vh;gap:22px}
+  .arc-shuffle-btn{width:66px;height:66px}
+}
+
 .arc-section-label{
   padding:10px 16px 4px 16px;
   font-size:12px;font-weight:700;
@@ -521,6 +571,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   to   { opacity: 1; transform: scale(1); }
 }
 
+@media(max-width:599px){
+  .ft-text{top:3%;}
+  .ft-label{margin-bottom:clamp(5px,1.2vw,10px);}
+  .ft-dots{bottom:7%;}
+}
+
 </style>
 
 
@@ -615,7 +671,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- ARCHIVE -->
 <div class="screen" id="screenArchive">
   <div class="arc-sticky">
-    <div class="arc-letters" id="arcLetters"></div>
+    <div class="arc-hero">
+      <div class="arc-letters" id="arcLetters"></div>
+      <button class="arc-shuffle-btn" id="arcShuffleAllBtn" aria-label="Gesamtarchiv zufällig abspielen">
+        <img class="arc-shuffle-img"
+             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"
+             onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"
+             alt=""/>
+      </button>
+    </div>
     <div class="arc-search" id="arcSearchWrap">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="arcInput" placeholder="Song suchen …" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
@@ -661,7 +725,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="np-time"><span id="npElapsed">0:00</span><span id="npRemain">—</span></div>
     <div class="np-controls">
       <button class="np-btn" id="npBtnShuffle">
-        <svg viewBox="0 0 24 24"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        <img class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" alt=""/>
       </button>
       <button class="np-btn filled" id="npBtnPrev">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
@@ -705,7 +769,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
     <div class="hj-controls">
       <button class="hj-btn" id="btnShuffle">
-        <svg viewBox="0 0 24 24"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        <img class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" alt=""/>
       </button>
       <button class="hj-btn filled" id="btnPrev">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
@@ -1894,6 +1958,7 @@ const arcInput      = document.getElementById('arcInput');
 const arcClear      = document.getElementById('arcClear');
 const arcSearchWrap = document.getElementById('arcSearchWrap');
 const arcLetters    = document.getElementById('arcLetters');
+const arcShuffleAllBtn = document.getElementById('arcShuffleAllBtn');
 const arcList       = document.getElementById('arcList');
 
 
@@ -2110,6 +2175,16 @@ function hideArchive(){
 }
 
 document.getElementById('archiveCard').addEventListener('click',showArchive);
+arcShuffleAllBtn.addEventListener('click',()=>{
+  shuffleOn = true;
+  btnShuffle.classList.add('active');
+  npBtnShuffle.classList.add('active');
+  arcQueue = shuffleArr(ALL_SONGS.slice());
+  arcQueueIdx = 0;
+  prevScreen = 'archive';
+  loadArchiveSongByIndex(0);
+});
+
 
 // Back button: archive → home (runs before existing TL → home handler, guard by active check)
 backBtn.addEventListener('click',()=>{
@@ -2159,7 +2234,7 @@ screenArchive.addEventListener('scroll',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v16q-in-the-spotlight-title-final-20260517';
+  const VERSION = 'v23-random-function-icon-only-150-20260517';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
