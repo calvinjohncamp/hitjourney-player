@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v33-random-button-fixed-position -->
+<!-- Version: v34-ipad-random-button-centered -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -330,9 +330,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-top{padding-top:24px;padding-bottom:16px;}
   .tl-hero{align-items:flex-start;}
   .tl-album-random-btn{
-    width:86px;
-    height:86px;
-    margin-top:37px; /* exakt mittig zur 160px-Coverhöhe */
+    width:112px;  /* iPad: ca. 30% größer */
+    height:112px;
+    margin-top:42px; /* wieder sauber mittig zur Coverhöhe */
   }
 }
 @media(max-width:599px){
@@ -345,14 +345,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-album-random-btn{
     width:68px;
     height:68px;
-    position:relative;
-    top:41px; /* feste vertikale Position unabhängig von Skalierung */
-    left:8px; /* etwas weiter rechts */
-    margin-top:0;
-    transform:none;
+    margin-top:41px; /* minimal tiefer + optisch exakt mittig */
+    transform:translateX(8px); /* etwas weiter rechts */
   }
   .tl-album-random-btn:active{
-    transform:scale(.92);
+    transform:translateX(8px) scale(.92);
   }
 }
 
