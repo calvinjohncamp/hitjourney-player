@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v23-random-function-icon-only-150 -->
+<!-- Version: v27-archive-up-button-custom -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -203,31 +203,104 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 #arcList{max-width:680px;margin:0 auto;width:100%}
 
+.arc-top-btn{
+  position:fixed;
+  right:18px;
+  bottom:var(--arc-top-btn-bottom, 156px);
+  z-index:260;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:0;
+  background:transparent;
+  color:#85ACC9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:none;
+  opacity:0;
+  transform:translateY(10px) scale(.96);
+  pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease;
+}
+.arc-top-btn.visible{
+  opacity:.92;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+.arc-top-btn:active{transform:translateY(0) scale(.9);opacity:.78}
+.arc-top-img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+
+
 /* ══ TRACKLIST ══ */
-/* Album header: cover centered, title+meta centered below */
+/* Album header: cover aligned with track thumbnails + album random play */
 .tl-top{
-  display:flex;flex-direction:column;align-items:center;
-  padding:20px 16px 16px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:20px 16px 16px 74px; /* 32px row padding + 28px number column + 14px gap */
   background:transparent;
   border-bottom:none;
-  gap:12px;
   max-width:680px;
   margin:0 auto;
   width:100%;
 }
+.tl-hero{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:clamp(46px,8vw,92px);
+  width:100%;
+}
+.tl-cover-stack{
+  width:min(160px,40vw);
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 .tl-top-cover{
-  width:min(160px,40vw);height:min(160px,40vw);
+  width:100%;height:auto;aspect-ratio:1/1;
   border-radius:8px;object-fit:cover;
   background:#0B2A42;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
 }
-@media(min-width:600px){
-  .tl-top-cover{width:160px;height:160px;}
-  .tl-top{gap:14px;padding:24px 16px 16px;}
+.tl-top-info{text-align:center;margin-top:12px;width:100%;}
+.tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-top-meta{font-size:12px;color:rgba(133,172,201,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-album-random-btn{
+  width:clamp(46px,8.3vw,66px);
+  height:clamp(46px,8.3vw,66px);
+  flex:0 0 auto;
+  border-radius:50%;
+  border:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  padding:0;
+  overflow:visible;
+  transition:transform .12s ease,opacity .15s ease;
 }
-.tl-top-info{text-align:center;}
-.tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;}
-.tl-top-meta{font-size:12px;color:rgba(133,172,201,.6)}
+.tl-album-random-btn:active{transform:scale(.92);opacity:.88}
+.tl-album-random-btn .arc-shuffle-img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none}
+@media(min-width:600px){
+  .tl-cover-stack{width:160px;}
+  .tl-top{padding-top:24px;padding-bottom:16px;}
+}
+@media(max-width:599px){
+  .tl-top{padding-left:74px;padding-right:16px;}
+  .tl-hero{gap:30px;}
+  .tl-cover-stack{width:min(140px,38vw);}
+  .tl-album-random-btn{width:45px;height:45px;}
+}
 
 /* Track rows — bigger, Spotify-sized */
 .tl-track{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 32px;cursor:pointer;transition:background .12s}
@@ -688,16 +761,29 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </div>
   <div id="arcSongCount" style="text-align:center;padding:10px 0 2px;font-size:13px;font-weight:600;color:rgba(133,172,201,.5);letter-spacing:.05em"></div>
   <div id="arcList"></div>
+  <button class="arc-top-btn" id="arcTopBtn" aria-label="Zurück zum Archive-Anfang">
+    <img class="arc-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png" alt=""/>
+  </button>
   <div class="home-bottom-pad"></div>
 </div>
 
 <!-- TRACKLIST -->
 <div class="screen" id="screenTracklist">
   <div class="tl-top">
-    <img class="tl-top-cover" id="tlCover" src="" alt=""/>
-    <div class="tl-top-info">
-      <div class="tl-top-title" id="tlTitle"></div>
-      <div class="tl-top-meta" id="tlMeta"></div>
+    <div class="tl-hero">
+      <div class="tl-cover-stack">
+        <img class="tl-top-cover" id="tlCover" src="" alt=""/>
+        <div class="tl-top-info">
+          <div class="tl-top-title" id="tlTitle"></div>
+          <div class="tl-top-meta" id="tlMeta"></div>
+        </div>
+      </div>
+      <button class="tl-album-random-btn" id="tlAlbumShuffleBtn" aria-label="Album zufällig abspielen">
+        <img class="arc-shuffle-img"
+             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"
+             onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"
+             alt=""/>
+      </button>
     </div>
   </div>
   <div id="tlList"></div>
@@ -1187,6 +1273,7 @@ const tlCover      = document.getElementById('tlCover');
 const tlTitle      = document.getElementById('tlTitle');
 const tlMeta       = document.getElementById('tlMeta');
 const tlList       = document.getElementById('tlList');
+const tlAlbumShuffleBtn = document.getElementById('tlAlbumShuffleBtn');
 const nowCover     = document.getElementById('nowCover');
 const nowTitle     = document.getElementById('nowTitle');
 const nowNum       = document.getElementById('nowNum');
@@ -1561,6 +1648,10 @@ function showAlbum(key){
   showNowStrip();
   playerBar.classList.add('visible');
   refreshHighlight();
+  // Beim Wechsel auf eine Albumseite immer oben starten — unabhängig von Shuffle/aktiver Zeile.
+  screenTL.scrollTop = 0;
+  requestAnimationFrame(()=>{ screenTL.scrollTop = 0; });
+  setTimeout(()=>{ screenTL.scrollTop = 0; }, 80);
   prevScreen='tracklist';
 }
 function showNowPlaying(){
@@ -1896,6 +1987,17 @@ btnNext.addEventListener('click',()=>{
   else queueIdx=(queueIdx+1)%queue.length;
   loadPlay(queue[queueIdx]);
 });
+tlAlbumShuffleBtn.addEventListener('click',()=>{
+  if(!curAlbum)return;
+  shuffleOn = true;
+  btnShuffle.classList.add('active');
+  npBtnShuffle.classList.add('active');
+  queue = shuffleArr(ALBUMS[curAlbum].songs.map((_,i)=>i));
+  queueIdx = 0;
+  prevScreen = 'tracklist';
+  loadPlay(queue[0]);
+});
+
 btnShuffle.addEventListener('click',()=>{
   shuffleOn=!shuffleOn;
   btnShuffle.classList.toggle('active',shuffleOn);
@@ -1954,6 +2056,7 @@ function updateMS(i){
 
 // ── Archive ──
 const screenArchive = document.getElementById('screenArchive');
+const arcTopBtn = document.getElementById('arcTopBtn');
 const arcInput      = document.getElementById('arcInput');
 const arcClear      = document.getElementById('arcClear');
 const arcSearchWrap = document.getElementById('arcSearchWrap');
@@ -2128,6 +2231,7 @@ function scrollToLetter(l){
     const y = screenArchive.scrollTop + (targetTop - containerTop) - 8;
 
     screenArchive.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    setTimeout(updateArchiveTopButton,520);
   },360);
 }
 
@@ -2149,6 +2253,8 @@ arcClear.addEventListener('click',()=>{
 });
 
 function showArchive(){
+  screenArchive.scrollTop = 0;
+  setArchiveHeaderCollapsed(false);
   setArchiveHeaderCollapsed(false);
   renderArchiveList(ALL_SONGS);
   screenHome.classList.remove('active');
@@ -2163,12 +2269,14 @@ function showArchive(){
   mainHeader.style.position='';
   mainHeader.style.display='';
   screenArchive.scrollTop=0;
+  updateArchiveTopButton();
   arcLastScrollTop=0;
   document.getElementById('arcSongCount').textContent = ALL_SONGS.length + ' songs';
   prevScreen='archive';
 }
 function hideArchive(){
   screenArchive.classList.remove('active');
+  updateArchiveTopButton();
   arcInput.value='';
   arcSearchWrap.classList.remove('has-value');
   showHome();
@@ -2204,6 +2312,23 @@ function setArchiveHeaderCollapsed(collapsed){
   sticky.classList.toggle('collapsed', collapsed);
 }
 
+function updateArchiveTopButton(){
+  if(!arcTopBtn) return;
+  const active = screenArchive.classList.contains('active') && screenArchive.scrollTop > 120;
+  arcTopBtn.classList.toggle('visible', active);
+  const playerTop = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().top : window.innerHeight;
+  const bottom = Math.max(24, window.innerHeight - playerTop + 14);
+  document.documentElement.style.setProperty('--arc-top-btn-bottom', bottom + 'px');
+}
+
+arcTopBtn && arcTopBtn.addEventListener('click',()=>{
+  setArchiveHeaderCollapsed(false);
+  arcTopBtn.classList.remove('visible');
+  screenArchive.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(updateArchiveTopButton,260);
+});
+window.addEventListener('resize',updateArchiveTopButton);
+
 screenArchive.addEventListener('scroll',()=>{
   if(arcScrollTicking) return;
   arcScrollTicking = true;
@@ -2226,6 +2351,7 @@ screenArchive.addEventListener('scroll',()=>{
     }
 
     arcLastScrollTop = Math.max(0,y);
+    updateArchiveTopButton();
     arcScrollTicking=false;
   });
 }, {passive:true});
@@ -2234,7 +2360,7 @@ screenArchive.addEventListener('scroll',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v23-random-function-icon-only-150-20260517';
+  const VERSION = 'v27-archive-up-button-custom-20260517';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
