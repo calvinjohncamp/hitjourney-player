@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v16l-runtime-media-overrides -->
+<!-- Version: v16q-in-the-spotlight-title-final -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -439,17 +439,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .ft-title-line {
   font-family: 'Anton', sans-serif;
-  font-size: clamp(28px, 8vw, 90px);
+  font-size: clamp(31px, 8.8vw, 99px);
   line-height: .97;
   text-transform: uppercase;
   color: #0a0a0a;
   mix-blend-mode: difference;
   letter-spacing: -.01em;
 }
-.ft-title-line:nth-child(2) { margin-left: 0; }      /* Auf */
-.ft-title-line:nth-child(3) { margin-left: 7%; }     /* der — e startet über Mitte des e von Über */
-.ft-title-line:nth-child(4) { margin-left: 1.5%; }   /* Über */
-.ft-title-line:nth-child(5) { margin-left: 0; }      /* holspur — ganz links */
+.ft-title-line.ft-in,
+.ft-title-line.ft-the,
+.ft-title-line.ft-spot,
+.ft-title-line.ft-light { margin-top: 0; }
+.ft-title-line.ft-in    { margin-left: 0; }
+.ft-title-line.ft-the   { margin-left: 3.8%; }  /* THE eine halbe Buchstabenbreite weiter links */
+.ft-title-line.ft-spot  { margin-left: 7.2%; }  /* SPOT eine halbe Buchstabenbreite weiter links */
+.ft-title-line.ft-light { margin-left: 0; }
 
 /* Right side: song title — creme text, black shadow */
 .ft-song-name {
@@ -459,7 +463,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   z-index: 4;
   text-align: right;
   pointer-events: none;
-  max-width: 55%;
+  max-width: 62%;
 }
 .ft-song-title {
   font-family: 'Anton', sans-serif;
@@ -555,25 +559,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <!-- 10 Fokus-Cover im Kreis — Index 0 = schwarzer Kreis (kein Bild) -->
       <div class="ft-covers" id="ftCovers">
         <img src="" class="active ft-blank" loading="eager"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20(Alte%20Braut)%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg" loading="lazy"/>
         <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20One%20Tells%20You%20When%20It%20Starts%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg" loading="lazy"/>
         <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg" loading="lazy"/>
+        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg" loading="lazy"/>
       </div>
 
       <!-- Big bold text overlay — uses mix-blend-mode:difference -->
       <div class="ft-text">
         <div class="ft-label">10 Songs im Fokus</div>
-        <div class="ft-title-line">Auf</div>
-        <div class="ft-title-line">der</div>
-        <div class="ft-title-line">Über</div>
-        <div class="ft-title-line">holspur</div>
+        <div class="ft-title-line ft-in">IN</div>
+        <div class="ft-title-line ft-the">THE</div>
+        <div class="ft-title-line ft-spot">SPOT</div>
+        <div class="ft-title-line ft-light">LIGHT</div>
       </div>
 
       <!-- Song title (bottom right) -->
@@ -2155,7 +2159,7 @@ screenArchive.addEventListener('scroll',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v16l-runtime-media-overrides-20260516';
+  const VERSION = 'v16q-in-the-spotlight-title-final-20260517';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -2169,38 +2173,37 @@ screenArchive.addEventListener('scroll',()=>{
 (function(){
   const FEATURED_SONGS = [
     { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: nur schwarzer Kreis
-    { title: 'Anywhere you were with me', display: 'Anywhere You Were With Me', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3' },
-    { title: 'Bar am Meer', display: 'Bar am Meer', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Fokus.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Ultimate%20-%20Lyrics.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bar-am-meer.mp3' },
-    { title: 'Berlin (Alte Braut)', display: 'Berlin (Alte Braut)', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20(Alte%20Braut)%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3' },
-    { title: 'Gleich zurück', display: 'Gleich zurück', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3' },
-    { title: 'Late September Heart', display: 'Late September Heart', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Fokus.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Ultimate%20-%20Lyrics.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3' },
-    { title: 'My piece of heaven', display: 'My Piece of Heaven', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
-    { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht', artist: 'Jörn Kämper',
+    { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
-    { title: 'No one tells you when it starts', display: 'No One Tells You When It Starts', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20One%20Tells%20You%20When%20It%20Starts%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3' },
-    { title: 'Rita 4ever', display: 'Rita 4ever', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
-      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
+    { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
+    { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
+    { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
+    { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
     { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
+    { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3' },
+    { title: 'Keys on the Floor', display: 'Keys On The Floor', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3' },
+    { title: 'Rita 4ever', display: 'Rita 4 Ever', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
+    { title: 'My piece of heaven', display: 'My Piece Of Heaven', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
   ];
-
   const teaser   = document.getElementById('featuredTeaser');
   const coversEl = document.getElementById('ftCovers');
   const imgEls   = coversEl ? Array.from(coversEl.querySelectorAll('img')) : [];
@@ -2229,7 +2232,7 @@ screenArchive.addEventListener('scroll',()=>{
     imgEls[current].classList.add('active');
     dots[current].classList.add('active');
     const song = FEATURED_SONGS[current];
-    if(titleEl)  titleEl.textContent  = song.display || '';
+    if(titleEl)  titleEl.innerHTML  = song.display || '';
     if(artistEl) artistEl.textContent = song.artist  || '';
     if(numEl)    numEl.textContent    = song.title ? String(current).padStart(2,'0') + ' / ' + (FEATURED_SONGS.length - 1) : '';
   }
@@ -2241,7 +2244,7 @@ screenArchive.addEventListener('scroll',()=>{
     clearInterval(timer);
   }
 
-  if(titleEl)  titleEl.textContent  = '';
+  if(titleEl)  titleEl.innerHTML  = '';
   if(artistEl) artistEl.textContent = '';
   if(numEl)    numEl.textContent    = '';
   startRotation();
