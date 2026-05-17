@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v29-up-button-archive-and-albums -->
+<!-- Version: v33-random-button-fixed-position -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -328,12 +328,32 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(min-width:600px){
   .tl-cover-stack{width:160px;}
   .tl-top{padding-top:24px;padding-bottom:16px;}
+  .tl-hero{align-items:flex-start;}
+  .tl-album-random-btn{
+    width:86px;
+    height:86px;
+    margin-top:37px; /* exakt mittig zur 160px-Coverhöhe */
+  }
 }
 @media(max-width:599px){
   .tl-top{padding-left:74px;padding-right:16px;}
-  .tl-hero{gap:30px;}
+  .tl-hero{
+    gap:48px;
+    align-items:flex-start;
+  }
   .tl-cover-stack{width:min(140px,38vw);}
-  .tl-album-random-btn{width:45px;height:45px;}
+  .tl-album-random-btn{
+    width:68px;
+    height:68px;
+    position:relative;
+    top:41px; /* feste vertikale Position unabhängig von Skalierung */
+    left:8px; /* etwas weiter rechts */
+    margin-top:0;
+    transform:none;
+  }
+  .tl-album-random-btn:active{
+    transform:scale(.92);
+  }
 }
 
 /* Track rows — bigger, Spotify-sized */
