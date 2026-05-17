@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#06141F"/>
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v27-archive-up-button-custom -->
+<!-- Version: v29-up-button-archive-and-albums -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -230,6 +230,39 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .arc-top-btn:active{transform:translateY(0) scale(.9);opacity:.78}
 .arc-top-img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  pointer-events:none;
+}
+
+.tl-top-btn{
+  position:fixed;
+  right:18px;
+  bottom:var(--tl-top-btn-bottom, 156px);
+  z-index:260;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  opacity:0;
+  transform:translateY(10px) scale(.96);
+  pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease;
+}
+.tl-top-btn.visible{
+  opacity:.92;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+.tl-top-btn:active{transform:translateY(0) scale(.9);opacity:.78}
+.tl-top-img{
   width:100%;
   height:100%;
   display:block;
@@ -787,6 +820,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     </div>
   </div>
   <div id="tlList"></div>
+  <button class="tl-top-btn" id="tlTopBtn" aria-label="Zurück zum Album-Anfang">
+    <img class="tl-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png" alt=""/>
+  </button>
   <div class="tl-bottom-pad"></div>
 </div>
 
@@ -1274,6 +1310,7 @@ const tlTitle      = document.getElementById('tlTitle');
 const tlMeta       = document.getElementById('tlMeta');
 const tlList       = document.getElementById('tlList');
 const tlAlbumShuffleBtn = document.getElementById('tlAlbumShuffleBtn');
+const tlTopBtn    = document.getElementById('tlTopBtn');
 const nowCover     = document.getElementById('nowCover');
 const nowTitle     = document.getElementById('nowTitle');
 const nowNum       = document.getElementById('nowNum');
@@ -1607,6 +1644,8 @@ function getLyricsUrlsForSong(song) {
 
 // ── Navigation ──
 function showHome(){
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
   screenHome.classList.add('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
@@ -1619,6 +1658,8 @@ function showHome(){
   prevScreen='home';
 }
 function showAlbum(key){
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
   const alb=ALBUMS[key]; curAlbum=key;
   setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
@@ -1651,10 +1692,12 @@ function showAlbum(key){
   // Beim Wechsel auf eine Albumseite immer oben starten — unabhängig von Shuffle/aktiver Zeile.
   screenTL.scrollTop = 0;
   requestAnimationFrame(()=>{ screenTL.scrollTop = 0; });
-  setTimeout(()=>{ screenTL.scrollTop = 0; }, 80);
+  setTimeout(()=>{ screenTL.scrollTop = 0; updateAlbumTopButton(); }, 80);
   prevScreen='tracklist';
 }
 function showNowPlaying(){
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(!curAlbum) return;
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
@@ -1670,7 +1713,7 @@ function hideNowPlaying(){
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
-  else { screenTL.classList.add('active'); }
+  else { screenTL.classList.add('active'); updateAlbumTopButton(); }
 }
 
 // ── Click handlers ──
@@ -2253,6 +2296,7 @@ arcClear.addEventListener('click',()=>{
 });
 
 function showArchive(){
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
   screenArchive.scrollTop = 0;
   setArchiveHeaderCollapsed(false);
   setArchiveHeaderCollapsed(false);
@@ -2298,6 +2342,27 @@ arcShuffleAllBtn.addEventListener('click',()=>{
 backBtn.addEventListener('click',()=>{
   if(screenArchive.classList.contains('active')) hideArchive();
 });
+
+// Albumseiten: dezenter UP-Button über der Playerleiste
+function updateAlbumTopButton(){
+  if(!tlTopBtn) return;
+  const active = screenTL.classList.contains('active') && screenTL.scrollTop > 120;
+  tlTopBtn.classList.toggle('visible', active);
+  const playerTop = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().top : window.innerHeight;
+  const bottom = Math.max(24, window.innerHeight - playerTop + 14);
+  document.documentElement.style.setProperty('--tl-top-btn-bottom', bottom + 'px');
+}
+
+tlTopBtn && tlTopBtn.addEventListener('click',()=>{
+  tlTopBtn.classList.remove('visible');
+  screenTL.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(updateAlbumTopButton,260);
+});
+
+screenTL.addEventListener('scroll',()=>{
+  requestAnimationFrame(updateAlbumTopButton);
+});
+window.addEventListener('resize',updateAlbumTopButton);
 
 // Archive: A-Z/Suche weich ausblenden, ohne Scroll-Flackern
 let arcLastScrollTop = 0;
@@ -2360,7 +2425,7 @@ screenArchive.addEventListener('scroll',()=>{
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v27-archive-up-button-custom-20260517';
+  const VERSION = 'v29-up-button-archive-and-albums-20260517';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
