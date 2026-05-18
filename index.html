@@ -1,18 +1,19 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="hitjourney"/>
-<meta name="theme-color" content="#06141F"/>
-<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="hitjourney" name="apple-mobile-web-app-title"/>
+<meta content="#06141F" name="theme-color"/>
+<link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v59-swf-banner-responsive-position -->
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
+<!-- Version: v66-swf-all-40-spotify-embeds-clean -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -1138,32 +1139,58 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
-/* ── Intro-Streifen: Spotify CTA links | Zitat rechts ── */
+/* ── Intro-Streifen: Spotify-Link oben mittig + Zitat darunter ── */
 .swf-intro-strip{
   display:flex;
-  align-items:stretch;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  min-height:178px;
+  padding:26px 18px 24px;
   background:#2a2a2a; /* Anthrazit — passend zum ersten Song-Entry */
 }
-/* Spotify CTA — linksbündig, vertikal zentriert */
+/* Spotify CTA — mittig, Logo über Text */
 .swf-intro-cta{
   flex-shrink:0;
-  width:44%;
+  width:auto;
+  max-width:320px;
   display:flex;
-  flex-direction:row;
+  flex-direction:column;
   align-items:center;
-  gap:12px;
-  padding:20px 16px 20px 18px;
+  justify-content:center;
+  gap:8px;
+  padding:0;
+  text-align:center;
   text-decoration:none;
   color:inherit;
-  transition:background .15s;
+  transition:opacity .15s;
 }
-.swf-intro-cta:active{ background:rgba(255,255,255,.05); }
+.swf-intro-cta:active{ opacity:.78; }
+.swf-intro-cta-static{
+  cursor:default;
+}
+.swf-intro-cta-static:active{
+  background:transparent;
+}
+.swf-spotify-embed{
+  margin-top:18px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#000;
+}
+.swf-spotify-embed iframe{
+  display:block;
+  width:100%;
+  border:0;
+}
+
 .swf-intro-cta-icon{
   color:#1ED760;
   flex-shrink:0;
 }
 .swf-intro-cta-icon svg{ width:38px;height:38px;fill:currentColor; }
-.swf-intro-cta-text{ min-width:0; }
+.swf-intro-cta-text{ min-width:0; text-align:center; }
 .swf-intro-cta-label{
   font-size:9px;
   font-weight:700;
@@ -1186,22 +1213,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   margin-top:4px;
   letter-spacing:.06em;
 }
-/* Zitat — rechtsbündig, kein vertikaler Trennstrich */
+/* Zitat — zentriert unter dem Spotify-Link */
 .swf-intro-quote{
-  flex:1;
-  padding:20px 18px 20px 14px;
+  width:100%;
+  max-width:780px;
+  padding:0;
   display:flex;
   flex-direction:column;
   justify-content:center;
-  text-align:right;
+  align-items:center;
+  text-align:center;
 }
 .swf-intro-quote p{
   font-size:13px;
-  line-height:1.6;
+  line-height:1.55;
   color:rgba(255,255,255,.88);
   font-style:italic;
   font-weight:500; /* fetter, besser lesbar */
-  margin:0 0 8px;
+  margin:0 0 9px;
   letter-spacing:.01em;
 }
 .swf-intro-author{
@@ -1376,6 +1405,39 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   font-size:clamp(30px,8.5vw,50px);
 }
 
+
+/* ── Favorites Part Labels unter den Header-Bildern ── */
+.swf-banner-title{
+  display:none;
+}
+.swf-part-label{
+  min-height:192px;
+  padding:0 22px;
+  background:#0a0a0a;
+  font-family:'Anton',sans-serif;
+  font-size:clamp(22px,5.8vw,42px);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  line-height:1;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.swf-part-label.part-1{ color:#CA1F1D; }
+.swf-part-label.part-2{ color:#FCC003; }
+@media(max-width:599px){
+  .swf-part-label{
+    min-height:176px;
+    padding:0 16px;
+    font-size:clamp(26px,8vw,38px);
+  }
+}
+/* Einzelne Spotify-Embeds ersetzen die kleinen Spotify-Icons in den Zitaten */
+.swf-entry .swf-spotify-btn{
+  display:none!important;
+}
+
 .swf-bottom-pad{ height:200px; background:#111; }
 
 /* ── SWF Scroll-to-top button (grau/schwarz) ── */
@@ -1514,1520 +1576,980 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .featured-teaser{grid-column:1/-1}
 }
 </style>
-
-
-
-
 </head>
 <body>
-
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
-  <div class="hj-back-btn" id="backBtn">
-    <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
-    <span>Alben</span>
-  </div>
-  <div class="hj-logo" id="logoHome">
-    <span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span>
-  </div>
-  <span class="hj-logo-sub" id="makingWaves">making waves</span>
-  <div class="hj-header-right" id="headerRight"></div>
+<div class="hj-back-btn" id="backBtn">
+<svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
+<span>Alben</span>
 </div>
-
+<div class="hj-logo" id="logoHome">
+<span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span>
+</div>
+<span class="hj-logo-sub" id="makingWaves">making waves</span>
+<div class="hj-header-right" id="headerRight"></div>
+</div>
 <!-- HOME -->
 <div class="screen active" id="screenHome">
-  <div class="home-grid">
-
-    <!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
-    <div class="home-card square" data-album="top50">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="grad30">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="stories30">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories" loading="eager"/>
-    </div>
-    <div class="home-card square" data-album="top100">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100" loading="eager"/>
-    </div>
-
-    <!-- Streifen 2: In The Spotlight (volle Breite) -->
-    <div class="featured-teaser" id="featuredTeaser">
-      <div class="ft-circle"></div>
-      <div class="ft-covers" id="ftCovers">
-        <img src="" class="active ft-blank" loading="eager"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg" loading="lazy"/>
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg" loading="lazy"/>
-      </div>
-      <div class="ft-text">
-        <div class="ft-label">10 Songs im Fokus</div>
-        <div class="ft-title-line ft-in">IN</div>
-        <div class="ft-title-line ft-the">THE</div>
-        <div class="ft-title-line ft-spot">SPOT</div>
-        <div class="ft-title-line ft-light">LIGHT</div>
-      </div>
-      <div class="ft-song-name">
-        <div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
-        <div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
-        <div class="ft-song-num" id="ftSongNum">01 / 10</div>
-      </div>
-      <div class="ft-dots" id="ftDots"></div>
-    </div>
-
-    <!-- Zeile 3: Große Liebe · Buried Diamonds 2:1 · Poesie -->
-    <div class="home-trio wide">
-      <div class="home-card trio-gl" data-album="grosseLiebe">
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe" loading="eager"/>
-      </div>
-      <div class="home-card trio-bd" data-album="buriedDiamonds">
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds" loading="eager"/>
-      </div>
-      <div class="home-card trio-po" data-album="poesie">
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie" loading="eager"/>
-      </div>
-    </div>
-
-    <!-- Streifen 4: The Archive (volle Breite) -->
-    <div class="home-card wide" id="archiveCard">
-      <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="the archive" loading="eager"/>
-    </div>
-
-  </div>
-
-  <!-- ══ EDITORIAL CARDS ══ -->
-  <div class="ed-section">
-    <div class="ed-row">
-
-      <!-- Card 1: Kurs Nordwest -->
-      <div class="ed-card" id="edCardKnw" onclick="showKursNordwest()">
-        <img class="ed-img-real"
-             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg"
-             alt="Kurs Nordwest"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-        <div class="ed-img-placeholder" style="display:none">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
-          <span>Kurs Nordwest</span>
-        </div>
-        <div class="ed-body ed-body-knw">
-          <div class="ed-knw-label">Kurs Nordwest</div>
-        </div>
-      </div>
-
-      <!-- Card 2: Songwriter's Favorites -->
-      <div class="ed-card" id="edCardSwf" onclick="showSongwritersFavorites()">
-        <img class="ed-img-real"
-             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg"
-             alt="Songwriter's Favorites"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-        <div class="ed-img-placeholder" style="display:none">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          <span>Favorites</span>
-        </div>
-        <div class="ed-body ed-body-knw">
-          <div class="ed-knw-label">Songwriter's<br>Favorites</div>
-        </div>
-      </div>
-
-      <!-- Card 3: Almost One Million Streams -->
-      <div class="ed-card" id="edCardStreams" onclick="return false;">
-        <img class="ed-img-real"
-             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg"
-             alt="Almost One Million Streams"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-        <div class="ed-img-placeholder" style="display:none">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18V9"/><path d="M10 18V5"/><path d="M15 18V12"/><path d="M20 18V7"/></svg>
-          <span>Streams</span>
-        </div>
-        <div class="ed-body ed-body-knw">
-          <div class="ed-knw-label">Almost One<br>Million Streams<br>And Counting</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="home-bottom-pad"></div>
+<div class="home-grid">
+<!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
+<div class="home-card square" data-album="top50">
+<img alt="Top 50" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg"/>
 </div>
-
+<div class="home-card square" data-album="grad30">
+<img alt="30° Grad" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg"/>
+</div>
+<div class="home-card square" data-album="stories30">
+<img alt="30 Stories" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg"/>
+</div>
+<div class="home-card square" data-album="top100">
+<img alt="Top 100" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg"/>
+</div>
+<!-- Streifen 2: In The Spotlight (volle Breite) -->
+<div class="featured-teaser" id="featuredTeaser">
+<div class="ft-circle"></div>
+<div class="ft-covers" id="ftCovers">
+<img class="active ft-blank" loading="eager" src=""/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg"/>
+<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg"/>
+</div>
+<div class="ft-text">
+<div class="ft-label">10 Songs im Fokus</div>
+<div class="ft-title-line ft-in">IN</div>
+<div class="ft-title-line ft-the">THE</div>
+<div class="ft-title-line ft-spot">SPOT</div>
+<div class="ft-title-line ft-light">LIGHT</div>
+</div>
+<div class="ft-song-name">
+<div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
+<div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
+<div class="ft-song-num" id="ftSongNum">01 / 10</div>
+</div>
+<div class="ft-dots" id="ftDots"></div>
+</div>
+<!-- Zeile 3: Große Liebe · Buried Diamonds 2:1 · Poesie -->
+<div class="home-trio wide">
+<div class="home-card trio-gl" data-album="grosseLiebe">
+<img alt="Grosse Liebe" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg"/>
+</div>
+<div class="home-card trio-bd" data-album="buriedDiamonds">
+<img alt="Buried Diamonds" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg"/>
+</div>
+<div class="home-card trio-po" data-album="poesie">
+<img alt="Poesie" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg"/>
+</div>
+</div>
+<!-- Streifen 4: The Archive (volle Breite) -->
+<div class="home-card wide" id="archiveCard">
+<img alt="the archive" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"/>
+</div>
+</div>
+<!-- ══ EDITORIAL CARDS ══ -->
+<div class="ed-section">
+<div class="ed-row">
+<!-- Card 1: Kurs Nordwest -->
+<div class="ed-card" id="edCardKnw" onclick="showKursNordwest()">
+<img alt="Kurs Nordwest" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+<span>Kurs Nordwest</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label">Kurs Nordwest</div>
+</div>
+</div>
+<!-- Card 2: Songwriter's Favorites -->
+<div class="ed-card" id="edCardSwf" onclick="showSongwritersFavorites()">
+<img alt="Songwriter's Favorites" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+<span>Favorites</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label">Songwriter's<br/>Favorites</div>
+</div>
+</div>
+<!-- Card 3: Almost One Million Streams -->
+<div class="ed-card" id="edCardStreams" onclick="window.open('https://soundcloud.com/joern-kaemper', '_blank', 'noopener');">
+<img alt="Almost One Million Streams" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M5 18V9"></path><path d="M10 18V5"></path><path d="M15 18V12"></path><path d="M20 18V7"></path></svg>
+<span>Streams</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label">Almost One<br/>Million Streams</div>
+</div>
+</div>
+</div>
+</div>
+<div class="home-bottom-pad"></div>
+</div>
 <!-- KURS NORDWEST -->
 <div id="screenKursNordwest">
-  <div class="knw-container">
-    <!-- Song 1: Mary-Anne -->
-    <!-- Song 1: Mary-Anne -->
-    <div class="knw-song" id="knwSong0">
-
-      <!-- Lyric-Sheet 2:1 -->
-      <div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover%202%201.jpg"
-             alt="Mary-Anne Lyric Sheet" loading="eager"/>
-      </div>
-
-      <!-- Play-Zeile -->
-      <div class="knw-play-row">
-        <button class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn0"
-                onclick="knwPlaySong(0)" aria-label="Mary-Anne abspielen">
-          <svg class="knw-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="knw-icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-        <div class="knw-play-info">
-          <div class="knw-play-name">Mary-Anne</div>
-          <div class="knw-play-artist">BRO · Jörn Kämper</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Divider -->
-    <div class="knw-divider"></div>
-
-    <!-- Song 2: Six Hours South of Lighthouse Nine -->
-    <div class="knw-song" id="knwSong1">
-
-      <!-- Lyric-Sheet 2:1 -->
-      <div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
-        <img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover%202%201.jpg"
-             alt="Six Hours South of Lighthouse Nine Lyric Sheet" loading="eager"/>
-      </div>
-
-      <!-- Play-Zeile -->
-      <div class="knw-play-row">
-        <button class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn1"
-                onclick="knwPlaySong(1)" aria-label="Six Hours South of Lighthouse Nine abspielen">
-          <svg class="knw-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="knw-icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-        <div class="knw-play-info">
-          <div class="knw-play-name">Six Hours South of Lighthouse Nine</div>
-          <div class="knw-play-artist">BRO · Jörn Kämper</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Platzhalter für weitere Songs (Song 3 folgt) -->
-
-    <div class="knw-bottom-pad"></div>
-  </div>
+<div class="knw-container">
+<!-- Song 1: Mary-Anne -->
+<!-- Song 1: Mary-Anne -->
+<div class="knw-song" id="knwSong0">
+<!-- Lyric-Sheet 2:1 -->
+<div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
+<img alt="Mary-Anne Lyric Sheet" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover%202%201.jpg"/>
 </div>
-
+<!-- Play-Zeile -->
+<div class="knw-play-row">
+<button aria-label="Mary-Anne abspielen" class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn0" onclick="knwPlaySong(0)">
+<svg class="knw-icon-play" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+<svg class="knw-icon-pause" style="display:none" viewbox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+</button>
+<div class="knw-play-info">
+<div class="knw-play-name">Mary-Anne</div>
+<div class="knw-play-artist">BRO · Jörn Kämper</div>
+</div>
+</div>
+</div>
+<!-- Divider -->
+<div class="knw-divider"></div>
+<!-- Song 2: Six Hours South of Lighthouse Nine -->
+<div class="knw-song" id="knwSong1">
+<!-- Lyric-Sheet 2:1 -->
+<div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector('img').src)">
+<img alt="Six Hours South of Lighthouse Nine Lyric Sheet" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover%202%201.jpg"/>
+</div>
+<!-- Play-Zeile -->
+<div class="knw-play-row">
+<button aria-label="Six Hours South of Lighthouse Nine abspielen" class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn1" onclick="knwPlaySong(1)">
+<svg class="knw-icon-play" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+<svg class="knw-icon-pause" style="display:none" viewbox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+</button>
+<div class="knw-play-info">
+<div class="knw-play-name">Six Hours South of Lighthouse Nine</div>
+<div class="knw-play-artist">BRO · Jörn Kämper</div>
+</div>
+</div>
+</div>
+<!-- Platzhalter für weitere Songs (Song 3 folgt) -->
+<div class="knw-bottom-pad"></div>
+</div>
+</div>
 <!-- Lightbox -->
 <div id="knwLightbox" onclick="knwCloseLightbox()">
-  <img id="knwLightboxImg" src="" alt=""/>
+<img alt="" id="knwLightboxImg" src=""/>
 </div>
-
 <!-- SONGWRITER'S FAVORITES -->
 <div id="screenSongwritersFavorites">
-
-  <!-- Section Banner: Playlist — Foto-Platzhalter, später befüllen -->
-  <div class="swf-banner">
-    <img class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist2.jpg" alt=""/>
-    <div class="swf-banner-title">
-      <span class="swf-banner-play">PLAY</span>
-      <span class="swf-banner-list">LIST</span>
-    </div>
-  </div>
-
-  <!-- Zitat + Spotify-CTA Streifen: Spotify links, Zitat rechts -->
-  <div class="swf-intro-strip">
-    <a class="swf-intro-cta" href="https://open.spotify.com/playlist/1mdu5HkdgK84vzVIyoUXmI?si=_F6GOo6KQGaBxy8oz1Z7tw" target="_blank" rel="noopener">
-      <div class="swf-intro-cta-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-      </div>
-      <div class="swf-intro-cta-text">
-        <div class="swf-intro-cta-label">Komplette Playlist</div>
-        <div class="swf-intro-cta-title">Mein lieber Sohn 2023</div>
-        <div class="swf-intro-cta-sub">40 Songs auf Spotify →</div>
-      </div>
-    </a>
-    <div class="swf-intro-quote">
-      <p>„Songs, die bei mir einen Nerv treffen. Lyrics, von denen ich jedes Mal denke: Das hättest du gern selbst geschrieben."</p>
-      <span class="swf-intro-author">Jörn Kämper</span>
-    </div>
-  </div>
-
-    
-    
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Nicht mal das Meer darf ich wiederseh&#x27;n<br>
-        Wo der Wind deine Haare vermisst.<br>
-        Wo jede Welle ein Seufzer<br>
+<!-- Zitat + Spotify-CTA Streifen: Spotify links, Zitat rechts -->
+<div class="swf-intro-strip">
+<a class="swf-intro-cta" href="https://open.spotify.com/playlist/1mdu5HkdgK84vzVIyoUXmI?si=fvYTVuLcQSy0RTMbI5UIBQ" rel="noopener" target="_blank">
+<div class="swf-intro-cta-icon">
+<svg viewbox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"></path></svg>
+</div>
+<div class="swf-intro-cta-text">
+<div class="swf-intro-cta-label">Komplette Playlist</div>
+<div class="swf-intro-cta-title">Songwriter's Favorites</div>
+<div class="swf-intro-cta-sub">Direkt hier abspielbar</div>
+</div>
+</a>
+<div class="swf-intro-quote">
+<p>„Songs, die bei mir einen Nerv treffen. Lyrics, von denen ich jedes Mal denke: Das hättest du gern selbst geschrieben."</p>
+<span class="swf-intro-author">Jörn Kämper</span>
+</div>
+</div>
+<!-- Section Banner: Playlist — Foto-Platzhalter, später befüllen -->
+<div class="swf-banner">
+<img alt="" class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist2.jpg"/>
+<div class="swf-banner-title">
+<span class="swf-banner-play">PLAY</span>
+<span class="swf-banner-list">LIST</span>
+</div>
+</div>
+<div class="swf-part-label part-1">Favorites - Part 1</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Nicht mal das Meer darf ich wiederseh'n<br/>
+        Wo der Wind deine Haare vermisst.<br/>
+        Wo jede Welle ein Seufzer<br/>
         Und jedes Sandkorn ein Blick von dir ist
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Weisses Papier</div>
+<div class="swf-song-artist">Element of Crime</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Weisses Papier</div>
-          <div class="swf-song-artist">Element of Crime</div>
-        </div>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/11X6PsP3iQYySHOk8QLe1R?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
 
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BWeisses%20Papier%20Element%20of%20Crime"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Weisses Papier auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Was soll ich nur sagen? Irgendwas knockt mich aus<br>
-        Ich bin ein Versager, weil ich mich doch nicht trau<br>
-        Mein Kopf ist voller Wörter, doch es kommt nichts raus<br>
-        Und sie steht auf, und steigt aus, und sagt<br>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Was soll ich nur sagen? Irgendwas knockt mich aus<br/>
+        Ich bin ein Versager, weil ich mich doch nicht trau<br/>
+        Mein Kopf ist voller Wörter, doch es kommt nichts raus<br/>
+        Und sie steht auf, und steigt aus, und sagt<br/>
         Bye Bye, Bye Bye meine Liebe des Lebens
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Bye Bye</div>
+<div class="swf-song-artist">Cro</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Bye Bye</div>
-          <div class="swf-song-artist">Cro</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BBye%20Bye%20Cro"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Bye Bye auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Und wir segelten raus<br>
-        Unser Schiff hieß Wahre Liebe<br>
-        Übers weite Meer der wilden Leidenschaft<br>
-        Es kamen schwere Wetter<br>
-        Die Wahre Liebe zerbrach<br>
-        Die Strömung trieb mich ans Ufer<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/4ooznHZF5fGsMIChB36pls?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Und wir segelten raus<br/>
+        Unser Schiff hieß Wahre Liebe<br/>
+        Übers weite Meer der wilden Leidenschaft<br/>
+        Es kamen schwere Wetter<br/>
+        Die Wahre Liebe zerbrach<br/>
+        Die Strömung trieb mich ans Ufer<br/>
         Und seitdem lieg ich nachts oft wach
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Wahre liebe</div>
+<div class="swf-song-artist">Achim Reichel</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Wahre liebe</div>
-          <div class="swf-song-artist">Achim Reichel</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Wahre%20liebe%20Achim%20Reichel"
-           target="_blank"
-           rel="noopener"
-           aria-label="Wahre liebe auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Rääts un links vum Bahndamm jonn die Radiowecker ahn<br>
-        Rejistrierte, jlattrasierte Schweijer zur U-Bahn<br>
-        Zeidunge met News vun jestern, hück schon övverhollt<br>
-        Zochkellner bring Kaffee – lauwärm, och ejal, wat soll’t<br>
-        Ich wöhr noch jähn bei dir, uns Naach jing nur bess vier<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/4ne4YMOMXOxPkOsnxpfN5R?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Rääts un links vum Bahndamm jonn die Radiowecker ahn<br/>
+        Rejistrierte, jlattrasierte Schweijer zur U-Bahn<br/>
+        Zeidunge met News vun jestern, hück schon övverhollt<br/>
+        Zochkellner bring Kaffee – lauwärm, och ejal, wat soll’t<br/>
+        Ich wöhr noch jähn bei dir, uns Naach jing nur bess vier<br/>
         Mir hatte kei Aug zo, dä Jrund dafür wohrs du
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Rääts un links vum Bahndammm</div>
+<div class="swf-song-artist">BAP</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Rääts un links vum Bahndammm</div>
-          <div class="swf-song-artist">BAP</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BR%C3%A4%C3%A4ts%20un%20links%20vum%20Bahndammm%20BAP"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Rääts un links vum Bahndammm auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Wie zwei Schiffe, die sich im Nebel begegnen<br>
-        Draußen auf hoher See<br>
-        So hat uns der Zufall zusammengebracht<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/2ZBJJ9eZiJcBeZhXVQkWMJ?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Wie zwei Schiffe, die sich im Nebel begegnen<br/>
+        Draußen auf hoher See<br/>
+        So hat uns der Zufall zusammengebracht<br/>
         Irgendwo zwischen Luv und Lee
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Kap der Guten Hoffnung</div>
+<div class="swf-song-artist">ina müller</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Kap der Guten Hoffnung</div>
-          <div class="swf-song-artist">ina müller</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BKap%20der%20Guten%20Hoffnung%20ina%20m%C3%BCller"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Kap der Guten Hoffnung auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Und das blonde blasse Mädchen<br>
-        Das schon ewig hier bedient<br>
-        Wie sieht sie plötzlich sexy aus<br>
-        In diesen viel zu engen Jeans<br>
-        Hallo Sehnsucht<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/6vzPyxQOHGJLTYWAhi4ZTo?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Und das blonde blasse Mädchen<br/>
+        Das schon ewig hier bedient<br/>
+        Wie sieht sie plötzlich sexy aus<br/>
+        In diesen viel zu engen Jeans<br/>
+        Hallo Sehnsucht<br/>
         Schön dich hier zu sehen
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Hallo Sehnsucht</div>
+<div class="swf-song-artist">Wolf Maahn</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Hallo Sehnsucht</div>
-          <div class="swf-song-artist">Wolf Maahn</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Hallo%20Sehnsucht%20Wolf%20Maahn"
-           target="_blank"
-           rel="noopener"
-           aria-label="Hallo Sehnsucht auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Madl hoid mi fest und hoid mi woam<br>
-        Hoid mi tiaf versteckt in deine Oam<br>
-        Fria samma stundenlang so glegn<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3nJpEWecS2iH9zZZtuVCYY?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Madl hoid mi fest und hoid mi woam<br/>
+        Hoid mi tiaf versteckt in deine Oam<br/>
+        Fria samma stundenlang so glegn<br/>
         Lass mi amoi no d’Sunn aufgeh‘ segn
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Lass mi amoi no d'Sun aufgeh´ segn</div>
+<div class="swf-song-artist">Georg Danzer</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Lass mi amoi no d&#x27;Sun aufgeh´ segn</div>
-          <div class="swf-song-artist">Georg Danzer</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BLass%20mi%20amoi%20no%20d%27Sun%20aufgeh%C2%B4%20segn%20Georg%20Danzer"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Lass mi amoi no d&#x27;Sun aufgeh´ segn auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Das Leben groovt, yeah<br>
-        Vielleicht dauert&#x27;s nimmer lang<br>
-        Vielleicht fangt&#x27;s von vorne an<br>
-        Irgendwann<br>
-        Weiter, weiter<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5vGbyTAZqo4RtXpnq1jN3N?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Das Leben groovt, yeah<br/>
+        Vielleicht dauert's nimmer lang<br/>
+        Vielleicht fangt's von vorne an<br/>
+        Irgendwann<br/>
+        Weiter, weiter<br/>
         Immer weiter
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Weiter, Weiter</div>
+<div class="swf-song-artist">Wanda</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Weiter, Weiter</div>
-          <div class="swf-song-artist">Wanda</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BWeiter%2C%20Weiter%20Wanda"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Weiter, Weiter auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Ist mir egal, mit wem du chillst<br>
-        Schlaf auf jedem Klo<br>
-        Mit jedem Typen, den du willst<br>
-        Mach mal dein Ding<br>
-        Mit Herz und Blut<br>
-        Mach dich glücklich<br>
-        Mach dich traurig<br>
-        Mach, mach, mach es gut<br>
-        Mach, was du willst<br>
-        Aber bring nie wieder<br>
-        Deine neuen Freunde<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/75zqu0ugtQKfXaTpKX2RRw?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Ist mir egal, mit wem du chillst<br/>
+        Schlaf auf jedem Klo<br/>
+        Mit jedem Typen, den du willst<br/>
+        Mach mal dein Ding<br/>
+        Mit Herz und Blut<br/>
+        Mach dich glücklich<br/>
+        Mach dich traurig<br/>
+        Mach, mach, mach es gut<br/>
+        Mach, was du willst<br/>
+        Aber bring nie wieder<br/>
+        Deine neuen Freunde<br/>
         In meine Kneipe
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Meine Kneipe</div>
+<div class="swf-song-artist">Von Wegen Lisbeth</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Meine Kneipe</div>
-          <div class="swf-song-artist">Von Wegen Lisbeth</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Meine%20Kneipe%20Von%20Wegen%20Lisbeth"
-           target="_blank"
-           rel="noopener"
-           aria-label="Meine Kneipe auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Den Himmel brauch ich nicht<br>
-        Die Hölle kenne ich<br>
-        Und Engel trifft man kaum<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5NBCRuSpMGY5ckTP6TfWDQ?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Den Himmel brauch ich nicht<br/>
+        Die Hölle kenne ich<br/>
+        Und Engel trifft man kaum<br/>
         Und wenn dann nur im Traum
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Engel</div>
+<div class="swf-song-artist">Rainhard Fendrich</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Engel</div>
-          <div class="swf-song-artist">Rainhard Fendrich</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BEngel%20Rainhard%20Fendrich"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Engel auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        They held a concert out in Brooklyn<br>
-        To watch the island bridges blow<br>
-        They turned our power down<br>
-        And drove us underground<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/2AbK7MHJcF2P0RxYtU2TUA?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        They held a concert out in Brooklyn<br/>
+        To watch the island bridges blow<br/>
+        They turned our power down<br/>
+        And drove us underground<br/>
         But we went right on with the show
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Miami 2017</div>
+<div class="swf-song-artist">Billy Joel</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Miami 2017</div>
-          <div class="swf-song-artist">Billy Joel</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BMiami%202017%20Billy%20Joel"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Miami 2017 auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/0FFyHXmFKwzqHXXsrXWhfW?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Well, I was born in a small town<br/>
+        And I can breathe in a small town<br/>
+        Gonna die in a small town<br/>
+        Oh, and that's probably where they'll bury me, yeah
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Small Town</div>
+<div class="swf-song-artist">John Mellencamp</div>
+</div>
 
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Well, I was born in a small town<br>
-        And I can breathe in a small town<br>
-        Gonna die in a small town<br>
-        Oh, and that&#x27;s probably where they&#x27;ll bury me, yeah
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/2HsjJJL4DhPCzMlnaGv7ap?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        I'm home for the summer, shoot out the lights<br/>
+        Don't blow my cover, oh I'm free tonight<br/>
+        I'm coming over, call all your friends<br/>
+        "Somebody hold me", all the pretty girls said<br/>
+        All of the whiskey went to my head<br/>
+        "Shut up and kiss me", all the pretty girls said
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​All the pretty girls</div>
+<div class="swf-song-artist">Kenny chesney</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Small Town</div>
-          <div class="swf-song-artist">John Mellencamp</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BSmall%20Town%20John%20Mellencamp"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Small Town auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/66pxmg3Jhjm09tHoWR1wVR?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Well I'm a runnin' down the road tryin' to loosen my load<br/>
+        Got a world of trouble on my mind<br/>
+        Lookin' for a lover who won't blow my cover<br/>
+        She's so hard to find
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Take it easy</div>
+<div class="swf-song-artist">Eagles</div>
+</div>
 
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        I&#x27;m home for the summer, shoot out the lights<br>
-        Don&#x27;t blow my cover, oh I&#x27;m free tonight<br>
-        I&#x27;m coming over, call all your friends<br>
-        &quot;Somebody hold me&quot;, all the pretty girls said<br>
-        All of the whiskey went to my head<br>
-        &quot;Shut up and kiss me&quot;, all the pretty girls said
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​All the pretty girls</div>
-          <div class="swf-song-artist">Kenny chesney</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BAll%20the%20pretty%20girls%20Kenny%20chesney"
-           target="_blank"
-           rel="noopener"
-           aria-label="​All the pretty girls auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Well I&#x27;m a runnin&#x27; down the road tryin&#x27; to loosen my load<br>
-        Got a world of trouble on my mind<br>
-        Lookin&#x27; for a lover who won&#x27;t blow my cover<br>
-        She&#x27;s so hard to find
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Take it easy</div>
-          <div class="swf-song-artist">Eagles</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BTake%20it%20easy%20Eagles"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Take it easy auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        I&#x27;m better with my muscles<br>
-        Than I am with my mouth<br>
-        I&#x27;ll work the fairgrounds in the summer<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5ZP73fz3ncBxMrGkqeSD7q?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        I'm better with my muscles<br/>
+        Than I am with my mouth<br/>
+        I'll work the fairgrounds in the summer<br/>
         Or go pick fruit down south
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Get Lucky</div>
+<div class="swf-song-artist">Mark Knopfler</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Get Lucky</div>
-          <div class="swf-song-artist">Mark Knopfler</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BGet%20Lucky%20Mark%20Knopfler"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Get Lucky auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/6tiu5BoEuL4z1tFvV1lAiw?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Nobody on the road<br/>
+        Nobody on the beach<br/>
+        I feel it in the air<br/>
+        The summer's out of reach<br/>
+        Empty lake, empty streets<br/>
+        The sun goes down alone<br/>
+        I'm driving by your house<br/>
+        Though I know you're not home
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​The boys of summer</div>
+<div class="swf-song-artist">Don Henley</div>
+</div>
 
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Nobody on the road<br>
-        Nobody on the beach<br>
-        I feel it in the air<br>
-        The summer&#x27;s out of reach<br>
-        Empty lake, empty streets<br>
-        The sun goes down alone<br>
-        I&#x27;m driving by your house<br>
-        Though I know you&#x27;re not home
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​The boys of summer</div>
-          <div class="swf-song-artist">Don Henley</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BThe%20boys%20of%20summer%20Don%20Henley"
-           target="_blank"
-           rel="noopener"
-           aria-label="​The boys of summer auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Oh, you&#x27;re welcome, well, I don&#x27;t think I caught your name<br>
-        Are you waiting for someone to meet you here?<br>
-        Well, that makes two of us, glad you came<br>
-        No, I don&#x27;t know the name of the band<br>
-        But they&#x27;re good, aren&#x27;t they?<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/4gvea7UlDkAvsJBPZAd4oB?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Oh, you're welcome, well, I don't think I caught your name<br/>
+        Are you waiting for someone to meet you here?<br/>
+        Well, that makes two of us, glad you came<br/>
+        No, I don't know the name of the band<br/>
+        But they're good, aren't they?<br/>
         Would you like to dance?
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">The chair</div>
+<div class="swf-song-artist">George Strait</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">The chair</div>
-          <div class="swf-song-artist">George Strait</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/The%20chair%20George%20Strait"
-           target="_blank"
-           rel="noopener"
-           aria-label="The chair auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/21y9A2VGPvJ2I4SuxtlcZF?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        And I can see us twisted in bedsheets<br/>
+        August sipped away like a bottle of wine<br/>
+        'Cause you were never mine
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​August</div>
+<div class="swf-song-artist">Taylor Swift</div>
+</div>
 
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        And I can see us twisted in bedsheets<br>
-        August sipped away like a bottle of wine<br>
-        &#x27;Cause you were never mine
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/4MGexoZc12lqE0hYkq9YYx?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        And are there lilac trees in the heart of town?<br/>
+        Can you hear a lark in any other part of town?<br/>
+        Does enchantment pour out of every door?<br/>
+        No, it's just on the street where you live
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">On the street where you live</div>
+<div class="swf-song-artist">Willie Nelson</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​August</div>
-          <div class="swf-song-artist">Taylor Swift</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BAugust%20Taylor%20Swift"
-           target="_blank"
-           rel="noopener"
-           aria-label="​August auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        And are there lilac trees in the heart of town?<br>
-        Can you hear a lark in any other part of town?<br>
-        Does enchantment pour out of every door?<br>
-        No, it&#x27;s just on the street where you live
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">On the street where you live</div>
-          <div class="swf-song-artist">Willie Nelson</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/On%20the%20street%20where%20you%20live%20Willie%20Nelson"
-           target="_blank"
-           rel="noopener"
-           aria-label="On the street where you live auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Don&#x27;t play that song for me<br>
-        Though it brings back sweet memories<br>
-        Of the days that I once knew<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5Jm3qxtZ6J8BVAgxQkkhxO?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Don't play that song for me<br/>
+        Though it brings back sweet memories<br/>
+        Of the days that I once knew<br/>
         Of the days I spent with you
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Don´t play that song</div>
+<div class="swf-song-artist">Bruce Springsteen</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Don´t play that song</div>
-          <div class="swf-song-artist">Bruce Springsteen</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Don%C2%B4t%20play%20that%20song%20Bruce%20Springsteen"
-           target="_blank"
-           rel="noopener"
-           aria-label="Don´t play that song auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-    <!-- ══ ZWEITER PLAYLIST-BANNER (nach Song 20) ══ -->
-    <div class="swf-banner swf-banner-2">
-      <img class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist.jpg" alt=""/>
-      <div class="swf-banner-title">
-        <span class="swf-banner-play">PLAY</span>
-        <span class="swf-banner-list">LIST</span>
-      </div>
-    </div>
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        A bottle of red, a bottle of white<br>
-        Whatever kind of mood you&#x27;re in tonight<br>
-        I&#x27;ll meet you anytime you want<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5LWhhHChX9bC9fsSKyWA9F?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<!-- ══ ZWEITER PLAYLIST-BANNER (nach Song 20) ══ -->
+<div class="swf-banner swf-banner-2">
+<img alt="" class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist.jpg"/>
+<div class="swf-banner-title">
+<span class="swf-banner-play">PLAY</span>
+<span class="swf-banner-list">LIST</span>
+</div>
+</div>
+<div class="swf-part-label part-2">Favorites - Part 2</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        A bottle of red, a bottle of white<br/>
+        Whatever kind of mood you're in tonight<br/>
+        I'll meet you anytime you want<br/>
         In our Italian Restaurant
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Scenes From an Italian Restaurant</div>
+<div class="swf-song-artist">Billy Joel</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Scenes From an Italian Restaurant</div>
-          <div class="swf-song-artist">Billy Joel</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Scenes%20From%20an%20Italian%20Restaurant%20Billy%20Joel"
-           target="_blank"
-           rel="noopener"
-           aria-label="Scenes From an Italian Restaurant auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        They&#x27;re tearing down the Cherry Bowl Drive-In tomorrow<br>
-        Where I first kissed you and ran my fingers through your hair<br>
-        She&#x27;s going away, all things must go some day<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3utq2FgD1pkmIoaWfjXWAU?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        They're tearing down the Cherry Bowl Drive-In tomorrow<br/>
+        Where I first kissed you and ran my fingers through your hair<br/>
+        She's going away, all things must go some day<br/>
         But I will still remember you there
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Cherry Bowl Drive</div>
+<div class="swf-song-artist">In - joshua kadison</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Cherry Bowl Drive</div>
-          <div class="swf-song-artist">In - joshua kadison</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BCherry%20Bowl%20Drive%20In%20-%20joshua%20kadison"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Cherry Bowl Drive auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        All the men come in these places<br>
-        And the men are all the same<br>
-        You don&#x27;t look at their faces<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/623ZeL2lWuz5v03TVkRBZa?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        All the men come in these places<br/>
+        And the men are all the same<br/>
+        You don't look at their faces<br/>
         And you don′t ask their names
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Private Dancer</div>
+<div class="swf-song-artist">Tina Turner</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Private Dancer</div>
-          <div class="swf-song-artist">Tina Turner</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Private%20Dancer%20Tina%20Turner"
-           target="_blank"
-           rel="noopener"
-           aria-label="Private Dancer auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3UAwhtn7nRMWopJOFzk3Nd?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        He′ll say, "I wish I knew you<br/>
+        I wish I met you when time was still on my side"<br/>
+        She'll say, "I wish I knew you<br/>
+        I wish I loved you before I was his bride"
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​Mr Rock &amp; Roll</div>
+<div class="swf-song-artist">Amy MacDonald</div>
+</div>
 
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        He′ll say, &quot;I wish I knew you<br>
-        I wish I met you when time was still on my side&quot;<br>
-        She&#x27;ll say, &quot;I wish I knew you<br>
-        I wish I loved you before I was his bride&quot;
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/6aX2LyT7zpTLe3iZfDeHki?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        There's a downtown smell of cooking<br/>
+        From the flame on an open grill<br/>
+        There's a sax and a big bass pumping<br/>
+        Lord have mercy - you can't sit still
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Club at the end of the street</div>
+<div class="swf-song-artist">Elton John</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​Mr Rock &amp; Roll</div>
-          <div class="swf-song-artist">Amy MacDonald</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BMr%20Rock%20%26%20Roll%20Amy%20MacDonald"
-           target="_blank"
-           rel="noopener"
-           aria-label="​Mr Rock &amp; Roll auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        There&#x27;s a downtown smell of cooking<br>
-        From the flame on an open grill<br>
-        There&#x27;s a sax and a big bass pumping<br>
-        Lord have mercy - you can&#x27;t sit still
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Club at the end of the street</div>
-          <div class="swf-song-artist">Elton John</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Club%20at%20the%20end%20of%20the%20street%20Elton%20John"
-           target="_blank"
-           rel="noopener"
-           aria-label="Club at the end of the street auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Now we can truly say<br>
-        We&#x27;ll be together and that&#x27;s all we&#x27;ll ever need<br>
-        We&#x27;ll love each other, that&#x27;s the way it&#x27;s gonna be<br>
-        And nothin&#x27; under the sun of moon<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3spWfMlB39jSkstIslYnvG?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Now we can truly say<br/>
+        We'll be together and that's all we'll ever need<br/>
+        We'll love each other, that's the way it's gonna be<br/>
+        And nothin' under the sun of moon<br/>
         Can make us be apart
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​My kind of lady</div>
+<div class="swf-song-artist">Supertramp</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​My kind of lady</div>
-          <div class="swf-song-artist">Supertramp</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BMy%20kind%20of%20lady%20Supertramp"
-           target="_blank"
-           rel="noopener"
-           aria-label="​My kind of lady auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        You can hide &#x27;neath your covers and study your pain<br>
-        Make crosses from your lovers, throw roses in the rain<br>
-        Waste your summer praying in vain<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3jnoftwNCmIuTNVkxakisg?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        You can hide 'neath your covers and study your pain<br/>
+        Make crosses from your lovers, throw roses in the rain<br/>
+        Waste your summer praying in vain<br/>
         For a savior to rise from these streets
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Thunder Road</div>
+<div class="swf-song-artist">Bruce Springsteen</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Thunder Road</div>
-          <div class="swf-song-artist">Bruce Springsteen</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Thunder%20Road%20Bruce%20Springsteen"
-           target="_blank"
-           rel="noopener"
-           aria-label="Thunder Road auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Don&#x27;t cry, snowman, don&#x27;t you fear the sun<br>
-        Who&#x27;ll carry me without legs to run, honey<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/56lhDZNQ5J47aog6mGKeGk?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Don't cry, snowman, don't you fear the sun<br/>
+        Who'll carry me without legs to run, honey<br/>
         Without legs to run, honey
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Snowman</div>
+<div class="swf-song-artist">Sia</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Snowman</div>
-          <div class="swf-song-artist">Sia</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Snowman%20Sia"
-           target="_blank"
-           rel="noopener"
-           aria-label="Snowman auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Another airplane<br>
-        Another sunny place<br>
-        I&#x27;m lucky I know<br>
-        But I wanna go home<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/7uoFMmxln0GPXQ0AcCBXRq?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Another airplane<br/>
+        Another sunny place<br/>
+        I'm lucky I know<br/>
+        But I wanna go home<br/>
         Mmm, I got to go home
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">HOME</div>
+<div class="swf-song-artist">MICHAEL BUBLÉ</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">HOME</div>
-          <div class="swf-song-artist">MICHAEL BUBLÉ</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/HOME%20MICHAEL%20BUBL%C3%89"
-           target="_blank"
-           rel="noopener"
-           aria-label="HOME auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        It was paradise valley nevada<br>
-        Not far from where the west was won<br>
-        I am the only black face in the whole damn place<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3lyLqIn8mybyEFTs8JJaLf?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        It was paradise valley nevada<br/>
+        Not far from where the west was won<br/>
+        I am the only black face in the whole damn place<br/>
         Just a raisin in the blazing sun
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">​This old skin</div>
+<div class="swf-song-artist">The Beautiful South</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">​This old skin</div>
-          <div class="swf-song-artist">The Beautiful South</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/%E2%80%8BThis%20old%20skin%20The%20Beautiful%20South"
-           target="_blank"
-           rel="noopener"
-           aria-label="​This old skin auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Die Welt hinter Glas<br>
-        Die Route gecheckt<br>
-        Der Himmel noch schwarz<br>
-        So still und perfekt<br>
-        Und ich bleibe wach<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/1zXCns35DzeoVLHyGFGqmo?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Die Welt hinter Glas<br/>
+        Die Route gecheckt<br/>
+        Der Himmel noch schwarz<br/>
+        So still und perfekt<br/>
+        Und ich bleibe wach<br/>
         Ich geb auf dich Acht
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Welt hinter Glas</div>
+<div class="swf-song-artist">Max Mutzke</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Welt hinter Glas</div>
-          <div class="swf-song-artist">Max Mutzke</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Welt%20hinter%20Glas%20Max%20Mutzke"
-           target="_blank"
-           rel="noopener"
-           aria-label="Welt hinter Glas auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/4UrNsywga9TxlfArHYU9P3?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Maria Lopez heeß se<br/>
+        Die janze Strooß woor hin<br/>
+        Pechschwazze Hoor un siebzehn<br/>
+        En Hillije, en Spanierin<br/>
+        Sulang noch Leech bei ihr brannt<br/>
+        Sinn se öm dä Block jerannt<br/>
+        " Marie " stund op jeder Wand
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Nix wie bessher</div>
+<div class="swf-song-artist">Wolfgang Niedecken</div>
+</div>
 
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Maria Lopez heeß se<br>
-        Die janze Strooß woor hin<br>
-        Pechschwazze Hoor un siebzehn<br>
-        En Hillije, en Spanierin<br>
-        Sulang noch Leech bei ihr brannt<br>
-        Sinn se öm dä Block jerannt<br>
-        &quot; Marie &quot; stund op jeder Wand
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Nix wie bessher</div>
-          <div class="swf-song-artist">Wolfgang Niedecken</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Nix%20wie%20bessher%20Wolfgang%20Niedecken"
-           target="_blank"
-           rel="noopener"
-           aria-label="Nix wie bessher auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Wenn die Angst mich verfolgt und die Zweifel mich fast wieder killn<br>
-        Weil ich nicht weiß was passiert<br>
-        Ich will schreien, aber bleib lieber still<br>
-        Und wenn die Zeit nicht vergeht, weil es einfach nicht läuft wie man will<br>
-        Doch dann kommt diese Melodie, dieses Lied<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/6rmeHZwmC9To0MzU96M78k?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Wenn die Angst mich verfolgt und die Zweifel mich fast wieder killn<br/>
+        Weil ich nicht weiß was passiert<br/>
+        Ich will schreien, aber bleib lieber still<br/>
+        Und wenn die Zeit nicht vergeht, weil es einfach nicht läuft wie man will<br/>
+        Doch dann kommt diese Melodie, dieses Lied<br/>
         Ich war nie so verliebt
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Melodie</div>
+<div class="swf-song-artist">Cro</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Melodie</div>
-          <div class="swf-song-artist">Cro</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Melodie%20Cro"
-           target="_blank"
-           rel="noopener"
-           aria-label="Melodie auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Das ist so intensiv<br>
-        Dafür fehlt uns die Kraft<br>
-        Wir fliegen viel zu hoch, sind nicht dafür gemacht<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/3lacPAFR1cSHBBNxMtrTOT?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Das ist so intensiv<br/>
+        Dafür fehlt uns die Kraft<br/>
+        Wir fliegen viel zu hoch, sind nicht dafür gemacht<br/>
         Zu gigantisch, romantisch, zu extrem
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Eine Nummer zu gross</div>
+<div class="swf-song-artist">Roger Cicero</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Eine Nummer zu gross</div>
-          <div class="swf-song-artist">Roger Cicero</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Eine%20Nummer%20zu%20gross%20Roger%20Cicero"
-           target="_blank"
-           rel="noopener"
-           aria-label="Eine Nummer zu gross auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Zweitausend Stunden hab ich gewartet<br>
-        Ich hab sie alle gezählt und verflucht<br>
-        Ich hab getrunken, geraucht und gebetet<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5TDP4YUdOxAkkthryXP1as?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Zweitausend Stunden hab ich gewartet<br/>
+        Ich hab sie alle gezählt und verflucht<br/>
+        Ich hab getrunken, geraucht und gebetet<br/>
         Hab dich flussauf- und flussabwärts gesucht
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Junimond</div>
+<div class="swf-song-artist">Rio Reiser</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Junimond</div>
-          <div class="swf-song-artist">Rio Reiser</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Junimond%20Rio%20Reiser"
-           target="_blank"
-           rel="noopener"
-           aria-label="Junimond auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        I schlürf an Eiskaffee im Rialto<br>
-        Und schau de junga Hasn noch<br>
-        I glaub mei Chef muaß heit auf mi verzichtn<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/5G3pFGaM9BgmXZVwM4bSmo?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        I schlürf an Eiskaffee im Rialto<br/>
+        Und schau de junga Hasn noch<br/>
+        I glaub mei Chef muaß heit auf mi verzichtn<br/>
         Ja i lieg vui liaber mit dir im Gras
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Sommer in der Stadt</div>
+<div class="swf-song-artist">Spider Murphy Gang</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Sommer in der Stadt</div>
-          <div class="swf-song-artist">Spider Murphy Gang</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Sommer%20in%20der%20Stadt%20Spider%20Murphy%20Gang"
-           target="_blank"
-           rel="noopener"
-           aria-label="Sommer in der Stadt auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Ich guckte hoch aufs weiße Schloss<br>
-        Oder malochen bei Blohm &amp; Voss<br>
-        Ne irgendwie, das war doch klar<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/01b5SOei5QAZGwBM4M1eY2?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Ich guckte hoch aufs weiße Schloss<br/>
+        Oder malochen bei Blohm &amp; Voss<br/>
+        Ne irgendwie, das war doch klar<br/>
         Irgendwann, da wohn ich da
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Mein Ding</div>
+<div class="swf-song-artist">Udo Lindenberg</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Mein Ding</div>
-          <div class="swf-song-artist">Udo Lindenberg</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Mein%20Ding%20Udo%20Lindenberg"
-           target="_blank"
-           rel="noopener"
-           aria-label="Mein Ding auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Ich wünsch′ mir, es wär&#x27; wieder mal Sommer<br>
-        Ich spiel′ am off&#x27;nen Fenster Klavier<br>
-        Die Damen schauen heimlich nach oben<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/2LJQHkTucSOJf9hQL0Q8ae?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Ich wünsch′ mir, es wär' wieder mal Sommer<br/>
+        Ich spiel′ am off'nen Fenster Klavier<br/>
+        Die Damen schauen heimlich nach oben<br/>
         Und eine will sogar zu mir
       </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Immer mehr</div>
+<div class="swf-song-artist">Herwig Mitteregger</div>
+</div>
 
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Immer mehr</div>
-          <div class="swf-song-artist">Herwig Mitteregger</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Immer%20mehr%20Herwig%20Mitteregger"
-           target="_blank"
-           rel="noopener"
-           aria-label="Immer mehr auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/7Bzogpsa1clcaAtLESUCOB?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry">
+<div class="swf-quote">
+        Du musst gehn und den Mond sehn<br/>
+        Am besten am Meer<br/>
+        Bis zum Hals im echten Wasser stehn<br/>
+        Ein großes Herz wird leicht schwer<br/>
+        Zeit für'n Tag am Fluss<br/>
+        'Ne Nacht wie'n langer Kuss<br/>
+        Träume an 'nem süßen Sommernachmittag
       </div>
-    </div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Ein grosses Herz</div>
+<div class="swf-song-artist">Ulla Meinecke</div>
+</div>
 
-
-    <div class="swf-entry">
-      <div class="swf-quote">
-        Du musst gehn und den Mond sehn<br>
-        Am besten am Meer<br>
-        Bis zum Hals im echten Wasser stehn<br>
-        Ein großes Herz wird leicht schwer<br>
-        Zeit für&#x27;n Tag am Fluss<br>
-        &#x27;Ne Nacht wie&#x27;n langer Kuss<br>
-        Träume an &#x27;nem süßen Sommernachmittag
-      </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Ein grosses Herz</div>
-          <div class="swf-song-artist">Ulla Meinecke</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Ein%20grosses%20Herz%20Ulla%20Meinecke"
-           target="_blank"
-           rel="noopener"
-           aria-label="Ein grosses Herz auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-    <div class="swf-entry right">
-      <div class="swf-quote">
-        Es geht mir gut<br>
-        Vielleicht liegt&#x27;s am Sommer<br>
-        Vielleicht bist&#x27;s du-u-u du-du-du<br>
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/6eZxYj4EM6EbRf07NoLdze?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-entry right">
+<div class="swf-quote">
+        Es geht mir gut<br/>
+        Vielleicht liegt's am Sommer<br/>
+        Vielleicht bist's du-u-u du-du-du<br/>
         Is nur so n Gefühl
       </div>
-
-      <div class="swf-meta">
-        <div class="swf-song-info">
-          <div class="swf-song-title">Vielleicht der Sommer</div>
-          <div class="swf-song-artist">Lemo</div>
-        </div>
-
-        <a class="swf-spotify-btn"
-           href="https://open.spotify.com/search/Vielleicht%20der%20Sommer%20Lemo"
-           target="_blank"
-           rel="noopener"
-           aria-label="Vielleicht der Sommer auf Spotify öffnen">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-
-  <div class="swf-bottom-pad"></div>
+<div class="swf-meta">
+<div class="swf-song-info">
+<div class="swf-song-title">Vielleicht der Sommer</div>
+<div class="swf-song-artist">Lemo</div>
 </div>
 
-
+</div><div class="swf-spotify-embed"><iframe allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen="" data-testid="embed-iframe" frameborder="0" height="352" loading="lazy" src="https://open.spotify.com/embed/track/7HghA1yBmmpEHKkb31ZCBD?utm_source=generator" style="border-radius:12px" width="100%"></iframe></div>
+</div>
+<div class="swf-bottom-pad"></div>
+</div>
 <!-- ARCHIVE -->
 <div class="screen" id="screenArchive">
-  <div class="arc-sticky">
-    <div class="arc-hero">
-      <div class="arc-letters" id="arcLetters"></div>
-      <button class="arc-shuffle-btn" id="arcShuffleAllBtn" aria-label="Gesamtarchiv zufällig abspielen">
-        <img class="arc-shuffle-img"
-             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"
-             onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"
-             alt=""/>
-      </button>
-    </div>
-    <div class="arc-search" id="arcSearchWrap">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" id="arcInput" placeholder="Song suchen …" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <span class="arc-clear" id="arcClear">×</span>
-    </div>
-  </div>
-  <div id="arcSongCount" style="text-align:center;padding:10px 0 2px;font-size:13px;font-weight:600;color:rgba(133,172,201,.5);letter-spacing:.05em"></div>
-  <div id="arcList"></div>
-  <button class="arc-top-btn" id="arcTopBtn" aria-label="Zurück zum Archive-Anfang">
-    <img class="arc-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png" alt=""/>
-  </button>
-  <div class="home-bottom-pad"></div>
+<div class="arc-sticky">
+<div class="arc-hero">
+<div class="arc-letters" id="arcLetters"></div>
+<button aria-label="Gesamtarchiv zufällig abspielen" class="arc-shuffle-btn" id="arcShuffleAllBtn">
+<img alt="" class="arc-shuffle-img" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"/>
+</button>
 </div>
-
+<div class="arc-search" id="arcSearchWrap">
+<svg viewbox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+<input autocapitalize="off" autocomplete="off" autocorrect="off" id="arcInput" placeholder="Song suchen …" spellcheck="false" type="search"/>
+<span class="arc-clear" id="arcClear">×</span>
+</div>
+</div>
+<div id="arcSongCount" style="text-align:center;padding:10px 0 2px;font-size:13px;font-weight:600;color:rgba(133,172,201,.5);letter-spacing:.05em"></div>
+<div id="arcList"></div>
+<button aria-label="Zurück zum Archive-Anfang" class="arc-top-btn" id="arcTopBtn">
+<img alt="" class="arc-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png"/>
+</button>
+<div class="home-bottom-pad"></div>
+</div>
 <!-- TRACKLIST -->
 <div class="screen" id="screenTracklist">
-  <div class="tl-top">
-    <div class="tl-hero">
-      <div class="tl-cover-stack">
-        <img class="tl-top-cover" id="tlCover" src="" alt=""/>
-        <div class="tl-top-info">
-          <div class="tl-top-title" id="tlTitle"></div>
-          <div class="tl-top-meta" id="tlMeta"></div>
-        </div>
-      </div>
-      <button class="tl-album-random-btn" id="tlAlbumShuffleBtn" aria-label="Album zufällig abspielen">
-        <img class="arc-shuffle-img"
-             src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"
-             onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"
-             alt=""/>
-      </button>
-    </div>
-  </div>
-  <div id="tlList"></div>
-  <button class="tl-top-btn" id="tlTopBtn" aria-label="Zurück zum Album-Anfang">
-    <img class="tl-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png" alt=""/>
-  </button>
-  <div class="tl-bottom-pad"></div>
+<div class="tl-top">
+<div class="tl-hero">
+<div class="tl-cover-stack">
+<img alt="" class="tl-top-cover" id="tlCover" src=""/>
+<div class="tl-top-info">
+<div class="tl-top-title" id="tlTitle"></div>
+<div class="tl-top-meta" id="tlMeta"></div>
 </div>
-
+</div>
+<button aria-label="Album zufällig abspielen" class="tl-album-random-btn" id="tlAlbumShuffleBtn">
+<img alt="" class="arc-shuffle-img" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"/>
+</button>
+</div>
+</div>
+<div id="tlList"></div>
+<button aria-label="Zurück zum Album-Anfang" class="tl-top-btn" id="tlTopBtn">
+<img alt="" class="tl-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png"/>
+</button>
+<div class="tl-bottom-pad"></div>
+</div>
 <!-- NOW PLAYING -->
 <div id="screenNowPlaying">
-  <div class="np-header">
-    <button class="np-down-btn" id="npDownBtn">
-      <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
-    </button>
-    <span class="np-album-label" id="npAlbumLabel"></span>
-  </div>
-  <div class="np-cover-wrap" id="npCoverWrap">
-    <img class="np-cover" id="npCover" src="" alt=""/>
-  </div>
-  <div class="np-info">
-    <div class="np-title" id="npTitle"></div>
-    <div class="np-artist">BRO · Jörn Kämper</div>
-  </div>
-  <div class="np-spacer"></div>
-  <div class="np-bottom">
-    <div class="np-prog-wrap" id="npProgWrap"><div class="np-prog-fill" id="npProgFill"></div></div>
-    <div class="np-time"><span id="npElapsed">0:00</span><span id="npRemain">—</span></div>
-    <div class="np-controls">
-      <button class="np-btn" id="npBtnShuffle">
-        <img class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" alt=""/>
-      </button>
-      <button class="np-btn filled" id="npBtnPrev">
-        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </button>
-      <button class="np-btn np-btn-play" id="npBtnPlay">
-        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button class="np-btn filled" id="npBtnNext">
-        <svg viewBox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"/></svg>
-      </button>
-      <button class="np-btn np-btn-repeat" id="npBtnRepeat">
-        <svg class="icon-rpt-off" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
-        <svg class="icon-rpt-all" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
-        <svg class="icon-rpt-one" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/><text x="12" y="15.5" font-size="5.5" font-weight="900" font-family="sans-serif" fill="currentColor" text-anchor="middle" stroke="none">1</text></svg>
-      </button>
-    </div>
-  </div>
-</div>
-
-
-<button class="swf-top-btn" id="swfTopBtn" aria-label="Zurück zum Anfang">
-  <svg viewBox="0 0 24 24"><polyline points="18,15 12,9 6,15"/></svg>
+<div class="np-header">
+<button class="np-down-btn" id="npDownBtn">
+<svg viewbox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg>
 </button>
-
+<span class="np-album-label" id="npAlbumLabel"></span>
+</div>
+<div class="np-cover-wrap" id="npCoverWrap">
+<img alt="" class="np-cover" id="npCover" src=""/>
+</div>
+<div class="np-info">
+<div class="np-title" id="npTitle"></div>
+<div class="np-artist">BRO · Jörn Kämper</div>
+</div>
+<div class="np-spacer"></div>
+<div class="np-bottom">
+<div class="np-prog-wrap" id="npProgWrap"><div class="np-prog-fill" id="npProgFill"></div></div>
+<div class="np-time"><span id="npElapsed">0:00</span><span id="npRemain">—</span></div>
+<div class="np-controls">
+<button class="np-btn" id="npBtnShuffle">
+<img alt="" class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png"/>
+</button>
+<button class="np-btn filled" id="npBtnPrev">
+<svg viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path></svg>
+</button>
+<button class="np-btn np-btn-play" id="npBtnPlay">
+<svg class="icon-play" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+<svg class="icon-pause" viewbox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+</button>
+<button class="np-btn filled" id="npBtnNext">
+<svg viewbox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"></path></svg>
+</button>
+<button class="np-btn np-btn-repeat" id="npBtnRepeat">
+<svg class="icon-rpt-off" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+<svg class="icon-rpt-all" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+<svg class="icon-rpt-one" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path><text fill="currentColor" font-family="sans-serif" font-size="5.5" font-weight="900" stroke="none" text-anchor="middle" x="12" y="15.5">1</text></svg>
+</button>
+</div>
+</div>
+</div>
+<button aria-label="Zurück zum Anfang" class="swf-top-btn" id="swfTopBtn">
+<svg viewbox="0 0 24 24"><polyline points="18,15 12,9 6,15"></polyline></svg>
+</button>
 <audio id="hjAudio" preload="none"></audio>
-
 <!-- Player Bar -->
 <div class="hj-player" id="playerBar">
-  <!-- Upper strip: now playing (clickable → Now Playing screen) -->
-  <div class="hj-now-strip" id="nowStrip">
-    <div class="hj-prog-wrap"><div class="hj-prog-fill" id="progFill"></div></div>
-    <div class="hj-now">
-      <div class="hj-now-num">
-        <span class="hj-now-numtxt" id="nowNum">—</span>
-      </div>
-      <img class="hj-now-cover" id="nowCover" src="" alt="" style="visibility:hidden"/>
-      <div class="hj-now-info" id="nowInfo" style="visibility:hidden">
-        <div class="hj-now-title" id="nowTitle"></div>
-        <div class="hj-now-artist">Jörn Kämper</div>
-      </div>
-    </div>
-  </div>
-  <!-- Lower strip: controls -->
-  <div class="hj-controls-strip">
-    <div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
-    <div class="hj-controls">
-      <button class="hj-btn" id="btnShuffle">
-        <img class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" alt=""/>
-      </button>
-      <button class="hj-btn filled" id="btnPrev">
-        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </button>
-      <button class="hj-btn hj-btn-play" id="btnPlay">
-        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button class="hj-btn filled" id="btnNext">
-        <svg viewBox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"/></svg>
-      </button>
-      <button class="hj-btn hj-btn-repeat" id="btnRepeat">
-        <svg class="icon-rpt-off" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
-        <svg class="icon-rpt-all" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/></svg>
-        <svg class="icon-rpt-one" viewBox="0 0 24 24" style="fill:none;stroke:currentColor"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9A4 4 0 0 1 7 5H21"/><polyline points="7,23 3,19 7,15"/><path d="M21 13V15A4 4 0 0 1 17 19H3"/><text x="12" y="15.5" font-size="5.5" font-weight="900" font-family="sans-serif" fill="currentColor" text-anchor="middle" stroke="none">1</text></svg>
-      </button>
-    </div>
-  </div>
+<!-- Upper strip: now playing (clickable → Now Playing screen) -->
+<div class="hj-now-strip" id="nowStrip">
+<div class="hj-prog-wrap"><div class="hj-prog-fill" id="progFill"></div></div>
+<div class="hj-now">
+<div class="hj-now-num">
+<span class="hj-now-numtxt" id="nowNum">—</span>
 </div>
-
+<img alt="" class="hj-now-cover" id="nowCover" src="" style="visibility:hidden"/>
+<div class="hj-now-info" id="nowInfo" style="visibility:hidden">
+<div class="hj-now-title" id="nowTitle"></div>
+<div class="hj-now-artist">Jörn Kämper</div>
+</div>
+</div>
+</div>
+<!-- Lower strip: controls -->
+<div class="hj-controls-strip">
+<div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
+<div class="hj-controls">
+<button class="hj-btn" id="btnShuffle">
+<img alt="" class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png"/>
+</button>
+<button class="hj-btn filled" id="btnPrev">
+<svg viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path></svg>
+</button>
+<button class="hj-btn hj-btn-play" id="btnPlay">
+<svg class="icon-play" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+<svg class="icon-pause" viewbox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+</button>
+<button class="hj-btn filled" id="btnNext">
+<svg viewbox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"></path></svg>
+</button>
+<button class="hj-btn hj-btn-repeat" id="btnRepeat">
+<svg class="icon-rpt-off" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+<svg class="icon-rpt-all" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+<svg class="icon-rpt-one" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path><text fill="currentColor" font-family="sans-serif" font-size="5.5" font-weight="900" stroke="none" text-anchor="middle" x="12" y="15.5">1</text></svg>
+</button>
+</div>
+</div>
+</div>
 <script>
 const SONGS_TOP50 = [
   { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Fall%20-%20Lyrics.jpg' },
