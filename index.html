@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v81-one-million-streams-ahead -->
+<!-- Version: v82-tracklist-full-screen -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -393,7 +393,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:220px}
+.tl-bottom-pad{height:148px}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -511,7 +511,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15)}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
-.hj-now{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.hj-now{display:flex;align-items:center;gap:12px;padding:8px 16px}
 .hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
 .hj-now-numtxt{display:none}
 .hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0}
@@ -523,8 +523,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:transparent;
   padding-bottom:env(safe-area-inset-bottom, 0px);
 }
-.hj-time{display:flex;justify-content:space-between;padding:10px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 18px}
+.hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 14px}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
