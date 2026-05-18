@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v83-tracklist-flex-fix -->
+<!-- Version: v83-tracklist-flex-bottom-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -34,30 +34,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
 #screenHome{padding-top:14px}
 #screenTracklist{padding-top:8px}
-/* Flex restoration and layout stability */
-.screen.active {
-  display: flex;
-  flex-direction: column;
-}
-
-#screenHome.active,
-#screenArchive.active,
-#screenTracklist.active {
-  display: flex;
-  flex-direction: column;
-}
-
-#screenNowPlaying.active {
-  display: flex;
-}
-
-#tlList {
-  flex: 0 0 auto;
-}
-
-.tl-bottom-pad {
-  height: calc(var(--player-bar-h, 142px) + 2px);
-}
+.screen.active{display:flex;flex-direction:column}
 .screen::-webkit-scrollbar{display:none}
 
 /* ══ HOME ══ */
@@ -416,10 +393,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:210px}
+.tl-bottom-pad{height:calc(var(--player-bar-h, 142px) + 8px)}
 
 /* Tracklist container: max-width for iPad readability */
-#tlList{max-width:680px;margin:0 auto;width:100%}
+#tlList{max-width:680px;margin:0 auto;width:100%;flex:0 0 auto}
 #screenNowPlaying{
   background:rgba(6,20,32,1);
   display:none;
@@ -521,7 +498,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   transform:translateY(100%);
   transition:transform .3s ease;
   pointer-events:none;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .hj-player.visible{
   transform:translateY(0);
@@ -572,7 +548,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
 .hj-player::after{
-  display: none;
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
 }
 
 
@@ -4245,11 +4225,18 @@ backBtn.addEventListener('click',()=>{
 
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
-  const h = playerBar.getBoundingClientRect().height || 190;
-  const pad = h + 24;
-  document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
+  // Player-Bar ist immer gleich hoch — nur per transform versteckt, nicht per display:none.
+  // getBoundingClientRect().height funktioniert daher auch, wenn sie gerade nach unten herausgeschoben ist.
+  const h = playerBar.getBoundingClientRect().height || 142;
+  const pad = Math.round(h + 8);
+
+  document.documentElement.style.setProperty('--player-bar-h', Math.round(h) + 'px');
+  document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => {
+    el.style.height = pad + 'px';
+  });
 }
 
+// Albumseiten: dezenter UP-Button über der Playerleiste
 function updateAlbumTopButton(){
   if(!tlTopBtn) return;
   const active = screenTL.classList.contains('active') && screenTL.scrollTop > 120;
@@ -4257,27 +4244,8 @@ function updateAlbumTopButton(){
   const playerTop = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().top : window.innerHeight;
   const bottom = Math.max(24, window.innerHeight - playerTop + 14);
   document.documentElement.style.setProperty('--tl-top-btn-bottom', bottom + 'px');
+  updateBottomPads();
 }
-
-function updatePlayerBarHeight(){
-  const pBar = document.querySelector('.hj-player');
-  if(!pBar) return;
-
-  const h = pBar.classList.contains('visible')
-    ? pBar.getBoundingClientRect().height
-    : 0;
-
-  document.documentElement.style.setProperty(
-    '--player-bar-h',
-    `${h}px`
-  );
-}
-
-updatePlayerBarHeight();
-window.addEventListener('resize', updatePlayerBarHeight);
-window.addEventListener('orientationchange', updatePlayerBarHeight);
-
-updateBottomPads();
 
 tlTopBtn && tlTopBtn.addEventListener('click',()=>{
   tlTopBtn.classList.remove('visible');
@@ -4399,7 +4367,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v51-controls-safearea-fix-20260518';
+  const VERSION = 'v83-tracklist-flex-bottom-fix-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4699,27 +4667,6 @@ showHome = function(){
 })();
 
 // Bottom-Pads initial setzen und bei Orientierungswechsel/Resize aktualisieren
-
-// Dynamische Berechnung der Player-Bar-Höhe zur Vermeidung von Leerraum auf iPhones
-function updatePlayerBarHeight(){
-  const playerBar = document.querySelector('.hj-player');
-  if(!playerBar) return;
-
-  const h = playerBar.classList.contains('visible')
-    ? playerBar.getBoundingClientRect().height
-    : 0;
-
-  document.documentElement.style.setProperty(
-    '--player-bar-h',
-    `${h}px`
-  );
-}
-
-/* Initialer Aufruf & Event-Listener */
-updatePlayerBarHeight();
-window.addEventListener('resize', updatePlayerBarHeight);
-window.addEventListener('orientationchange', updatePlayerBarHeight);
-
 updateBottomPads();
 new ResizeObserver(updateBottomPads).observe(playerBar);
 
