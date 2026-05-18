@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v88-smart-dock-player -->
+<!-- Version: v90-ipad-full-player-controls-air-visible -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -600,6 +600,26 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
   height:env(safe-area-inset-bottom, 0px);
   background:rgba(6,20,32,1);
+}
+
+/* v90 — iPad/large screens: real breathing room under the full player controls only.
+   Important: .hj-controls-strip had max-height:86px and overflow:hidden, so padding alone was clipped.
+   The minimized swipe-down dock stays unchanged because these rules only target :not(.minimized). */
+@media (min-width:600px){
+  .hj-player.visible:not(.minimized) .hj-controls-strip{
+    max-height:128px;
+  }
+  .hj-player.visible:not(.minimized) .hj-controls{
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 42px);
+  }
+}
+@media (min-width:900px){
+  .hj-player.visible:not(.minimized) .hj-controls-strip{
+    max-height:142px;
+  }
+  .hj-player.visible:not(.minimized) .hj-controls{
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 52px);
+  }
 }
 
 
