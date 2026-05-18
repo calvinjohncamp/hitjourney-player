@@ -4361,14 +4361,23 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v46-edcard-layout-20260518';
+  const VERSION = 'v47-bottompad-fix-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
-    window.location.reload(true);
+    // Safari/iPhone PWA ignoriert reload(true) — URL-Parameter erzwingt echten Netzwerk-Request
+    const url = new URL(window.location.href);
+    url.searchParams.set('v', VERSION);
+    window.location.replace(url.toString());
     return;
   }
   localStorage.setItem('hj-version', VERSION);
+  // URL-Parameter nach erfolgreichem Reload sauber entfernen
+  if(window.location.search.includes('v=')) {
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete('v');
+    history.replaceState(null,'',clean.toString());
+  }
 })();
 
 // ══ FEATURED TEASER ROTATION ══
