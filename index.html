@@ -2754,32 +2754,39 @@ async function loadFromSupabase() {
   const songMap = {};
   songsRaw.forEach(row => {
     songMap[row.slug] = {
-      title:  row.title,
-      mp3:    row.mp3_url,
-      cover:  row.cover_url,
-      lyrics: row.lyrics_url  || null,
+      title:    row.title,
+      mp3:      row.mp3_url,
+      cover:    row.cover_url,
+      lyrics:   row.lyrics_url   || null,
       lyrics21: row.lyrics21_url || null,
     };
   });
 
-  // 2. Playlist-Tracks laden (mit Playlist-Slug)
+  // 2. Playlists laden (id → slug mapping)
+  const playlistsRes = await fetch(SB_URL + '/rest/v1/playlists?select=id,slug', { headers });
+  if (!playlistsRes.ok) throw new Error('Playlists fetch failed: ' + playlistsRes.status);
+  const playlistsRaw = await playlistsRes.json();
+  const playlistIdToSlug = {};
+  playlistsRaw.forEach(p => { playlistIdToSlug[p.id] = p.slug; });
+
+  // 3. Playlist-Tracks laden
   const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,track_order,playlist_id,playlists(slug)&order=playlist_id,track_order',
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,track_order,playlist_id&order=playlist_id,track_order',
     { headers }
   );
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
 
-  // 3. ALBUMS aufbauen
+  // 4. ALBUMS aufbauen
   ALBUMS = {};
-  ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; }); // Reihenfolge sichern
+  ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   tracksRaw.forEach(row => {
-    const playlistSlug = row.playlists?.slug;
+    const playlistSlug = playlistIdToSlug[row.playlist_id];
     const info = PLAYLIST_MAP[playlistSlug];
-    if (!info) return; // unbekannte Playlist überspringen
+    if (!info) return;
     const song = songMap[row.song_slug];
-    if (!song) return; // fehlender Song überspringen
+    if (!song) return;
 
     if (!ALBUMS[info.key]) {
       ALBUMS[info.key] = {
@@ -2792,7 +2799,7 @@ async function loadFromSupabase() {
     ALBUMS[info.key].songs.push(song);
   });
 
-  // Null-Einträge entfernen (falls Playlist in DB fehlt)
+  // Null-Einträge entfernen
   Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
 
   console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
