@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v93-slug-fix-20260518 -->
+<!-- Version: v94-admin-easter-egg-20260518 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4190,7 +4190,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v93-slug-fix-20260518';
+  const VERSION = 'v94-admin-easter-egg-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4524,3 +4524,131 @@ playerBar.classList.add = function(...args){
 
 </body>
 </html>
+
+<script>
+/* ══ ADMIN EASTER EGG ══ 10x Tap auf hitjourney-Logo → Admin Modal */
+(function(){
+  const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjM1NDcxOCwiZXhwIjoyMDg3OTMwNzE4fQ.-tCegC4gf2Gqg_hbPO2yKJyC2fZEVP6WoIdVbHoLt8c';
+  const SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
+  const ADMIN_PW = 'hitjourney2026';
+
+  let tapCount = 0, tapTimer = null;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #admOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
+    #admOverlay.open{display:flex}
+    #admModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.25);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px;color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif}
+    #admModal h2{font-size:18px;font-weight:700;color:#cfe5f5;margin-bottom:20px}
+    #admModal h3{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#85ACC9;margin:18px 0 10px}
+    .ai{width:100%;background:rgba(11,42,66,.8);border:1px solid rgba(133,172,201,.22);border-radius:10px;padding:12px 14px;color:#f1ecdf;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:9px}
+    .ai::placeholder{color:rgba(133,172,201,.4)}
+    .ab{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-weight:600;margin-bottom:8px;transition:opacity .15s}
+    .ab:active{opacity:.8}
+    .ab-p{background:#85ACC9;color:#06141F}
+    .ab-c{background:rgba(133,172,201,.12);color:#85ACC9}
+    .am{font-size:13px;padding:8px 12px;border-radius:8px;margin-bottom:10px;display:none}
+    .am-ok{background:rgba(50,180,100,.2);color:#6fda9a}
+    .am-err{background:rgba(200,60,60,.2);color:#f08080}
+    .adiv{height:1px;background:rgba(133,172,201,.1);margin:16px 0}
+  `;
+  document.head.appendChild(style);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'admOverlay';
+  overlay.innerHTML = `<div id="admModal">
+    <div id="admPwS">
+      <h2>🔐 Admin</h2>
+      <input class="ai" id="admPwI" type="password" placeholder="Passwort …"/>
+      <button class="ab ab-p" id="admPwBtn">Einloggen</button>
+      <button class="ab ab-c" id="admPwX">Abbrechen</button>
+      <div class="am am-err" id="admPwErr">Falsches Passwort</div>
+    </div>
+    <div id="admMainS" style="display:none">
+      <h2>⚙️ hitjourney Admin</h2>
+      <h3>Song hinzufügen</h3>
+      <input class="ai" id="admT" placeholder="Titel *"/>
+      <input class="ai" id="admSl" placeholder="Slug (wird auto-generiert)"/>
+      <input class="ai" id="admM" placeholder="MP3-URL *"/>
+      <input class="ai" id="admC" placeholder="Cover-URL"/>
+      <input class="ai" id="admL" placeholder="Lyrics-URL"/>
+      <select class="ai" id="admPl">
+        <option value="">— Playlist (optional) —</option>
+        <option value="songwriters-picks">Top 50</option>
+        <option value="30-grad">30° Grad</option>
+        <option value="30-stories">30 Stories</option>
+        <option value="grosse-liebe">Grosse Liebe</option>
+        <option value="poesie">Poesie</option>
+        <option value="buried-diamonds">Buried Diamonds</option>
+        <option value="top-100">Top 100</option>
+      </select>
+      <div class="am" id="admMsg"></div>
+      <button class="ab ab-p" id="admSave">Song speichern</button>
+      <div class="adiv"></div>
+      <button class="ab ab-c" id="admX">Schließen</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  function slug(t){ return t.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+  function msg(text,type){ const el=document.getElementById('admMsg'); el.textContent=text; el.className='am am-'+type; el.style.display=''; setTimeout(()=>el.style.display='none',4000); }
+  function hdrs(){ return {'apikey':SB_SERVICE,'Authorization':'Bearer '+SB_SERVICE,'Content-Type':'application/json','Prefer':'return=minimal'}; }
+
+  // 10x tap
+  document.getElementById('logoHome').addEventListener('click',()=>{
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer=setTimeout(()=>tapCount=0,1500);
+    if(tapCount>=10){
+      tapCount=0;
+      overlay.classList.add('open');
+      document.getElementById('admPwI').value='';
+      document.getElementById('admPwErr').style.display='none';
+      document.getElementById('admPwS').style.display='';
+      document.getElementById('admMainS').style.display='none';
+    }
+  });
+
+  document.getElementById('admPwBtn').addEventListener('click',()=>{
+    if(document.getElementById('admPwI').value===ADMIN_PW){
+      document.getElementById('admPwS').style.display='none';
+      document.getElementById('admMainS').style.display='';
+    } else {
+      document.getElementById('admPwErr').style.display='';
+    }
+  });
+  document.getElementById('admPwI').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('admPwBtn').click(); });
+  document.getElementById('admPwX').addEventListener('click',()=>overlay.classList.remove('open'));
+  document.getElementById('admX').addEventListener('click',()=>overlay.classList.remove('open'));
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+
+  document.getElementById('admT').addEventListener('input',e=>{
+    const sl=document.getElementById('admSl');
+    if(!sl.dataset.m) sl.value=slug(e.target.value);
+  });
+  document.getElementById('admSl').addEventListener('input',e=>e.target.dataset.m='1');
+
+  document.getElementById('admSave').addEventListener('click',async()=>{
+    const title=document.getElementById('admT').value.trim();
+    const sl=document.getElementById('admSl').value.trim()||slug(title);
+    const mp3=document.getElementById('admM').value.trim();
+    const cover=document.getElementById('admC').value.trim();
+    const lyrics=document.getElementById('admL').value.trim();
+    const pl=document.getElementById('admPl').value;
+    if(!title||!mp3){ msg('Titel und MP3-URL sind Pflicht.','err'); return; }
+    try {
+      const r=await fetch(SB_URL+'/rest/v1/songs',{method:'POST',headers:hdrs(),body:JSON.stringify({slug:sl,title,mp3_url:mp3,cover_url:cover||null,lyrics_url:lyrics||null})});
+      if(!r.ok&&r.status!==409){ msg('Fehler: '+(await r.text()),'err'); return; }
+      if(pl){
+        const pr=await fetch(SB_URL+'/rest/v1/playlist_tracks?select=position&playlist_slug=eq.'+pl+'&order=position.desc&limit=1',{headers:{apikey:SB_SERVICE,Authorization:'Bearer '+SB_SERVICE}});
+        const pd=await pr.json();
+        const pos=pd.length?pd[0].position+1:1;
+        await fetch(SB_URL+'/rest/v1/playlist_tracks',{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:pl,song_slug:sl,position:pos})});
+      }
+      msg('✓ Song gespeichert'+(pl?' und zur Playlist hinzugefügt.':'.'),'ok');
+      ['admT','admSl','admM','admC','admL'].forEach(id=>document.getElementById(id).value='');
+      delete document.getElementById('admSl').dataset.m;
+    } catch(e){ msg('Fehler: '+e.message,'err'); }
+  });
+})();
+</script>
