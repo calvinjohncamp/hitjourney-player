@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v90-ipad-full-player-controls-air-visible -->
+<!-- Version: v91-ipad-player-air-reduced -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -602,23 +602,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(6,20,32,1);
 }
 
-/* v90 — iPad/large screens: real breathing room under the full player controls only.
-   Important: .hj-controls-strip had max-height:86px and overflow:hidden, so padding alone was clipped.
-   The minimized swipe-down dock stays unchanged because these rules only target :not(.minimized). */
+/* v91 — iPad/large screens only: reduced breathing room under the full player controls.
+   Compared with v90, roughly two thirds of the extra bottom air were removed.
+   iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
   .hj-player.visible:not(.minimized) .hj-controls-strip{
-    max-height:128px;
+    max-height:100px;
   }
   .hj-player.visible:not(.minimized) .hj-controls{
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 42px);
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 22px);
   }
 }
 @media (min-width:900px){
   .hj-player.visible:not(.minimized) .hj-controls-strip{
-    max-height:142px;
+    max-height:105px;
   }
   .hj-player.visible:not(.minimized) .hj-controls{
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 52px);
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 29px);
   }
 }
 
