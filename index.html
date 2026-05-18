@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v83-tracklist-flex-fix -->
+<!-- Version: v84-scroll-lock-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -3567,7 +3567,7 @@ function showAlbum(key){
   previewSong(0);
   showNowStrip();
   playerBar.classList.add('visible');
-  refreshHighlight();
+  refreshHighlight(false); // beim Album-Öffnen kein automatisches Scrollen
   // Beim Wechsel auf eine Albumseite immer oben starten — unabhängig von Shuffle/aktiver Zeile.
   screenTL.scrollTop = 0;
   requestAnimationFrame(()=>{ screenTL.scrollTop = 0; });
@@ -3825,6 +3825,7 @@ let suppressTrackScroll = false;
 function loadPlayNoScroll(songIdx){
   suppressTrackScroll = true;
   loadPlay(songIdx);
+  // suppressTrackScroll bleibt dauerhaft true — nur loadPlay selbst darf scrollen (einmalig beim Laden)
   setTimeout(()=>{ suppressTrackScroll = false; }, 500);
 }
 function loadPlay(songIdx){
@@ -3836,18 +3837,22 @@ function loadPlay(songIdx){
   nowNum.textContent=songIdx+1;
   showNowStrip();
   if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
-  refreshHighlight(); updateMS(songIdx);
+  refreshHighlight(true); updateMS(songIdx);
   if(screenNP.classList.contains('active')) updateNPScreen();
 }
-function refreshHighlight(){
+function refreshHighlight(allowScroll){
   const cur=queueIdx>=0?queue[queueIdx]:-1;
-  document.querySelectorAll('.tl-track').forEach(row=>{
+  document.querySelectorAll('#tlList .tl-track').forEach(row=>{
     const i=parseInt(row.dataset.idx);
     row.classList.toggle('active',i===cur);
     row.classList.toggle('playing',i===cur&&!audio.paused);
   });
-  const active=tlList.querySelector('.tl-track.active');
-  if(active && !suppressTrackScroll)active.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // scrollIntoView nur wenn explizit erlaubt (d.h. User hat Song gewählt / Prev/Next gedrückt)
+  // NICHT bei play/pause-Events — das verhindert den Scroll-zurück-Bug bei langen Playlisten
+  if(allowScroll && !suppressTrackScroll){
+    const active=tlList.querySelector('.tl-track.active');
+    if(active) active.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 }
 let featuredMode = false; // true = Fokus-Song läuft, kein Player-Strip
 
@@ -3860,7 +3865,7 @@ function updatePlayBtns(){
   document.querySelectorAll('.knw-play-btn-circle').forEach((b,i)=>{
     b.classList.toggle('playing', p && i === knwActiveSongIdx);
   });
-  refreshHighlight();
+  refreshHighlight(false); // KEIN scrollIntoView — verhindert Scroll-zurück-Bug bei langen Listen
   refreshArchiveHighlight();
 }
 function syncRepeatBtn(btn){
