@@ -8,13 +8,9 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="hitjourney" name="apple-mobile-web-app-title"/>
 <meta content="#06141F" name="theme-color"/>
-<link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
-<link rel="shortcut icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
-<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
-
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v75-favicon-added -->
+<!-- Version: v76-spotify-single-active-ios -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4504,5 +4500,78 @@ showHome = function(){
 })();
 
 </script>
+
+
+<script>
+/* v76 — iPhone/iPad Spotify safety:
+   Spotify embeds run in cross-origin iframes. iOS may keep several of them playing.
+   This guard unloads every other Spotify iframe as soon as one Spotify player is touched,
+   and reloads the selected player fresh so a newly selected song starts from the beginning. */
+(function(){
+  const spotifyFrames = Array.from(document.querySelectorAll('iframe[src*="open.spotify.com/embed/"]'));
+  if(!spotifyFrames.length) return;
+
+  spotifyFrames.forEach((frame, idx) => {
+    const originalSrc = frame.getAttribute('src') || '';
+    frame.dataset.spotifyOriginalSrc = originalSrc;
+    frame.dataset.spotifyIdx = String(idx);
+    frame.dataset.spotifyActive = '1';
+  });
+
+  let activeFrame = null;
+  let lastSwitch = 0;
+
+  function freshSrc(src){
+    if(!src || src === 'about:blank') return src;
+    try{
+      const url = new URL(src, window.location.href);
+      url.searchParams.set('hjfresh', String(Date.now()));
+      return url.toString();
+    }catch(e){
+      const sep = src.includes('?') ? '&' : '?';
+      return src + sep + 'hjfresh=' + Date.now();
+    }
+  }
+
+  function unloadFrame(frame){
+    if(!frame || frame === activeFrame) return;
+    if(frame.getAttribute('src') !== 'about:blank'){
+      frame.setAttribute('src','about:blank');
+      frame.dataset.spotifyActive = '0';
+    }
+  }
+
+  function activateFrame(frame){
+    const now = Date.now();
+    if(!frame) return;
+
+    // Prevent double touch/click sequences from immediately reloading the same player again.
+    if(activeFrame === frame && now - lastSwitch < 900) return;
+
+    lastSwitch = now;
+    spotifyFrames.forEach(unloadFrame);
+
+    if(activeFrame !== frame || frame.dataset.spotifyActive !== '1'){
+      activeFrame = frame;
+      const base = frame.dataset.spotifyOriginalSrc || frame.getAttribute('src') || '';
+      frame.setAttribute('src','about:blank');
+      frame.dataset.spotifyActive = '0';
+      window.setTimeout(() => {
+        frame.setAttribute('src', freshSrc(base));
+        frame.dataset.spotifyActive = '1';
+      }, 60);
+    }else{
+      activeFrame = frame;
+    }
+  }
+
+  spotifyFrames.forEach(frame => {
+    ['pointerdown','touchstart','mousedown','focus'].forEach(evt => {
+      frame.addEventListener(evt, () => activateFrame(frame), {passive:true});
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
