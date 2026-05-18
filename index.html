@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v76-spotify-single-active-ios -->
+<!-- Version: v79-spotify-ios-rich-placeholder -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4503,72 +4503,153 @@ showHome = function(){
 
 
 <script>
-/* v76 — iPhone/iPad Spotify safety:
-   Spotify embeds run in cross-origin iframes. iOS may keep several of them playing.
-   This guard unloads every other Spotify iframe as soon as one Spotify player is touched,
-   and reloads the selected player fresh so a newly selected song starts from the beginning. */
+/* v79 — Spotify iOS Lazy-Load mit Rich Placeholders
+   - Desktop: KEINE Änderung. Alle iframes laden automatisch wie bisher.
+   - iOS only: iframes werden durch schöne Placeholders ersetzt (Titel + Artist +
+     Cover-Thumbnail via Spotify oEmbed). Erst beim Antippen lädt der Player —
+     dauerhaft, ohne jemals wieder zu verschwinden.
+   - Parallellauf-Schutz: beim Laden eines neuen Players werden alle vorherigen
+     per src-Reset gestoppt (bleiben aber sichtbar und pausiert im DOM).
+*/
 (function(){
-  const spotifyFrames = Array.from(document.querySelectorAll('iframe[src*="open.spotify.com/embed/"]'));
-  if(!spotifyFrames.length) return;
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  spotifyFrames.forEach((frame, idx) => {
-    const originalSrc = frame.getAttribute('src') || '';
-    frame.dataset.spotifyOriginalSrc = originalSrc;
-    frame.dataset.spotifyIdx = String(idx);
-    frame.dataset.spotifyActive = '1';
-  });
+  // Desktop: gar nichts tun
+  if(!isIOS) return;
 
-  let activeFrame = null;
-  let lastSwitch = 0;
+  const containers = Array.from(document.querySelectorAll('.swf-spotify-embed, .swf-playlist-embed-block'));
+  if(!containers.length) return;
 
-  function freshSrc(src){
-    if(!src || src === 'about:blank') return src;
-    try{
-      const url = new URL(src, window.location.href);
-      url.searchParams.set('hjfresh', String(Date.now()));
-      return url.toString();
-    }catch(e){
-      const sep = src.includes('?') ? '&' : '?';
-      return src + sep + 'hjfresh=' + Date.now();
+  const loadedFrames = [];
+
+  containers.forEach(container => {
+    const iframe = container.querySelector('iframe[src*="open.spotify.com/embed/"]');
+    if(!iframe) return;
+
+    const originalSrc = iframe.getAttribute('src') || '';
+    const isPlaylist = originalSrc.includes('/playlist/');
+    const height = iframe.getAttribute('height') || '152';
+
+    // Titel + Artist aus dem umgebenden swf-entry auslesen
+    const entry = container.closest('.swf-entry');
+    const titleEl = entry ? entry.querySelector('.swf-song-title') : null;
+    const artistEl = entry ? entry.querySelector('.swf-song-artist') : null;
+    const title = titleEl ? titleEl.textContent.trim().replace(/^\u200b/, '') : (isPlaylist ? "Songwriter's Favorites" : 'Song');
+    const artist = artistEl ? artistEl.textContent.trim() : '';
+
+    // Track-ID aus der Spotify-URL extrahieren (für Cover-Thumbnail)
+    const trackMatch = originalSrc.match(/\/(?:track|album|playlist)\/([A-Za-z0-9]+)/);
+    const trackId = trackMatch ? trackMatch[1] : null;
+    // Spotify Cover-Thumbnail URL (funktioniert ohne Auth für Previews)
+    const coverUrl = trackId
+      ? `https://i.scdn.co/image/` // wird per oEmbed geladen, s.u.
+      : null;
+
+    // Iframe sofort entfernen
+    iframe.remove();
+
+    // Placeholder bauen
+    const ph = document.createElement('div');
+    ph.style.cssText = [
+      'display:flex',
+      'align-items:center',
+      'gap:14px',
+      'cursor:pointer',
+      'border-radius:12px',
+      'background:#181818',
+      'padding:14px 16px',
+      'box-sizing:border-box',
+      'min-height:80px',
+      'user-select:none',
+      '-webkit-user-select:none',
+      'border:1px solid rgba(255,255,255,0.06)',
+    ].join(';');
+
+    // Cover-Platzhalter (grau, wird per oEmbed befüllt)
+    const coverDiv = document.createElement('div');
+    coverDiv.style.cssText = [
+      'width:56px','height:56px','flex-shrink:0',
+      'border-radius:6px','background:#282828',
+      'overflow:hidden','display:flex','align-items:center','justify-content:center',
+    ].join(';');
+    // Spotify-Logo als Fallback im Cover
+    coverDiv.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="#1ED760" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 01-.453-1.492c3.633-1.103 8.147-.568 11.233 1.329a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.793c3.514-1.066 9.356-.86 13.045 1.339a.937.937 0 01-.985 1.611z"/></svg>`;
+
+    // Text-Bereich
+    const textDiv = document.createElement('div');
+    textDiv.style.cssText = 'flex:1;min-width:0;overflow:hidden';
+    textDiv.innerHTML = `
+      <div style="color:#fff;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">${title}</div>
+      ${artist ? `<div style="color:#a7a7a7;font-size:12px;margin-top:2px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">${artist}</div>` : ''}
+      <div style="color:#1ED760;font-size:11px;margin-top:5px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;display:flex;align-items:center;gap:5px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#1ED760"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 01-.277-1.215c3.809-.87 7.076-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 01-.453-1.492c3.633-1.103 8.147-.568 11.233 1.329a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.793c3.514-1.066 9.356-.86 13.045 1.339a.937.937 0 01-.985 1.611z"/></svg>
+        Antippen zum Abspielen
+      </div>`;
+
+    // Play-Button rechts
+    const playBtn = document.createElement('div');
+    playBtn.style.cssText = 'flex-shrink:0';
+    playBtn.innerHTML = `
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="#1ED760"/>
+        <polygon points="15,12 31,20 15,28" fill="#000"/>
+      </svg>`;
+
+    ph.appendChild(coverDiv);
+    ph.appendChild(textDiv);
+    ph.appendChild(playBtn);
+    container.appendChild(ph);
+
+    // Cover-Bild via oEmbed nachladen (async, kein Blockieren)
+    if(trackId && !isPlaylist){
+      const trackUrl = encodeURIComponent('https://open.spotify.com/track/' + trackId);
+      fetch('https://open.spotify.com/oembed?url=' + trackUrl)
+        .then(r => r.json())
+        .then(data => {
+          if(data && data.thumbnail_url){
+            const img = document.createElement('img');
+            img.src = data.thumbnail_url;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px';
+            img.onload = () => { coverDiv.innerHTML = ''; coverDiv.appendChild(img); };
+          }
+        })
+        .catch(() => {}); // Fehler ignorieren — Fallback-Icon bleibt
     }
-  }
 
-  function unloadFrame(frame){
-    if(!frame || frame === activeFrame) return;
-    if(frame.getAttribute('src') !== 'about:blank'){
-      frame.setAttribute('src','about:blank');
-      frame.dataset.spotifyActive = '0';
+    function loadPlayer(){
+      ph.remove();
+
+      // Alle anderen geladenen Player stoppen (src-Reset)
+      loadedFrames.forEach(f => {
+        const saved = f._hjSrc;
+        f.setAttribute('src', 'about:blank');
+        setTimeout(() => f.setAttribute('src', saved), 60);
+      });
+
+      const newFrame = document.createElement('iframe');
+      let src = originalSrc;
+      try{
+        const u = new URL(src);
+        u.searchParams.set('hjt', String(Date.now()));
+        src = u.toString();
+      }catch(e){
+        src = src + (src.includes('?') ? '&' : '?') + 'hjt=' + Date.now();
+      }
+      newFrame._hjSrc = src;
+      newFrame.setAttribute('src', src);
+      newFrame.setAttribute('width', '100%');
+      newFrame.setAttribute('height', height);
+      newFrame.setAttribute('frameborder', '0');
+      newFrame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+      newFrame.setAttribute('allowfullscreen', '');
+      newFrame.style.cssText = 'display:block;width:100%;border:0;border-radius:12px';
+      container.appendChild(newFrame);
+      loadedFrames.push(newFrame);
     }
-  }
 
-  function activateFrame(frame){
-    const now = Date.now();
-    if(!frame) return;
-
-    // Prevent double touch/click sequences from immediately reloading the same player again.
-    if(activeFrame === frame && now - lastSwitch < 900) return;
-
-    lastSwitch = now;
-    spotifyFrames.forEach(unloadFrame);
-
-    if(activeFrame !== frame || frame.dataset.spotifyActive !== '1'){
-      activeFrame = frame;
-      const base = frame.dataset.spotifyOriginalSrc || frame.getAttribute('src') || '';
-      frame.setAttribute('src','about:blank');
-      frame.dataset.spotifyActive = '0';
-      window.setTimeout(() => {
-        frame.setAttribute('src', freshSrc(base));
-        frame.dataset.spotifyActive = '1';
-      }, 60);
-    }else{
-      activeFrame = frame;
-    }
-  }
-
-  spotifyFrames.forEach(frame => {
-    ['pointerdown','touchstart','mousedown','focus'].forEach(evt => {
-      frame.addEventListener(evt, () => activateFrame(frame), {passive:true});
-    });
+    ph.addEventListener('touchend', function(e){ e.preventDefault(); loadPlayer(); }, {passive:false});
+    ph.addEventListener('click', loadPlayer);
   });
 })();
 </script>
