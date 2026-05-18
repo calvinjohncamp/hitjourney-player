@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v88-tighter-controls -->
+<!-- Version: v86-block-scroll-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -551,8 +551,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:transparent;
   padding-bottom:0;
 }
-.hj-time{display:flex;justify-content:space-between;padding:4px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:4px 8px calc(2px + env(safe-area-inset-bottom, 0px))}
+.hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 14px}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
@@ -574,6 +574,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
+/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
+.hj-player::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
+}
 
 
 /* ══ FEATURED TEASER ══ */
