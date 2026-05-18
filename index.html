@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v84-scroll-lock-fix -->
+<!-- Version: v85-scope-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -416,7 +416,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:210px}
+.tl-bottom-pad{height:260px}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -4268,28 +4268,6 @@ function updateAlbumTopButton(){
   const playerTop = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().top : window.innerHeight;
   const bottom = Math.max(24, window.innerHeight - playerTop + 14);
   document.documentElement.style.setProperty('--tl-top-btn-bottom', bottom + 'px');
-  
-// Dynamische Berechnung der Player-Bar-Höhe zur Vermeidung von Leerraum auf iPhones
-function updatePlayerBarHeight(){
-  const playerBar = document.querySelector('.hj-player');
-  if(!playerBar) return;
-
-  const h = playerBar.classList.contains('visible')
-    ? playerBar.getBoundingClientRect().height
-    : 0;
-
-  document.documentElement.style.setProperty(
-    '--player-bar-h',
-    `${h}px`
-  );
-}
-
-/* Initialer Aufruf & Event-Listener */
-updatePlayerBarHeight();
-window.addEventListener('resize', updatePlayerBarHeight);
-window.addEventListener('orientationchange', updatePlayerBarHeight);
-
-updateBottomPads();
 }
 
 tlTopBtn && tlTopBtn.addEventListener('click',()=>{
