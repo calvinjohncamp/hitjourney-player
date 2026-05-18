@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v84-tracklist-max-viewport -->
+<!-- Version: v83-tracklist-flex-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1690,21 +1690,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   #screenSongwritersFavorites .swf-playlist-embed-block iframe{
     max-width: 1180px !important;
   }
-}
-
-
-/* Precision bottom placement to eliminate iOS dead space */
-.hj-player {
-  padding-bottom: 0 !important;
-}
-.hj-controls-strip {
-  padding-top: 10px !important;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px) !important;
-  padding-left: 20px !important;
-  padding-right: 20px !important;
-}
-.hj-progress-container {
-  margin-bottom: 2px !important;
 }
 
 </style>
@@ -4299,27 +4284,6 @@ updatePlayerBarHeight();
 window.addEventListener('resize', updatePlayerBarHeight);
 window.addEventListener('orientationchange', updatePlayerBarHeight);
 
-
-// Dynamische und praezise Vermessung der Player-Bar fuer maximalen Viewport auf iPhones
-function updatePlayerBarHeight(){
-  const playerBar = document.querySelector('.hj-player');
-  if(!playerBar) return;
-
-  const h = playerBar.classList.contains('visible')
-    ? playerBar.getBoundingClientRect().height
-    : 0;
-
-  document.documentElement.style.setProperty(
-    '--player-bar-h',
-    `${h}px`
-  );
-}
-
-/* Initialer Aufruf & Event-Listener */
-updatePlayerBarHeight();
-window.addEventListener('resize', updatePlayerBarHeight);
-window.addEventListener('orientationchange', updatePlayerBarHeight);
-
 updateBottomPads();
 }
 
@@ -4745,27 +4709,6 @@ showHome = function(){
 // Bottom-Pads initial setzen und bei Orientierungswechsel/Resize aktualisieren
 
 // Dynamische Berechnung der Player-Bar-Höhe zur Vermeidung von Leerraum auf iPhones
-function updatePlayerBarHeight(){
-  const playerBar = document.querySelector('.hj-player');
-  if(!playerBar) return;
-
-  const h = playerBar.classList.contains('visible')
-    ? playerBar.getBoundingClientRect().height
-    : 0;
-
-  document.documentElement.style.setProperty(
-    '--player-bar-h',
-    `${h}px`
-  );
-}
-
-/* Initialer Aufruf & Event-Listener */
-updatePlayerBarHeight();
-window.addEventListener('resize', updatePlayerBarHeight);
-window.addEventListener('orientationchange', updatePlayerBarHeight);
-
-
-// Dynamische und praezise Vermessung der Player-Bar fuer maximalen Viewport auf iPhones
 function updatePlayerBarHeight(){
   const playerBar = document.querySelector('.hj-player');
   if(!playerBar) return;
