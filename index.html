@@ -1739,6 +1739,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </style>
 </head>
 <body>
+<div id="hjLoadingOverlay" style="position:fixed;inset:0;z-index:9999;background:rgb(6,20,32);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.7">
+    <circle cx="24" cy="24" r="20" stroke="#5884A4" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="60" style="animation:hjSpin 1.2s linear infinite;transform-origin:center">
+    </circle>
+  </svg>
+  <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
+</div>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
@@ -2712,390 +2720,83 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 <script>
-const SONGS_TOP50 = [
-  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Fall%20-%20Lyrics.jpg' },
-  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Lyrics.jpg' },
-  { title: 'Real', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/real.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/real%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Real%20-%20Lyrics.jpg' },
-  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Lyrics.jpg' },
-  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Never%20Quite%20Mine%20-%20Lyrics.jpg' },
-  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20%28Eichendorff%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Ashes In The Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ashes-in-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Lyrics.jpg' },
-  { title: 'Im Kiosk brennt noch Licht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-kiosk-brennt-noch-licht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Lyrics.jpg' },
-  { title: 'Johnny (Song for my mother)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'unscharf', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Lyrics.jpg' },
-  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Lyrics.jpg' },
-  { title: 'An der Haltestelle', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-der-haltestelle.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20der%20Haltestelle%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20der%20Haltestelle%20-%20Lyrics.jpg' },
-  { title: 'Red Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/red-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Lyrics.jpg' },
-  { title: 'Gleich zurück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Lyrics.jpg' },
-  { title: 'Anywhere you were with me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Lyrics.jpg' },
-  { title: 'Bar am Meer', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bar-am-meer.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Tell Me Why', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20Me%20Why%20-%20Bro%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Beste%20Freunde%20-%20Lyrics.jpg' },
-  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Nur ein Zucken von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-ein-zucken-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Lyrics.jpg' },
-  { title: 'The Quiet Wars', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-quiet-wars.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/the%20quiet%20wars%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Quiet%20Wars%20-%20Lyrics.jpg' },
-  { title: 'So ist das', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/so-ist-das.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'The Cold Don\'t Lie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Lyrics.jpg' },
-  { title: 'Du fehlst mir nicht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-fehlst-mir-nicht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'This world is wide', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/this-world-is-wide.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Ultimate%20-%20Cover.jpg' },
-  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Late September Heart', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Guten%20Morgen%20-%20Lyrics.jpg' },
-  { title: 'I Write You A Song', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-write-you-a-song.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Lyrics.jpg' },
-  { title: 'alles rot alles tot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-rot-alles-tot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Cover%2025%20Ultimate.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Lyrics.jpg' },
-  { title: 'Pine & Snow', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Lyrics.jpg' },
-  { title: 'Picobello', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/picobello.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Lyrics.jpg' },
-  { title: 'Nothing but Stories', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/in%20the%20end%20-%20sadie%20cover%202.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/nothing%20but%20stories%20-%20Bro%20-%20Ultimate%20-%20lyrics.jpg' },
-  { title: 'Sommer in Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommer-in-berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Lyrics.jpg' },
-  { title: 'Still Smells Like June', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-smells-like-june.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Lyrics.jpg' },
-  { title: 'Siebzehn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/siebzehn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Siebzehn%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Midnight Breeze', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/midnight-breeze.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Lyrics.jpg' },
-  { title: 'Concrete Kids', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/concrete-kids.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Lyrics.jpg' },
-  { title: 'Streets with No Name', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Ultimate%20-%20Lyrics%20Lara.jpg' },
-  { title: 'Weltuntergang', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/weltuntergang.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%202026%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%20-%20Lyrics.jpg' },
-  { title: 'Back Then Somewhere', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/back-then-somewhere.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Lyrics.jpg' },
-  { title: 'Tricks', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tricks.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tricks%20-%20Cover%20NEU.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tricks%20-%20Lyrics.jpg' },
-  { title: 'To the Broken Hearts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/to-the-broken-hearts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/To%20the%20broken%20hearts%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/To%20the%20Broken%20Hearts%20-%20Lyrics.jpg' },
-  { title: 'Kein Rückspiegel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kein-rueckspiegel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kein%20Rueckspiegel%20-%20Cover.jpg' },
-  { title: 'Broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/broken%20pieces%20-%20emma%20-%20Ultimate%20-%20lyrics.jpg' },
-  { title: 'Jeden verdammten Tag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/jeden-verdammten-tag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jeden%20verdammten%20Tag%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jeden%20verdammten%20Tag%20-%20Lyrics.jpg' },
-  { title: 'No one tells you when it starts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/no%20one%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20one%20tells%20you%20when%20it%20starts%20-%20Lyrics.jpg' },
-  { title: 'Mein Stück vom Glück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mein-stueck-vom-glueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Lyrics.jpg' },
-  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/BERLIN%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20-%20Lyrics.jpg' },
-  { title: 'Kein Himmel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kein-himmel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kein%20Himmel%20-%20Cover.jpg' },
-];
+// ── SUPABASE CONFIG ──
+const SB_URL  = 'https://hioaqcwqzeqcvvikollq.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
 
-const SONGS_GRAD30 = [
-  { title: 'Nur noch Augen für sie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Lyrics.jpg' },
-  { title: 'problematisch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Lyrics.jpg' },
-  { title: 'Neues Licht, dieselben Scheiben', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Lyrics.jpg' },
-  { title: 'Achterbahn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/achterbahn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Achterbahn%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Achterbahn%20-%20Lyrics.jpg' },
-  { title: '8 Stunden', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/8-stunden.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/8%20Stunden%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/8%20Stunden%20-%20Lyrics.jpg' },
-  { title: 'Magdalena kann tanzen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/magdalena-kann-tanzen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magdalena%20kann%20tanzen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magdalena%20kann%20tanzen%20-%20Lyrics.jpg' },
-  { title: 'Herbstlaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbstlaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Lyrics.jpg' },
-  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Lyrics.jpg' },
-  { title: 'Sommer in Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommer-in-berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Lyrics.jpg' },
-  { title: 'Im Kiosk brennt noch Licht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-kiosk-brennt-noch-licht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Lyrics.jpg' },
-  { title: 'Ruf mich an', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ruf-mich-an.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/ruf%20mich%20an%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ruf%20mich%20an%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Weltuntergang', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/weltuntergang.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%202026%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%20-%20Lyrics.jpg' },
-  { title: 'Magie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/magie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Lyrics.jpg' },
-  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Lyrics.jpg' },
-  { title: 'Nicht von hier', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nicht-von-hier.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nicht%20von%20hier%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nicht%20von%20hier%20-%20Lyrics.jpg' },
-  { title: 'Noch dabei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/noch-dabei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noch%20dabei%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noch%20dabei%20-%20Lyrics.jpg' },
-  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20%28Eichendorff%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Klartext', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/klartext.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Zu Sehr', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zu-sehr.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Lyrics.jpg' },
-  { title: 'Polaroid von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/polaroid-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Polaroid%20von%20dir%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Polaroid%20von%20dir%20-%20Lyrics.jpg' },
-  { title: 'Gefährlich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gefaehrlich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/gefaehrlich%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gefaehrlich%20-%20Lyrics.jpg' },
-  { title: '10000 Schritte', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/10000-schritte.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/10000%20Schritte%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/10000%20Schritte%20-%20Lyrics.jpg' },
-  { title: 'Jein', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/jein.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/jein%20-%20cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Jein%20-%20Lyrics.jpg' },
-  { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Beste%20Freunde%20-%20Lyrics.jpg' },
-  { title: 'Licht aus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/licht-aus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Lyrics.jpg' },
-  { title: 'Piece of Heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Piece%20of%20Heaven%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Piece%20of%20Heaven%20-%20Lyrics.jpg' },
-  { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Guten%20Morgen%20-%20Lyrics.jpg' },
-  { title: 'Unter der Laterne', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unter-der-laterne.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Cover%20ultimate.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Lyrics.jpg' },
-  { title: 'Kirre', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kirre.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kirre%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kirre%20-%20Lyrics.jpg' },
-  { title: 'Flaschenpost von Dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/flaschenpost-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flaschenpost%20von%20Dir%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flaschenpost%20von%20Dir%20-%20Lyrics.jpg' },
-];
-
-const SONGS_STORIES30 = [
-  { title: 'Half Past Nine on Main Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20past%20nine%20on%20Main%20Street%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'keys on the floor', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/keys%20on%20the%20floor%20-%20Cover%20Lara%20Wolff.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20on%20the%20floor%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Almost', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/almost.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Almost%20-%20Final%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Almost%20-%20Lyrics.jpg' },
-  { title: 'First Drop of Color', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/first-drop-of-color.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/First%20Drop%20of%20Color%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/First%20Drop%20of%20Color%20-%20Lyrics.jpg' },
-  { title: 'Talking to a Different Blue', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/talking-to-a-different-blue.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Lyrics.jpg' },
-  { title: 'Quiet Knife', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/quiet-knife.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Quiet%20Knife%20-%20Cover%20Plain.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Quiet%20Knife%20-%20Lyrics.jpg' },
-  { title: 'What If Tonight', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/what-if-tonight.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Lyrics.jpg' },
-  { title: 'The City After Two', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-city-after-two.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20City%20After%20Two%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20City%20After%20Two%20-%20Lyrics.jpg' },
-  { title: 'That\'s how it goes', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/thats-how-it-goes.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/That%27s%20how%20it%20goes%20-%20Cover%201.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Thats%20how%20it%20goes%20-%20Lyrics.jpg' },
-  { title: 'Fixing the Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/fixing-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Fixing%20the%20Wind%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Fixing%20the%20Wind%20-%20Lyrics.jpg' },
-  { title: 'Hung up a thought', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hung-up-a-thought.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hung%20up%20a%20thought%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hung%20up%20a%20thought%20-%20Lyrics.jpg' },
-  { title: 'I pay in hurt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-pay-in-hurt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20pay%20in%20hurt%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20pay%20in%20hurt%20-%20Lyrics.jpg' },
-  { title: 'Most Nights', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/most-nights.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Most%20Nights%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Most%20Nights%20-%20Lyrics.jpg' },
-  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Fall%20-%20Lyrics.jpg' },
-  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Never%20Quite%20Mine%20-%20Lyrics.jpg' },
-  { title: 'Call Me Up', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/call-me-up.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Call%20Me%20Up%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Call%20me%20Up%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Johnny', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg' },
-  { title: 'half of you', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-you.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/half%20of%20you%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/half%20of%20you%20-%20Lyrics.jpg' },
-  { title: 'Josephine 1815', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/josephine-1815.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Lyrics.jpg' },
-  { title: 'Real', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/real.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/real%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Real%20-%20Lyrics.jpg' },
-  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Where I Left Me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/where-i-left-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Where%20I%20Left%20Me%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Where%20I%20Left%20Me%20-%20Lyrics.jpg' },
-  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Lyrics.jpg' },
-  { title: 'broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces-2.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/broken%20pieces%20-%20emma%20-%20cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/broken%20pieces%20-%20emma%20-%20Ultimate%20-%20lyrics.jpg' },
-  { title: 'Stay With Me Tonight', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/stay-with-me-tonight.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stay%20With%20Me%20Tonight%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stay%20With%20Me%20Tonight%20-%20Lyrics.jpg' },
-  { title: 'Old Bear', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/old-bear.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/old%20bear%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Old%20Bear%20-%20Lyrics.jpg' },
-  { title: 'Opium', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/opium.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Opium%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Opium%20-%20Lyrics.jpg' },
-  { title: 'Too Late For Love', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/too-late-for-love.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Lyrics.jpg' },
-  { title: 'My piece of heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover%2026.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Lyrics.jpg' },
-  { title: 'Stays for Good', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/stays-for-good.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stays%20for%20Good%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stays%20for%20Good%20-%20Lyrics.jpg' },
-];
-
-const SONGS_TOP100 = [
-  { title: 'Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/BERLIN%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20-%20Lyrics.jpg' },
-  { title: 'No one tells you when it starts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-one-tells-you-when-it-starts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/no%20one%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20one%20tells%20you%20when%20it%20starts%20-%20Lyrics.jpg' },
-  { title: 'Late September Heart', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Pine & Snow', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Lyrics.jpg' },
-  { title: 'Und der Wind pfeift', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/und-der-wind-pfeift.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20der%20Wind%20pfeift%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20der%20Wind%20pfeift%20-%20Lyrics.jpg' },
-  { title: 'alles rot alles tot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-rot-alles-tot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Cover%2025%20Ultimate.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/alles%20rot%20alles%20tot%20-%20Lyrics.jpg' },
-  { title: 'Waves', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/waves.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Waves%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Waves%20-%20Lyrics.jpg' },
-  { title: 'Vintage Shirts', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/vintage-shirts.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vintage%20Shirts%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vintage%20Shirts%20-%20Lyrics.jpg' },
-  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Lyrics.jpg' },
-  { title: 'Tell Me Why', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20Me%20Why%20-%20Bro%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Streets with No Name', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Ultimate%20-%20Lyrics%20Lara.jpg' },
-  { title: 'Berlin (Alte Braut)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/berlin-alte-braut.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Lyrics.jpg' },
-  { title: 'Same Old Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/same-old-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Same%20Old%20Moon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Same%20Old%20Moon%20-%20Lyrics.jpg' },
-  { title: 'Wenn ich dich seh', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wenn-ich-dich-seh.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20ich%20dich%20seh%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20ich%20dich%20seh%20-%20Lyrics.jpg' },
-  { title: 'Josephine 1815', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/josephine-1815.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Josephine%201815%20-%20Lyrics.jpg' },
-  { title: 'Still Standing', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-standing.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Standing%20-%20Cover%20NEW.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Standing%20-%20Lyrics.jpg' },
-  { title: 'Anywhere you were with me', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/anywhere-you-were-with-me.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Lyrics.jpg' },
-  { title: 'My piece of heaven', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover%2026.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Lyrics.jpg' },
-  { title: 'Ich tanze im Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ich-tanze-im-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20tanze%20im%20Regen%20-%20Jule%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20tanze%20im%20Regen%20-%20Jule%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Panoptikum', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/panoptikum.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panoptikum%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panoptikum%20-%20Lyrics.jpg' },
-  { title: 'Nur ein Zucken von dir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-ein-zucken-von-dir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20ein%20Zucken%20von%20dir%20-%20Lyrics.jpg' },
-  { title: 'The Cold Don\'t Lie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Lyrics.jpg' },
-  { title: 'Nachtexpress', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nachtexpress.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nachtexpress%20%28Durch%20die%20Nacht%29%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nachtexpress%20%28Durch%20die%20Nacht%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'So ist das', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/so-ist-das.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/So%20ist%20das%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'I Write You A Song', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-write-you-a-song.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Write%20You%20A%20Song%20-%20Lyrics.jpg' },
-  { title: 'Half of Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-of-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Lyrics.jpg' },
-  { title: 'Nothing but Stories', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/in%20the%20end%20-%20sadie%20cover%202.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/nothing%20but%20stories%20-%20Bro%20-%20Ultimate%20-%20lyrics.jpg' },
-  { title: 'Concrete Kids', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/concrete-kids.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Concrete%20Kids%20-%20Lyrics.jpg' },
-  { title: 'Du fehlst mir nicht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-fehlst-mir-nicht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20fehlst%20mir%20nicht%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Midnight Breeze', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/midnight-breeze.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Midnight%20Breeze%20-%20Lyrics.jpg' },
-  { title: 'Siebzehn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/siebzehn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/17%20-%20Siebzehn%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Chelsea Hotel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/chelsea-hotel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Chelsea%20Hotel%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Chelsea%20Hotel%20-%20Lyrics.jpg' },
-  { title: 'Gleich zurück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gleich-zurueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20zurueck%20-%20Lyrics.jpg' },
-  { title: 'No Surrender', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-surrender.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Surrender%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Surrender%20-%20Lyrics.jpg' },
-  { title: 'Three Blocks Down', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/three-blocks-down.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Three%20Blocks%20Down%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Three%20Blocks%20Down%20-%20Lyrics.jpg' },
-  { title: 'This world is wide', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/this-world-is-wide.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Ultimate%20-%20Cover.jpg' },
-  { title: 'Picobello', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/picobello.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Picobello%20-%20Lyrics.jpg' },
-  { title: 'Red Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/red-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Red%20Moon%20-%20Lyrics.jpg' },
-  { title: 'The Sway', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-sway.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Sway%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Sway%20-%20Lyrics.jpg' },
-  { title: 'Side Street Confessions', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/side-street-confessions.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Side%20Street%20Confessions%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Side%20Street%20Confessions%20-%20Lyrics.jpg' },
-  { title: 'unscharf', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/unscharf%20-%20Lyrics.jpg' },
-  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg' },
-  { title: 'Dein Kleid', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dein-kleid.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Lyrics.jpg' },
-  { title: 'Ashes In The Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ashes-in-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ashes%20In%20The%20Wind%20-%20Lyrics.jpg' },
-  { title: 'Nothing but Stories (male)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nothing-but-stories-male.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/nothing%20but%20stories%20-%20cover.jpg' },
-  { title: 'Cracks in a Silver Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/cracks-in-a-silver-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silver%20Moon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Cracks%20in%20a%20Silver%20Moon%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Isabelle', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/isabelle.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Isabelle%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Isabelle%20-%20Lyrics.jpg' },
-  { title: 'Aus und vorbei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/aus-und-vorbei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20und%20Vorbei%20-%20Ultimate%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20und%20Vorbei%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Lyrics.jpg' },
-  { title: 'Panopticum (English)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/panopticum-english.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panopticum%20-%20Cover.jpg' },
-  { title: 'The Last Honest Man', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-last-honest-man.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Honest%20Man%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Honest%20Man%20-%20Lyrics.jpg' },
-  { title: 'Late September Heart (MJD)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/late-september-heart-female.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20%28MJD%29%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Late%20September%20Heart%20%28MJD%29%20-%20Lyrics.jpg' },
-  { title: 'Ocean City', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ocean-city.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ocean%20City%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ocean%20City%20-%20Lyrics.jpg' },
-  { title: 'Sweet Dreams Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sweet-dreams-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sweet%20Dreams%20Baby%20-%20Lyrics.jpg' },
-  { title: 'Forever Ago', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/forever-ago.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Forever%20Ago%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Forever%20Ago%20-%20Lyrics.jpg' },
-  { title: 'Over the Moon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/over-the-moon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Over%20the%20Moon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Over%20the%20Moon%20-%20Lyrics.jpg' },
-  { title: 'Coming Home', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/coming-home.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Coming%20Home%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Coming%20Home%20-%20Lyrics.jpg' },
-  { title: 'Never Quite Mine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/never-quite-mine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/never%20quite%20mine%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Never%20Quite%20Mine%20-%20Lyrics.jpg' },
-  { title: 'House of Mirrors', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/house-of-mirrors.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/House%20of%20Mirrors%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/House%20of%20Mirrors%20-%20Lyrics.jpg' },
-  { title: 'Out of Soda', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/out-of-soda.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20Soda%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20Soda%20-%20Lyrics.jpg' },
-  { title: 'Back Then Somewhere', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/back-then-somewhere.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Back%20Then%20Somewhere%20-%20Lyrics.jpg' },
-  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20%28Eichendorff%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'No Time to Run', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/no-time-to-run.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Time%20to%20Run%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/No%20Time%20to%20Run%20-%20Lyrics.jpg' },
-  { title: 'problematisch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/problematisch%20-%20Lyrics.jpg' },
-  { title: 'The Quiet Wars', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-quiet-wars.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/the%20quiet%20wars%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Quiet%20Wars%20-%20Lyrics.jpg' },
-  { title: 'Tante Paula', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tante%20Paula%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tante%20Paula%20-%20Lyrics.jpg' },
-  { title: 'Zu krass', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zu-krass.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20krass%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20krass%20-%20Lyrics.jpg' },
-  { title: 'keys on the floor', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/keys%20on%20the%20floor%20-%20Cover%20Lara%20Wolff.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20on%20the%20floor%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Still Smells Like June', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/still-smells-like-june.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Still%20Smells%20Like%20June%20-%20Lyrics.jpg' },
-  { title: 'Tommy und ich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tommy-und-ich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tommy%20und%20ich%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tommy%20und%20ich%20-%20Lyrics.jpg' },
-  { title: 'Her mit dem Sommer', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/her-mit-dem-sommer.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Her%20mit%20dem%20Sommer%20NEU%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Her%20mit%20dem%20Sommer%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Silent Damn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/silent-damn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Damn%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Damn%20-%20Lyrics.jpg' },
-  { title: 'I Fall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/i-fall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20fall%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/I%20Fall%20-%20Lyrics.jpg' },
-  { title: 'When Pigs Fly', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/when-pigs-fly.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/When%20Pigs%20Fly%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/When%20Pigs%20Fly%20-%20Lyrics.jpg' },
-  { title: 'Dreams don\'t wait', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dreams-dont-wait.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dreams%20don’t%20wait%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dreams%20don%27t%20wait%20-%20Lyrics.jpg' },
-  { title: 'Devil\'s Grin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/devil-s-grin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Devils%20Grin%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'einer geht noch', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/einer-geht-noch.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/einer%20geht%20noch%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/einer%20geht%20noch%20-%20Lyrics.jpg' },
-  { title: 'Buenos Dias', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/buenos-dias.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buenos%20Dias%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buenos%20Dias%20-%20Lyrics.jpg' },
-  { title: 'Über den Wolken', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ueber-den-wolken.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ueber%20den%20Wolken%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/U%CC%88ber%20den%20Wolken%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Streets with No Name (Annie)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/streets-with-no-name-2.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Streets%20with%20No%20Name%20-%20Annie%20-%20Cover.jpg' },
-  { title: 'Johnny', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/johnny.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover.jpg' },
-  { title: 'New York', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/new-york.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/New%20York%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/New%20York%20-%20Lyrics.jpg' },
-  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Lyrics.jpg' },
-  { title: 'Vancouver Crossing', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/vancouver-crossing.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vancouver%20Crossing%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Vancouver%20Crossing%20-%20Lyrics.jpg' },
-  { title: 'The girl who stole you', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-girl-who-stole-you.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20girl%20who%20stole%20you%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20girl%20who%20stole%20you%20-%20Lyrics.jpg' },
-  { title: 'Liebe mich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/liebe-mich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Liebe%20mich%20-%20Cover%20NEU.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Liebe%20mich%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Aus die Maus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/aus-die-maus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20die%20Maus%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Aus%20die%20Maus%20-%20Lyrics.jpg' },
-  { title: 'Drive Me Out of Here', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/drive-me-out-of-here.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Drive%20Me%20Out%20of%20Here%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Drive%20Me%20Out%20of%20Here%20-%20Lyrics.jpg' },
-  { title: 'Lost in Paradise', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/lost-in-paradise.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lost%20in%20Paradise%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lost%20in%20Paradise%20-%20Lyrics.jpg' },
-  { title: 'Talking to a Different Blue', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/talking-to-a-different-blue.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Talking%20to%20a%20Different%20Blue%20-%20Lyrics.jpg' },
-  { title: 'Tell Me Why (Annie Cole)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tell-me-why-female.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Annie%20Cole%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Tell%20me%20why%20-%20Annie%20Cole%20-%20Lyrics.jpg' },
-  { title: 'Do You Remember', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/do-you-remember.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Do%20You%20Remember%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Do%20You%20Remember%20-%20Lyrics.jpg' },
-  { title: 'Broken pieces', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/broken-pieces.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/broken%20pieces%20-%20emma%20-%20Ultimate%20-%20lyrics.jpg' },
-  { title: 'Too Late For Love', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/too-late-for-love.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Too%20Late%20For%20Love%20-%20Lyrics.jpg' },
-  { title: 'Zihuatanejo', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zihuatanejo.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zihuatanejo%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zihuatanejo%20-%20Lyrics.jpg' },
-  { title: 'Hey Schöne', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hey-schoene.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%20Schoene%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%20Schoene%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Bevor das Licht ausgeht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/bevor-das-licht-ausgeht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bevor%20das%20Licht%20ausgeht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bevor%20das%20Licht%20ausgeht%20-%20Lyrics.jpg' },
-  { title: 'Half Past Nine on Main Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20past%20nine%20on%20Main%20Street%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'She\'s a Knockout', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/shes-a-knockout.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She’s%20a%20Knockout%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She%27s%20a%20Knockout%20-%20Lyrics.jpg' },
-];
-const SONGS_GROSSE_LIEBE = [
-  { title: 'Im Kiosk brennt noch Licht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-kiosk-brennt-noch-licht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Kiosk%20brennt%20noch%20Licht%20-%20Lyrics.jpg' },
-  { title: 'Mein Stück vom Glück', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mein-stueck-vom-glueck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mein%20Stueck%20vom%20Glueck%20-%20Lyrics.jpg' },
-  { title: 'Sehnsucht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20%28Eichendorff%29%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Ruf mich an', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ruf-mich-an.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/ruf%20mich%20an%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ruf%20mich%20an%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Weltuntergang', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/weltuntergang.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%202026%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Weltuntergang%20-%20Lyrics.jpg' },
-  { title: 'Magie', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/magie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Magie%20-%20Lyrics.jpg' },
-  { title: 'Sommer in Berlin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommer-in-berlin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommer%20in%20Berlin%20-%20Lyrics.jpg' },
-  { title: 'Unter der Laterne', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unter-der-laterne.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Cover%20ultimate.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unter%20der%20Laterne%20-%20Lyrics.jpg' },
-  { title: 'Wunder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wunder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wunder%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wunder%20-%20Lyrics.jpg' },
-  { title: 'Guten Morgen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/guten-morgen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/guten%20morgen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Guten%20Morgen%20-%20Lyrics.jpg' },
-  { title: 'Licht aus', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/licht-aus.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Licht%20aus%20-%20Lyrics.jpg' },
-  { title: 'Im Rückspiegel schön', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/im-rueckspiegel-schoen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Rueckspiegel%20schoen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Im%20Rueckspiegel%20schoen%20-%20Lyrics.jpg' },
-  { title: 'Sternenstaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sternenstaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sternenstaub%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sternenstaub%20-%20Lyrics.jpg' },
-  { title: 'Prinzessin', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/prinzessin.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Prinzessin%20-%20Lyrics.jpg' },
-  { title: 'Nebelmond', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nebelmond.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nebelmond%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nebelmond%20-%20Lyrics.jpg' },
-  { title: 'Beste Freunde', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/beste-freunde.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/beste%20freunde%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Beste%20Freunde%20-%20Lyrics.jpg' },
-  { title: 'Klartext', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/klartext.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Dein Kleid', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dein-kleid.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dein%20Kleid%20-%20Lyrics.jpg' },
-  { title: 'Ein Kuss im Dunkeln', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ein-kuss-im-dunkeln.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Kuss%20im%20Dunkeln%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Kuss%20im%20Dunkeln%20-%20Lyrics.jpg' },
-  { title: 'Herbstlaub', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbstlaub.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Lyrics.jpg' },
-  { title: 'Salz auf meinen Lippen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/salz-auf-meinen-lippen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Salz%20auf%20meinen%20Lippen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Salz%20auf%20meinen%20Lippen%20-%20Lyrics.jpg' },
-  { title: 'Alles klar', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alles-klar.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alles%20klar%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alles%20klar%20-%20Lyrics.jpg' },
-  { title: 'Knistern', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/knistern.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Knistern%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Knistern%20-%20Lyrics.jpg' },
-  { title: 'Krokusse im März', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/krokusse-im-maerz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20Maerz%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Krokusse%20im%20Maerz%20-%20Lyrics.jpg' },
-  { title: 'Dann kam der Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/dann-kam-der-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dann%20kam%20der%20Regen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Dann%20kam%20der%20Regen%20-%20Lyrics.jpg' },
-  { title: 'Keine Orchideen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keine-orchideen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keine%20Orchideen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keine%20Orchideen%20-%20Lyrics.jpg' },
-  { title: 'Milchglas', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/milchglas.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Milchglas%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Milchglas%20-%20Lyrics.jpg' },
-  { title: 'Flipperkugeln', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/flipperkugeln.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flipperkugeln%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flipperkugeln%20-%20Lyrics.jpg' },
-  { title: 'Susie, 19, vermisst', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/susie-19-vermisst.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Susie%2C%2019%2C%20vermisst%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Susie%2019%20vermisst%20-%20Lyrics.jpg' },
-  { title: 'Rita 4ever', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%204ever%20-%20Lyrics.jpg' },
-];
-
-const SONGS_POESIE = [
-  { title: 'Sehnsucht (Eichendorff)', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sehnsucht-eichendorff.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20Eichendorff%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Lyrics.jpg' },
-  { title: 'Herr von Ribbeck', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herr-von-ribbeck.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herr%20von%20Ribbeck%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Herbsttag', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herbsttag.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbsttag%20-%20Lyrics.jpg' },
-  { title: 'Der Erlkönig', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-erlkoenig.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Erlkoenig%20-%20Lyrics.jpg' },
-  { title: 'Willkommen und Abschied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/willkommen-und-abschied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Willkommen%20und%20Abschied%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Willkommen%20und%20Abschied%20-%20Lyrics.jpg' },
-  { title: 'Röslein Rot', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/roeslein-rot.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Roeslein%20Rot%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Roeslein%20Rot%20-%20Lyrics.jpg' },
-  { title: 'Abendlied', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/abendlied.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/abendlied%20-%20cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abendlied%20-%20Lyrics.jpg' },
-  { title: 'Mondnacht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mondnacht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mondnacht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mondnacht%20-%20Lyrics.jpg' },
-  { title: 'Der Lindenbaum', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-lindenbaum.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Lindenbaum%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Lindenbaum%20-%20Lyrics.jpg' },
-  { title: 'Lorelei', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/lorelei.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lorelei%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lorelei%20-%20Lyrics.jpg' },
-  { title: 'Hörst du', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hoerst-du.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hoerst%20du%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hoerst%20du%20-%20Lyrics.jpg' },
-];
-
-const SONGS_BURIED_DIAMONDS = [
-  { title: '3:47', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/3-47.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/3-47%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/3-47%20-%20Lyrics.jpg' },
-  { title: 'Abgestürzt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/abgestuerzt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abgestuerzt%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Abgestuerzt%20-%20Lyrics.jpg' },
-  { title: 'All I need', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-i-need.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20I%20need%20-%20Lyrics.jpg' },
-  { title: 'All In Sandy', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/all-in-sandy.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/All%20in%20Sandy%20-%20Lyrics.jpg' },
-  { title: 'Alte Bilder', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/alte-bilder.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Alte%20Bilder%20-%20Lyrics.jpg' },
-  { title: 'An und für sich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/an-und-fuer-sich.mp3',
-    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
-    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
-    coverCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Cover%202.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Cover%202.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Final%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Final%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Cover%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Cover%202%201.jpg'
-    ],
-    lyricsCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20f%C3%BCr%20sich%20-%20Lyrics%202.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/An%20und%20fuer%20sich%20-%20Lyrics%202.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20f%C3%BCr%20sich%20-%20Lyrics%202%201.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/an%20und%20fuer%20sich%20-%20Lyrics%202%201.jpg'
-    ] },
-  { title: "Annie's Fire", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/annies-fire.mp3',
-    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Cover.jpg',
-    lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%27s%20Fire%20-%20Lyrics.jpg',
-    coverCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Cover.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Cover.jpg'
-    ],
-    lyricsCandidates: [
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annies%20Fire%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%C2%B4s%20Fire%20-%20Lyrics.jpg',
-      'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Annie%E2%80%99s%20Fire%20-%20Lyrics.jpg'
-    ] },
-  { title: 'Astronauts, Pirates, Kings of the Street', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/astronauts-pirates-kings-of-the-street.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Astronauts%2C%20Pirates%2C%20Kings%20of%20the%20street%20-%20Lyrics.jpg' },
-  { title: 'Barfuss durch den Flur', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/barfuss-durch-den-flur.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Barfuss%20durch%20den%20Flur%20-%20Lyrics.jpg' },
-  { title: 'Big Time Baby', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/big-time-baby.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Big%20Time%20Baby%20-%20Lyrics.jpg' },
-  { title: 'Cassandra', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/cassandra.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Cassandra%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Cassandra%20NEU%20-%20Lyrics.jpg' },
-  { title: 'Come on Mia', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/come-on-mia.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Come%20on%2C%20Mia%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Come%20on%2C%20Mia%20-%20Lyrics.jpg' },
-  { title: 'Could If I Wanted', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/could-if-i-wanted.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Could%20If%20I%20Wanted%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Could%20If%20I%20Wanted%20-%20Lyrics.jpg' },
-  { title: 'Da bist du ja', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/da-bist-du-ja.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Da%20bist%20du%20ja%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Da%20bist%20du%20ja%20-%20Lyrics.jpg' },
-  { title: 'Denim Dreams', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/denim-dreams.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Denim%20Dreams%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Denim%20Dreams%20-%20Lyrics.jpg' },
-  { title: 'Der Himmel hat ne Delle', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/der-himmel-hat-ne-delle.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Himmel%20hat%20%E2%80%99ne%20Delle%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Der%20Himmel%20hat%20%E2%80%99ne%20Delle%20-%20Lyrics.jpg' },
-  { title: 'Du klebst an mir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-klebst-an-mir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20klebst%20an%20mir%20-%20Shirt%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%20klebst%20an%20mir%20-%20Shirt%20-%20Lyrics.jpg' },
-  { title: 'Du mein Geheimnis', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/du-mein-geheimnis.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%2C%20mein%20Geheimnis%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Du%2C%20mein%20Geheimnis%20-%20Lyrics.jpg' },
-  { title: 'Ein Jahr', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ein-jahr.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Jahr%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ein%20Jahr%20-%20Lyrics.jpg' },
-  { title: 'Ewig her', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ewig-her.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ewig%20her%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ewig%20her%20-%20Lyrics.jpg' },
-  { title: 'Ferris Wheel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ferris-wheel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ferris%20Wheel%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ferris%20Wheel%20-%20Lyrics.jpg' },
-  { title: 'Freefall', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/freefall.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Freefall%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Freefall%20-%20Lyrics.jpg' },
-  { title: 'Gone Like the Wind', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/gone-like-the-wind.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gone%20Like%20the%20Wind%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gone%20Like%20the%20Wind%20-%20Lyrics.jpg' },
-  { title: 'Harbor Lights', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/harbor-lights.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Harbor%20lights%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Harbor%20lights%20-%20Lyrics.jpg' },
-  { title: 'Herz bleibt stehen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/herz-bleibt-stehen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herz%20bleibt%20stehen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herz%20bleibt%20stehen%20-%20Lyrics.jpg' },
-  { title: 'Hey komm schon her', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/hey-komm-schon-her.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%2C%20komm%20schon%20her%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Hey%2C%20komm%20schon%20her%20-%20Lyrics.jpg' },
-  { title: 'Ich will dich', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/ich-will-dich.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20will%20dich%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Ich%20will%20dich%20-%20Lyrics.jpg' },
-  { title: 'In meiner Stadt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/in-meiner-stadt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/In%20meiner%20Stadt%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/In%20meiner%20Stadt%20-%20Lyrics.jpg' },
-  { title: 'It Is What It Is', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/it-is-what-it-is.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/It%20Is%20What%20It%20Is%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/It%20Is%20What%20It%20Is%20-%20Lyrics.jpg' },
-  { title: 'Just This Dance', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just%20this%20dance%20-%20cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just%20this%20dance%20-%20lyrics.jpg' },
-  { title: 'Kurz davor', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/kurz-davor.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurz%20davor%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurz%20davor%20-%20Lyrics.jpg' },
-  { title: 'Let Me In', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/let-me-in.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Let%20me%20in%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Let%20me%20in%20-%20Lyrics.jpg' },
-  { title: "Life's a Thriller", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/lifes-a-thriller.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Life%27s%20a%20Thriller%20-%20Cover%20gray.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Life%27s%20a%20Thriller%20-%20Lyrics.jpg' },
-  { title: 'Love Is What Remains', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/love-is-what-remains.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Love%20is%20what%20remains%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Love%20is%20what%20remains%20-%20Lyrics.jpg' },
-  { title: 'Mädchen mit den Sommersprossen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/maedchen-mit-den-sommersprossen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Maedchen%20mit%20den%20Sommersprossen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Maedchen%20mit%20den%20Sommersprossen%20-%20Lyrics.jpg' },
-  { title: 'Mehr Mut', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mehr-mut.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mehr%20Mut%20-%20Zwerg%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mehr%20Mut%20-%20Zwerg%20-%20Lyrics.jpg' },
-  { title: 'Meine Worte', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/meine-worte.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Meine%20Worte%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Meine%20Worte%20-%20Lyrics.jpg' },
-  { title: 'Missed that Train', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/missed-that-train.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Missed%20that%20Train%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Missed%20that%20Train%20-%20Lyrics.jpg' },
-  { title: 'Nö nö', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/noe-noe.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noe%20Noe%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Noe%20Noe%20-%20Lyrics.jpg' },
-  { title: 'Nur der Himmel', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-der-himmel.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20der%20Himmel%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20der%20Himmel%20-%20Lyrics.jpg' },
-  { title: 'Nur die Ruhe', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-die-ruhe.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20die%20Ruhe%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20die%20Ruhe%20-%20Lyrics.jpg' },
-  { title: 'Out of the Blue', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/out-of-the-blue.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20the%20Blue%202025%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Out%20of%20the%20Blue%202025%20-%20Lyrics.jpg' },
-  { title: 'Panikherz', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/panikherz.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panikherz%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Panikherz%20-%20Lyrics.jpg' },
-  { title: 'Perfect 10', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/perfect-10.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Perfect%2010%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Perfect%2010%20-%20Lyrics.jpg' },
-  { title: 'Pictures That Burn', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pictures-that-burn.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pictures%20That%20Burn%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pictures%20That%20Burn%20-%20Lyrics.jpg' },
-  { title: 'Sag mir wann wann wann', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sag-mir-wann-wann-wann.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sag%20mir%20wann%20wann%20wann%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sag%20mir%20wann%20wann%20wann%20-%20Lyrics.jpg' },
-  { title: 'Schattenland ist abgebrannt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/schattenland-ist-abgebrannt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Schattenland%20ist%20abgebrannt%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Schattenland%20ist%20abgebrannt%20-%20Lyrics.jpg' },
-  { title: 'She Still Flies', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/she-still-flies.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She%20still%20flies%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/She%20still%20flies%20-%20Lyrics.jpg' },
-  { title: 'Shine Baby Shine', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/shine-baby-shine.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Shine%20Baby%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Shine%20Baby%20-%20Lyrics.jpg' },
-  { title: 'Sie ist der Hammer', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sie-ist-der-hammer.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sie%20ist%20der%20Hammer%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sie%20ist%20der%20Hammer%20-%20Lyrics.jpg' },
-  { title: 'Silent Trap', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/silent-trap.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Trap%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Silent%20Trap%20-%20Lyrics.jpg' },
-  { title: 'Slow Burn Woman', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/slow-burn-woman.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Slow%20Burn%20Woman%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Slow%20Burn%20Woman%20-%20Lyrics.jpg' },
-  { title: 'Sommerblues', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/sommerblues.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommerblues%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sommerblues%20-%20Lyrics.jpg' },
-  { title: 'Son What Will the People Say', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/son-what-will-the-people-say.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Son%20What%20Will%20the%20People%20Say%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Son%20What%20Will%20the%20People%20Say%20-%20Lyrics.jpg' },
-  { title: 'Stadt schmilzt', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/stadt-schmilzt.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stadt%20schmilzt%20-%20Cover%20ultimate%20NEU.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stadt%20schmilzt%20-%20Lyrics%20ultimate.jpg' },
-  { title: 'suboptimal', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/suboptimal.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/suboptimal%20NEU%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/suboptimal%20NEU%20-%20Lyrics.jpg' },
-  { title: "The Dust Don't Lie", mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-dust-dont-lie.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20dust%20don%E2%80%99t%20lie%20-%20Cover%20HD.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20dust%20don%E2%80%99t%20lie%20-%20Lyrics.jpg' },
-  { title: 'The Last Song', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-last-song.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Song%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Last%20Song%20-%20Lyrics.jpg' },
-  { title: 'The Life We Never Lived', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-life-we-never-lived.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Life%20We%20Never%20Lived%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Life%20We%20Never%20Lived%20-%20Lyrics.jpg' },
-  { title: 'The Place We Keep', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-place-we-keep.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20place%20we%20keep%20-%20Cover%20HD.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20place%20we%20keep%20-%20Lyrics.jpg' },
-  { title: 'Time on Our Side', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/time-on-our-side.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Time%20on%20our%20side%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Time%20on%20our%20side%20-%20Lyrics.jpg' },
-  { title: 'Und dann tanz ich im Regen', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/und-dann-tanz-ich-im-regen.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20dann%20tanz%20ich%20im%20Regen%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Und%20dann%20tanz%20ich%20im%20Regen%20-%20Ultimate%20-%20Lyrics.jpg' },
-  { title: 'Wenn schon', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/wenn-schon.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20schon%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Wenn%20schon%20-%20Lyrics.jpg' },
-  { title: 'You Were My World, My Everything', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/you-were-my-world-my-everything.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/You%20were%20my%20world%2C%20my%20everything%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/You%20were%20my%20world%2C%20my%20everything%20-%20Lyrics.jpg' },
-  { title: 'Zimmer ohne Aussicht', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zimmer-ohne-aussicht.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zimmer%20ohne%20Aussicht%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zimmer%20ohne%20Aussicht%20-%20Lyrics.jpg' },
-  { title: 'Zurück zu mir', mp3: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/zurueck-zu-mir.mp3', cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zurueck%20zu%20mir%20-%20Cover.jpg', lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zurueck%20zu%20mir%20-%20Lyrics.jpg' },
-];
-
-const ALBUMS = {
-  top50:    { title:"Top 50",     meta:"Songwriter's Picks · 50 Songs", songs:SONGS_TOP50,    cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" },
-  grad30:   { title:"30° Grad",   meta:"BRO · 30 Songs",               songs:SONGS_GRAD30,   cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" },
-  stories30:{ title:"30 Stories", meta:"BRO · 30 Songs",               songs:SONGS_STORIES30,cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" },
-  grosseLiebe:{ title:"Grosse Liebe", meta:"BRO · 30 Songs",          songs:SONGS_GROSSE_LIEBE,cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" },
-  poesie:   { title:"Poesie",     meta:"BRO · 11 Songs",               songs:SONGS_POESIE,   cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" },
-  buriedDiamonds:{ title:"Buried Diamonds", meta:"BRO · 66 Songs",     songs:SONGS_BURIED_DIAMONDS,cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Cover.jpg" },
-  top100:   { title:"Top 100",    meta:"Hitjourney · 100 Songs",        songs:SONGS_TOP100,   cover:"https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" },
+// Playlist-Slug → ALBUMS-Key + Metadaten
+const PLAYLIST_MAP = {
+  'top-50':         { key:'top50',        title:'Top 50',          meta:"Songwriter's Picks · 50 Songs", cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg' },
+  '30-grad':        { key:'grad30',       title:'30° Grad',        meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg' },
+  '30-stories':     { key:'stories30',    title:'30 Stories',      meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg' },
+  'grosse-liebe':   { key:'grosseLiebe',  title:'Grosse Liebe',    meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg' },
+  'poesie':         { key:'poesie',       title:'Poesie',          meta:'BRO · 11 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg' },
+  'buried-diamonds':{ key:'buriedDiamonds',title:'Buried Diamonds',meta:'BRO · 66 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Cover.jpg' },
+  'top-100':        { key:'top100',       title:'Top 100',         meta:'Hitjourney · 100 Songs',         cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg' },
 };
+
+// Reihenfolge der Alben im Player
+const ALBUM_ORDER = ['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'];
+
+// Werden async befüllt
+let ALBUMS = {};
+
+// ── SUPABASE LOADER ──
+async function loadFromSupabase() {
+  const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON };
+
+  // 1. Alle Songs laden
+  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+  if (!songsRes.ok) throw new Error('Songs fetch failed: ' + songsRes.status);
+  const songsRaw = await songsRes.json();
+
+  // Songs-Map: slug → song-Objekt (im App-Format)
+  const songMap = {};
+  songsRaw.forEach(row => {
+    songMap[row.slug] = {
+      title:  row.title,
+      mp3:    row.mp3_url,
+      cover:  row.cover_url,
+      lyrics: row.lyrics_url  || null,
+      lyrics21: row.lyrics21_url || null,
+    };
+  });
+
+  // 2. Playlist-Tracks laden (mit Playlist-Slug)
+  const tracksRes = await fetch(
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,track_order,playlist_id,playlists(slug)&order=playlist_id,track_order',
+    { headers }
+  );
+  if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
+  const tracksRaw = await tracksRes.json();
+
+  // 3. ALBUMS aufbauen
+  ALBUMS = {};
+  ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; }); // Reihenfolge sichern
+
+  tracksRaw.forEach(row => {
+    const playlistSlug = row.playlists?.slug;
+    const info = PLAYLIST_MAP[playlistSlug];
+    if (!info) return; // unbekannte Playlist überspringen
+    const song = songMap[row.song_slug];
+    if (!song) return; // fehlender Song überspringen
+
+    if (!ALBUMS[info.key]) {
+      ALBUMS[info.key] = {
+        title: info.title,
+        meta:  info.meta,
+        cover: info.cover,
+        songs: []
+      };
+    }
+    ALBUMS[info.key].songs.push(song);
+  });
+
+  // Null-Einträge entfernen (falls Playlist in DB fehlt)
+  Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
+
+  console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
+}
 
 // ── DOM ──
 const audio        = document.getElementById('hjAudio');
@@ -4134,57 +3835,78 @@ function applyFinalMediaOverrides(){
     });
   });
 }
-applyFinalMediaOverrides();
+// ── APP INIT (läuft nach Supabase-Load) ──
+let ALL_SONGS = [];
 
-console.log('[hitjourney] FINAL_MEDIA_OVERRIDES active', FINAL_MEDIA_OVERRIDES);
-console.log('[hitjourney] 30 Stories first songs', ALBUMS.stories30.songs.slice(0,2));
+function initApp() {
+  applyFinalMediaOverrides();
+  console.log('[hitjourney] FINAL_MEDIA_OVERRIDES active', FINAL_MEDIA_OVERRIDES);
+  console.log('[hitjourney] ALBUMS geladen:', Object.keys(ALBUMS).join(', '));
 
-
-// Build flat list of all unique songs from every album, sorted A→Z
-function buildAllSongs(){
-  const seen = new Set();
-  const all = [];
-  const albumOrder = ['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'];
-  albumOrder.forEach(key=>{
-    ALBUMS[key].songs.forEach(s=>{
-      const id = s.mp3; // use mp3 URL as unique key
-      if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:key}); }
+  // Build flat list of all unique songs from every album, sorted A→Z
+  function buildAllSongs(){
+    const seen = new Set();
+    const all = [];
+    const albumOrder = ['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'];
+    albumOrder.forEach(key=>{
+      if(!ALBUMS[key]) return;
+      ALBUMS[key].songs.forEach(s=>{
+        const id = s.mp3;
+        if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:key}); }
+      });
     });
-  });
-  // KNW-Songs ins Archiv
-  KNW_SONGS.forEach(s=>{
-    const id = s.mp3;
-    if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:'kursNordwest'}); }
-  });
-  all.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
-  return all;
-}
-const ALL_SONGS = buildAllSongs();
+    KNW_SONGS.forEach(s=>{
+      const id = s.mp3;
+      if(!seen.has(id)){ seen.add(id); all.push({...s, albumKey:'kursNordwest'}); }
+    });
+    all.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
+    return all;
+  }
+  ALL_SONGS = buildAllSongs();
 
-// Letter strip: Pinterest-style rows
-const ALPHABET_ROWS = [
-  ['A','B','C','D','E','F'],
-  ['G','H','I','J','K','L'],
-  ['M','N','O','P','Q','R'],
-  ['S','T','U','V','W','X'],
-  ['Y','Z']
-];
-const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
+  // Letter strip: Pinterest-style rows
+  const ALPHABET_ROWS = [
+    ['A','B','C','D','E','F'],
+    ['G','H','I','J','K','L'],
+    ['M','N','O','P','Q','R'],
+    ['S','T','U','V','W','X'],
+    ['Y','Z']
+  ];
+  const availLetters = [...new Set(ALL_SONGS.map(s=>s.title[0].toUpperCase()))].sort();
 
-ALPHABET_ROWS.forEach((row,idx)=>{
-  const rowEl=document.createElement('div');
-  rowEl.className='arc-letter-row r'+(idx+1);
-  row.forEach(l=>{
-    const el=document.createElement('span');
-    const available=availLetters.includes(l);
-    el.className='arc-letter' + (available ? '' : ' dim');
-    el.dataset.letter=l;
-    el.textContent=l;
-    el.addEventListener('click',()=>scrollToLetter(l));
-    rowEl.appendChild(el);
+  ALPHABET_ROWS.forEach((row,idx)=>{
+    const rowEl=document.createElement('div');
+    rowEl.className='arc-letter-row r'+(idx+1);
+    row.forEach(l=>{
+      const el=document.createElement('span');
+      const available=availLetters.includes(l);
+      el.className='arc-letter' + (available ? '' : ' dim');
+      el.dataset.letter=l;
+      el.textContent=l;
+      el.addEventListener('click',()=>scrollToLetter(l));
+      rowEl.appendChild(el);
+    });
+    arcLetters.appendChild(rowEl);
   });
-  arcLetters.appendChild(rowEl);
-});
+
+  // Ladeoverlay ausblenden
+  const overlay = document.getElementById('hjLoadingOverlay');
+  if(overlay) overlay.style.display = 'none';
+
+  // Archive-Songzähler
+  const arcSongCountEl = document.getElementById('arcSongCount');
+  if(arcSongCountEl) arcSongCountEl.textContent = ALL_SONGS.length + ' songs';
+
+} // END initApp()
+
+// ── BOOTSTRAP ──
+loadFromSupabase()
+  .then(initApp)
+  .catch(err => {
+    console.error('[hitjourney] Supabase-Fehler:', err);
+    const overlay = document.getElementById('hjLoadingOverlay');
+    if(overlay) overlay.innerHTML = '<div style="color:#cfe5f5;font-family:sans-serif;text-align:center;padding:40px"><div style="font-size:2rem;margin-bottom:12px">\u26a0\ufe0f</div><div>Fehler beim Laden der Songs.<br>Bitte Seite neu laden.</div></div>';
+  });
 
 function renderArchiveList(songs){
   arcList.innerHTML='';
