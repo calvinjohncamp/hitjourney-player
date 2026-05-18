@@ -32,8 +32,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Screens ── */
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
-#screenHome{padding-top:14px;padding-bottom:calc(190px + env(safe-area-inset-bottom, 0px))}
-#screenTracklist{padding-top:8px;padding-bottom:calc(190px + env(safe-area-inset-bottom, 0px))}
+#screenHome{padding-top:14px}
+#screenTracklist{padding-top:8px}
 .screen.active{display:block}
 .screen::-webkit-scrollbar{display:none}
 
@@ -46,7 +46,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:0}
+.home-bottom-pad{height:210px}
 
 /* Trio-Container: volle Breite */
 .home-trio{
@@ -393,7 +393,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:0}
+.tl-bottom-pad{height:210px}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -521,7 +521,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* Lower controls strip: compact, anchored to the physical bottom */
 .hj-controls-strip{
   background:transparent;
-  padding-bottom:env(safe-area-inset-bottom, 0px);
+  padding-bottom:0;
 }
 .hj-time{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
 .hj-controls{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 14px}
@@ -4363,7 +4363,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v49-css-padding-fix-20260518';
+  const VERSION = 'v51-controls-safearea-fix-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
