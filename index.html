@@ -729,6 +729,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
+  align-items:start;
 }
 .ed-card{
   border-radius:8px;
@@ -741,6 +742,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   flex-direction:column;
   color:inherit;
+  align-self:start;
 }
 .ed-card:active{transform:scale(.95);opacity:.85}
 .ed-img{
@@ -989,14 +991,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   align-items:center;
   justify-content:center;
-  height:clamp(80px,22vw,110px);
+  height:88px;
   flex-shrink:0;
   background:#000;
   box-sizing:border-box;
 }
 .ed-knw-label{
   font-family:'Anton',sans-serif;
-  font-size:clamp(14px,4.8vw,24px);
+  font-size:18px;
   letter-spacing:.06em;
   text-transform:uppercase;
   color:rgba(255,255,255,0.90);
@@ -1064,7 +1066,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   align-items:center;
   justify-content:center;
-  height:clamp(80px,22vw,110px);
+  height:88px;
   flex-shrink:0;
   background:#000;
   box-sizing:border-box;
@@ -1161,9 +1163,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:22px;
-  min-height:178px;
-  padding:26px 18px 24px;
+  gap:14px;
+  min-height:148px;
+  padding:20px 18px 18px;
   background:#2a2a2a; /* Anthrazit — passend zum ersten Song-Entry */
 }
 /* Spotify CTA — mittig, Logo über Text */
@@ -1511,18 +1513,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ══ IPHONE: SWF kleinere Schrift damit weniger Umbrüche ══ */
 @media(max-width:430px){
-  /* ── Home Editorial Cards: kleinere Schrift damit Labels sauber umbrechen ── */
+  /* ── Home Editorial Cards: kleinere Schrift auf kleinen iPhones ── */
   .ed-knw-label{
-    font-size:17px;
+    font-size:15px;
     letter-spacing:.04em;
     line-height:1.15;
   }
   #edCardStreams .ed-knw-label{
-    font-size:16px;
+    font-size:14px;
     line-height:1.2;
   }
-  .ed-body-knw{
-    padding:14px 10px;
+  .ed-body-knw,.ed-body-swf{
+    height:80px;
+    padding:8px 8px;
   }
 
   /* ── SWF Banner ── */
@@ -1589,10 +1592,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
   .ed-row{gap:12px}
   .ed-body-knw,.ed-body-swf{
-    height:clamp(90px,9vw,130px);
+    height:110px;
+    padding:12px 12px;
   }
   .ed-knw-label{
-    font-size:clamp(16px,2.8vw,28px);
+    font-size:22px;
   }
 
   /* Player bar: wider layout with progress bar inline */
@@ -1614,9 +1618,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* v74 — force larger Songwriter's Favorites intro on desktop / landscape only */
 @media (orientation: landscape), (min-width: 700px){
   #screenSongwritersFavorites .swf-intro-strip{
-    min-height: 260px !important;
-    padding: 44px 32px 42px !important;
-    gap: 30px !important;
+    min-height: 210px !important;
+    padding: 34px 32px 32px !important;
+    gap: 20px !important;
   }
 
   #screenSongwritersFavorites .swf-intro-cta{
@@ -1638,11 +1642,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     font-size: 20px !important;
     line-height: 1.18 !important;
     letter-spacing: .07em !important;
-  }
-
-  #screenSongwritersFavorites .swf-intro-cta-sub{
-    font-size: 12px !important;
-    letter-spacing: .08em !important;
   }
 
   #screenSongwritersFavorites .swf-intro-quote{
@@ -1849,7 +1848,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div class="swf-intro-cta-text">
 <div class="swf-intro-cta-label">Komplette Playlist</div>
 <div class="swf-intro-cta-title">Songwriter's Favorites</div>
-<div class="swf-intro-cta-sub">Direkt hier abspielbar</div>
 </div>
 </a>
 <div class="swf-intro-quote">
