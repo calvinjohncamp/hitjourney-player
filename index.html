@@ -985,21 +985,27 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-direction:column;
 }
 .ed-body-knw{
-  padding:20px 14px;
+  padding:10px 10px;
   display:flex;
   align-items:center;
   justify-content:center;
-  flex:1;
+  height:clamp(80px,22vw,110px);
+  flex-shrink:0;
   background:#000;
+  box-sizing:border-box;
 }
 .ed-knw-label{
   font-family:'Anton',sans-serif;
-  font-size:27px;
+  font-size:clamp(14px,4.8vw,24px);
   letter-spacing:.06em;
   text-transform:uppercase;
   color:rgba(255,255,255,0.90);
   text-align:center;
   width:100%;
+  line-height:1.15;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  hyphens:none;
 }
 
 /* KNW top row: cover zentriert, play-row darunter */
@@ -1025,11 +1031,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 @media(max-width:599px){
   #edCardSwf .ed-knw-label{
-    font-size:clamp(24px,8.6vw,34px);
-    line-height:1.08;
-    letter-spacing:.035em;
-    white-space:normal;
-    overflow-wrap:normal;
+    line-height:1.12;
   }
 }
 
@@ -1047,20 +1049,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   filter:grayscale(30%) brightness(.85);
 }
 #edCardSwf .ed-knw-label{
-  line-height:1.18;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  min-height:100%;
+  gap:0;
   text-align:center;
+  min-height:100%;
+  line-height:1.15;
 }
+/* ed-body-swf now uses ed-body-knw styles — alias kept for legacy */
 .ed-body-swf{
-  padding:20px 14px;
+  padding:10px 10px;
   display:flex;
   align-items:center;
   justify-content:center;
-  flex:1;
+  height:clamp(80px,22vw,110px);
+  flex-shrink:0;
   background:#000;
+  box-sizing:border-box;
 }
 
 /* ── Ed-Card 3: Almost One Million Streams ── */
@@ -1077,9 +1084,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   filter:grayscale(15%) brightness(.9);
 }
 #edCardStreams .ed-knw-label{
-  font-size:26px;
-  line-height:1.18;
-  letter-spacing:.04em;
+  line-height:1.15;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1583,6 +1588,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     margin:0 auto 14px;
   }
   .ed-row{gap:12px}
+  .ed-body-knw,.ed-body-swf{
+    height:clamp(90px,9vw,130px);
+  }
+  .ed-knw-label{
+    font-size:clamp(16px,2.8vw,28px);
+  }
 
   /* Player bar: wider layout with progress bar inline */
   .hj-player{
@@ -1748,7 +1759,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Kurs Nordwest</span>
 </div>
 <div class="ed-body ed-body-knw">
-<div class="ed-knw-label">Kurs Nordwest</div>
+<div class="ed-knw-label">Kurs<br/>Nordwest</div>
 </div>
 </div>
 <!-- Card 2: Songwriter's Favorites -->
@@ -1759,7 +1770,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Favorites</span>
 </div>
 <div class="ed-body ed-body-knw">
-<div class="ed-knw-label ed-knw-label-swf"><span>SONG</span><span>WRITERS</span><span>FAVORITES</span></div>
+<div class="ed-knw-label ed-knw-label-swf"><span>SONG</span><span>WRITER'S</span><span>FAVORITES</span></div>
 </div>
 </div>
 <!-- Card 3: Almost One Million Streams -->
@@ -4354,7 +4365,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v45-swf-polish-20260517';
+  const VERSION = 'v46-edcard-layout-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
