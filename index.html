@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v94-admin-easter-egg-20260518 -->
+<!-- Version: v95-admin-dblclick-20260518 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4190,7 +4190,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v94-admin-easter-egg-20260518';
+  const VERSION = 'v95-admin-dblclick-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4532,7 +4532,7 @@ playerBar.classList.add = function(...args){
   const SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
   const ADMIN_PW = 'hitjourney2026';
 
-  let tapCount = 0, tapTimer = null;
+
 
   const style = document.createElement('style');
   style.textContent = `
@@ -4594,20 +4594,17 @@ playerBar.classList.add = function(...args){
   function msg(text,type){ const el=document.getElementById('admMsg'); el.textContent=text; el.className='am am-'+type; el.style.display=''; setTimeout(()=>el.style.display='none',4000); }
   function hdrs(){ return {'apikey':SB_SERVICE,'Authorization':'Bearer '+SB_SERVICE,'Content-Type':'application/json','Prefer':'return=minimal'}; }
 
-  // 10x tap
-  document.getElementById('logoHome').addEventListener('click',()=>{
-    tapCount++;
-    clearTimeout(tapTimer);
-    tapTimer=setTimeout(()=>tapCount=0,1500);
-    if(tapCount>=10){
-      tapCount=0;
-      overlay.classList.add('open');
-      document.getElementById('admPwI').value='';
-      document.getElementById('admPwErr').style.display='none';
-      document.getElementById('admPwS').style.display='';
-      document.getElementById('admMainS').style.display='none';
-    }
-  });
+
+  function openAdmin(){
+    overlay.classList.add('open');
+    document.getElementById('admPwI').value='';
+    document.getElementById('admPwErr').style.display='none';
+    document.getElementById('admPwS').style.display='';
+    document.getElementById('admMainS').style.display='none';
+  }
+
+  // Doppelklick auf "making waves"
+  document.getElementById('makingWaves').addEventListener('dblclick', openAdmin);
 
   document.getElementById('admPwBtn').addEventListener('click',()=>{
     if(document.getElementById('admPwI').value===ADMIN_PW){
