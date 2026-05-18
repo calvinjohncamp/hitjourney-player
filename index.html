@@ -2771,7 +2771,7 @@ async function loadFromSupabase() {
 
   // 3. Playlist-Tracks laden
   const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,track_order,playlist_id&order=playlist_id,track_order',
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_id&order=playlist_id',
     { headers }
   );
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
