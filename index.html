@@ -46,7 +46,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:220px}
+.home-bottom-pad{height:200px}
 
 /* Trio-Container: volle Breite */
 .home-trio{
@@ -393,7 +393,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:148px}
+.tl-bottom-pad{height:200px}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -4223,6 +4223,13 @@ backBtn.addEventListener('click',()=>{
   if(screenArchive.classList.contains('active')) hideArchive();
 });
 
+// Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
+function updateBottomPads(){
+  const h = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().height : 0;
+  const pad = h + 8; // 8px Luft über dem Player-Bar
+  document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
+}
+
 // Albumseiten: dezenter UP-Button über der Playerleiste
 function updateAlbumTopButton(){
   if(!tlTopBtn) return;
@@ -4231,6 +4238,7 @@ function updateAlbumTopButton(){
   const playerTop = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().top : window.innerHeight;
   const bottom = Math.max(24, window.innerHeight - playerTop + 14);
   document.documentElement.style.setProperty('--tl-top-btn-bottom', bottom + 'px');
+  updateBottomPads();
 }
 
 tlTopBtn && tlTopBtn.addEventListener('click',()=>{
@@ -4642,6 +4650,17 @@ showHome = function(){
     ph.addEventListener('click', loadPlayer);
   });
 })();
+
+// Bottom-Pads initial setzen und bei Orientierungswechsel/Resize aktualisieren
+updateBottomPads();
+new ResizeObserver(updateBottomPads).observe(playerBar);
+
+// Beim ersten Einblenden des Player-Bars Pads sofort neu berechnen
+const _origPlayerAdd = playerBar.classList.add.bind(playerBar.classList);
+playerBar.classList.add = function(...args){
+  _origPlayerAdd(...args);
+  if(args.includes('visible')) requestAnimationFrame(updateBottomPads);
+};
 </script>
 
 </body>
