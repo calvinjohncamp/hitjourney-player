@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v92-supabase-confirmed-20260518 -->
+<!-- Version: v93-slug-fix-20260518 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -2726,7 +2726,7 @@ const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // Playlist-Slug → ALBUMS-Key + Metadaten
 const PLAYLIST_MAP = {
-  'top-50':         { key:'top50',        title:'Top 50',          meta:"Songwriter's Picks · 50 Songs", cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg' },
+  'songwriters-picks': { key:'top50',        title:'Top 50',          meta:"Songwriter's Picks · 50 Songs", cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg' },
   '30-grad':        { key:'grad30',       title:'30° Grad',        meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg' },
   '30-stories':     { key:'stories30',    title:'30 Stories',      meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg' },
   'grosse-liebe':   { key:'grosseLiebe',  title:'Grosse Liebe',    meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg' },
@@ -4190,7 +4190,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v92-supabase-confirmed-20260518';
+  const VERSION = 'v93-slug-fix-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
