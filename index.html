@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v66-swf-all-40-spotify-embeds-clean -->
+<!-- Version: v71-swf-card-title-three-lines -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1022,6 +1022,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .knw-lyric-wrap img{ border-radius:10px; }
 }
 
+
+@media(max-width:599px){
+  #edCardSwf .ed-knw-label{
+    font-size:clamp(24px,8.6vw,34px);
+    line-height:1.08;
+    letter-spacing:.035em;
+    white-space:normal;
+    overflow-wrap:normal;
+  }
+}
+
 /* ── Ed-Card 2: Songwriter's Favorites ── */
 #edCardSwf{
   display:flex;
@@ -1076,7 +1087,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   text-align:center;
 }
 
-/* ══ SONGWRITER'S FAVORITES SCREEN ══ */
+/* ══ SONG<br>WRITERS<br>FAVORITES SCREEN ══ */
 #screenSongwritersFavorites{
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   display:none;min-height:0;
@@ -1278,6 +1289,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .swf-banner-2 .swf-banner-title{
   text-align:left;
   margin-left:0;
+}
+
+
+.swf-playlist-embed-block{
+  background:#242424;
+  padding:30px 18px;
+}
+.swf-playlist-embed-block iframe{
+  display:block;
+  width:100%;
+  max-width:980px;
+  margin:0 auto;
+  border:0;
 }
 
 /* ── Song entry: alternating schwarz/anthrazit ── */
@@ -1743,7 +1767,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div id="knwLightbox" onclick="knwCloseLightbox()">
 <img alt="" id="knwLightboxImg" src=""/>
 </div>
-<!-- SONGWRITER'S FAVORITES -->
+<!-- SONG<br>WRITERS<br>FAVORITES -->
 <div id="screenSongwritersFavorites">
 <!-- Zitat + Spotify-CTA Streifen: Spotify links, Zitat rechts -->
 <div class="swf-intro-strip">
@@ -1771,6 +1795,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 <div class="swf-part-label part-1">Favorites - Part 1</div>
+<div class="swf-playlist-embed-block">
+<iframe data-testid="embed-iframe"
+style="border-radius:12px"
+src="https://open.spotify.com/embed/playlist/1mdu5HkdgK84vzVIyoUXmI?utm_source=generator"
+width="100%"
+height="352"
+frameborder="0"
+allowfullscreen=""
+allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+loading="lazy"></iframe>
+</div>
 <div class="swf-entry">
 <div class="swf-quote">
         Nicht mal das Meer darf ich wiederseh'n<br/>
