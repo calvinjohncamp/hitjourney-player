@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v89-balanced-padding -->
+<!-- Version: v91-grounded-smart-dock -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -516,44 +516,72 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .np-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* ══ PLAYER BAR ══ */
+/* ══ SMART DOCK PLAYER ══ */
 .hj-player{
   position:fixed;bottom:0;left:0;right:0;
   z-index:200;
   display:flex;flex-direction:column;
-  background:rgba(6,20,32,1);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(6,20,32,.96);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
   transform:translateY(100%);
-  transition:transform .3s ease;
+  transition:transform .3s ease, background .22s ease, box-shadow .22s ease;
   pointer-events:none;
+  box-shadow:0 -10px 34px rgba(0,0,0,.28);
+  touch-action:pan-y;
 }
 .hj-player.visible{
   transform:translateY(0);
   pointer-events:auto;
 }
-/* Upper now-playing strip: slightly lighter */
+.hj-player.minimized{
+  background:rgba(8,24,37,.88);
+  box-shadow:0 -6px 24px rgba(0,0,0,.34);
+}
+/* One grouped player surface */
 .hj-now-strip{
-  background:rgba(18,48,72,.98);
-  border-top:1px solid rgba(133,172,201,.18);
+  background:transparent;
+  border-top:1px solid rgba(133,172,201,.16);
   cursor:pointer;
 }
-.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15)}
+.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:height .18s ease,opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
-.hj-now{display:flex;align-items:center;gap:12px;padding:8px 16px}
-.hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end}
+.hj-now{display:flex;align-items:center;gap:12px;padding:8px 16px 6px;transition:padding .2s ease,min-height .2s ease}
+.hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;transition:width .2s ease,opacity .18s ease}
 .hj-now-numtxt{display:none}
-.hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0}
+.hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0;transition:width .2s ease,height .2s ease,border-radius .2s ease}
 .hj-now-info{flex:1;min-width:0}
-.hj-now-title{font-size:17px;font-weight:500;color:#85ACC9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hj-now-artist{font-size:13px;color:rgba(133,172,201,.5);margin-top:2px}
-/* Lower controls strip: compact, anchored to the physical bottom */
+.hj-now-title{font-size:17px;font-weight:500;color:#85ACC9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-size .18s ease,color .18s ease}
+.hj-now-artist{font-size:13px;color:rgba(133,172,201,.5);margin-top:2px;transition:opacity .18s ease,max-height .18s ease,margin .18s ease}
+/* Lower controls strip: compact, visually grouped with status */
 .hj-controls-strip{
   background:transparent;
   padding-bottom:0;
+  overflow:hidden;
+  max-height:86px;
+  opacity:1;
+  transition:max-height .22s ease,opacity .18s ease;
 }
 .hj-time{display:flex;justify-content:space-between;padding:4px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-/* iPhone: 8px Luft über Home-Indicator */
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:4px 8px calc(8px + env(safe-area-inset-bottom, 0px))}
+.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 20px}
+/* v91: Grounded Dock — unten wieder geschlossen, aber mit mehr Hintergrund unter den Buttons */
+.hj-controls{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 24px)}
+@media(max-width:599px){
+  .hj-controls{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 26px)}
+  .hj-player.minimized .hj-now{padding-top:8px;padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 12px)}
+}
+@media(min-width:600px){
+  .hj-controls{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 30px)}
+  .hj-player.minimized .hj-now{padding-top:9px;padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 14px)}
+}
+
+/* Minimized: tap anywhere on the mini dock to reopen */
+.hj-player.minimized .hj-prog-wrap{height:0;opacity:0}
+.hj-player.minimized .hj-now{min-height:54px;padding:7px 14px}
+.hj-player.minimized .hj-now-num{width:0;opacity:0;overflow:hidden}
+.hj-player.minimized .hj-now-cover{width:40px;height:40px;border-radius:6px}
+.hj-player.minimized .hj-now-title{font-size:15px;color:#cfe5f5}
+.hj-player.minimized .hj-now-artist{opacity:0;max-height:0;margin-top:0;overflow:hidden}
+.hj-player.minimized .hj-controls-strip{max-height:0;opacity:0;pointer-events:none}
 
 .hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
@@ -575,6 +603,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
+/* iPhone/iPad PWA bottom anchoring: unterhalb der Buttons bleibt derselbe Player-Hintergrund sichtbar */
+.hj-player::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
+}
 
 
 /* ══ FEATURED TEASER ══ */
@@ -1625,15 +1661,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     left:0;right:0;
   }
   .hj-now-strip .hj-now{padding:12px 32px}
-  .hj-controls{padding:10px 32px 18px}
+  .hj-controls{padding:10px 32px 26px}
 
   /* Bottom pad: slightly less on desktop */
   .home-bottom-pad{height:180px}
-}
-
-/* iPad: 600–899px — safe-area + komfortabler Rand */
-@media(min-width:600px) and (max-width:899px){
-  .hj-controls{padding:6px 24px calc(12px + env(safe-area-inset-bottom, 0px))}
 }
 
 @media(min-width:1200px){
@@ -3787,7 +3818,19 @@ npProgWrap && npProgWrap.addEventListener('click',e=>{
   audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
 });
 
-// ── Swipe on Player-Bar strip → Prev / Next ──
+// ── Smart Dock Player: Swipe down minimizes, tap on mini dock reopens, horizontal swipe keeps Prev/Next ──
+function setPlayerMinimized(minimized){
+  if(!playerBar.classList.contains('visible')) return;
+  playerBar.classList.toggle('minimized', !!minimized);
+  requestAnimationFrame(()=>{
+    updateBottomPads();
+    updatePlayerBarHeight();
+    updateAlbumTopButton && updateAlbumTopButton();
+    updateArchiveTopButton && updateArchiveTopButton();
+    updateSwfTopButton && updateSwfTopButton();
+  });
+}
+
 let stripStartX=0, stripStartY=0, stripTouchMoved=false;
 nowStrip.addEventListener('touchstart',e=>{
   stripStartX=e.touches[0].clientX;
@@ -3800,13 +3843,35 @@ nowStrip.addEventListener('touchmove',e=>{
 nowStrip.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-stripStartX;
   const dy=e.changedTouches[0].clientY-stripStartY;
-  if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
+  if(Math.abs(dy)>Math.abs(dx)*1.2 && dy>36){
+    setPlayerMinimized(true); // swipe down → mini player
+  } else if(Math.abs(dx)>Math.abs(dy)*1.5&&Math.abs(dx)>40){
     if(dx<0){ btnNext.click(); } // swipe left → next
     else     { btnPrev.click(); } // swipe right → prev
   } else if(!stripTouchMoved){
-    showNowPlaying(); // kein Swipe → normaler Tap → NP öffnen
+    if(playerBar.classList.contains('minimized')) setPlayerMinimized(false);
+    else showNowPlaying(); // full strip tap → Now Playing screen as before
   }
 },{passive:true});
+
+// Swipe down also works on the lower control area, but buttons keep their normal function.
+let dockStartX=0, dockStartY=0;
+playerBar.addEventListener('touchstart',e=>{
+  if(e.target.closest('button')) return;
+  dockStartX=e.touches[0].clientX;
+  dockStartY=e.touches[0].clientY;
+},{passive:true});
+playerBar.addEventListener('touchend',e=>{
+  if(e.target.closest('button')) return;
+  const dx=e.changedTouches[0].clientX-dockStartX;
+  const dy=e.changedTouches[0].clientY-dockStartY;
+  if(Math.abs(dy)>Math.abs(dx)*1.2 && dy>36) setPlayerMinimized(true);
+},{passive:true});
+playerBar.addEventListener('click',e=>{
+  if(!playerBar.classList.contains('minimized')) return;
+  if(e.target.closest('button')) return;
+  setPlayerMinimized(false);
+});
 
 // ── Playback ──
 function previewSong(i){
@@ -4721,7 +4786,7 @@ new ResizeObserver(updateBottomPads).observe(playerBar);
 const _origPlayerAdd = playerBar.classList.add.bind(playerBar.classList);
 playerBar.classList.add = function(...args){
   _origPlayerAdd(...args);
-  if(args.includes('visible')) requestAnimationFrame(updateBottomPads);
+  if(args.includes('visible')) requestAnimationFrame(()=>{ updateBottomPads(); updatePlayerBarHeight(); });
 };
 </script>
 
