@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v85-scope-fix -->
+<!-- Version: v86-block-scroll-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -41,10 +41,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 #screenHome.active,
-#screenArchive.active,
-#screenTracklist.active {
+#screenArchive.active {
   display: flex;
   flex-direction: column;
+}
+
+/* screenTracklist scrollt als Block-Container — kein flex-direction:column! */
+#screenTracklist.active {
+  display: block;
 }
 
 #screenNowPlaying.active {
@@ -52,7 +56,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 #tlList {
-  flex: 0 0 auto;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .tl-bottom-pad {
@@ -418,8 +424,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
 .tl-bottom-pad{height:260px}
 
-/* Tracklist container: max-width for iPad readability */
-#tlList{max-width:680px;margin:0 auto;width:100%}
+/* Tracklist container: max-width for iPad readability — definiert oben im Screen-Block */
 #screenNowPlaying{
   background:rgba(6,20,32,1);
   display:none;
