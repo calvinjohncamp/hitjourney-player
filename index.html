@@ -32,8 +32,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Screens ── */
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
-#screenHome{padding-top:14px}
-#screenTracklist{padding-top:8px}
+#screenHome{padding-top:14px;padding-bottom:calc(190px + env(safe-area-inset-bottom, 0px))}
+#screenTracklist{padding-top:8px;padding-bottom:calc(190px + env(safe-area-inset-bottom, 0px))}
 .screen.active{display:block}
 .screen::-webkit-scrollbar{display:none}
 
@@ -46,7 +46,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
-.home-bottom-pad{height:200px}
+.home-bottom-pad{height:0}
 
 /* Trio-Container: volle Breite */
 .home-trio{
@@ -393,7 +393,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
-.tl-bottom-pad{height:200px}
+.tl-bottom-pad{height:0}
 
 /* Tracklist container: max-width for iPad readability */
 #tlList{max-width:680px;margin:0 auto;width:100%}
@@ -4363,7 +4363,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v48-bottompad-fix2-20260518';
+  const VERSION = 'v49-css-padding-fix-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
