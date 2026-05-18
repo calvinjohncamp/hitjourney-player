@@ -4225,8 +4225,10 @@ backBtn.addEventListener('click',()=>{
 
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
-  const h = playerBar.classList.contains('visible') ? playerBar.getBoundingClientRect().height : 0;
-  const pad = h + 8; // 8px Luft über dem Player-Bar
+  // Player-Bar ist immer gleich hoch — nur per transform versteckt, nicht per display:none
+  // getBoundingClientRect().height funktioniert daher auch wenn nicht sichtbar
+  const h = playerBar.getBoundingClientRect().height || 190;
+  const pad = h + 8;
   document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
 }
 
@@ -4361,7 +4363,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v47-bottompad-fix-20260518';
+  const VERSION = 'v48-bottompad-fix2-20260518';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
