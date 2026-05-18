@@ -2762,27 +2762,20 @@ async function loadFromSupabase() {
     };
   });
 
-  // 2. Playlists laden (id → slug mapping)
-  const playlistsRes = await fetch(SB_URL + '/rest/v1/playlists?select=id,slug', { headers });
-  if (!playlistsRes.ok) throw new Error('Playlists fetch failed: ' + playlistsRes.status);
-  const playlistsRaw = await playlistsRes.json();
-  const playlistIdToSlug = {};
-  playlistsRaw.forEach(p => { playlistIdToSlug[p.id] = p.slug; });
-
-  // 3. Playlist-Tracks laden
+  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
   const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_id&order=playlist_id',
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
     { headers }
   );
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
 
-  // 4. ALBUMS aufbauen
+  // 3. ALBUMS aufbauen
   ALBUMS = {};
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   tracksRaw.forEach(row => {
-    const playlistSlug = playlistIdToSlug[row.playlist_id];
+    const playlistSlug = row.playlist_slug;
     const info = PLAYLIST_MAP[playlistSlug];
     if (!info) return;
     const song = songMap[row.song_slug];
