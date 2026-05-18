@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v71-swf-card-title-three-lines -->
+<!-- Version: v74-swf-intro-landscape-force -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1087,7 +1087,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   text-align:center;
 }
 
-/* ══ SONG<br>WRITERS<br>FAVORITES SCREEN ══ */
+/* ══ <span>SONG</span><span>WRITERS</span><span>FAVORITES</span> SCREEN ══ */
 #screenSongwritersFavorites{
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   display:none;min-height:0;
@@ -1293,7 +1293,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 .swf-playlist-embed-block{
-  background:#242424;
+  background:#0a0a0a;
   padding:30px 18px;
 }
 .swf-playlist-embed-block iframe{
@@ -1599,6 +1599,66 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .home-grid{grid-template-columns:repeat(4,1fr)}
   .featured-teaser{grid-column:1/-1}
 }
+
+/* v74 — force larger Songwriter's Favorites intro on desktop / landscape only */
+@media (orientation: landscape), (min-width: 700px){
+  #screenSongwritersFavorites .swf-intro-strip{
+    min-height: 260px !important;
+    padding: 44px 32px 42px !important;
+    gap: 30px !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-cta{
+    max-width: 420px !important;
+    gap: 13px !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-cta-icon svg{
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-cta-label{
+    font-size: 12px !important;
+    letter-spacing: .25em !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-cta-title{
+    font-size: 20px !important;
+    line-height: 1.18 !important;
+    letter-spacing: .07em !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-cta-sub{
+    font-size: 12px !important;
+    letter-spacing: .08em !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-quote{
+    max-width: 1100px !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-quote p{
+    font-size: 20px !important;
+    line-height: 1.75 !important;
+    max-width: 1100px !important;
+  }
+
+  #screenSongwritersFavorites .swf-intro-author{
+    font-size: 13px !important;
+    letter-spacing: .25em !important;
+    margin-top: 8px !important;
+  }
+
+  #screenSongwritersFavorites .swf-playlist-embed-block{
+    padding: 44px 32px !important;
+  }
+
+  #screenSongwritersFavorites .swf-playlist-embed-block iframe{
+    max-width: 1180px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1699,7 +1759,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Favorites</span>
 </div>
 <div class="ed-body ed-body-knw">
-<div class="ed-knw-label">Songwriter's<br/>Favorites</div>
+<div class="ed-knw-label ed-knw-label-swf"><span>SONG</span><span>WRITERS</span><span>FAVORITES</span></div>
 </div>
 </div>
 <!-- Card 3: Almost One Million Streams -->
@@ -1767,7 +1827,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div id="knwLightbox" onclick="knwCloseLightbox()">
 <img alt="" id="knwLightboxImg" src=""/>
 </div>
-<!-- SONG<br>WRITERS<br>FAVORITES -->
+<!-- <span>SONG</span><span>WRITERS</span><span>FAVORITES</span> -->
 <div id="screenSongwritersFavorites">
 <!-- Zitat + Spotify-CTA Streifen: Spotify links, Zitat rechts -->
 <div class="swf-intro-strip">
@@ -1786,15 +1846,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span class="swf-intro-author">Jörn Kämper</span>
 </div>
 </div>
-<!-- Section Banner: Playlist — Foto-Platzhalter, später befüllen -->
-<div class="swf-banner">
-<img alt="" class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist2.jpg"/>
-<div class="swf-banner-title">
-<span class="swf-banner-play">PLAY</span>
-<span class="swf-banner-list">LIST</span>
-</div>
-</div>
-<div class="swf-part-label part-1">Favorites - Part 1</div>
 <div class="swf-playlist-embed-block">
 <iframe data-testid="embed-iframe"
 style="border-radius:12px"
@@ -1806,6 +1857,15 @@ allowfullscreen=""
 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
 loading="lazy"></iframe>
 </div>
+<!-- Section Banner: Playlist — Foto-Platzhalter, später befüllen -->
+<div class="swf-banner">
+<img alt="" class="swf-banner-bg" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Playlist2.jpg"/>
+<div class="swf-banner-title">
+<span class="swf-banner-play">PLAY</span>
+<span class="swf-banner-list">LIST</span>
+</div>
+</div>
+<div class="swf-part-label part-1">Favorites - Part 1</div>
 <div class="swf-entry">
 <div class="swf-quote">
         Nicht mal das Meer darf ich wiederseh'n<br/>
