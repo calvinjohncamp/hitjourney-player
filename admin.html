@@ -1053,7 +1053,10 @@ function _fillEditForm(s){
   Object.keys(editFiles).forEach(k=>editFiles[k]=null);
 
   document.getElementById('eTitle').value  = s.title    || '';
-  document.getElementById('eArtist').value = s.artist   || '';
+  const eArtistEl = document.getElementById('eArtist');
+  eArtistEl.value = s.artist || '';
+  if(s.artist) eArtistEl.classList.add('has-val');
+  else eArtistEl.classList.remove('has-val');
   document.getElementById('eSlug').value   = s.slug     || '';
   document.getElementById('eLang').value   = s.language || 'english';
 
