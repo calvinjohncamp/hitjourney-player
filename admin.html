@@ -1216,9 +1216,15 @@ async function saveEdit(){
   }
 
   if(btn) btn.textContent = 'Speichere …';
+  const artist = document.getElementById('eArtist').value.trim();
+  if(artist && artist.length < 2){
+    showMsg(msgEl,'Artist-Name muss mindestens 2 Zeichen haben.','err');
+    if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
+    return;
+  }
   const body = {
     title:    document.getElementById('eTitle').value.trim(),
-    artist:   document.getElementById('eArtist').value.trim(),
+    artist:   artist,
     slug:     document.getElementById('eSlug').value.trim(),
     language: document.getElementById('eLang').value,
     ...newUrls,
@@ -1285,6 +1291,7 @@ async function saveSong(){
   const btn    = document.getElementById('addSaveBtn');
 
   if(!title){ showMsg(msgEl,'Titel ist Pflicht.','err'); return; }
+  if(artist && artist.length < 2){ showMsg(msgEl,'Artist-Name muss mindestens 2 Zeichen haben.','err'); return; }
   if(!files.mp3&&!files.cover){ showMsg(msgEl,'Mindestens MP3 oder Cover 1:1 wird benötigt.','err'); return; }
 
   btn.disabled=true;
