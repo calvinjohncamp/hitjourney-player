@@ -228,20 +228,54 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 #newAlbumModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:6px 20px 40px;animation:slideUp .25s ease}
 
 
-/* ══ EDIT MODAL ══ */
-#editOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:0}
-#editOverlay.open{display:flex}
-#editModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:6px 20px 40px;animation:slideUp .25s ease}
-@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-drag{width:40px;height:4px;border-radius:2px;background:rgba(133,172,201,.25);margin:10px auto 18px}
-.modal-title{font-size:16px;font-weight:700;color:#cfe5f5;margin-bottom:4px}
-.modal-subtitle{font-size:12px;color:rgba(133,172,201,.4);margin-bottom:0}
-.modal-actions{display:flex;gap:8px;margin-top:16px}
+/* ══ EDIT SCREEN ══ */
+.edit-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  background:rgb(6,20,32);
+  border-bottom:1px solid rgba(133,172,201,.12);
+  flex-shrink:0;
+  gap:8px;
+  position:sticky;top:0;z-index:10;
+}
+.edit-nav-back{
+  display:flex;align-items:center;gap:4px;
+  background:none;border:none;cursor:pointer;
+  color:#85ACC9;font-size:14px;font-weight:600;
+  padding:6px 8px;border-radius:8px;
+  transition:background .15s;white-space:nowrap;
+}
+.edit-nav-back:hover{background:rgba(133,172,201,.1)}
+.edit-nav-back svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+.edit-nav-center{
+  display:flex;align-items:center;gap:6px;
+  flex:1;min-width:0;justify-content:center;
+}
+.edit-nav-arrow{
+  width:32px;height:32px;border-radius:8px;border:none;
+  background:rgba(133,172,201,.1);color:#85ACC9;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;flex-shrink:0;
+}
+.edit-nav-arrow:hover{background:rgba(133,172,201,.22)}
+.edit-nav-arrow:disabled{opacity:.3;cursor:default}
+.edit-nav-arrow svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.5;fill:none}
+.edit-nav-info{text-align:center;min-width:0;flex:1}
+.edit-nav-title{font-size:14px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.edit-nav-pos{font-size:11px;color:rgba(133,172,201,.4);margin-top:1px}
+.edit-nav-save{
+  background:#85ACC9;color:#06141F;border:none;border-radius:8px;
+  font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;
+  transition:opacity .15s;white-space:nowrap;flex-shrink:0;
+}
+.edit-nav-save:hover{opacity:.85}
+
 .pl-check-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.06);cursor:pointer;font-size:12px;color:#cfe5f5;user-select:none;transition:background .15s,border-color .15s}
 .pl-check-pill input{accent-color:#85ACC9;width:13px;height:13px;cursor:pointer}
 .pl-check-pill:has(input:checked){background:rgba(133,172,201,.18);border-color:#85ACC9}
 .btn-save{flex:1;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:700;background:#85ACC9;color:#06141F;transition:opacity .15s}
 .btn-cancel{padding:13px 18px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;background:rgba(133,172,201,.1);color:#85ACC9;transition:background .15s}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
 
 /* ══ CONFIRM DIALOG ══ */
 #confirmOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
@@ -482,35 +516,53 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
-<!-- ══ EDIT MODAL ══ -->
-<div id="editOverlay">
-  <div id="editModal">
-    <div class="modal-drag"></div>
-    <div class="modal-title" id="editModalTitle">Song bearbeiten</div>
-    <div class="modal-subtitle" id="editModalSlug"></div>
-
-    <div class="section-label">Song-Info</div>
-    <div class="field-row cols-2" style="margin-bottom:8px">
-      <div class="field">
-        <div class="field-label">Titel</div>
-        <input class="ai" id="eTitle" type="text"/>
+<!-- ══ EDIT SCREEN (full-page, kein Modal) ══ -->
+<div class="screen" id="tabEdit">
+  <div class="edit-nav">
+    <button class="edit-nav-back" onclick="closeEdit()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Zurück
+    </button>
+    <div class="edit-nav-center">
+      <button class="edit-nav-arrow" id="editPrevBtn" onclick="navigateEdit(-1)" title="Vorheriger Song">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="edit-nav-info">
+        <div class="edit-nav-title" id="editNavTitle">—</div>
+        <div class="edit-nav-pos" id="editNavPos"></div>
       </div>
-      <div class="field">
-        <div class="field-label">Artist</div>
-        <input class="ai" id="eArtist" list="artistList" type="text"/>
-      </div>
+      <button class="edit-nav-arrow" id="editNextBtn" onclick="navigateEdit(1)" title="Nächster Song">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
-    <div class="field-row cols-2" style="margin-bottom:8px">
-      <div class="field">
-        <div class="field-label">Slug</div>
-        <input class="ai" id="eSlug" type="text"/>
+    <button class="edit-nav-save" onclick="saveEdit()">Speichern</button>
+  </div>
+
+  <div class="add-wrap" id="editWrap">
+    <div class="section-label">Song-Info</div>
+    <div class="field-group">
+      <div class="field-row cols-2">
+        <div class="field">
+          <div class="field-label">Titel</div>
+          <input class="ai" id="eTitle" type="text"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Artist</div>
+          <input class="ai" id="eArtist" list="artistList" type="text"/>
+        </div>
       </div>
-      <div class="field">
-        <div class="field-label">Sprache</div>
-        <select class="ai" id="eLang">
-          <option value="english">English</option>
-          <option value="german">Deutsch</option>
-        </select>
+      <div class="field-row cols-2">
+        <div class="field">
+          <div class="field-label">Slug</div>
+          <input class="ai" id="eSlug" type="text"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Sprache</div>
+          <select class="ai" id="eLang">
+            <option value="english">English</option>
+            <option value="german">Deutsch</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -533,7 +585,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="upload-progress" id="eProgMp3"></div>
         <button class="zone-clear" onclick="clearEditZone('mp3',event)" title="Entfernen">×</button>
       </div>
-      <div class="s3-hint" id="eHintMp3"></div>
     </div>
 
     <div class="section-label">Bilder</div>
@@ -550,7 +601,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <div class="upload-progress" id="eProgCover"></div>
           <button class="zone-clear" onclick="clearEditZone('cover',event)" title="Entfernen">×</button>
         </div>
-        <div class="s3-hint" id="eHintCover"></div>
       </div>
       <div class="field">
         <div class="field-label">Lyrics</div>
@@ -564,7 +614,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <div class="upload-progress" id="eProgLyrics"></div>
           <button class="zone-clear" onclick="clearEditZone('lyrics',event)" title="Entfernen">×</button>
         </div>
-        <div class="s3-hint" id="eHintLyrics"></div>
       </div>
     </div>
     <div class="field" style="margin-top:0">
@@ -579,7 +628,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="upload-progress" id="eProgCover21"></div>
         <button class="zone-clear" onclick="clearEditZone('cover21',event)" title="Entfernen">×</button>
       </div>
-      <div class="s3-hint" id="eHintCover21"></div>
     </div>
 
     <div class="section-label">Playlists</div>
@@ -587,11 +635,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div id="ePlaylistChecks" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
     </div>
 
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeEdit()">Abbrechen</button>
-      <button class="btn-save" onclick="saveEdit()">Änderungen speichern</button>
-    </div>
-    <div class="form-msg" id="editMsg" style="margin-top:10px"></div>
+    <div class="form-msg" id="editMsg" style="margin-top:4px"></div>
+    <button class="btn-primary" onclick="saveEdit()" id="editSaveBtn">Änderungen speichern</button>
   </div>
 </div>
 
@@ -891,9 +936,10 @@ async function confirmDeleteSong(){
   } catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 
-/* ── EDIT ── */
-// Edit modal file state
+/* ── EDIT SCREEN ── */
 const editFiles = { mp3: null, cover: null, cover21: null, lyrics: null };
+let editSongList = [];
+let editSongIdx  = -1;
 
 function onFileEdit(input, key){
   const file = input.files[0];
@@ -935,30 +981,44 @@ function clearEditZone(key, e){
   if(prevIds[key]){ const p=document.getElementById(prevIds[key]); if(p) p.src=''; }
 }
 
-function openEdit(jsonStr){
-  const s = JSON.parse(jsonStr);
+function _fillEditForm(s){
   editTarget = s;
-  // Reset edit files
   Object.keys(editFiles).forEach(k=>editFiles[k]=null);
-  ['ezMp3','ezCover','ezCover21','ezLyrics'].forEach(id=>{ const z=document.getElementById(id); if(z) z.classList.remove('has-file'); });
-  ['ePrevCover','ePrevCover21','ePrevLyrics'].forEach(id=>{ const p=document.getElementById(id); if(p) p.src=''; });
 
-  document.getElementById('editModalTitle').textContent = s.title || 'Song bearbeiten';
-  document.getElementById('editModalSlug').textContent  = s.slug || '';
-  document.getElementById('eTitle').value    = s.title    || '';
-  document.getElementById('eArtist').value   = s.artist   || '';
-  document.getElementById('eSlug').value     = s.slug     || '';
-  document.getElementById('eLang').value     = s.language || 'english';
+  document.getElementById('eTitle').value  = s.title    || '';
+  document.getElementById('eArtist').value = s.artist   || '';
+  document.getElementById('eSlug').value   = s.slug     || '';
+  document.getElementById('eLang').value   = s.language || 'english';
 
-  // Show existing asset hints
-  const eHintMp3 = document.getElementById('eHintMp3');
-  if(eHintMp3) eHintMp3.textContent = s.mp3_url ? '✓ '+s.mp3_url.split('/').pop() : '';
-  const eHintCover = document.getElementById('eHintCover');
-  if(eHintCover) eHintCover.textContent = s.cover_url ? '✓ '+s.cover_url.split('/').pop() : '';
-  const eHintLyrics = document.getElementById('eHintLyrics');
-  if(eHintLyrics) eHintLyrics.textContent = s.lyrics_url ? '✓ '+s.lyrics_url.split('/').pop() : '';
-  const eHintCover21 = document.getElementById('eHintCover21');
-  if(eHintCover21) eHintCover21.textContent = s.lyrics21_url ? '✓ '+s.lyrics21_url.split('/').pop() : '';
+  // MP3
+  const eMp3Zone = document.getElementById('ezMp3');
+  const eMp3Name = document.getElementById('eMp3Name');
+  const eMp3Size = document.getElementById('eMp3Size');
+  if(s.mp3_url){
+    eMp3Name.textContent = decodeURIComponent(s.mp3_url.split('/').pop());
+    eMp3Size.textContent = 'S3';
+    eMp3Zone.classList.add('has-file');
+  } else {
+    eMp3Name.textContent = '—'; eMp3Size.textContent = '';
+    eMp3Zone.classList.remove('has-file');
+  }
+
+  // Images from S3 — show directly in drop zones
+  [
+    {id:'ePrevCover',   url:s.cover_url,    zone:'ezCover'},
+    {id:'ePrevLyrics',  url:s.lyrics_url,   zone:'ezLyrics'},
+    {id:'ePrevCover21', url:s.lyrics21_url, zone:'ezCover21'},
+  ].forEach(({id, url, zone})=>{
+    const prev = document.getElementById(id);
+    const z    = document.getElementById(zone);
+    if(url){
+      prev.src = url;
+      prev.onload  = ()=>z.classList.add('has-file');
+      prev.onerror = ()=>{ prev.src=''; z.classList.remove('has-file'); };
+    } else {
+      prev.src=''; z.classList.remove('has-file');
+    }
+  });
 
   // Playlist checkboxes
   const container = document.getElementById('ePlaylistChecks');
@@ -967,16 +1027,72 @@ function openEdit(jsonStr){
   );
   container.innerHTML = albumsData.map(al=>`
     <label class="pl-check-pill">
-      <input type="checkbox" value="${al.slug}" ${currentPlaylists.has(al.slug)?'checked':''}/>
+      <input type="checkbox" value="${al.slug}" ${currentPlaylists.has(al.slug)?'checked':''}/> 
       ${esc(al.title||al.slug)}
     </label>`).join('');
 
   document.getElementById('editMsg').className = 'form-msg';
-  document.getElementById('editOverlay').classList.add('open');
+  document.getElementById('editMsg').textContent = '';
+
+  // Nav bar update
+  const navTitle = document.getElementById('editNavTitle');
+  const navPos   = document.getElementById('editNavPos');
+  if(navTitle) navTitle.textContent = s.title || s.slug || 'Song bearbeiten';
+  if(navPos) navPos.textContent = editSongList.length > 1 ? (editSongIdx+1)+' / '+editSongList.length : '';
+
+  document.getElementById('editPrevBtn').disabled = editSongIdx <= 0;
+  document.getElementById('editNextBtn').disabled = editSongIdx >= editSongList.length - 1;
+
+  // Scroll to top
+  const sc = document.getElementById('tabEdit');
+  if(sc) sc.scrollTop = 0;
+}
+
+function getFilteredSongs(){
+  const q    = document.getElementById('searchInput').value.trim().toLowerCase();
+  const lang = document.getElementById('filterLang').value;
+  let list = allSongs.filter(s=>{
+    if(lang && s.language!==lang) return false;
+    if(!q) return true;
+    return (s.title||'').toLowerCase().includes(q)
+        || (s.artist||'').toLowerCase().includes(q)
+        || (s.slug||'').toLowerCase().includes(q);
+  });
+  list.sort((a,b)=>{
+    const va = (a[sortKey]||'').toLowerCase();
+    const vb = (b[sortKey]||'').toLowerCase();
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  return list;
+}
+
+function openEdit(jsonStr){
+  const s = JSON.parse(jsonStr);
+  editSongList = getFilteredSongs();
+  editSongIdx  = editSongList.findIndex(x=>x.slug===s.slug);
+  if(editSongIdx < 0){ editSongList=[s]; editSongIdx=0; }
+
+  if(!albumsData.length) loadPlaylists().then(()=>_fillEditForm(s));
+  else _fillEditForm(s);
+
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(sc=>sc.classList.remove('active'));
+  document.getElementById('tabEdit').classList.add('active');
+}
+
+function navigateEdit(dir){
+  const newIdx = editSongIdx + dir;
+  if(newIdx < 0 || newIdx >= editSongList.length) return;
+  editSongIdx = newIdx;
+  _fillEditForm(editSongList[newIdx]);
 }
 
 function closeEdit(){
-  document.getElementById('editOverlay').classList.remove('open');
+  document.querySelectorAll('.screen').forEach(sc=>sc.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tabSongs').classList.add('active');
+  const songsTab = document.querySelector('[data-tab="songs"]');
+  if(songsTab) songsTab.classList.add('active');
   editTarget = null;
 }
 
@@ -984,41 +1100,40 @@ async function saveEdit(){
   if(!editTarget) return;
   const slug = editTarget.slug;
   const msgEl = document.getElementById('editMsg');
-  const btn = document.querySelector('#editModal .btn-save');
-  btn.disabled = true;
+  const btn   = document.getElementById('editSaveBtn');
+  const navBtn = document.getElementById('editNavSaveBtn');
+  if(btn) btn.disabled = true;
 
-  // Upload any new files first
   const eNames = {
     mp3:     `songs/${slug}.mp3`,
     cover:   `artwork/${slug}-cover.jpg`,
     cover21: `artwork/${slug}-cover-2-1.jpg`,
     lyrics:  `artwork/${slug}-lyrics.jpg`,
   };
-  const urlKeys = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url' };
-  const progIds = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics' };
-  const newUrls = {};
+  const urlKeys  = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url' };
+  const progIds  = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics' };
+  const newUrls  = {};
 
   try{
     for(const key of ['mp3','cover','cover21','lyrics']){
       if(!editFiles[key]) continue;
-      btn.textContent = `Lade hoch: ${editFiles[key].name} …`;
+      if(btn) btn.textContent = `Lade hoch: ${editFiles[key].name} …`;
       newUrls[urlKeys[key]] = await uploadToS3(editFiles[key], eNames[key], progIds[key]);
     }
   } catch(e){
-    msgEl.textContent = 'Upload-Fehler: '+e.message;
-    msgEl.className = 'form-msg err';
-    btn.disabled=false; btn.textContent='Änderungen speichern'; return;
+    showMsg(msgEl,'Upload-Fehler: '+e.message,'err');
+    if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
+    return;
   }
 
-  btn.textContent = 'Speichere …';
+  if(btn) btn.textContent = 'Speichere …';
   const body = {
-    title:       document.getElementById('eTitle').value.trim(),
-    artist:      document.getElementById('eArtist').value.trim(),
-    slug:        document.getElementById('eSlug').value.trim(),
-    language:    document.getElementById('eLang').value,
+    title:    document.getElementById('eTitle').value.trim(),
+    artist:   document.getElementById('eArtist').value.trim(),
+    slug:     document.getElementById('eSlug').value.trim(),
+    language: document.getElementById('eLang').value,
     ...newUrls,
   };
-  // Keep existing URLs for fields not re-uploaded
   if(!newUrls.mp3_url)      body.mp3_url      = editTarget.mp3_url      || null;
   if(!newUrls.cover_url)    body.cover_url    = editTarget.cover_url    || null;
   if(!newUrls.lyrics21_url) body.lyrics21_url = editTarget.lyrics21_url || null;
@@ -1028,12 +1143,10 @@ async function saveEdit(){
     const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
 
-    // Handle playlist changes
+    // Playlist changes
     const checks = document.querySelectorAll('#ePlaylistChecks input[type=checkbox]');
     const before = new Set(albumsData.filter(al=>al.tracks.some(t=>t.song_slug===slug)).map(al=>al.slug));
     const after  = new Set([...checks].filter(c=>c.checked).map(c=>c.value));
-
-    // Add to new playlists
     for(const plSlug of after){
       if(before.has(plSlug)) continue;
       const al = albumsData.find(a=>a.slug===plSlug);
@@ -1041,7 +1154,6 @@ async function saveEdit(){
       await fetch(sbUrl('/rest/v1/playlist_tracks'),{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:plSlug,song_slug:slug,position:maxPos+1})});
       if(al) al.tracks.push({song_slug:slug,playlist_slug:plSlug,position:maxPos+1});
     }
-    // Remove from unchecked playlists
     for(const plSlug of before){
       if(after.has(plSlug)) continue;
       await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+plSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
@@ -1049,21 +1161,28 @@ async function saveEdit(){
       if(al) al.tracks = al.tracks.filter(t=>t.song_slug!==slug);
     }
 
+    // Refresh from DB
     const updated = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{headers:hdrs()}).then(r=>r.json());
     const s = updated[0]||{...editTarget,...body};
+
+    // Update local state
     allSongs = allSongs.map(x=>x.slug===slug?s:x);
+    const listIdx = editSongList.findIndex(x=>x.slug===slug);
+    if(listIdx>=0) editSongList[listIdx]=s;
+
     renderTable();
     populateArtistList();
-    closeEdit();
     toast('✓ Gespeichert');
-  } catch(e){
-    msgEl.textContent = 'Fehler: '+e.message;
-    msgEl.className = 'form-msg err';
-  }
-  btn.disabled=false; btn.textContent='Änderungen speichern';
-}
 
-document.getElementById('editOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('editOverlay')) closeEdit(); });
+    // Stay in edit screen, refresh form with updated data
+    editTarget = s;
+    _fillEditForm(s);
+
+  } catch(e){
+    showMsg(msgEl,'Fehler: '+e.message,'err');
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
+}
 
 
 /* ── SAVE SONG ── */
