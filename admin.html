@@ -198,6 +198,16 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .td-num{width:36px;color:rgba(133,172,201,.35);font-size:12px;font-weight:600;text-align:center}
 .td-num input{width:36px;background:rgba(133,172,201,.1);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#cfe5f5;font-size:12px;font-weight:700;text-align:center;padding:3px 2px;outline:none}
 .td-num input:focus{border-color:#85ACC9;background:rgba(133,172,201,.18)}
+/* Drag & Drop sortable rows */
+.album-songs-table tbody tr[draggable]{cursor:grab}
+.album-songs-table tbody tr[draggable]:active{cursor:grabbing}
+.album-songs-table tbody tr.drag-over td{background:rgba(133,172,201,.12)!important;border-top:2px solid #85ACC9}
+.album-songs-table tbody tr.dragging{opacity:.35}
+.drag-handle{display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.3);cursor:grab;padding:0 4px;user-select:none;font-size:14px}
+.drag-handle:hover{color:rgba(133,172,201,.7)}
+.btn-sort-save{display:none;margin:8px 14px 4px;padding:8px 16px;background:#2a8a5a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-sort-save.visible{display:block}
+.btn-sort-save:hover{background:#237a4e}
 /* All-songs picker inside album (for adding tracks) */
 .album-picker{border-top:1px solid rgba(133,172,201,.08);padding:10px 14px 14px}
 .album-picker-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.35);margin-bottom:8px}
@@ -1018,6 +1028,7 @@ function renderAlbums(){
             <input placeholder="Song suchen …" oninput="filterAlbumSongs('${al.slug}', this.value)"/>
           </div>
         </div>
+        <button class="btn-sort-save" id="savesort-${al.slug}" onclick="saveOrder('${al.slug}')">✓ Reihenfolge speichern</button>
         <div id="altable-${al.slug}">${renderAlbumSongs(al)}</div>
         <div class="album-picker">
           <div class="album-picker-title">Songs hinzufügen</div>
@@ -1039,9 +1050,10 @@ function renderAlbumSongs(al, q=''){
     return s && ((s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q));
   }) : tracks;
   if(!filtered.length) return `<div style="padding:12px 14px;font-size:13px;color:rgba(133,172,201,.35)">Keine Songs.</div>`;
-  return `<table class="album-songs-table">
+  return `<table class="album-songs-table" id="dragtable-${al.slug}">
     <thead><tr>
-      <th style="width:40px">#</th>
+      <th style="width:24px"></th>
+      <th style="width:32px">#</th>
       <th style="width:36px"></th>
       <th>Titel</th>
       <th>Artist</th>
@@ -1049,17 +1061,14 @@ function renderAlbumSongs(al, q=''){
       <th></th>
     </tr></thead>
     <tbody>
-    ${filtered.map(t=>{
+    ${filtered.map((t,idx)=>{
       const s = allSongs.find(x=>x.slug===t.song_slug)||{title:t.song_slug,artist:'',cover_url:null,mp3_url:null,lyrics_url:null,slug:t.song_slug};
       const coverHtml = s.cover_url
         ? `<img src="${s.cover_url}" loading="lazy" style="width:28px;height:28px;border-radius:4px;object-fit:cover;display:block" onerror="this.style.display='none'">`
         : `<div style="width:28px;height:28px;border-radius:4px;background:rgba(133,172,201,.08);display:flex;align-items:center;justify-content:center;font-size:12px">♪</div>`;
-      return `<tr>
-        <td class="td-num">
-          <input type="number" value="${t.position}" min="1" style="width:38px"
-            onchange="updateTrackPos('${al.slug}','${t.song_slug}',this.value)"
-            onblur="reloadAlbumSongs('${al.slug}')"/>
-        </td>
+      return `<tr draggable="true" data-slug="${t.song_slug}" data-album="${al.slug}">
+        <td class="drag-handle" title="Ziehen zum Sortieren">⠿</td>
+        <td class="td-num">${t.position}</td>
         <td class="td-cover">${coverHtml}</td>
         <td class="td-title">
           <div class="song-title">${esc(s.title||'—')}</div>
@@ -1110,12 +1119,14 @@ function renderPicker(al){
 function toggleAlbum(slug){
   const card = document.getElementById('album-'+slug);
   card.classList.toggle('open');
+  if(card.classList.contains('open')) initDragSort(slug);
 }
 
 function filterAlbumSongs(slug, q){
   const al = albumsData.find(a=>a.slug===slug);
   if(!al) return;
   document.getElementById('altable-'+slug).innerHTML = renderAlbumSongs(al, q.toLowerCase());
+  initDragSort(slug);
 }
 
 function filterPicker(slug, q){
@@ -1183,7 +1194,75 @@ async function updateTrackPos(albumSlug, songSlug, newPos){
 
 function reloadAlbumSongs(albumSlug){
   const al = albumsData.find(a=>a.slug===albumSlug);
-  if(al) document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
+  if(al){ document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al); initDragSort(albumSlug); }
+}
+
+/* ── DRAG & DROP SORT ── */
+let dragSrc = null;
+
+function initDragSort(albumSlug){
+  const tbody = document.querySelector(`#dragtable-${albumSlug} tbody`);
+  if(!tbody) return;
+  tbody.querySelectorAll('tr[draggable]').forEach(row=>{
+    row.addEventListener('dragstart', e=>{
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', ()=>{
+      row.classList.remove('dragging');
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+      if(row !== dragSrc) row.classList.add('drag-over');
+    });
+    row.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(!dragSrc || dragSrc===row) return;
+      const rows = [...tbody.querySelectorAll('tr')];
+      const srcIdx = rows.indexOf(dragSrc);
+      const tgtIdx = rows.indexOf(row);
+      if(srcIdx < tgtIdx) row.after(dragSrc);
+      else row.before(dragSrc);
+      row.classList.remove('drag-over');
+      // Show save button
+      const btn = document.getElementById('savesort-'+albumSlug);
+      if(btn) btn.classList.add('visible');
+    });
+  });
+}
+
+async function saveOrder(albumSlug){
+  const tbody = document.querySelector(`#dragtable-${albumSlug} tbody`);
+  if(!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr[data-slug]')];
+  const al = albumsData.find(a=>a.slug===albumSlug);
+  if(!al) return;
+  const btn = document.getElementById('savesort-'+albumSlug);
+  if(btn){ btn.textContent='Speichere …'; btn.disabled=true; }
+  try{
+    // Update all positions in parallel
+    await Promise.all(rows.map((row,idx)=>{
+      const songSlug = row.dataset.slug;
+      const newPos = idx + 1;
+      // Update local data
+      const t = al.tracks.find(t=>t.song_slug===songSlug);
+      if(t) t.position = newPos;
+      // Update td-num display
+      const numCell = row.querySelector('.td-num');
+      if(numCell) numCell.textContent = newPos;
+      return fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+songSlug,
+        {method:'PATCH', headers:hdrs(), body:JSON.stringify({position:newPos})});
+    }));
+    toast('Reihenfolge gespeichert ✓');
+    if(btn){ btn.textContent='✓ Reihenfolge speichern'; btn.disabled=false; btn.classList.remove('visible'); }
+  } catch(e){
+    toast('Fehler: '+e.message,'err');
+    if(btn){ btn.textContent='✓ Reihenfolge speichern'; btn.disabled=false; }
+  }
 }
 
 /* ── NEW ALBUM ── */
