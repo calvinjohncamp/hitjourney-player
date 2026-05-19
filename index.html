@@ -900,7 +900,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Song-Block: Cover + Play + Lyric-Sheet */
 .knw-song{
-  margin-bottom:8px;
+  margin-bottom:28px;
 }
 .knw-song-title{
   font-size:13px;
@@ -1893,8 +1893,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- KURS NORDWEST -->
 <div id="screenKursNordwest">
 <div class="knw-container">
-<!-- Punkt oben — Easter Egg (doppelklick/doppeltap öffnet Admin) -->
-<div class="knw-divider" id="knwEasterEgg"></div>
 <!-- Song 1: Mary-Anne -->
 <div class="knw-song" id="knwSong0">
 <!-- Lyric-Sheet 2:1 -->
@@ -1913,8 +1911,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
-<!-- Punkt Mitte — zwischen Song 1 und Song 2 -->
-<div class="knw-divider knw-divider--mid"></div>
 <!-- Song 2: Six Hours South of Lighthouse Nine -->
 <div class="knw-song" id="knwSong1">
 <!-- Lyric-Sheet 2:1 -->
@@ -1933,8 +1929,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
-<!-- Punkt unten — symmetrisch nach Song 2 -->
-<div class="knw-divider knw-divider--bottom"></div>
 <!-- Platzhalter für weitere Songs (Song 3 folgt) -->
 <div class="knw-bottom-pad"></div>
 </div>
@@ -1958,7 +1952,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </a>
 <div class="swf-intro-quote">
 <p>„Songs, die bei mir einen Nerv treffen. Lyrics, von denen ich jedes Mal denke: Das hättest du gern selbst geschrieben."</p>
-<span class="swf-intro-author">Jörn Kämper</span>
+<span class="swf-intro-author" id="swfEasterEgg">Jörn Kämper</span>
 </div>
 </div>
 
@@ -4557,10 +4551,11 @@ playerBar.classList.add = function(...args){
 </html>
 
 <script>
-/* ══ ADMIN EASTER EGG — oberer der drei Punkte ══ */
+/* ══ ADMIN EASTER EGG — "Jörn Kämper" auf Songwriter's Favorites ══ */
 (function(){
-  var egg = document.getElementById('knwEasterEgg');
+  var egg = document.getElementById('swfEasterEgg');
   if(!egg) return;
+  egg.style.cursor = 'default';
   // Desktop: Doppelklick
   egg.addEventListener('dblclick', function(){ window.open('admin.html','_blank'); });
   // Mobile: Doppeltap (zwei Taps ≤ 400ms)
