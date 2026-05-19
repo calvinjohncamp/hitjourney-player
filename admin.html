@@ -865,7 +865,7 @@ function renderArtistOptions(dropId, artists, inputId){
   if(!drop) return;
   if(!artists.length){ drop.classList.remove('open'); return; }
   drop.innerHTML = artists.map(a=>
-    `<div class="artist-option" onmousedown="pickArtist('${inputId}','${dropId}',${JSON.stringify(a)})">${esc(a)}</div>`
+    `<div class="artist-option" onpointerdown="event.preventDefault();pickArtist('${inputId}','${dropId}',${JSON.stringify(a)})">${esc(a)}</div>`
   ).join('');
   drop.classList.add('open');
 }
