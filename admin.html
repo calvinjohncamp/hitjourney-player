@@ -7,6 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
+<!-- Version: admin-v20260519-artist-dropdown-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -381,7 +382,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
               oninput="filterArtistDrop('addArtistDrop',this.value)"
               onclick="openArtistDrop('addArtistDrop',this.value)"
               onkeydown="if(event.key==='ArrowDown')openArtistDrop('addArtistDrop',this.value)"
-              onblur="setTimeout(()=>closeArtistDrop('addArtistDrop'),150)"/>
+              onblur="setTimeout(()=>closeArtistDrop('addArtistDrop'),300)"/>
             <div class="artist-dropdown" id="addArtistDrop"></div>
           </div>
         </div>
@@ -576,7 +577,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
               oninput="filterArtistDrop('eArtistDrop',this.value)"
               onclick="openArtistDrop('eArtistDrop',this.value)"
               onkeydown="if(event.key==='ArrowDown')openArtistDrop('eArtistDrop',this.value)"
-              onblur="setTimeout(()=>closeArtistDrop('eArtistDrop'),150)"/>
+              onblur="setTimeout(()=>closeArtistDrop('eArtistDrop'),300)"/>
             <div class="artist-dropdown" id="eArtistDrop"></div>
           </div>
         </div>
@@ -702,6 +703,7 @@ let sortKey = 'title';
 let sortAsc = true;
 let deleteTarget = null;
 let editTarget = null;
+let _artistPickPending = false;
 
 /* ── TOAST ── */
 function toast(text, type='ok'){
@@ -860,12 +862,30 @@ function getArtists(){
   return [...new Set(allSongs.map(s=>s.artist).filter(Boolean))].sort();
 }
 
+function bindArtistDrop(drop, inputId, dropId){
+  if(!drop || drop._boundArtistPicker) return;
+  drop._boundArtistPicker = true;
+
+  const handlePickStart = ev => {
+    const opt = ev.target.closest('.artist-option');
+    if(!opt) return;
+    ev.preventDefault();
+    _artistPickPending = true;
+    pickArtist(inputId, dropId, opt.dataset.artist || opt.textContent || '');
+  };
+
+  drop.addEventListener('pointerdown', handlePickStart);
+  drop.addEventListener('mousedown', handlePickStart);
+  drop.addEventListener('touchstart', handlePickStart, { passive:false });
+}
+
 function renderArtistOptions(dropId, artists, inputId){
   const drop = document.getElementById(dropId);
   if(!drop) return;
+  bindArtistDrop(drop, inputId, dropId);
   if(!artists.length){ drop.classList.remove('open'); return; }
   drop.innerHTML = artists.map(a=>
-    `<div class="artist-option" onpointerdown="event.preventDefault();pickArtist('${inputId}','${dropId}',${JSON.stringify(a)})">${esc(a)}</div>`
+    `<div class="artist-option" data-artist="${esc(a)}">${esc(a)}</div>`
   ).join('');
   drop.classList.add('open');
 }
@@ -880,19 +900,28 @@ function openArtistDrop(dropId, val){
 function filterArtistDrop(dropId, val){
   const inputId = dropId === 'addArtistDrop' ? 'addArtist' : 'eArtist';
   const artists = getArtists();
-  const filtered = val ? artists.filter(a=>a.toLowerCase().includes(val.toLowerCase())) : artists;
+  const q = (val || '').toLowerCase();
+  const filtered = q ? artists.filter(a=>a.toLowerCase().includes(q)) : artists;
   renderArtistOptions(dropId, filtered, inputId);
 }
 
 function closeArtistDrop(dropId){
+  if(_artistPickPending) return;
   const drop = document.getElementById(dropId);
   if(drop) drop.classList.remove('open');
 }
 
 function pickArtist(inputId, dropId, artist){
   const inp = document.getElementById(inputId);
-  if(inp){ inp.value = artist; inp.classList.add('has-val'); }
-  closeArtistDrop(dropId);
+  if(inp){
+    inp.value = artist;
+    inp.classList.add('has-val');
+    inp.dispatchEvent(new Event('input', { bubbles:true }));
+    inp.dispatchEvent(new Event('change', { bubbles:true }));
+  }
+  const drop = document.getElementById(dropId);
+  if(drop) drop.classList.remove('open');
+  setTimeout(()=>{ _artistPickPending = false; }, 0);
 }
 
 /* ── SORT ── */
