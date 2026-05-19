@@ -379,7 +379,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <div class="artist-wrap">
             <input class="ai" id="addArtist" placeholder="z. B. Bro" type="text" autocomplete="off"
               oninput="filterArtistDrop('addArtistDrop',this.value)"
-              onfocus="openArtistDrop('addArtistDrop',this.value)"
+              onclick="openArtistDrop('addArtistDrop',this.value)"
+              onkeydown="if(event.key==='ArrowDown')openArtistDrop('addArtistDrop',this.value)"
               onblur="setTimeout(()=>closeArtistDrop('addArtistDrop'),150)"/>
             <div class="artist-dropdown" id="addArtistDrop"></div>
           </div>
@@ -573,7 +574,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <div class="artist-wrap">
             <input class="ai" id="eArtist" type="text" autocomplete="off"
               oninput="filterArtistDrop('eArtistDrop',this.value)"
-              onfocus="openArtistDrop('eArtistDrop',this.value)"
+              onclick="openArtistDrop('eArtistDrop',this.value)"
+              onkeydown="if(event.key==='ArrowDown')openArtistDrop('eArtistDrop',this.value)"
               onblur="setTimeout(()=>closeArtistDrop('eArtistDrop'),150)"/>
             <div class="artist-dropdown" id="eArtistDrop"></div>
           </div>
@@ -871,8 +873,8 @@ function renderArtistOptions(dropId, artists, inputId){
 function openArtistDrop(dropId, val){
   const inputId = dropId === 'addArtistDrop' ? 'addArtist' : 'eArtist';
   const artists = getArtists();
-  const filtered = val ? artists.filter(a=>a.toLowerCase().includes(val.toLowerCase())) : artists;
-  renderArtistOptions(dropId, filtered, inputId);
+  // Beim Fokus immer alle Artists zeigen — nicht nach aktuellem Wert filtern
+  renderArtistOptions(dropId, artists, inputId);
 }
 
 function filterArtistDrop(dropId, val){
