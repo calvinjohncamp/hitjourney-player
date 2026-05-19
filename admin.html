@@ -920,7 +920,9 @@ async function saveSong(){
   btn.textContent='Speichere in Datenbank …';
   try{
     const body={slug,title,artist:artist||null,language:lang,...urls};
+    console.log('Saving to DB:', body);
     const r=await fetch(SB_URL+'/rest/v1/songs',{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    console.log('DB response status:', r.status);
     if(!r.ok){
       const errText=await r.text();
       if(r.status===409) throw new Error('Ein Song mit diesem Slug existiert bereits: '+slug);
