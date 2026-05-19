@@ -551,12 +551,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 <script>
 /* ── CONFIG ── */
 const SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
+const SB_KEY = 'sb_publishable_hPdHQmbez9NKPtA9m9Izmg_DPcrLzv7';
 const S3 = 'https://hitjourney.s3.eu-west-1.amazonaws.com';
 
 
-function hdrs(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'}; }
-function hdrsMin(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}; }
+function hdrs(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation','x-client-info':'hitjourney-admin'}; }
+function hdrsMin(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal','x-client-info':'hitjourney-admin'}; }
 
 /* ── STATE ── */
 let allSongs = [];
@@ -659,13 +659,21 @@ function fmtSize(b){ if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixe
 const LAMBDA_URL = 'https://7j7xy5kfkbo3nztze7xwlo2psy0uzuoo.lambda-url.eu-west-1.on.aws/';
 
 async function uploadToS3(file, s3Key, progressElId){
-  const prog = document.getElementById(progressElId);
+  const prog = progressElId ? document.getElementById(progressElId) : null;
+
+  // contentType-Fallback: manche Browser liefern leeren file.type
+  let contentType = file.type;
+  if(!contentType){
+    if(s3Key.endsWith('.mp3'))  contentType = 'audio/mpeg';
+    else if(s3Key.endsWith('.jpg')||s3Key.endsWith('.jpeg')) contentType = 'image/jpeg';
+    else contentType = 'application/octet-stream';
+  }
 
   // Schritt 1: Presigned URL von Lambda holen (nur key + contentType, keine Datei)
   const lambdaRes = await fetch(LAMBDA_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: s3Key, contentType: file.type }),
+    body: JSON.stringify({ key: s3Key, contentType }),
   });
   if(!lambdaRes.ok) throw new Error('Lambda Fehler: ' + await lambdaRes.text());
   const { presignedUrl, publicUrl } = await lambdaRes.json();
@@ -674,7 +682,7 @@ async function uploadToS3(file, s3Key, progressElId){
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', presignedUrl, true);
-    xhr.setRequestHeader('Content-Type', file.type);
+    xhr.setRequestHeader('Content-Type', contentType);
     xhr.upload.onprogress = ev => {
       if(ev.lengthComputable && prog) prog.style.width=(ev.loaded/ev.total*100)+'%';
     };
@@ -913,17 +921,28 @@ async function saveSong(){
   try{
     const body={slug,title,artist:artist||null,language:lang,...urls};
     const r=await fetch(SB_URL+'/rest/v1/songs',{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
-    if(!r.ok&&r.status!==409) throw new Error(await r.text());
+    if(!r.ok){
+      const errText=await r.text();
+      if(r.status===409) throw new Error('Ein Song mit diesem Slug existiert bereits: '+slug);
+      throw new Error(errText);
+    }
     if(pl){
       const pr=await fetch(SB_URL+'/rest/v1/playlist_tracks?select=position&playlist_slug=eq.'+pl+'&order=position.desc&limit=1',{headers:hdrs()});
       const pd=await pr.json();
       const pos=pd.length?pd[0].position+1:1;
       await fetch(SB_URL+'/rest/v1/playlist_tracks',{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:pl,song_slug:slug,position:pos})});
     }
-    const saved=await r.json();
-    if(saved&&saved[0]) allSongs=[...allSongs,saved[0]];
+    // Frisch aus DB holen statt auf return=representation zu vertrauen
+    const fetchedR=await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug,{headers:hdrs()});
+    const fetched=await fetchedR.json();
+    if(fetched&&fetched[0]){allSongs=allSongs.filter(s=>s.slug!==slug);allSongs.push(fetched[0]);}
     renderTable(); populateArtistList();
     showMsg(msgEl,'✓ Song gespeichert'+(pl?' und zur Playlist hinzugefügt.':'.'),'ok');
+    // Grüner Button als visuelles Feedback
+    btn.textContent='✓ Song gespeichert';
+    btn.style.background='#2a8a5a';
+    btn.style.color='#fff';
+    setTimeout(()=>{ btn.style.background=''; btn.style.color=''; }, 2500);
     document.getElementById('addTitle').value='';
     document.getElementById('addArtist').value='';
     document.getElementById('addSlug').value='';
@@ -933,6 +952,7 @@ async function saveSong(){
     updateHints();
   } catch(e){ showMsg(msgEl,'Datenbankfehler: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='Song speichern & hochladen';
+  btn.style.background=''; btn.style.color='';
 }
 function showMsg(el,text,type){ el.textContent=text; el.className='form-msg '+type; }
 
