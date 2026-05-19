@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v97-three-dots-20260519 -->
+<!-- Version: v98-tante-paula-teaser-20260519 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -68,6 +68,56 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ══ HOME ══ */
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;padding-top:0}
+
+
+/* ══ TANTE PAULA HOME TEASER ══ */
+.tp-teaser{
+  grid-column:1/-1;
+  position:relative;
+  aspect-ratio:2/1;
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+  background:#050505;
+  transition:transform .13s ease, opacity .13s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.tp-teaser:active{transform:scale(.985);opacity:.92}
+.tp-teaser img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.tp-play-btn{
+  position:absolute;
+  left:42.4%;
+  top:37.2%;
+  width:clamp(46px,7.2vw,88px);
+  height:clamp(46px,7.2vw,88px);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px solid rgba(207,229,245,.45);
+  background:rgba(6,20,32,.58);
+  color:#cfe5f5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 28px rgba(0,0,0,.55);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  pointer-events:none;
+  transition:transform .14s ease, background .18s ease, opacity .18s ease;
+}
+.tp-teaser:hover .tp-play-btn{background:rgba(11,42,66,.72)}
+.tp-play-btn svg{width:42%;height:42%;fill:currentColor;stroke:none;display:block}
+.tp-play-btn .tp-icon-pause{display:none}
+.tp-teaser.playing .tp-play-btn .tp-icon-play{display:none}
+.tp-teaser.playing .tp-play-btn .tp-icon-pause{display:block}
+.tp-teaser.playing .tp-play-btn{opacity:.9;background:rgba(11,42,66,.76)}
+@media(max-width:599px){
+  .tp-play-btn{left:42.5%;top:37.5%;width:52px;height:52px}
+}
 
 .home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
 .home-card:active{transform:scale(.95);opacity:.85}
@@ -1790,6 +1840,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- HOME -->
 <div class="screen active" id="screenHome">
 <div class="home-grid">
+<!-- Neuer Einstiegsteaser: Tante Paula -->
+<div class="tp-teaser" id="tpTeaser" aria-label="Tante Paula von Lara Wolff abspielen oder pausieren">
+<img alt="Tante Paula · Lara Wolff" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover21.jpg"/>
+<div class="tp-play-btn" aria-hidden="true">
+<svg class="tp-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+<svg class="tp-icon-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>
+</div>
+</div>
 <!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
 <div class="home-card square" data-album="top50">
 <img alt="Top 50" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg"/>
@@ -4223,7 +4281,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v96-admin-dot-20260519';
+  const VERSION = 'v98-tante-paula-teaser-20260519';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4240,6 +4298,68 @@ showHome = function(){
     clean.searchParams.delete('v');
     history.replaceState(null,'',clean.toString());
   }
+})();
+
+
+// ══ TANTE PAULA HOME TEASER ══
+(function(){
+  const teaser = document.getElementById('tpTeaser');
+  if(!teaser) return;
+
+  const TANTE_PAULA = {
+    title: 'Tante Paula',
+    artist: 'Lara Wolff',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover21.jpg',
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3'
+  };
+  let tpActive = false;
+
+  function isThisSong(){
+    return audio && audio.src && audio.src === TANTE_PAULA.mp3;
+  }
+  function syncState(){
+    const playing = tpActive && isThisSong() && !audio.paused;
+    teaser.classList.toggle('playing', playing);
+  }
+
+  teaser.addEventListener('click', () => {
+    if(isThisSong()){
+      if(audio.paused){
+        featuredMode = true;
+        playerBar.classList.remove('visible');
+        audio.play().catch(()=>{});
+      } else {
+        audio.pause();
+      }
+      syncState();
+      return;
+    }
+
+    featuredMode = true;
+    tpActive = true;
+    playerBar.classList.remove('visible');
+    audio.src = TANTE_PAULA.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+    syncState();
+  });
+
+  audio.addEventListener('play', () => {
+    if(audio.src !== TANTE_PAULA.mp3){
+      tpActive = false;
+      teaser.classList.remove('playing');
+      return;
+    }
+    tpActive = true;
+    featuredMode = true;
+    playerBar.classList.remove('visible');
+    syncState();
+  });
+  audio.addEventListener('pause', syncState);
+  audio.addEventListener('ended', () => {
+    tpActive = false;
+    teaser.classList.remove('playing');
+  });
 })();
 
 // ══ FEATURED TEASER ROTATION ══
