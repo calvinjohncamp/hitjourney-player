@@ -600,9 +600,9 @@ function getS3Names(){
   const slug  = document.getElementById('addSlug').value.trim() || makeSlug(title);
   return {
     mp3:     `songs/${slug}.mp3`,
-    cover:   `artwork/${title} - Cover.jpg`,
-    cover21: `artwork/${title} - Cover 2 1.jpg`,
-    lyrics:  `artwork/${title} - Lyrics.jpg`,
+    cover:   `artwork/${slug}-cover.jpg`,
+    cover21: `artwork/${slug}-cover-2-1.jpg`,
+    lyrics:  `artwork/${slug}-lyrics.jpg`,
   };
 }
 function updateHints(){
