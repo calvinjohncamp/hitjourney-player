@@ -199,13 +199,11 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .td-num input{width:36px;background:rgba(133,172,201,.1);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#cfe5f5;font-size:12px;font-weight:700;text-align:center;padding:3px 2px;outline:none}
 .td-num input:focus{border-color:#85ACC9;background:rgba(133,172,201,.18)}
 /* Drag & Drop sortable rows */
-.album-songs-table tbody tr[draggable]{cursor:grab}
+.album-songs-table tbody tr[draggable]{cursor:grab;user-select:none}
 .album-songs-table tbody tr[draggable]:active{cursor:grabbing}
 .album-songs-table tbody tr.drag-over td{background:rgba(133,172,201,.12)!important;border-top:2px solid #85ACC9}
 .album-songs-table tbody tr.dragging{opacity:.35}
-.drag-handle{display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.3);cursor:grab;padding:0 4px;user-select:none;font-size:14px}
-.drag-handle:hover{color:rgba(133,172,201,.7)}
-.btn-sort-save{display:none;margin:8px 14px 4px;padding:8px 16px;background:#2a8a5a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-sort-save{display:none;position:sticky;bottom:0;z-index:10;width:calc(100% - 28px);margin:8px 14px 4px;padding:9px 16px;background:#2a8a5a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
 .btn-sort-save.visible{display:block}
 .btn-sort-save:hover{background:#237a4e}
 /* All-songs picker inside album (for adding tracks) */
@@ -1052,7 +1050,6 @@ function renderAlbumSongs(al, q=''){
   if(!filtered.length) return `<div style="padding:12px 14px;font-size:13px;color:rgba(133,172,201,.35)">Keine Songs.</div>`;
   return `<table class="album-songs-table" id="dragtable-${al.slug}">
     <thead><tr>
-      <th style="width:24px"></th>
       <th style="width:32px">#</th>
       <th style="width:36px"></th>
       <th>Titel</th>
@@ -1067,7 +1064,6 @@ function renderAlbumSongs(al, q=''){
         ? `<img src="${s.cover_url}" loading="lazy" style="width:28px;height:28px;border-radius:4px;object-fit:cover;display:block" onerror="this.style.display='none'">`
         : `<div style="width:28px;height:28px;border-radius:4px;background:rgba(133,172,201,.08);display:flex;align-items:center;justify-content:center;font-size:12px">♪</div>`;
       return `<tr draggable="true" data-slug="${t.song_slug}" data-album="${al.slug}">
-        <td class="drag-handle" title="Ziehen zum Sortieren">⠿</td>
         <td class="td-num">${t.position}</td>
         <td class="td-cover">${coverHtml}</td>
         <td class="td-title">
@@ -1228,6 +1224,11 @@ function initDragSort(albumSlug){
       if(srcIdx < tgtIdx) row.after(dragSrc);
       else row.before(dragSrc);
       row.classList.remove('drag-over');
+      // Renumber all positions live
+      tbody.querySelectorAll('tr[data-slug]').forEach((r,i)=>{
+        const numCell = r.querySelector('.td-num');
+        if(numCell) numCell.textContent = i+1;
+      });
       // Show save button
       const btn = document.getElementById('savesort-'+albumSlug);
       if(btn) btn.classList.add('visible');
