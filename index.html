@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v102-tante-paula-top-gap-match-20260519 -->
+<!-- Version: v117-home-about-isolation-fix-20260519 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -70,8 +70,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;padding-top:0}
 
 
-/* ══ TANTE PAULA HOME TEASER ══ */
-.tp-teaser{
+/* ══ FULL-WIDTH HOME AUDIO TEASER ══ */
+.tp-teaser,
+.wide-audio-teaser{
   grid-column:1/-1;
   position:relative;
   aspect-ratio:2/1;
@@ -82,13 +83,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   transition:transform .13s ease, opacity .13s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.tp-teaser:active{transform:scale(.985);opacity:.92}
-.tp-teaser img{
+.tp-teaser:active,
+.wide-audio-teaser:active{transform:scale(.985);opacity:.92}
+.tp-teaser img,
+.wide-audio-teaser img{
   width:100%;
   height:100%;
   display:block;
   object-fit:cover;
 }
+/* finaler Home-Teaser unten */
+.wide-audio-teaser.home-final-teaser{margin-top:0}
 .tp-play-btn{
   position:absolute;
   left:42.4%;
@@ -144,6 +149,52 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio .trio-bd{grid-area:bd}
 .home-trio .trio-bd img{aspect-ratio:2/1}
 .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
+
+
+/* ══ HOME FOOTER INFO BUTTON ══ */
+.home-info-footer{
+  width:100%;
+  /* v108: Footer-Block unter dem letzten Home-Motiv ca. 40% höher;
+     i-Button bleibt durch identisches Top-/Bottom-Padding exakt mittig. */
+  padding:34px 18px calc(env(safe-area-inset-bottom,0px) + 34px);
+  border-top:0;
+  background:rgba(6,20,32,1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.home-info-btn{
+  width:43px;
+  height:43px;
+  border-radius:50%;
+  border:1px solid rgba(133,172,201,.35);
+  background:#0B2A42;
+  color:#85ACC9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.34);
+  cursor:pointer;
+  transition:background .15s,color .15s,transform .1s;
+  padding:0;
+  overflow:hidden;
+}
+
+.home-info-i{
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  font-size:22px;
+  line-height:1;
+  font-weight:800;
+  color:#85ACC9;
+  transform:translateY(-1px);
+  pointer-events:none;
+}
+.home-info-btn:active{transform:scale(.9)}
+.home-info-btn:hover{background:#123048;color:#cfe5f5}
+@media(min-width:900px){
+  .home-info-footer{padding-left:32px;padding-right:32px}
+}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
@@ -1815,6 +1866,161 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
+
+/* ══ ABOUT / CONTACT SCREEN ══ */
+#screenAbout{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:none;
+  min-height:0;
+  background:#06141F;
+}
+#screenAbout.active{display:block;}
+#screenAbout::-webkit-scrollbar{display:none}
+.about-wrap{
+  max-width:720px;
+  margin:0 auto;
+  padding:44px 28px 0;
+  color:#f1ecdf;
+}
+.about-title{
+  font-family:'Anton',sans-serif;
+  font-size:clamp(28px,6vw,56px);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  line-height:1;
+  margin-bottom:0;
+  color:#cfe5f5;
+}
+.about-domain{
+  font-size:15px;
+  font-weight:600;
+  color:#5884A4;
+  margin-top:0;
+  margin-bottom:16px;
+  padding-top:16px;
+  letter-spacing:.06em;
+}
+.about-label{
+  font-size:11px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:#5884A4;
+  margin-bottom:12px;
+  font-weight:700;
+}
+.about-text{
+  font-size:15px;
+  line-height:1.85;
+  color:rgba(207,229,245,.75);
+}
+.about-text strong{color:#cfe5f5;font-weight:700;}
+.about-contact{
+  margin-top:18px;
+  line-height:2;
+  font-size:14px;
+  color:rgba(133,172,201,.6);
+}
+.about-contact a{color:#85ACC9;text-decoration:none;}
+.about-divider{height:1px;background:rgba(133,172,201,.1);margin:28px 0;}
+
+
+/* ── About-page Teaser-Banner ── */
+.about-teaser{
+  width:100%;
+  position:relative;
+  aspect-ratio:2/1;
+  overflow:hidden;
+  margin-top:52px;
+  background:#050505;
+  cursor:pointer;
+  transition:opacity .14s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.about-teaser:active{opacity:.9}
+.about-teaser img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+/* Dice shuffle button overlay — replacing the play icon */
+.about-teaser-btn{
+  position:absolute;
+  right:3.5%;
+  bottom:7%;
+  width:clamp(44px,6.5vw,72px);
+  height:clamp(44px,6.5vw,72px);
+  border-radius:50%;
+  border:1.5px solid rgba(207,229,245,.5);
+  background:rgba(6,20,32,.62);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  pointer-events:none;
+}
+.about-teaser-btn svg{
+  width:46%;
+  height:46%;
+  fill:#cfe5f5;
+  stroke:none;
+  display:block;
+}
+.about-final-art{
+  width:100%;
+  margin-top:28px;
+  border-radius:8px;
+  overflow:hidden;
+  background:#0B2A42;
+  cursor:pointer;
+  transition:opacity .14s ease, transform .14s ease;
+}
+.about-final-art:active{opacity:.9;transform:scale(.995)}
+.about-final-art img{
+  width:100%;
+  aspect-ratio:2/1;
+  object-fit:cover;
+  display:block;
+}
+.about-art-lightbox{
+  position:fixed;
+  inset:0;
+  z-index:9500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  background:rgba(6,20,32,.97);
+  cursor:pointer;
+}
+.about-art-lightbox.open{display:flex;}
+.about-art-lightbox img{
+  width:100vw;
+  height:100vh;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+}
+/* Bottom pad after teaser */
+.about-bottom-pad{
+  height:calc(env(safe-area-inset-bottom,0px) + 100px);
+  background:#06141F;
+}
+
+@media(max-width:599px){
+  .about-wrap{padding:36px 20px 0;}
+  .about-title{font-size:30px;}
+  .about-text{font-size:14px;line-height:1.82;}
+  .about-poem{font-size:13px;}
+}
+@media(min-width:900px){
+  .about-wrap{padding-left:32px;padding-right:32px;}
+}
+
 </style>
 </head>
 <body>
@@ -1943,8 +2149,59 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
-<div class="home-bottom-pad"></div>
+<!-- Finaler Home-Teaser: This World Is Wide -->
+<div class="home-grid home-final-grid">
+<div class="wide-audio-teaser home-final-teaser" id="twiwTeaser" aria-label="This World Is Wide abspielen oder pausieren">
+<img alt="This World Is Wide" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover%202%201.jpg"/>
 </div>
+</div>
+<footer class="home-info-footer" aria-label="Information">
+<button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information"><span class="home-info-i" aria-hidden="true">i</span></button>
+</footer>
+</div>
+
+<!-- ABOUT / CONTACT -->
+<div class="screen" id="screenAbout">
+  <div class="about-wrap">
+
+    <div class="about-title">About</div>
+    <div class="about-domain">hitjourney.com</div>
+
+    <div class="about-text">
+      hitjourney is an independent music, lyrics and design project by<br><br>
+      <strong>jörn kämper</strong><br><br>
+      All songs, lyrics, visuals, cover artworks, lyric sheets, playlists, interface concepts and app designs shown on this website are original creations and protected by copyright. Responsible for concept, songwriting, music production, artwork, app design and creative direction:<br><br>
+      jörn kämper<br>
+      tulpenweg 11<br>
+      51674 wiehl<br>
+      germany
+      <div class="about-contact">
+        ✉ <a href="mailto:calvinjohncamp@aol.com">calvinjohncamp@aol.com</a><br>
+        ✆ +49 160 94600284
+      </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+
+    <div class="about-label">copyright</div>
+    <div class="about-text">
+      All content on this website — including music, lyrics, artwork, graphics, animations and app elements — may not be copied, reproduced or redistributed without permission.<br><br>
+      © jörn kämper — all rights reserved
+      <div class="about-final-art" id="aboutFinalArt" role="button" aria-label="Artwork groß anzeigen" tabindex="0">
+        <img id="aboutFinalArtImg" alt="hitjourney shaped by human choice powered by AI" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
+      </div>
+    </div>
+
+  </div>
+  <div class="about-bottom-pad"></div>
+
+</div>
+
+<div class="about-art-lightbox" id="aboutArtLightbox" aria-hidden="true">
+  <img alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
+</div>
+
 <!-- KURS NORDWEST -->
 <div id="screenKursNordwest">
 <div class="knw-container">
@@ -2934,6 +3191,10 @@ const screenTL   = document.getElementById('screenTracklist');
 const screenNP   = document.getElementById('screenNowPlaying');
 const screenKnw  = document.getElementById('screenKursNordwest');
 const screenSwf  = document.getElementById('screenSongwritersFavorites');
+const screenAbout = document.getElementById('screenAbout');
+const aboutFinalArt = document.getElementById('aboutFinalArt');
+const aboutArtLightbox = document.getElementById('aboutArtLightbox');
+const homeInfoBtn = document.getElementById('homeInfoBtn');
 
 // ── State ──
 let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
@@ -3321,6 +3582,7 @@ function showKursNordwest(){
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
   if(screenSwf) screenSwf.style.display='none';
   screenKnw.style.display = 'block';
   backBtn.classList.add('visible');
@@ -3341,6 +3603,7 @@ function showSongwritersFavorites(){
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
   screenSwf.style.display = 'block';
   backBtn.classList.add('visible');
@@ -3353,6 +3616,26 @@ function showSongwritersFavorites(){
 }
 
 // ── Navigation ──
+
+function showAbout(){
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
+  screenHome.classList.remove('active');
+  screenTL.classList.remove('active');
+  screenArchive.classList.remove('active');
+  screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
+  if(screenKnw) screenKnw.style.display='none';
+  if(screenSwf) screenSwf.style.display='none';
+  if(screenAbout) screenAbout.classList.add('active');
+  backBtn.classList.add('visible');
+  logoHome.style.display='none';
+  makingWaves.style.display='none';
+  headerRight.textContent='CONTACT / ABOUT';
+  mainHeader.style.display='';
+  if(screenAbout) screenAbout.scrollTop=0;
+  prevScreen='about';
+}
 function showHome(){
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
@@ -3360,6 +3643,9 @@ function showHome(){
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
+  if(aboutArtLightbox) aboutArtLightbox.classList.remove('open');
+  if(aboutArtLightbox) aboutArtLightbox.setAttribute('aria-hidden','true');
   if(screenKnw) screenKnw.style.display='none';
   if(screenSwf) screenSwf.style.display='none';
   backBtn.classList.remove('visible');
@@ -3390,6 +3676,7 @@ function showAlbum(key){
   screenHome.classList.remove('active');
   screenNP.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
   screenTL.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
@@ -3433,12 +3720,39 @@ function hideNowPlaying(){
 // ── Click handlers ──
 document.querySelectorAll('[data-album]').forEach(el=>el.addEventListener('click',()=>showAlbum(el.dataset.album)));
 backBtn.addEventListener('click',()=>{
-  if(screenNP.classList.contains('active')) hideNowPlaying();
+  if(screenAbout && screenAbout.classList.contains('active')) showHome();
+  else if(screenNP.classList.contains('active')) hideNowPlaying();
   else if(screenKnw && screenKnw.style.display==='block') hideKursNordwest();
   else if(screenSwf && screenSwf.style.display==='block') showHome();
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
+if(homeInfoBtn) homeInfoBtn.addEventListener('click',showAbout);
+{
+  const aboutArtTrigger = document.getElementById('aboutFinalArt');
+  const aboutArtOverlay = document.getElementById('aboutArtLightbox');
+  if(aboutArtTrigger && aboutArtOverlay){
+    const openAboutArt = (e)=>{
+      if(e) e.preventDefault();
+      aboutArtOverlay.classList.add('open');
+      aboutArtOverlay.setAttribute('aria-hidden','false');
+    };
+    const closeAboutArt = ()=>{
+      aboutArtOverlay.classList.remove('open');
+      aboutArtOverlay.setAttribute('aria-hidden','true');
+    };
+    aboutArtTrigger.addEventListener('click', openAboutArt);
+    aboutArtTrigger.addEventListener('touchend', openAboutArt, {passive:false});
+    aboutArtTrigger.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' || e.key===' '){ openAboutArt(e); }
+    });
+    aboutArtOverlay.addEventListener('click', closeAboutArt);
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape' && aboutArtOverlay.classList.contains('open')) closeAboutArt();
+    });
+  }
+}
+
 // nowStrip tap → showNowPlaying handled in swipe block below
 npDownBtn.addEventListener('click', hideNowPlaying);
 
@@ -4100,6 +4414,7 @@ function showArchive(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
   screenArchive.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
@@ -4278,7 +4593,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v102-tante-paula-top-gap-match-20260519';
+  const VERSION = 'v103-this-world-bottom-teaser-20260519';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4364,6 +4679,75 @@ showHome = function(){
   audio.addEventListener('pause', syncState);
   audio.addEventListener('ended', () => {
     tpActive = false;
+    teaser.classList.remove('playing');
+  });
+})();
+
+// ══ THIS WORLD IS WIDE HOME FINAL TEASER ══
+(function(){
+  const teaser = document.getElementById('twiwTeaser');
+  if(!teaser) return;
+
+  const THIS_WORLD_IS_WIDE = {
+    title: 'This World Is Wide',
+    artist: 'Jörn Kämper',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover%202%201.jpg',
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/this-world-is-wide.mp3'
+  };
+  let twiwActive = false;
+
+  function isThisSong(){
+    return audio && audio.src && audio.src === THIS_WORLD_IS_WIDE.mp3;
+  }
+  function syncState(){
+    const playing = twiwActive && isThisSong() && !audio.paused;
+    teaser.classList.toggle('playing', playing);
+  }
+
+  teaser.addEventListener('click', () => {
+    if(isThisSong()){
+      if(audio.paused){
+        featuredMode = true;
+        playerBar.classList.remove('visible');
+        audio.play().catch(()=>{});
+      } else {
+        audio.pause();
+      }
+      syncState();
+      return;
+    }
+
+    featuredMode = true;
+    twiwActive = true;
+    playerBar.classList.remove('visible');
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'this-world-is-wide' } }));
+    audio.src = THIS_WORLD_IS_WIDE.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+    syncState();
+  });
+
+  window.addEventListener('hj:teaser-audio-switch', (e) => {
+    if(e.detail && e.detail.source !== 'this-world-is-wide'){
+      twiwActive = false;
+      teaser.classList.remove('playing');
+    }
+  });
+
+  audio.addEventListener('play', () => {
+    if(audio.src !== THIS_WORLD_IS_WIDE.mp3){
+      twiwActive = false;
+      teaser.classList.remove('playing');
+      return;
+    }
+    twiwActive = true;
+    featuredMode = true;
+    playerBar.classList.remove('visible');
+    syncState();
+  });
+  audio.addEventListener('pause', syncState);
+  audio.addEventListener('ended', () => {
+    twiwActive = false;
     teaser.classList.remove('playing');
   });
 })();
