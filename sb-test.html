@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<title>Supabase Test</title>
+<style>
+body{font-family:monospace;background:#06141F;color:#cfe5f5;padding:40px;max-width:600px}
+button{background:#85ACC9;color:#06141F;border:none;padding:14px 24px;font-size:15px;font-weight:700;border-radius:8px;cursor:pointer;margin:10px 0}
+#result{margin-top:20px;padding:16px;border-radius:8px;white-space:pre-wrap;font-size:13px;line-height:1.6}
+.ok{background:rgba(50,180,100,.15);color:#6fda9a}
+.err{background:rgba(200,60,60,.15);color:#f08080}
+</style>
+</head>
+<body>
+<h2>Supabase Insert Test</h2>
+<p>Schreibt einen Test-Song direkt in die DB — ohne S3-Upload.</p>
+<button onclick="runTest()">Test starten</button>
+<div id="result"></div>
+
+<script>
+const SB_URL = 'https://hioaqcwqzeqcvvikollq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhpb2FxY3dxemVxY3Z2aWtvbGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ3MTgsImV4cCI6MjA4NzkzMDcxOH0.IvZ7YZwrhjNg8SwwO9rnXoiDwOVncY8iVcucmipmuFI';
+
+async function runTest(){
+  const el = document.getElementById('result');
+  el.className = '';
+  el.textContent = 'Läuft …';
+
+  const testSlug = 'zzz-test-'+Date.now();
+  const body = {
+    slug: testSlug,
+    title: 'ZZZ Test Song',
+    artist: 'Test Artist',
+    language: 'english'
+  };
+
+  el.textContent = 'Sende:\n'+JSON.stringify(body, null, 2);
+
+  try{
+    const r = await fetch(SB_URL+'/rest/v1/songs?apikey='+SB_KEY, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer '+SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const text = await r.text();
+    if(r.ok){
+      el.className = 'ok';
+      el.textContent = '✓ INSERT erfolgreich! HTTP '+r.status+'\n\n'+text;
+      // Direkt wieder löschen
+      await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+testSlug+'&apikey='+SB_KEY, {
+        method: 'DELETE',
+        headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+      });
+      el.textContent += '\n\n✓ Test-Song wieder gelöscht.';
+    } else {
+      el.className = 'err';
+      el.textContent = '✗ FEHLER HTTP '+r.status+':\n\n'+text;
+    }
+  } catch(e){
+    el.className = 'err';
+    el.textContent = '✗ Netzwerkfehler:\n'+e.message;
+  }
+}
+</script>
+</body>
+</html>
