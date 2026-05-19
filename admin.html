@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260519-artist-dropdown-fix -->
+<!-- Version: admin-v20260519-apostrophe-edit-fix-v2 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -996,7 +996,7 @@ function renderTable(){
       </td>
       <td>
         <div class="td-actions">
-          <button class="btn-icon btn-edit" onclick='openEdit(${JSON.stringify(JSON.stringify(s))})' title="Bearbeiten">
+          <button class="btn-icon btn-edit" data-song-b64="${toB64(JSON.stringify(s))}" onclick="openEditFromBtn(this)" title="Bearbeiten">
             <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
           <button class="btn-icon btn-del" onclick='askDelete("${esc(s.slug)}","${esc(s.title)}")' title="Löschen">
@@ -1009,6 +1009,25 @@ function renderTable(){
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toB64(str){
+  return btoa(unescape(encodeURIComponent(String(str))));
+}
+function fromB64(b64){
+  return decodeURIComponent(escape(atob(String(b64 || ''))));
+}
+function openEditFromBtn(btn){
+  try{
+    const songJson = fromB64(btn.dataset.songB64);
+    const ctxJson = btn.dataset.contextB64 ? fromB64(btn.dataset.contextB64) : '';
+    const ctx = ctxJson ? JSON.parse(ctxJson) : undefined;
+    openEdit(songJson, ctx);
+  }catch(e){
+    console.error('Edit parse error', e, btn && btn.dataset);
+    toast('Song konnte nicht geöffnet werden','err');
+  }
+}
+
 
 /* ── DELETE ── */
 function askDelete(slug, title){
@@ -1502,7 +1521,7 @@ function renderAlbumSongs(al, q=''){
         </td>
         <td>
           <div class="td-actions">
-            <button class="btn-icon btn-edit" onclick='openEdit(${JSON.stringify(JSON.stringify(s))},{type:"album",slug:"${al.slug}"})' title="Bearbeiten">
+            <button class="btn-icon btn-edit" data-song-b64="${toB64(JSON.stringify(s))}" data-context-b64="${toB64(JSON.stringify({type:'album',slug:al.slug}))}" onclick="openEditFromBtn(this)" title="Bearbeiten">
               <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             <button class="btn-icon btn-del" onclick="removeFromAlbum('${al.slug}','${t.song_slug}')" title="Aus Album entfernen">
