@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v98-tante-paula-teaser-20260519 -->
+<!-- Version: v102-tante-paula-top-gap-match-20260519 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -32,7 +32,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Screens ── */
 .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
-#screenHome{padding-top:14px}
+#screenHome{padding-top:10px}
 #screenTracklist{padding-top:8px}
 /* Flex restoration and layout stability */
 .screen.active {
@@ -1711,10 +1711,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .hj-logo-hit,.hj-logo-journey{font-size:28px}
 
   /* Home grid: 4 columns */
+  #screenHome{padding-top:12px}
   .home-grid{
     grid-template-columns:repeat(4,1fr);
     gap:12px;
-    padding:18px 28px 0;
+    padding:0 28px 0;
     max-width:1400px;
     margin:0 auto;
   }
@@ -1842,11 +1843,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div class="home-grid">
 <!-- Neuer Einstiegsteaser: Tante Paula -->
 <div class="tp-teaser" id="tpTeaser" aria-label="Tante Paula von Lara Wolff abspielen oder pausieren">
-<img alt="Tante Paula · Lara Wolff" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover21.jpg"/>
-<div class="tp-play-btn" aria-hidden="true">
-<svg class="tp-icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-<svg class="tp-icon-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>
-</div>
+<img alt="Tante Paula · Lara Wolff" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg"/>
 </div>
 <!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
 <div class="home-card square" data-album="top50">
@@ -4281,7 +4278,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v98-tante-paula-teaser-20260519';
+  const VERSION = 'v102-tante-paula-top-gap-match-20260519';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4309,7 +4306,7 @@ showHome = function(){
   const TANTE_PAULA = {
     title: 'Tante Paula',
     artist: 'Lara Wolff',
-    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover21.jpg',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg',
     mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3'
   };
   let tpActive = false;
@@ -4338,10 +4335,19 @@ showHome = function(){
     featuredMode = true;
     tpActive = true;
     playerBar.classList.remove('visible');
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'tante-paula' } }));
     audio.src = TANTE_PAULA.mp3;
     audio.load();
     audio.play().catch(()=>{});
     syncState();
+  });
+
+
+  window.addEventListener('hj:teaser-audio-switch', (e) => {
+    if(e.detail && e.detail.source !== 'tante-paula'){
+      tpActive = false;
+      teaser.classList.remove('playing');
+    }
   });
 
   audio.addEventListener('play', () => {
@@ -4460,12 +4466,20 @@ showHome = function(){
     }
 
     // Neuer Song → Featured-Modus, kein Strip, kein PlayerBar
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'spotlight' } }));
     featuredMode = true;
     featuredCurrentMp3 = song.mp3;
     playerBar.classList.remove('visible'); // sicherheitshalber verstecken
     audio.src = song.mp3;
     audio.load();
     audio.play().catch(()=>{});
+  });
+
+
+  window.addEventListener('hj:teaser-audio-switch', (e) => {
+    if(e.detail && e.detail.source !== 'spotlight'){
+      featuredCurrentMp3 = null;
+    }
   });
 
   // Wenn normaler Player woanders übernimmt → Featured-Modus beenden
