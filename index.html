@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v95-admin-dblclick-20260518 -->
+<!-- Version: v96-admin-dot-20260519 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1012,9 +1012,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Divider */
 .knw-divider{
-  height:1px;
-  background:rgba(133,172,201,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   margin:8px 0 32px;
+  height:24px;
+  cursor:default;
+  user-select:none;
+}
+.knw-divider::before{
+  content:'';
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(133,172,201,.22);
+  transition:background .3s;
+}
+.knw-divider:hover::before{
+  background:rgba(133,172,201,.38);
 }
 
 /* Bottom pad */
@@ -4190,7 +4205,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v95-admin-dblclick-20260518';
+  const VERSION = 'v96-admin-dot-20260519';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -4603,8 +4618,8 @@ playerBar.classList.add = function(...args){
     document.getElementById('admMainS').style.display='none';
   }
 
-  // Doppelklick auf "making waves"
-  document.getElementById('makingWaves').addEventListener('dblclick', openAdmin);
+  // Doppelklick auf Trennpunkt zwischen den Kurs-Nordwest-Songs
+  document.querySelector('.knw-divider').addEventListener('dblclick', openAdmin);
 
   document.getElementById('admPwBtn').addEventListener('click',()=>{
     if(document.getElementById('admPwI').value===ADMIN_PW){
