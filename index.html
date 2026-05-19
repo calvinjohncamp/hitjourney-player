@@ -900,7 +900,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Song-Block: Cover + Play + Lyric-Sheet */
 .knw-song{
-  margin-bottom:28px;
+  margin-bottom:8px;
 }
 .knw-song-title{
   font-size:13px;
@@ -1015,8 +1015,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   align-items:center;
   justify-content:center;
-  margin:20px 0;
   height:28px;
+  margin:0;
   cursor:default;
   user-select:none;
 }
@@ -1031,15 +1031,18 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .knw-divider:hover::before{
   background:rgba(133,172,201,.5);
 }
-/* Mittlerer Divider: sitzt auf Höhe "BRO · Jörn Kämper" des oberen Songs */
-.knw-divider--mid{
-  margin-top:-118px;
-  margin-bottom:94px;
+/* Oberer Punkt: Abstand zum Lyric-Sheet darunter */
+#knwEasterEgg{
+  margin-bottom:20px;
 }
-/* Unterer Divider: ähnlicher Abstand vom Play-Button wie oben */
+/* Mittlerer Punkt: enger an die Play-Zeile oben, Abstand zum nächsten Lyric-Sheet */
+.knw-divider--mid{
+  margin-top:-4px;
+  margin-bottom:20px;
+}
+/* Unterer Punkt: enger an die Play-Zeile oben */
 .knw-divider--bottom{
-  margin-top:-90px;
-  margin-bottom:0;
+  margin-top:-4px;
 }
 
 /* Bottom pad */
