@@ -555,8 +555,9 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const S3 = 'https://hitjourney.s3.eu-west-1.amazonaws.com';
 
 
-function hdrs(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation','x-client-info':'hitjourney-admin'}; }
-function hdrsMin(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal','x-client-info':'hitjourney-admin'}; }
+function hdrs(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'}; }
+function sbUrl(path){ return SB_URL+path+(path.includes('?')?'&':'?')+'apikey='+SB_KEY; }
+function hdrsMin(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}; }
 
 /* ── STATE ── */
 let allSongs = [];
@@ -702,7 +703,7 @@ async function uploadToS3(file, s3Key, progressElId){
 /* ── LOAD SONGS ── */
 async function loadSongs(){
   try{
-    const r = await fetch(SB_URL+'/rest/v1/songs?select=*&order=title.asc&limit=2000',{headers:hdrs()});
+    const r = await fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'),{headers:hdrs()});
     allSongs = await r.json();
     populateArtistList();
     renderTable();
@@ -819,8 +820,8 @@ async function confirmDeleteSong(){
   const slug = deleteTarget;
   closeConfirm();
   try{
-    await fetch(SB_URL+'/rest/v1/playlist_tracks?song_slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
-    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
+    await fetch(SB_URL+'/rest/v1/playlist_tracks?song_slug=eq.'+slug+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrs()});
+    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrs()});
     if(!r.ok) throw new Error(await r.text());
     allSongs = allSongs.filter(s=>s.slug!==slug);
     renderTable();
@@ -865,7 +866,7 @@ async function saveEdit(){
   };
   const msgEl = document.getElementById('editMsg');
   try{
-    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+editTarget.slug,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
+    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+editTarget.slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
     const updated = await r.json();
     const s = updated[0]||{...editTarget,...body};
@@ -921,7 +922,7 @@ async function saveSong(){
   try{
     const body={slug,title,artist:artist||null,language:lang,...urls};
     console.log('Saving to DB:', body);
-    const r=await fetch(SB_URL+'/rest/v1/songs',{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    const r=await fetch(sbUrl('/rest/v1/songs'),{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
     console.log('DB response status:', r.status);
     if(!r.ok){
       const errText=await r.text();
@@ -929,13 +930,13 @@ async function saveSong(){
       throw new Error(errText);
     }
     if(pl){
-      const pr=await fetch(SB_URL+'/rest/v1/playlist_tracks?select=position&playlist_slug=eq.'+pl+'&order=position.desc&limit=1',{headers:hdrs()});
+      const pr=await fetch(SB_URL+'/rest/v1/playlist_tracks?select=position&playlist_slug=eq.'+pl+'&apikey='+SB_KEY+'&order=position.desc&limit=1',{headers:hdrs()});
       const pd=await pr.json();
       const pos=pd.length?pd[0].position+1:1;
-      await fetch(SB_URL+'/rest/v1/playlist_tracks',{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:pl,song_slug:slug,position:pos})});
+      await fetch(sbUrl('/rest/v1/playlist_tracks'),{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:pl,song_slug:slug,position:pos})});
     }
     // Frisch aus DB holen statt auf return=representation zu vertrauen
-    const fetchedR=await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug,{headers:hdrs()});
+    const fetchedR=await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{headers:hdrs()});
     const fetched=await fetchedR.json();
     if(fetched&&fetched[0]){allSongs=allSongs.filter(s=>s.slug!==slug);allSongs.push(fetched[0]);}
     renderTable(); populateArtistList();
@@ -967,8 +968,8 @@ async function loadPlaylists(){
   try{
     // Load all playlists + track counts in parallel
     const [plR, trR] = await Promise.all([
-      fetch(SB_URL+'/rest/v1/playlists?select=*&order=title.asc', {headers:hdrs()}),
-      fetch(SB_URL+'/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', {headers:hdrs()}),
+      fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'), {headers:hdrs()}),
+      fetch(sbUrl('/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position'), {headers:hdrs()}),
     ]);
     const playlists = await plR.json();
     const tracks    = await trR.json();
@@ -1144,7 +1145,7 @@ async function addToAlbum(albumSlug, songSlug){
   const maxPos = al.tracks.length ? Math.max(...al.tracks.map(t=>t.position)) : 0;
   const pos = maxPos + 1;
   try{
-    const r = await fetch(SB_URL+'/rest/v1/playlist_tracks',{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:albumSlug,song_slug:songSlug,position:pos})});
+    const r = await fetch(sbUrl('/rest/v1/playlist_tracks'),{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:albumSlug,song_slug:songSlug,position:pos})});
     if(!r.ok) throw new Error(await r.text());
     al.tracks.push({song_slug:songSlug,playlist_slug:albumSlug,position:pos});
     document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
@@ -1160,7 +1161,7 @@ async function removeFromAlbum(albumSlug, songSlug){
   const al = albumsData.find(a=>a.slug===albumSlug);
   if(!al) return;
   try{
-    const r = await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&song_slug=eq.'+songSlug,{method:'DELETE',headers:hdrs()});
+    const r = await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+songSlug,{method:'DELETE',headers:hdrs()});
     if(!r.ok) throw new Error(await r.text());
     al.tracks = al.tracks.filter(t=>t.song_slug!==songSlug);
     document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
@@ -1175,7 +1176,7 @@ async function updateTrackPos(albumSlug, songSlug, newPos){
   const pos = parseInt(newPos,10);
   if(!pos||pos<1) return;
   try{
-    await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&song_slug=eq.'+songSlug,
+    await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+songSlug,
       {method:'PATCH',headers:hdrs(),body:JSON.stringify({position:pos})});
     const al = albumsData.find(a=>a.slug===albumSlug);
     if(al){ const t=al.tracks.find(t=>t.song_slug===songSlug); if(t) t.position=pos; }
@@ -1228,7 +1229,7 @@ async function saveNewAlbum(){
 
   try{
     const body={slug,title:name,cover_url:coverUrl};
-    const r=await fetch(SB_URL+'/rest/v1/playlists',{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    const r=await fetch(sbUrl('/rest/v1/playlists'),{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
     const saved=await r.json();
     const newAl = {...(saved[0]||{slug,title:name,cover_url:coverUrl}), tracks:[]};
@@ -1257,8 +1258,8 @@ async function confirmDelete(){
     const slug = deleteTarget.replace('__album__','');
     closeConfirm();
     try{
-      await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
-      const r=await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
+      await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+slug+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrs()});
+      const r=await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrs()});
       if(!r.ok) throw new Error(await r.text());
       albumsData = albumsData.filter(a=>a.slug!==slug);
       renderAlbums();
