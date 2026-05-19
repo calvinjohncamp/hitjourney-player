@@ -1066,12 +1066,29 @@ function getFilteredSongs(){
   return list;
 }
 
-function openEdit(jsonStr){
+// context = {type:'songs'} | {type:'album', slug:'kurs-nordwest'}
+function openEdit(jsonStr, context){
   const s = JSON.parse(jsonStr);
-  editSongList = getFilteredSongs();
-  editSongIdx  = editSongList.findIndex(x=>x.slug===s.slug);
+  const ctx = context || {type:'songs'};
+
+  if(ctx.type === 'album'){
+    // Build list from album tracks in album position order
+    const al = albumsData.find(a=>a.slug===ctx.slug);
+    if(al && al.tracks.length){
+      const sorted = al.tracks.slice().sort((a,b)=>a.position-b.position);
+      editSongList = sorted.map(t=>allSongs.find(x=>x.slug===t.song_slug)).filter(Boolean);
+    } else {
+      editSongList = [s];
+    }
+  } else {
+    // Default: filtered + sorted songs list from Songs tab
+    editSongList = getFilteredSongs();
+  }
+
+  editSongIdx = editSongList.findIndex(x=>x.slug===s.slug);
   if(editSongIdx < 0){ editSongList=[s]; editSongIdx=0; }
 
+  // Ensure albumsData is loaded (needed for playlist checkboxes)
   if(!albumsData.length) loadPlaylists().then(()=>_fillEditForm(s));
   else _fillEditForm(s);
 
@@ -1377,7 +1394,7 @@ function renderAlbumSongs(al, q=''){
         </td>
         <td>
           <div class="td-actions">
-            <button class="btn-icon btn-edit" onclick='openEdit(${JSON.stringify(JSON.stringify(s))})' title="Bearbeiten">
+            <button class="btn-icon btn-edit" onclick='openEdit(${JSON.stringify(JSON.stringify(s))},{type:"album",slug:"${al.slug}"})' title="Bearbeiten">
               <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             <button class="btn-icon btn-del" onclick="removeFromAlbum('${al.slug}','${t.song_slug}')" title="Aus Album entfernen">

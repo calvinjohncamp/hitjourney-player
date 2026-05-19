@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v96-admin-dot-20260519 -->
+<!-- Version: v97-three-dots-20260519 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1010,26 +1010,36 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   padding:7px 0 0;
 }
 
-/* Divider */
+/* Divider — drei gleichmäßige Punkte, davon einer das Easter Egg */
 .knw-divider{
   display:flex;
   align-items:center;
   justify-content:center;
-  margin:16px 0 16px;
-  height:24px;
+  margin:20px 0;
+  height:28px;
   cursor:default;
   user-select:none;
 }
 .knw-divider::before{
   content:'';
-  width:20px;
-  height:20px;
+  width:12px;
+  height:12px;
   border-radius:50%;
-  background:rgba(133,172,201,.22);
+  background:rgba(133,172,201,.28);
   transition:background .3s;
 }
 .knw-divider:hover::before{
-  background:rgba(133,172,201,.38);
+  background:rgba(133,172,201,.5);
+}
+/* Mittlerer Divider: sitzt auf Höhe "BRO · Jörn Kämper" des oberen Songs */
+.knw-divider--mid{
+  margin-top:-118px;
+  margin-bottom:94px;
+}
+/* Unterer Divider: ähnlicher Abstand vom Play-Button wie oben */
+.knw-divider--bottom{
+  margin-top:-90px;
+  margin-bottom:0;
 }
 
 /* Bottom pad */
@@ -1880,7 +1890,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <!-- KURS NORDWEST -->
 <div id="screenKursNordwest">
 <div class="knw-container">
-<!-- Song 1: Mary-Anne -->
+<!-- Punkt oben — Easter Egg (doppelklick/doppeltap öffnet Admin) -->
+<div class="knw-divider" id="knwEasterEgg"></div>
 <!-- Song 1: Mary-Anne -->
 <div class="knw-song" id="knwSong0">
 <!-- Lyric-Sheet 2:1 -->
@@ -1899,8 +1910,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
-<!-- Divider -->
-<div class="knw-divider"></div>
+<!-- Punkt Mitte — zwischen Song 1 und Song 2 -->
+<div class="knw-divider knw-divider--mid"></div>
 <!-- Song 2: Six Hours South of Lighthouse Nine -->
 <div class="knw-song" id="knwSong1">
 <!-- Lyric-Sheet 2:1 -->
@@ -1919,6 +1930,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
+<!-- Punkt unten — symmetrisch nach Song 2 -->
+<div class="knw-divider knw-divider--bottom"></div>
 <!-- Platzhalter für weitere Songs (Song 3 folgt) -->
 <div class="knw-bottom-pad"></div>
 </div>
@@ -4541,8 +4554,18 @@ playerBar.classList.add = function(...args){
 </html>
 
 <script>
-/* ══ ADMIN EASTER EGG ══ */
-document.querySelector('.knw-divider').addEventListener('dblclick', function(){
-  window.open('admin.html', '_blank');
-});
+/* ══ ADMIN EASTER EGG — oberer der drei Punkte ══ */
+(function(){
+  var egg = document.getElementById('knwEasterEgg');
+  if(!egg) return;
+  // Desktop: Doppelklick
+  egg.addEventListener('dblclick', function(){ window.open('admin.html','_blank'); });
+  // Mobile: Doppeltap (zwei Taps ≤ 400ms)
+  var lastTap = 0;
+  egg.addEventListener('touchend', function(e){
+    var now = Date.now();
+    if(now - lastTap < 400){ window.open('admin.html','_blank'); e.preventDefault(); }
+    lastTap = now;
+  });
+})();
 </script>
