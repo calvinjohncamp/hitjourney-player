@@ -203,7 +203,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .album-songs-table tbody tr[draggable]:active{cursor:grabbing}
 .album-songs-table tbody tr.drag-over td{background:rgba(133,172,201,.12)!important;border-top:2px solid #85ACC9}
 .album-songs-table tbody tr.dragging{opacity:.35}
-.btn-sort-save{display:none;position:sticky;bottom:0;z-index:10;width:calc(100% - 28px);margin:8px 14px 4px;padding:9px 16px;background:#2a8a5a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+.btn-sort-save{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;width:calc(100% - 48px);max-width:600px;padding:13px 16px;background:#2a8a5a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;box-shadow:0 4px 24px rgba(0,0,0,.5)}
 .btn-sort-save.visible{display:block}
 .btn-sort-save:hover{background:#237a4e}
 /* All-songs picker inside album (for adding tracks) */
@@ -237,6 +237,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .modal-title{font-size:16px;font-weight:700;color:#cfe5f5;margin-bottom:4px}
 .modal-subtitle{font-size:12px;color:rgba(133,172,201,.4);margin-bottom:0}
 .modal-actions{display:flex;gap:8px;margin-top:16px}
+.pl-check-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.06);cursor:pointer;font-size:12px;color:#cfe5f5;user-select:none;transition:background .15s,border-color .15s}
+.pl-check-pill input{accent-color:#85ACC9;width:13px;height:13px;cursor:pointer}
+.pl-check-pill:has(input:checked){background:rgba(133,172,201,.18);border-color:#85ACC9}
 .btn-save{flex:1;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:700;background:#85ACC9;color:#06141F;transition:opacity .15s}
 .btn-cancel{padding:13px 18px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;background:rgba(133,172,201,.1);color:#85ACC9;transition:background .15s}
 
@@ -511,26 +514,77 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
     </div>
 
-    <div class="section-label">S3-Asset-URLs</div>
-    <div class="field" style="margin-bottom:8px">
-      <div class="field-label">MP3-URL</div>
-      <input class="ai" id="eMp3" type="url"/>
+    <div class="section-label">MP3</div>
+    <div class="field">
+      <div class="upload-zone mp3-zone" id="ezMp3" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'mp3')">
+        <input type="file" accept="audio/mpeg,audio/mp3,.mp3" onchange="onFileEdit(this,'mp3')"/>
+        <div class="upload-zone-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span>MP3 ersetzen</span>
+          <small>oder hierher ziehen</small>
+        </div>
+        <div class="mp3-filled">
+          <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <div class="mp3-filled-info">
+            <div class="mp3-filled-name" id="eMp3Name">—</div>
+            <div class="mp3-filled-size" id="eMp3Size"></div>
+          </div>
+        </div>
+        <div class="upload-progress" id="eProgMp3"></div>
+        <button class="zone-clear" onclick="clearEditZone('mp3',event)" title="Entfernen">×</button>
+      </div>
+      <div class="s3-hint" id="eHintMp3"></div>
     </div>
-    <div class="field" style="margin-bottom:8px">
-      <div class="field-label">Cover 1:1</div>
-      <input class="ai" id="eCover" type="url"/>
+
+    <div class="section-label">Bilder</div>
+    <div class="upload-grid">
+      <div class="field">
+        <div class="field-label">Cover</div>
+        <div class="upload-zone sq" id="ezCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'cover')">
+          <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileEdit(this,'cover')"/>
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Cover</span>
+          </div>
+          <img class="zone-preview" id="ePrevCover" alt=""/>
+          <div class="upload-progress" id="eProgCover"></div>
+          <button class="zone-clear" onclick="clearEditZone('cover',event)" title="Entfernen">×</button>
+        </div>
+        <div class="s3-hint" id="eHintCover"></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Lyrics</div>
+        <div class="upload-zone sq" id="ezLyrics" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'lyrics')">
+          <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileEdit(this,'lyrics')"/>
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Lyrics</span>
+          </div>
+          <img class="zone-preview" id="ePrevLyrics" alt=""/>
+          <div class="upload-progress" id="eProgLyrics"></div>
+          <button class="zone-clear" onclick="clearEditZone('lyrics',event)" title="Entfernen">×</button>
+        </div>
+        <div class="s3-hint" id="eHintLyrics"></div>
+      </div>
     </div>
-    <div class="field" style="margin-bottom:8px">
-      <div class="field-label">Cover 2:1</div>
-      <input class="ai" id="eCover21" type="url"/>
+    <div class="field" style="margin-top:0">
+      <div class="field-label">Lyricssheet</div>
+      <div class="upload-zone wide" id="ezCover21" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'cover21')">
+        <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileEdit(this,'cover21')"/>
+        <div class="upload-zone-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Lyricssheet</span>
+        </div>
+        <img class="zone-preview" id="ePrevCover21" alt=""/>
+        <div class="upload-progress" id="eProgCover21"></div>
+        <button class="zone-clear" onclick="clearEditZone('cover21',event)" title="Entfernen">×</button>
+      </div>
+      <div class="s3-hint" id="eHintCover21"></div>
     </div>
-    <div class="field" style="margin-bottom:8px">
-      <div class="field-label">Lyrics-URL</div>
-      <input class="ai" id="eLyrics" type="url"/>
-    </div>
-    <div class="field" style="margin-bottom:8px">
-      <div class="field-label">Lyrics21-URL</div>
-      <input class="ai" id="eLyrics21" type="url"/>
+
+    <div class="section-label">Playlists</div>
+    <div class="field" style="margin-bottom:12px">
+      <div id="ePlaylistChecks" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"></div>
     </div>
 
     <div class="modal-actions">
@@ -838,46 +892,166 @@ async function confirmDeleteSong(){
 }
 
 /* ── EDIT ── */
+// Edit modal file state
+const editFiles = { mp3: null, cover: null, cover21: null, lyrics: null };
+
+function onFileEdit(input, key){
+  const file = input.files[0];
+  if(!file) return;
+  editFiles[key] = file;
+  const zone = input.closest('.upload-zone');
+  zone.classList.add('has-file');
+  if(key==='mp3'){
+    document.getElementById('eMp3Name').textContent = file.name;
+    document.getElementById('eMp3Size').textContent = (file.size/1024/1024).toFixed(1)+' MB';
+  } else {
+    const prev = zone.querySelector('.zone-preview');
+    if(prev){ const r=new FileReader(); r.onload=e=>prev.src=e.target.result; r.readAsDataURL(file); }
+  }
+}
+function onDropEdit(e, key){
+  e.preventDefault();
+  offDrag(e.currentTarget);
+  const file = e.dataTransfer.files[0];
+  if(!file) return;
+  editFiles[key] = file;
+  const zone = e.currentTarget;
+  zone.classList.add('has-file');
+  if(key==='mp3'){
+    document.getElementById('eMp3Name').textContent = file.name;
+    document.getElementById('eMp3Size').textContent = (file.size/1024/1024).toFixed(1)+' MB';
+  } else {
+    const prev = zone.querySelector('.zone-preview');
+    if(prev){ const r=new FileReader(); r.onload=ev=>prev.src=ev.target.result; r.readAsDataURL(file); }
+  }
+}
+function clearEditZone(key, e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  editFiles[key] = null;
+  const ids = {mp3:'ezMp3',cover:'ezCover',cover21:'ezCover21',lyrics:'ezLyrics'};
+  const zone = document.getElementById(ids[key]);
+  if(zone){ zone.classList.remove('has-file'); const inp=zone.querySelector('input[type=file]'); if(inp) inp.value=''; }
+  const prevIds = {cover:'ePrevCover',cover21:'ePrevCover21',lyrics:'ePrevLyrics'};
+  if(prevIds[key]){ const p=document.getElementById(prevIds[key]); if(p) p.src=''; }
+}
+
 function openEdit(jsonStr){
   const s = JSON.parse(jsonStr);
   editTarget = s;
+  // Reset edit files
+  Object.keys(editFiles).forEach(k=>editFiles[k]=null);
+  ['ezMp3','ezCover','ezCover21','ezLyrics'].forEach(id=>{ const z=document.getElementById(id); if(z) z.classList.remove('has-file'); });
+  ['ePrevCover','ePrevCover21','ePrevLyrics'].forEach(id=>{ const p=document.getElementById(id); if(p) p.src=''; });
+
   document.getElementById('editModalTitle').textContent = s.title || 'Song bearbeiten';
   document.getElementById('editModalSlug').textContent  = s.slug || '';
-  document.getElementById('eTitle').value    = s.title   || '';
-  document.getElementById('eArtist').value   = s.artist  || '';
-  document.getElementById('eSlug').value     = s.slug    || '';
-  document.getElementById('eLang').value     = s.language|| 'english';
-  document.getElementById('eMp3').value      = s.mp3_url    || '';
-  document.getElementById('eCover').value    = s.cover_url  || '';
-  document.getElementById('eCover21').value  = s.lyrics21_url || '';
-  document.getElementById('eLyrics').value   = s.lyrics_url  || '';
-  document.getElementById('eLyrics21').value = s.lyrics21_url || '';
+  document.getElementById('eTitle').value    = s.title    || '';
+  document.getElementById('eArtist').value   = s.artist   || '';
+  document.getElementById('eSlug').value     = s.slug     || '';
+  document.getElementById('eLang').value     = s.language || 'english';
+
+  // Show existing asset hints
+  const eHintMp3 = document.getElementById('eHintMp3');
+  if(eHintMp3) eHintMp3.textContent = s.mp3_url ? '✓ '+s.mp3_url.split('/').pop() : '';
+  const eHintCover = document.getElementById('eHintCover');
+  if(eHintCover) eHintCover.textContent = s.cover_url ? '✓ '+s.cover_url.split('/').pop() : '';
+  const eHintLyrics = document.getElementById('eHintLyrics');
+  if(eHintLyrics) eHintLyrics.textContent = s.lyrics_url ? '✓ '+s.lyrics_url.split('/').pop() : '';
+  const eHintCover21 = document.getElementById('eHintCover21');
+  if(eHintCover21) eHintCover21.textContent = s.lyrics21_url ? '✓ '+s.lyrics21_url.split('/').pop() : '';
+
+  // Playlist checkboxes
+  const container = document.getElementById('ePlaylistChecks');
+  const currentPlaylists = new Set(
+    albumsData.filter(al=>al.tracks.some(t=>t.song_slug===s.slug)).map(al=>al.slug)
+  );
+  container.innerHTML = albumsData.map(al=>`
+    <label class="pl-check-pill">
+      <input type="checkbox" value="${al.slug}" ${currentPlaylists.has(al.slug)?'checked':''}/>
+      ${esc(al.title||al.slug)}
+    </label>`).join('');
+
   document.getElementById('editMsg').className = 'form-msg';
   document.getElementById('editOverlay').classList.add('open');
 }
+
 function closeEdit(){
   document.getElementById('editOverlay').classList.remove('open');
   editTarget = null;
 }
+
 async function saveEdit(){
   if(!editTarget) return;
-  const body = {
-    title:      document.getElementById('eTitle').value.trim(),
-    artist:     document.getElementById('eArtist').value.trim(),
-    slug:       document.getElementById('eSlug').value.trim(),
-    language:   document.getElementById('eLang').value,
-    mp3_url:    document.getElementById('eMp3').value.trim()||null,
-    cover_url:  document.getElementById('eCover').value.trim()||null,
-    lyrics21_url: document.getElementById('eCover21').value.trim()||null,
-    lyrics_url: document.getElementById('eLyrics').value.trim()||null,
-  };
+  const slug = editTarget.slug;
   const msgEl = document.getElementById('editMsg');
+  const btn = document.querySelector('#editModal .btn-save');
+  btn.disabled = true;
+
+  // Upload any new files first
+  const eNames = {
+    mp3:     `songs/${slug}.mp3`,
+    cover:   `artwork/${slug}-cover.jpg`,
+    cover21: `artwork/${slug}-cover-2-1.jpg`,
+    lyrics:  `artwork/${slug}-lyrics.jpg`,
+  };
+  const urlKeys = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url' };
+  const progIds = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics' };
+  const newUrls = {};
+
   try{
-    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+editTarget.slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
+    for(const key of ['mp3','cover','cover21','lyrics']){
+      if(!editFiles[key]) continue;
+      btn.textContent = `Lade hoch: ${editFiles[key].name} …`;
+      newUrls[urlKeys[key]] = await uploadToS3(editFiles[key], eNames[key], progIds[key]);
+    }
+  } catch(e){
+    msgEl.textContent = 'Upload-Fehler: '+e.message;
+    msgEl.className = 'form-msg err';
+    btn.disabled=false; btn.textContent='Änderungen speichern'; return;
+  }
+
+  btn.textContent = 'Speichere …';
+  const body = {
+    title:       document.getElementById('eTitle').value.trim(),
+    artist:      document.getElementById('eArtist').value.trim(),
+    slug:        document.getElementById('eSlug').value.trim(),
+    language:    document.getElementById('eLang').value,
+    ...newUrls,
+  };
+  // Keep existing URLs for fields not re-uploaded
+  if(!newUrls.mp3_url)      body.mp3_url      = editTarget.mp3_url      || null;
+  if(!newUrls.cover_url)    body.cover_url    = editTarget.cover_url    || null;
+  if(!newUrls.lyrics21_url) body.lyrics21_url = editTarget.lyrics21_url || null;
+  if(!newUrls.lyrics_url)   body.lyrics_url   = editTarget.lyrics_url   || null;
+
+  try{
+    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
-    const updated = await r.json();
+
+    // Handle playlist changes
+    const checks = document.querySelectorAll('#ePlaylistChecks input[type=checkbox]');
+    const before = new Set(albumsData.filter(al=>al.tracks.some(t=>t.song_slug===slug)).map(al=>al.slug));
+    const after  = new Set([...checks].filter(c=>c.checked).map(c=>c.value));
+
+    // Add to new playlists
+    for(const plSlug of after){
+      if(before.has(plSlug)) continue;
+      const al = albumsData.find(a=>a.slug===plSlug);
+      const maxPos = al ? (al.tracks.length ? Math.max(...al.tracks.map(t=>t.position)) : 0) : 0;
+      await fetch(sbUrl('/rest/v1/playlist_tracks'),{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:plSlug,song_slug:slug,position:maxPos+1})});
+      if(al) al.tracks.push({song_slug:slug,playlist_slug:plSlug,position:maxPos+1});
+    }
+    // Remove from unchecked playlists
+    for(const plSlug of before){
+      if(after.has(plSlug)) continue;
+      await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+plSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+slug,{method:'DELETE',headers:hdrs()});
+      const al = albumsData.find(a=>a.slug===plSlug);
+      if(al) al.tracks = al.tracks.filter(t=>t.song_slug!==slug);
+    }
+
+    const updated = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{headers:hdrs()}).then(r=>r.json());
     const s = updated[0]||{...editTarget,...body};
-    allSongs = allSongs.map(x=>x.slug===editTarget.slug?s:x);
+    allSongs = allSongs.map(x=>x.slug===slug?s:x);
     renderTable();
     populateArtistList();
     closeEdit();
@@ -886,8 +1060,11 @@ async function saveEdit(){
     msgEl.textContent = 'Fehler: '+e.message;
     msgEl.className = 'form-msg err';
   }
+  btn.disabled=false; btn.textContent='Änderungen speichern';
 }
+
 document.getElementById('editOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('editOverlay')) closeEdit(); });
+
 
 /* ── SAVE SONG ── */
 async function saveSong(){
