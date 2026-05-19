@@ -785,7 +785,7 @@ function renderTable(){
         <div class="td-urls">
           <div class="url-dot ${s.cover_url?'has':'missing'}" title="Cover"></div>
           <div class="url-dot ${s.lyrics_url?'has':'missing'}" title="Lyrics"></div>
-          <div class="url-dot ${s.cover_url_21?'has':'missing'}" title="2:1 Cover"></div>
+          <div class="url-dot ${s.lyrics21_url?'has':'missing'}" title="2:1 Cover"></div>
           <div class="url-dot ${s.mp3_url?'has':'missing'}" title="MP3"></div>
         </div>
       </td>
@@ -841,7 +841,7 @@ function openEdit(jsonStr){
   document.getElementById('eLang').value     = s.language|| 'english';
   document.getElementById('eMp3').value      = s.mp3_url    || '';
   document.getElementById('eCover').value    = s.cover_url  || '';
-  document.getElementById('eCover21').value  = s.cover_url_21 || '';
+  document.getElementById('eCover21').value  = s.lyrics21_url || '';
   document.getElementById('eLyrics').value   = s.lyrics_url  || '';
   document.getElementById('eLyrics21').value = s.lyrics21_url || '';
   document.getElementById('editMsg').className = 'form-msg';
@@ -860,9 +860,8 @@ async function saveEdit(){
     language:   document.getElementById('eLang').value,
     mp3_url:    document.getElementById('eMp3').value.trim()||null,
     cover_url:  document.getElementById('eCover').value.trim()||null,
-    cover_url_21: document.getElementById('eCover21').value.trim()||null,
+    lyrics21_url: document.getElementById('eCover21').value.trim()||null,
     lyrics_url: document.getElementById('eLyrics').value.trim()||null,
-    lyrics21_url: document.getElementById('eLyrics21').value.trim()||null,
   };
   const msgEl = document.getElementById('editMsg');
   try{
@@ -903,7 +902,7 @@ async function saveSong(){
   const uploads = [
     {key:'mp3',    file:files.mp3,     s3:names.mp3,     prog:'progMp3',     urlKey:'mp3_url'},
     {key:'cover',  file:files.cover,   s3:names.cover,   prog:'progCover',   urlKey:'cover_url'},
-    {key:'cover21',file:files.cover21, s3:names.cover21, prog:'progCover21', urlKey:'cover_url_21'},
+    {key:'cover21',file:files.cover21, s3:names.cover21, prog:'progCover21', urlKey:'lyrics21_url'},
     {key:'lyrics', file:files.lyrics,  s3:names.lyrics,  prog:'progLyrics',  urlKey:'lyrics_url'},
   ];
 
@@ -1071,7 +1070,7 @@ function renderAlbumSongs(al, q=''){
           <div class="td-urls">
             <div class="url-dot ${s.cover_url?'has':'missing'}" title="Cover"></div>
             <div class="url-dot ${s.lyrics_url?'has':'missing'}" title="Lyrics"></div>
-            <div class="url-dot ${s.cover_url_21?'has':'missing'}" title="2:1 Cover"></div>
+            <div class="url-dot ${s.lyrics21_url?'has':'missing'}" title="2:1 Cover"></div>
             <div class="url-dot ${s.mp3_url?'has':'missing'}" title="MP3"></div>
           </div>
         </td>
