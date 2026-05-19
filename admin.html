@@ -148,6 +148,23 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* S3 target URL hint */
 .s3-hint{font-size:10.5px;color:rgba(133,172,201,.3);margin-top:4px;font-family:'SF Mono','Menlo',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* ── Artist Autocomplete Dropdown ── */
+.artist-wrap{position:relative}
+.artist-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:#0B2A42;border:1px solid rgba(133,172,201,.25);border-radius:10px;
+  max-height:200px;overflow-y:auto;display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.artist-dropdown.open{display:block}
+.artist-dropdown::-webkit-scrollbar{display:none}
+.artist-option{
+  padding:10px 14px;font-size:14px;color:#f1ecdf;cursor:pointer;
+  border-bottom:1px solid rgba(133,172,201,.06);transition:background .1s;
+}
+.artist-option:last-child{border-bottom:none}
+.artist-option:hover,.artist-option.active{background:rgba(133,172,201,.12);color:#cfe5f5}
+
 /* Buttons */
 .btn-primary{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:700;background:#85ACC9;color:#06141F;margin-top:16px;transition:opacity .15s,transform .1s;letter-spacing:.02em}
 .btn-primary:hover{opacity:.9}
@@ -359,8 +376,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <div class="field">
           <div class="field-label">Artist *</div>
-          <input class="ai" id="addArtist" list="artistList" placeholder="z. B. Bro" type="text"/>
-          <datalist id="artistList"></datalist>
+          <div class="artist-wrap">
+            <input class="ai" id="addArtist" placeholder="z. B. Bro" type="text" autocomplete="off"
+              oninput="filterArtistDrop('addArtistDrop',this.value)"
+              onfocus="openArtistDrop('addArtistDrop',this.value)"
+              onblur="setTimeout(()=>closeArtistDrop('addArtistDrop'),150)"/>
+            <div class="artist-dropdown" id="addArtistDrop"></div>
+          </div>
         </div>
       </div>
       <div class="field-row cols-2">
@@ -548,7 +570,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <div class="field">
           <div class="field-label">Artist</div>
-          <input class="ai" id="eArtist" list="artistList" type="text"/>
+          <div class="artist-wrap">
+            <input class="ai" id="eArtist" type="text" autocomplete="off"
+              oninput="filterArtistDrop('eArtistDrop',this.value)"
+              onfocus="openArtistDrop('eArtistDrop',this.value)"
+              onblur="setTimeout(()=>closeArtistDrop('eArtistDrop'),150)"/>
+            <div class="artist-dropdown" id="eArtistDrop"></div>
+          </div>
         </div>
       </div>
       <div class="field-row cols-2">
@@ -821,9 +849,48 @@ async function loadSongs(){
 }
 
 function populateArtistList(){
-  const artists = [...new Set(allSongs.map(s=>s.artist).filter(Boolean))].sort();
-  const dl = document.getElementById('artistList');
-  dl.innerHTML = artists.map(a=>`<option value="${a}"/>`).join('');
+  // artists list is now derived fresh in dropdown functions
+  // kept for compatibility
+}
+
+/* ── ARTIST DROPDOWN ── */
+function getArtists(){
+  return [...new Set(allSongs.map(s=>s.artist).filter(Boolean))].sort();
+}
+
+function renderArtistOptions(dropId, artists, inputId){
+  const drop = document.getElementById(dropId);
+  if(!drop) return;
+  if(!artists.length){ drop.classList.remove('open'); return; }
+  drop.innerHTML = artists.map(a=>
+    `<div class="artist-option" onmousedown="pickArtist('${inputId}','${dropId}',${JSON.stringify(a)})">${esc(a)}</div>`
+  ).join('');
+  drop.classList.add('open');
+}
+
+function openArtistDrop(dropId, val){
+  const inputId = dropId === 'addArtistDrop' ? 'addArtist' : 'eArtist';
+  const artists = getArtists();
+  const filtered = val ? artists.filter(a=>a.toLowerCase().includes(val.toLowerCase())) : artists;
+  renderArtistOptions(dropId, filtered, inputId);
+}
+
+function filterArtistDrop(dropId, val){
+  const inputId = dropId === 'addArtistDrop' ? 'addArtist' : 'eArtist';
+  const artists = getArtists();
+  const filtered = val ? artists.filter(a=>a.toLowerCase().includes(val.toLowerCase())) : artists;
+  renderArtistOptions(dropId, filtered, inputId);
+}
+
+function closeArtistDrop(dropId){
+  const drop = document.getElementById(dropId);
+  if(drop) drop.classList.remove('open');
+}
+
+function pickArtist(inputId, dropId, artist){
+  const inp = document.getElementById(inputId);
+  if(inp){ inp.value = artist; inp.classList.add('has-val'); }
+  closeArtistDrop(dropId);
 }
 
 /* ── SORT ── */

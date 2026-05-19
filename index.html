@@ -1907,7 +1907,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </button>
 <div class="knw-play-info">
 <div class="knw-play-name">Mary-Anne</div>
-<div class="knw-play-artist">BRO · Jörn Kämper</div>
+<div class="knw-play-artist" id="knwArtist0">BRO · Jörn Kämper</div>
 </div>
 </div>
 </div>
@@ -1925,7 +1925,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </button>
 <div class="knw-play-info">
 <div class="knw-play-name">Six Hours South of Lighthouse Nine</div>
-<div class="knw-play-artist">BRO · Jörn Kämper</div>
+<div class="knw-play-artist" id="knwArtist1">BRO · Jörn Kämper</div>
 </div>
 </div>
 </div>
@@ -2771,7 +2771,7 @@ async function loadFromSupabase() {
   const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON };
 
   // 1. Alle Songs laden
-  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
   if (!songsRes.ok) throw new Error('Songs fetch failed: ' + songsRes.status);
   const songsRaw = await songsRes.json();
 
@@ -2780,6 +2780,7 @@ async function loadFromSupabase() {
   songsRaw.forEach(row => {
     songMap[row.slug] = {
       title:    row.title,
+      artist:   row.artist  || '',
       mp3:      row.mp3_url,
       cover:    row.cover_url,
       lyrics:   row.lyrics_url   || null,
@@ -2819,6 +2820,13 @@ async function loadFromSupabase() {
 
   // Null-Einträge entfernen
   Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
+
+  // KNW-Screen: Artist-Anzeige aus Supabase befüllen
+  ['mary-anne', 'six-hours-south-of-lighthouse-nine'].forEach((slug, i) => {
+    const song = songMap[slug];
+    const el = document.getElementById('knwArtist' + i);
+    if(song && song.artist && el) el.textContent = song.artist;
+  });
 
   console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
 }
@@ -3319,7 +3327,7 @@ function showAlbum(key){
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
-      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>';
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playIdx(i));
     tlList.appendChild(row);
@@ -3957,7 +3965,7 @@ function renderArchiveList(songs){
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
-      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">BRO · Jörn Kämper</div></div>';
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>';
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playArchiveSong(i,songs));
     arcList.appendChild(row);
