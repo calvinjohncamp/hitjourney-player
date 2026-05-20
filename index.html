@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v137-player-dock-safearea-fix-20260520 -->
+<!-- Version: v136-remove-controls-strip-div-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -833,32 +833,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* ══ Player Dock Fix v137 ══ */
-.hj-player{
-  bottom:0;
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  min-height:calc(64px + env(safe-area-inset-bottom,0px));
-}
-
+/* ══ Player Bar: kein Safe-Area-Streifen ══
+   Kein padding-bottom auf .hj-player — die Bar endet bündig wie bei Spotify.
+   .hj-now bekommt symmetrisches Padding oben/unten (7px) für optische Zentrierung. */
 .hj-now{
-  min-height:64px;
-  padding:0 12px;
-  display:flex;
-  align-items:center;
+  padding-bottom: 7px;
 }
 
+/* v91 — iPad/large screens only: reduced breathing room under the full player controls.
+   Compared with v90, roughly two thirds of the extra bottom air were removed.
+   iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  .hj-player{
-    min-height:78px;
-    padding-bottom:0;
-  }
-
-  .hj-now{
-    min-height:78px;
-    padding:0 24px;
-    align-items:center;
-  }
-
   /* iPad: Footer vertikal zentrieren — gleichmäßiges Padding oben/unten */
   .hj-player .hj-now{
     padding-left:24px;padding-right:16px;
