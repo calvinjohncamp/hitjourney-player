@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v133-dvh-screen-height-20260520 -->
+<!-- Version: v135-no-safe-area-strip-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -807,7 +807,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Minimized: nur Cover + Titel sichtbar, Controls verschwinden */
 .hj-player.minimized .hj-prog-wrap{opacity:0}
-.hj-player.minimized .hj-now{padding:8px 14px 0;}
+.hj-player.minimized .hj-now{padding:8px 14px 8px;}
 .hj-player.minimized .hj-now-cover{width:36px;height:36px;border-radius:5px;}
 .hj-player.minimized .hj-now-title{font-size:14px;color:#cfe5f5}
 .hj-player.minimized .hj-now-artist{opacity:0;max-height:0;margin-top:0;overflow:hidden}
@@ -833,12 +833,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* ══ iPhone Safe-Area Fix ══
-   padding-bottom füllt den Home-Indicator-Streifen mit dem Bar-Hintergrund.
-   Die Buttons sitzen im oberen Teil der Bar (padding des .hj-now) — unverändert.
-   JS setzt zusätzlich --sab als konkreten px-Wert als Fallback. */
-.hj-player{
-  padding-bottom: var(--sab, env(safe-area-inset-bottom, 0px));
+/* ══ Player Bar: kein Safe-Area-Streifen ══
+   Kein padding-bottom auf .hj-player — die Bar endet bündig wie bei Spotify.
+   .hj-now bekommt symmetrisches Padding oben/unten (7px) für optische Zentrierung. */
+.hj-now{
+  padding-bottom: 7px;
 }
 
 /* v91 — iPad/large screens only: reduced breathing room under the full player controls.
