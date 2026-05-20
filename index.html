@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v132-spacer-strip-only-20260520 -->
+<!-- Version: v133-dvh-screen-height-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -32,7 +32,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
 
 /* ── Screens ── */
-.screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;min-height:0;scroll-padding-top:14px}
+/* Explizite Höhe via CSS-Variable --screen-h, gesetzt per JS.
+   100dvh - Header - Spacer für Player-Bar. Kein flex-Raten mehr. */
+.screen{
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:none;
+  scroll-padding-top:14px;
+  height:var(--screen-h, calc(100dvh - 60px));
+  max-height:var(--screen-h, calc(100dvh - 60px));
+  flex-shrink:0;
+}
 #screenHome{padding-top:10px}
 #screenTracklist{padding-top:8px}
 /* Flex restoration and layout stability */
@@ -50,10 +60,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* screenTracklist scrollt als Block-Container — kein flex-direction:column! */
 #screenTracklist.active {
   display: block;
+  overflow-y: auto;
 }
 
 #screenNowPlaying.active {
   display: flex;
+  /* NowPlaying überschreibt --screen-h komplett mit fixed:inset:0 */
+  height: auto;
+  max-height: none;
 }
 
 #tlList {
@@ -4634,15 +4648,21 @@ backBtn.addEventListener('click',()=>{
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
   const isVisible = playerBar.classList.contains('visible');
-  // Nur die sichtbare Button-Strip-Höhe messen (ohne Safe-Area-Padding darunter)
-  const strip = document.getElementById('nowStrip');
-  const stripH = strip ? strip.getBoundingClientRect().height : 0;
-  const fullH = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
-  const pad = fullH;
-  document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
-  // Spacer reserviert nur die Button-Strip-Höhe — Safe-Area läuft unter dem Spacer durch
+  const playerH = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 0;
+  const headerH = document.getElementById('mainHeader')
+    ? document.getElementById('mainHeader').getBoundingClientRect().height
+    : 60;
+  // dvh = echte iPhone-Viewport-Höhe (ohne Browser-Chrome, inkl. Safe Areas)
+  const dvh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const screenH = dvh - headerH - playerH;
+  document.documentElement.style.setProperty('--screen-h', screenH + 'px');
+
+  // Scroll-Pads für Listen
+  document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = (playerH || 80) + 'px');
+
+  // Spacer entfernen falls vorhanden (nicht mehr nötig)
   const spacer = document.getElementById('hjPlayerSpacer');
-  if(spacer) spacer.style.height = (isVisible ? stripH : 0) + 'px';
+  if(spacer) spacer.style.height = '0px';
 }
 
 // Albumseiten: dezenter UP-Button über der Playerleiste
