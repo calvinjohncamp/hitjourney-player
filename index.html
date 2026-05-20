@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v127-no-bottom-gap-20260520 -->
+<!-- Version: v128-zero-bottom-gap-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -670,10 +670,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .np-bottom{
     justify-content:center;
     padding-top:12px;
-    padding-bottom:16px; /* iPad hat keinen Home-Indicator */
   }
   .np-controls{
     padding-top:14px;
+    padding-bottom:20px; /* iPad: kein Home-Indicator, festes Padding */
   }
 }
 .np-cover{
@@ -694,20 +694,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
 .np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np-artist{font-size:14px;color:rgba(133,172,201,.6)}
-/* Bottom section: pushed to bottom. Safe-Area hier tragen damit Hintergrund bis Rand geht. */
+/* Bottom section: pushed to bottom. Kein padding-bottom — Hintergrund geht bis Rand.
+   Safe-Area trägt .np-controls direkt. */
 .np-bottom{
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  padding:0;
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
 .np-prog-fill{height:100%;background:#85ACC9;border-radius:2px;width:0%;transition:width .1s linear;pointer-events:none}
 .np-time{display:flex;justify-content:space-between;padding:8px 24px 0;font-size:12px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums;flex-shrink:0}
-/* NP Controls */
-.np-controls{display:flex;align-items:center;justify-content:space-between;padding:24px 16px 0;flex-shrink:0}
+/* NP Controls — padding-bottom trägt Safe-Area: Buttons direkt über Home-Indicator */
+.np-controls{display:flex;align-items:center;justify-content:space-between;padding:16px 16px calc(env(safe-area-inset-bottom, 0px) + 10px);flex-shrink:0}
 .np-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:10px;position:relative;transition:color .15s,transform .1s}
 .np-btn:active{transform:scale(.84)}
 .np-btn svg{display:block;width:26px;height:26px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
@@ -755,12 +756,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
-/* Einzeilige Now-Playing-Zeile: Cover + Info + Controls */
 /* Einzeilige Now-Playing-Zeile: Cover + Info + Controls.
-   Festes padding-bottom 7px — Safe-Area wird von .hj-player selbst getragen. */
+   padding-bottom:0 — Safe-Area trägt .hj-player, nicht .hj-now.
+   Buttons sitzen oben in der Bar, darunter nur der safe-area-Hintergrund. */
 .hj-now{
   display:flex;align-items:center;gap:10px;
-  padding:7px 10px 7px 12px;
+  padding:7px 10px 0 12px;
 }
 .hj-now-num{display:none}/* Track-Nummer ausgeblendet im Footer */
 .hj-now-numtxt{display:none}
@@ -786,7 +787,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Minimized: nur Cover + Titel sichtbar, Controls verschwinden */
 .hj-player.minimized .hj-prog-wrap{opacity:0}
-.hj-player.minimized .hj-now{padding:8px 14px 8px;}
+.hj-player.minimized .hj-now{padding:8px 14px 0;}
 .hj-player.minimized .hj-now-cover{width:36px;height:36px;border-radius:5px;}
 .hj-player.minimized .hj-now-title{font-size:14px;color:#cfe5f5}
 .hj-player.minimized .hj-now-artist{opacity:0;max-height:0;margin-top:0;overflow:hidden}
@@ -4761,7 +4762,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v127-no-bottom-gap-20260520';
+  const VERSION = 'v128-zero-bottom-gap-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
