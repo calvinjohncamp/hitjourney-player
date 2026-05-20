@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v147-sticky-language-header-20260520 -->
+<!-- Version: v149-language-cover-before-lyrics-same-frame-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4151,6 +4151,7 @@ function showHome(){
   makingWaves.style.display='';
   headerRight.textContent='';
   mainHeader.style.display='';
+  closeLanguageImageFrame(false);
   languageCoverClickState = { key:null, idx:-1, phase:0 };
   prevScreen='home';
 }
@@ -4345,34 +4346,35 @@ function playLanguageSong(lang, idx){
   const sameCard = languageCoverClickState.key === key && languageCoverClickState.idx === idx;
   const isCurrent = curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx;
 
-  // 1. Klick auf neues Cover: Song starten, aber auf der Sprach-Kachelseite bleiben.
+  // 1. Klick auf neues Cover: Song starten und das Cover im bisherigen großen Lyrics-Rahmen zeigen.
   if(!sameCard || !isCurrent){
-    if(lyricsOpen) closeLyrics();
+    closeLanguageImageFrame(false);
     curAlbum = key;
     queue = buildQueue(idx);
     queueIdx = queue.indexOf(idx);
     prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
     languageCoverClickState = { key, idx, phase:1 };
     loadPlayNoScroll(idx);
+    showNowPlaying();
+    requestAnimationFrame(()=>{ openLanguageCoverFrame(); });
     updateLanguageHighlight();
     return;
   }
 
-  // 2. Klick auf dasselbe Cover: Lyrics-Sheet groß öffnen.
+  // 2. Klick auf dasselbe große Cover: im exakt gleichen Rahmen zum Lyrics-Sheet wechseln.
   if(languageCoverClickState.phase === 1){
     if(audio.paused) audio.play().catch(()=>{});
-    prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
-    showNowPlaying();
-    requestAnimationFrame(()=>{ openLyrics(); });
+    if(!screenNP.classList.contains('active')) showNowPlaying();
+    openLyrics();
+    languageCoverFrameOpen = false;
     languageCoverClickState.phase = 2;
     updateLanguageHighlight();
     return;
   }
 
-  // 3. Klick nach geöffnetem Lyrics-Sheet: Lyrics schließen und zur Kachelseite zurück.
+  // 3. Klick nach geöffnetem Lyrics-Sheet: alles schließen und zur Kachelseite zurück.
   if(languageCoverClickState.phase === 2){
-    if(lyricsOpen) closeLyrics();
-    if(screenNP.classList.contains('active')) hideNowPlaying();
+    closeLanguageImageFrame(true);
     languageCoverClickState.phase = 3;
     updateLanguageHighlight();
     return;
@@ -4488,12 +4490,69 @@ let swipeStartX=0, swipeStartY=0;
 // ── Lyrics state ──
 let lyricsOpen = false;
 let lyricsCoverSrc = '';
+let languageCoverFrameOpen = false;
+let languageCycleTouchTime = 0;
 let npPinchScale = 1, npPinchLast = 1, npPinchDist0 = 0, npPinching = false;
 let npTransX = 0, npTransY = 0, npDragStartX = 0, npDragStartY = 0, npDragging = false;
 
 function applyLyricsTransform() {
   // translate first, then scale — avoids amplified movement
   npCoverImg.style.transform = 'translate('+npTransX+'px,'+npTransY+'px) scale('+npPinchScale+')';
+}
+
+function resetImageFrameTransform(){
+  npTransX = 0; npTransY = 0;
+  npCoverImg.style.transform = 'scale(1)';
+  npPinchScale = 1; npPinchLast = 1;
+}
+
+function openLanguageCoverFrame(){
+  if(!screenNP.classList.contains('active')) return;
+  npCoverImg.classList.add('lyrics-active');
+  npCoverWrap.classList.add('lyrics-mode');
+  screenNP.classList.add('lyrics-open');
+  resetImageFrameTransform();
+  lyricsOpen = false;
+  languageCoverFrameOpen = true;
+}
+
+function closeLanguageImageFrame(returnToLanguageScreen){
+  if(lyricsOpen){
+    closeLyrics();
+  } else if(languageCoverFrameOpen){
+    npCoverImg.classList.remove('lyrics-active');
+    npCoverWrap.classList.remove('lyrics-mode');
+    screenNP.classList.remove('lyrics-open');
+    resetImageFrameTransform();
+    languageCoverFrameOpen = false;
+  }
+  if(returnToLanguageScreen && screenNP.classList.contains('active')) hideNowPlaying();
+}
+
+function isLanguageImageCycleActive(){
+  return !!(languageCoverClickState && (languageCoverClickState.key === 'languageGerman' || languageCoverClickState.key === 'languageEnglish') && screenNP.classList.contains('active'));
+}
+
+function advanceLanguageImageCycle(e){
+  if(!isLanguageImageCycleActive()) return false;
+  if(e && e.target && e.target.closest && e.target.closest('.np-btn,.np-down-btn,.np-prog-wrap,.np-time')) return false;
+
+  if(languageCoverClickState.phase === 1){
+    if(audio.paused) audio.play().catch(()=>{});
+    openLyrics();
+    languageCoverFrameOpen = false;
+    languageCoverClickState.phase = 2;
+    updateLanguageHighlight();
+    return true;
+  }
+
+  if(languageCoverClickState.phase === 2){
+    closeLanguageImageFrame(true);
+    languageCoverClickState.phase = 3;
+    updateLanguageHighlight();
+    return true;
+  }
+  return false;
 }
 
 function openLyrics() {
@@ -4515,9 +4574,8 @@ function openLyrics() {
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
-  npTransX = 0; npTransY = 0;
-  npCoverImg.style.transform = 'scale(1)';
-  npPinchScale = 1; npPinchLast = 1;
+  resetImageFrameTransform();
+  languageCoverFrameOpen = false;
   lyricsOpen = true;
 }
 
@@ -4526,18 +4584,24 @@ function closeLyrics() {
   npCoverImg.classList.remove('lyrics-active');
   npCoverWrap.classList.remove('lyrics-mode');
   screenNP.classList.remove('lyrics-open');
-  npTransX = 0; npTransY = 0;
-  npCoverImg.style.transform = 'scale(1)';
-  npPinchScale = 1; npPinchLast = 1;
+  resetImageFrameTransform();
   lyricsOpen = false;
+  languageCoverFrameOpen = false;
 }
 
-npCoverImg.addEventListener('click',()=>{
-  if(lyricsOpen && languageCoverClickState && languageCoverClickState.phase === 2){
-    closeLyrics();
-    if(screenNP.classList.contains('active')) hideNowPlaying();
-    languageCoverClickState.phase = 3;
-    updateLanguageHighlight();
+npCoverImg.addEventListener('click',e=>{
+  if(Date.now() - languageCycleTouchTime < 350) return;
+  if(advanceLanguageImageCycle(e)){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+});
+
+screenNP.addEventListener('click',e=>{
+  if(Date.now() - languageCycleTouchTime < 350) return;
+  if(advanceLanguageImageCycle(e)){
+    e.preventDefault();
+    e.stopPropagation();
   }
 });
 
@@ -4590,12 +4654,20 @@ npCoverWrap.addEventListener('touchend',e=>{
   const dy=e.changedTouches[0].clientY-swipeStartY;
   const absDx=Math.abs(dx), absDy=Math.abs(dy);
   if(absDx<12&&absDy<12){ // TAP
+    if(advanceLanguageImageCycle(e)){
+      languageCycleTouchTime = Date.now();
+      return;
+    }
     if(lyricsOpen) closeLyrics();
     else openLyrics();
   } else if(dy>60&&absDy>absDx*1.2){ // swipe down
-    if(lyricsOpen) closeLyrics();
+    if(isLanguageImageCycleActive() && (languageCoverFrameOpen || lyricsOpen)){
+      closeLanguageImageFrame(true);
+      languageCoverClickState.phase = 3;
+      updateLanguageHighlight();
+    } else if(lyricsOpen) closeLyrics();
     else hideNowPlaying();
-  } else if(!lyricsOpen && absDx>absDy*1.5&&absDx>40){ // swipe left/right — nur ohne Lyrics
+  } else if(!lyricsOpen && !languageCoverFrameOpen && absDx>absDy*1.5&&absDx>40){ // swipe left/right — nur ohne Lyrics/Großcover
     if(dx<0){
       npCoverImg.classList.add('swipe-left');
       setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
