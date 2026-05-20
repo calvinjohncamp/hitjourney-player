@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v154-home-just-this-dance-lara-wolf-final-teaser-20260520 -->
+<!-- Version: v152-buried-diamonds-alpha-sort-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1094,7 +1094,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .language-teaser-half.right{right:0;}
 .language-teaser-half:active{background:rgba(255,255,255,.06);}
 .language-teaser-split{
-  display:none;
+  position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:rgba(255,255,255,.10);pointer-events:none;
 }
 #screenLanguageGerman,
 #screenLanguageEnglish{
@@ -2568,10 +2569,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="language-teaser-split" aria-hidden="true"></div>
   </div>
 </div>
-<!-- Finaler Home-Teaser: Just This Dance -->
+<!-- Finaler Home-Teaser: Just This Dance · Lara Wolff -->
 <div class="home-grid home-final-grid">
-<div class="wide-audio-teaser home-final-teaser" id="twiwTeaser" aria-label="Just This Dance abspielen oder pausieren">
-<img alt="Just This Dance" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance-lara-wolf-cover-2-1.jpg"/>
+<div class="tp-teaser home-final-teaser" id="jtdTeaser" aria-label="Just This Dance von Lara Wolff abspielen oder pausieren">
+<img alt="Just This Dance · Lara Wolff" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just-this-dance-lara-wolff-cover-2-1.jpg"/>
 </div>
 </div>
 <footer class="home-info-footer" aria-label="Information">
@@ -3612,6 +3613,14 @@ async function loadFromSupabase() {
 
   // Null-Einträge entfernen
   Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
+
+  // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
+  if(ALBUMS.buriedDiamonds && ALBUMS.buriedDiamonds.songs) {
+    ALBUMS.buriedDiamonds.songs.sort((a,b) =>
+      a.title.localeCompare(b.title, 'de', {sensitivity:'base'})
+    );
+    ALBUMS.buriedDiamonds.meta = ALBUMS.buriedDiamonds.songs.length + ' Songs';
+  }
 
   // KNW-Screen: Artist-Anzeige aus Supabase befüllen
   ['mary-anne', 'six-hours-south-of-lighthouse-nine'].forEach((slug, i) => {
@@ -5387,7 +5396,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v154-just-this-dance-lara-wolf-20260520';
+  const VERSION = 'v152-buried-diamonds-alpha-sort-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -5477,24 +5486,24 @@ showHome = function(){
   });
 })();
 
-// ══ JUST THIS DANCE HOME FINAL TEASER ══
+// ══ JUST THIS DANCE · LARA WOLFF HOME FINAL TEASER ══
 (function(){
-  const teaser = document.getElementById('twiwTeaser');
+  const teaser = document.getElementById('jtdTeaser');
   if(!teaser) return;
 
-  const JUST_THIS_DANCE_LARA_WOLF = {
+  const JUST_THIS_DANCE = {
     title: 'Just This Dance',
-    artist: 'Lara Wolf',
-    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance-lara-wolf-cover-2-1.jpg',
-    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance-lara-wolf.mp3'
+    artist: 'Lara Wolff',
+    cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just-this-dance-lara-wolff-cover.jpg',
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance-lara-wolff.mp3'
   };
-  let twiwActive = false;
+  let jtdActive = false;
 
   function isThisSong(){
-    return audio && audio.src && audio.src === JUST_THIS_DANCE_LARA_WOLF.mp3;
+    return audio && audio.src && audio.src === JUST_THIS_DANCE.mp3;
   }
   function syncState(){
-    const playing = twiwActive && isThisSong() && !audio.paused;
+    const playing = jtdActive && isThisSong() && !audio.paused;
     teaser.classList.toggle('playing', playing);
   }
 
@@ -5512,36 +5521,36 @@ showHome = function(){
     }
 
     featuredMode = true;
-    twiwActive = true;
+    jtdActive = true;
     playerBar.classList.remove('visible');
-    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'just-this-dance-lara-wolf' } }));
-    audio.src = JUST_THIS_DANCE_LARA_WOLF.mp3;
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'just-this-dance-lara-wolff' } }));
+    audio.src = JUST_THIS_DANCE.mp3;
     audio.load();
     audio.play().catch(()=>{});
     syncState();
   });
 
   window.addEventListener('hj:teaser-audio-switch', (e) => {
-    if(e.detail && e.detail.source !== 'just-this-dance-lara-wolf'){
-      twiwActive = false;
+    if(e.detail && e.detail.source !== 'just-this-dance-lara-wolff'){
+      jtdActive = false;
       teaser.classList.remove('playing');
     }
   });
 
   audio.addEventListener('play', () => {
-    if(audio.src !== JUST_THIS_DANCE_LARA_WOLF.mp3){
-      twiwActive = false;
+    if(audio.src !== JUST_THIS_DANCE.mp3){
+      jtdActive = false;
       teaser.classList.remove('playing');
       return;
     }
-    twiwActive = true;
+    jtdActive = true;
     featuredMode = true;
     playerBar.classList.remove('visible');
     syncState();
   });
   audio.addEventListener('pause', syncState);
   audio.addEventListener('ended', () => {
-    twiwActive = false;
+    jtdActive = false;
     teaser.classList.remove('playing');
   });
 })();
