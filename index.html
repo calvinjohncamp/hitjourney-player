@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v143-language-lyrics-position-close-20260520 -->
+<!-- Version: v144-tante-paula-dynamic-audio-fix-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -5199,7 +5199,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v128-zero-bottom-gap-20260520';
+  const VERSION = 'v144-tante-paula-dynamic-audio-fix-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -5224,16 +5224,26 @@ showHome = function(){
   const teaser = document.getElementById('tpTeaser');
   if(!teaser) return;
 
-  const TANTE_PAULA = {
+  const TANTE_PAULA_FALLBACK = {
     title: 'Tante Paula',
     artist: 'Lara Wolff',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg',
-    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3'
+    // Fallback nur für den Notfall. Normalerweise wird die MP3 jetzt aus Supabase gelesen.
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula-lara-wolff.mp3'
   };
   let tpActive = false;
 
+  function norm(v){ return String(v || '').trim().toLowerCase(); }
+  function sameUrl(a,b){ return decodeURIComponent(String(a || '')) === decodeURIComponent(String(b || '')); }
+  function getTantePaulaSong(){
+    const songs = (SUPABASE_SONGS && SUPABASE_SONGS.length) ? SUPABASE_SONGS : [];
+    return songs.find(s => norm(s.title) === 'tante paula' && /lara\s+wol(ff|fe)/i.test(String(s.artist || '')))
+        || songs.find(s => norm(s.slug).includes('tante-paula') && /lara\s+wol(ff|fe)/i.test(String(s.artist || '')))
+        || TANTE_PAULA_FALLBACK;
+  }
   function isThisSong(){
-    return audio && audio.src && audio.src === TANTE_PAULA.mp3;
+    const s = getTantePaulaSong();
+    return audio && audio.src && s && s.mp3 && sameUrl(audio.src, s.mp3);
   }
   function syncState(){
     const playing = tpActive && isThisSong() && !audio.paused;
@@ -5241,6 +5251,8 @@ showHome = function(){
   }
 
   teaser.addEventListener('click', () => {
+    const s = getTantePaulaSong();
+    if(!s || !s.mp3) return;
     if(isThisSong()){
       if(audio.paused){
         featuredMode = true;
@@ -5257,7 +5269,7 @@ showHome = function(){
     tpActive = true;
     playerBar.classList.remove('visible');
     window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'tante-paula' } }));
-    audio.src = TANTE_PAULA.mp3;
+    audio.src = s.mp3;
     audio.load();
     audio.play().catch(()=>{});
     syncState();
@@ -5272,7 +5284,7 @@ showHome = function(){
   });
 
   audio.addEventListener('play', () => {
-    if(audio.src !== TANTE_PAULA.mp3){
+    if(!isThisSong()){
       tpActive = false;
       teaser.classList.remove('playing');
       return;
