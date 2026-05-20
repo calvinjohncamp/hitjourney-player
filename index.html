@@ -833,12 +833,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* ══ Player Bar: Safe-Area-Streifen abdecken ══
-   padding-bottom auf .hj-player deckt den Home-Indicator-Bereich ab (env = 34px auf iPhone 14 Pro).
-   .hj-now behält sein optisches Padding oben/unten (7px). */
-.hj-player{
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+/* ══ Player Bar: kein Safe-Area-Streifen ══
+   Kein padding-bottom auf .hj-player — die Bar endet bündig wie bei Spotify.
+   .hj-now bekommt symmetrisches Padding oben/unten (7px) für optische Zentrierung. */
 .hj-now{
   padding-bottom: 7px;
 }
