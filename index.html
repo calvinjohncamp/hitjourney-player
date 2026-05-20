@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124m-playerbar-safearea-ipad-20260520 -->
+<!-- Version: v125-playerbar-safearea-final-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -744,8 +744,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
 /* Einzeilige Now-Playing-Zeile: Cover + Info + Controls */
-/* Einzeilige Now-Playing-Zeile: Cover + Info + Controls.
-   Festes padding-bottom 7px — Safe-Area wird von .hj-player selbst getragen. */
+/* iPhone: padding-bottom bleibt fest 7px — der Safe-Area-Bereich wird
+   separat gefüllt. Wichtig: KEIN env(safe-area-inset-bottom) als echtes
+   Padding auf .hj-player, sonst wandert der komplette Funktionsstreifen
+   sichtbar nach oben und unten entsteht wieder die störende freie Fläche. */
 .hj-now{
   display:flex;align-items:center;gap:10px;
   padding:7px 10px 7px 12px;
@@ -800,23 +802,29 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* iPhone PWA bottom anchoring:
-   padding-bottom auf .hj-player drückt den Inhalt (Fortschrittsbalken + hj-now)
-   über den Home-Indicator — die Bar-Hintergrundfarbe füllt den Bereich darunter
-   automatisch, da .hj-player position:fixed und bottom:0 hat. */
-.hj-player{
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+/* iPhone/PWA bottom anchoring: die Bar selbst bleibt am echten unteren Rand.
+   Nur ein Hintergrund-Füller läuft in die Safe-Area hinein. Dadurch werden
+   Cover, Titel und Play/Zurück/Weiter NICHT nach oben geschoben. */
+.hj-player::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
+  pointer-events:none;
 }
 
 /* v91 — iPad/large screens only: reduced breathing room under the full player controls.
    Compared with v90, roughly two thirds of the extra bottom air were removed.
    iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  /* iPad: Footer vertikal zentrieren — gleichmäßiges Padding oben/unten */
+  /* iPad: Footer-Inhalt tiefer und sauber mittig im Block — ohne Safe-Area-Padding auf dem Player. */
   .hj-player .hj-now{
     padding-left:24px;padding-right:16px;
     padding-top:16px;padding-bottom:16px;
-    min-height:72px;
+    min-height:76px;
     align-items:center;
   }
   .hj-now{align-items:center;}
@@ -1905,7 +1913,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .hj-player{
     left:0;right:0;
   }
-  .hj-now-strip .hj-now{padding:16px 32px 16px;}
+  .hj-now-strip .hj-now{padding:16px 32px 16px;min-height:76px;}
 
   /* Bottom pad: slightly less on desktop */
   .home-bottom-pad{height:180px}
@@ -4735,7 +4743,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v124m-playerbar-safearea-ipad-20260520';
+  const VERSION = 'v125-playerbar-safearea-final-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
