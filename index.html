@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124m-playerbar-safearea-ipad-20260520 -->
+<!-- Version: v125-fix-cover-playerbar-safearea-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -699,6 +699,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   justify-content:flex-end;
   padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
+/* Füllt den Home-Indicator-Streifen mit dem App-Hintergrund (kein farblicher Versatz) */
+#screenNowPlaying::after{
+  content:'';
+  position:fixed;
+  left:0;right:0;
+  bottom:0;
+  height:env(safe-area-inset-bottom, 0px);
+  background:rgba(6,20,32,1);
+  pointer-events:none;
+  z-index:1;
+}
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
 .np-prog-fill{height:100%;background:#85ACC9;border-radius:2px;width:0%;transition:width .1s linear;pointer-events:none}
@@ -811,7 +822,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons.
    ::after wächst nach UNTEN in den Safe-Area-Bereich — die Bar-Buttons bleiben
-   an ihrer Position, nur der Hintergrund füllt den Indicator-Streifen. */
+   an ihrer Position, nur der Hintergrund füllt den Indicator-Streifen.
+   WICHTIG: padding-bottom muss 0 bleiben — sonst hebt padding die gesamte Bar ab! */
+.hj-player{
+  padding-bottom: 0 !important;
+}
 .hj-player::after{
   content:'';
   position:absolute;
@@ -819,6 +834,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
   height:env(safe-area-inset-bottom, 0px);
   background:rgba(6,20,32,1);
+  pointer-events:none;
+  z-index:-1;
 }
 
 /* v91 — iPad/large screens only: reduced breathing room under the full player controls.
@@ -3838,11 +3855,22 @@ function showNowPlaying(){
   screenNP.classList.add('active');
   mainHeader.style.display='none';
   playerBar.classList.remove('visible');
-  updateNPScreen();
+  // updateNPScreen bricht bei queueIdx<0 ab — Fallback: Cover/Titel aus Preview
+  if(queueIdx>=0 || arcQueueIdx>=0){
+    updateNPScreen();
+  } else if(curAlbum && ALBUMS[curAlbum]){
+    const s=ALBUMS[curAlbum].songs[0];
+    setImgSrcWithFallback(npCover, getImgUrls(s,'cover'));
+    npTitle.textContent=s.title;
+    npAlbumLabel.textContent=ALBUMS[curAlbum].title;
+    npBtnPlay.classList.remove('playing');
+    syncRepeatBtn(npBtnRepeat);
+  }
 }
 function hideNowPlaying(){
   mainHeader.style.display='';
-  if(audio.src) playerBar.classList.add('visible');
+  // Player-Bar immer einblenden wenn ein Album offen ist (auch im Preview-Modus ohne aktiven Song)
+  if(audio.src || curAlbum) playerBar.classList.add('visible');
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
