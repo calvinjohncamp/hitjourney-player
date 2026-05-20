@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124h-favicon-20260520 -->
+<!-- Version: v124j-player-footer-fix-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4596,9 +4596,9 @@ backBtn.addEventListener('click',()=>{
 
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
-  // Player-Bar ist immer gleich hoch — nur per transform versteckt, nicht per display:none
-  // getBoundingClientRect().height funktioniert daher auch wenn nicht sichtbar
-  const h = playerBar.getBoundingClientRect().height || 190;
+  // Nur echte Höhe verwenden wenn Player sichtbar — sonst minimaler Pad
+  const isVisible = playerBar.classList.contains('visible');
+  const h = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
   const pad = h + 8;
   document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
 }
@@ -4733,7 +4733,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v103-this-world-bottom-teaser-20260519';
+  const VERSION = 'v124j-player-footer-fix-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
