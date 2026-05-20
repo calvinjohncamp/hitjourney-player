@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v131-spacer-flex-fix-20260520 -->
+<!-- Version: v132-spacer-strip-only-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4633,18 +4633,16 @@ backBtn.addEventListener('click',()=>{
 
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
-  // Nur echte Höhe wenn Player sichtbar — sonst kompakter Fallback
   const isVisible = playerBar.classList.contains('visible');
-  const h = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
-  const pad = h; // kein zusätzlicher Puffer — die Player-Bar selbst trägt bereits die Safe-Area
+  // Nur die sichtbare Button-Strip-Höhe messen (ohne Safe-Area-Padding darunter)
+  const strip = document.getElementById('nowStrip');
+  const stripH = strip ? strip.getBoundingClientRect().height : 0;
+  const fullH = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
+  const pad = fullH;
   document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
-  // Body-padding-bottom = Player-Bar-Höhe → Screens enden exakt an der Oberkante der Bar,
-  // kein ungenutzter Leerraum zwischen letztem Song und Player-Bar auf dem iPhone.
-  document.body.style.paddingBottom = pad + 'px';
-  // Spacer im Body-Flex reserviert die Höhe des fixed Player-Bars,
-  // damit die Screens (flex:1) exakt bis zur Oberkante der Bar reichen.
+  // Spacer reserviert nur die Button-Strip-Höhe — Safe-Area läuft unter dem Spacer durch
   const spacer = document.getElementById('hjPlayerSpacer');
-  if(spacer) spacer.style.height = (isVisible ? h : 0) + 'px';
+  if(spacer) spacer.style.height = (isVisible ? stripH : 0) + 'px';
 }
 
 // Albumseiten: dezenter UP-Button über der Playerleiste
