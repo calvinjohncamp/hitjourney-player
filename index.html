@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v145-ipad-random-transparent-bigger-20260520 -->
+<!-- Version: v147-sticky-language-header-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -612,6 +612,50 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-repeat-btn svg{width:25px;height:25px;}
 }
 
+
+/* v146 — Sticky Tracklist Header:
+   German Songs / English Songs header with count + action buttons stays reachable.
+   On iPhone the album covers scroll behind the opaque header; on iPad the left control rail remains fixed. */
+@media(max-width:599px){
+  #screenTracklist.active{
+    display:block;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  #tlLeftCol{
+    position:sticky;
+    top:0;
+    z-index:90;
+    background:rgba(6,20,32,1);
+    box-shadow:0 10px 24px rgba(6,20,32,.92);
+    border-bottom:1px solid rgba(133,172,201,.10);
+  }
+  #tlLeftCol::after{
+    content:'';
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:-18px;
+    height:18px;
+    pointer-events:none;
+    background:linear-gradient(to bottom, rgba(6,20,32,.86), rgba(6,20,32,0));
+  }
+  #tlRightCol{
+    position:relative;
+    z-index:1;
+    background:rgba(6,20,32,1);
+  }
+}
+
+@media(min-width:600px){
+  #tlLeftCol{
+    position:relative;
+    z-index:80;
+    background:rgba(6,20,32,1);
+    box-shadow:8px 0 22px rgba(6,20,32,.35);
+  }
+}
+
 /* Track rows — bigger, Spotify-sized */
 .tl-track{display:flex;align-items:center;gap:14px;padding:10px 16px 10px 32px;cursor:pointer;transition:background .12s}
 .tl-track:active{background:rgba(133,172,201,.07)}
@@ -1180,6 +1224,48 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .language-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .language-headline{font-size:34px;margin-top:0;}
 }
+
+/* v147 — Sticky German/English song headers:
+   The language title/count and Random/Play controls stay fixed while album covers scroll underneath. */
+#screenLanguageGerman,
+#screenLanguageEnglish{
+  scroll-padding-top:118px;
+}
+.language-topbar{
+  position:sticky;
+  top:0;
+  z-index:120;
+  background:rgba(6,20,32,1);
+  padding:8px 0 14px;
+  margin:0 0 14px;
+  box-shadow:0 12px 26px rgba(6,20,32,.92);
+  border-bottom:1px solid rgba(133,172,201,.10);
+}
+.language-topbar::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-18px;
+  height:18px;
+  pointer-events:none;
+  background:linear-gradient(to bottom, rgba(6,20,32,.90), rgba(6,20,32,0));
+}
+.language-grid{
+  position:relative;
+  z-index:1;
+}
+@media(max-width:599px){
+  #screenLanguageGerman,
+  #screenLanguageEnglish{
+    scroll-padding-top:96px;
+  }
+  .language-topbar{
+    padding:6px 0 12px;
+    margin:0 0 12px;
+  }
+}
+
 
 /* v142 — Lyrics-Sheet komplett sichtbar: Hochformat volle Breite, Desktop/Landscape als ganzes Quadrat */
 #screenNowPlaying.lyrics-open .np-cover-wrap{
