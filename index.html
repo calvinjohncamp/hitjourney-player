@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124i-icon-gap-reduced-20260520 -->
+<!-- Version: v124h-favicon-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -509,7 +509,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     flex:1;
     justify-content:center;
     align-items:center;
-    gap:40px;
+    gap:57px;
     order:3;
   }
 
@@ -620,7 +620,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
 .tl-duration{font-size:13px;color:rgba(133,172,201,.38);flex-shrink:0;font-variant-numeric:tabular-nums;min-width:34px;text-align:right;padding-right:2px;}
-.tl-bottom-pad{height:260px}
+.tl-bottom-pad{height:90px}
 
 /* Tracklist container: max-width for iPad readability — definiert oben im Screen-Block */
 #screenNowPlaying{
@@ -812,9 +812,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    Compared with v90, roughly two thirds of the extra bottom air were removed.
    iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  /* iPad: etwas mehr Padding links/rechts im Footer */
+  /* iPad: mehr Padding + vertikale Zentrierung im Footer */
   .hj-player.visible:not(.minimized) .hj-now{
     padding-left:24px;padding-right:16px;
+    padding-top:14px;padding-bottom:14px;
+    min-height:72px;align-items:center;
   }
   .hj-btn-play{width:46px;height:46px;}
 }
