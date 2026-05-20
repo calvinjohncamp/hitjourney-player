@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124l-playerbar-fix-20260520 -->
+<!-- Version: v124m-playerbar-safearea-ipad-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -744,9 +744,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
 /* Einzeilige Now-Playing-Zeile: Cover + Info + Controls */
-/* iPhone: padding-bottom bleibt fest 7px — das ::after-Pseudo-Element füllt
-   den Safe-Area-Bereich (Home Indicator) separat ab. KEIN doppeltes
-   env(safe-area-inset-bottom) hier, das würde die Bar zu weit nach oben schieben. */
+/* Einzeilige Now-Playing-Zeile: Cover + Info + Controls.
+   Festes padding-bottom 7px — Safe-Area wird von .hj-player selbst getragen. */
 .hj-now{
   display:flex;align-items:center;gap:10px;
   padding:7px 10px 7px 12px;
@@ -801,13 +800,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
-.hj-player::after{
-  content:'';
-  position:absolute;
-  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
-  height:env(safe-area-inset-bottom, 0px);
-  background:rgba(6,20,32,1);
+/* iPhone PWA bottom anchoring:
+   padding-bottom auf .hj-player drückt den Inhalt (Fortschrittsbalken + hj-now)
+   über den Home-Indicator — die Bar-Hintergrundfarbe füllt den Bereich darunter
+   automatisch, da .hj-player position:fixed und bottom:0 hat. */
+.hj-player{
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* v91 — iPad/large screens only: reduced breathing room under the full player controls.
@@ -1907,7 +1905,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .hj-player{
     left:0;right:0;
   }
-  .hj-now-strip .hj-now{padding:7px 32px 7px;}
+  .hj-now-strip .hj-now{padding:16px 32px 16px;}
 
   /* Bottom pad: slightly less on desktop */
   .home-bottom-pad{height:180px}
@@ -4737,7 +4735,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v124l-playerbar-fix-20260520';
+  const VERSION = 'v124m-playerbar-safearea-ipad-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
