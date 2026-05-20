@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124k-bottom-pad-ipad-footer-20260520 -->
+<!-- Version: v124l-playerbar-fix-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -744,10 +744,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
 /* Einzeilige Now-Playing-Zeile: Cover + Info + Controls */
+/* iPhone: padding-bottom bleibt fest 7px — das ::after-Pseudo-Element füllt
+   den Safe-Area-Bereich (Home Indicator) separat ab. KEIN doppeltes
+   env(safe-area-inset-bottom) hier, das würde die Bar zu weit nach oben schieben. */
 .hj-now{
   display:flex;align-items:center;gap:10px;
   padding:7px 10px 7px 12px;
-  padding-bottom:calc(7px + env(safe-area-inset-bottom, 0px));
 }
 .hj-now-num{display:none}/* Track-Nummer ausgeblendet im Footer */
 .hj-now-numtxt{display:none}
@@ -812,11 +814,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    Compared with v90, roughly two thirds of the extra bottom air were removed.
    iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  /* iPad: Footer vertikal zentrieren */
+  /* iPad: Footer vertikal zentrieren — gleichmäßiges Padding oben/unten */
   .hj-player .hj-now{
     padding-left:24px;padding-right:16px;
-    padding-top:12px;padding-bottom:12px;
-    min-height:68px;
+    padding-top:16px;padding-bottom:16px;
+    min-height:72px;
+    align-items:center;
   }
   .hj-now{align-items:center;}
   .hj-btn-play{width:46px;height:46px;}
@@ -4734,7 +4737,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v124k-bottom-pad-ipad-footer-20260520';
+  const VERSION = 'v124l-playerbar-fix-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
