@@ -663,14 +663,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .np-cover-wrap{
     padding:20px 20px 0;
   }
-  /* iPad: Song-View Footer-Block vertikal zentrieren */
+  /* iPad: Song-View-Footer vertikal zentrieren statt ans untere Ende drücken */
   .np-bottom{
     justify-content:center;
-    padding-top:16px;
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 20px);
+    padding-top:12px;
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
   .np-controls{
-    padding-top:16px;
+    padding-top:14px;
   }
 }
 .np-cover{
@@ -691,13 +691,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
 .np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np-artist{font-size:14px;color:rgba(133,172,201,.6)}
-/* Bottom section: pushed well down */
+/* Bottom section: pushed to bottom, with safe-area padding only (no player bar here — it's hidden in NowPlaying mode) */
 .np-bottom{
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -809,11 +809,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons */
+/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons.
+   ::after wächst nach UNTEN in den Safe-Area-Bereich — die Bar-Buttons bleiben
+   an ihrer Position, nur der Hintergrund füllt den Indicator-Streifen. */
 .hj-player::after{
   content:'';
   position:absolute;
-  left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
+  left:0;right:0;
+  bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
   height:env(safe-area-inset-bottom, 0px);
   background:rgba(6,20,32,1);
 }
