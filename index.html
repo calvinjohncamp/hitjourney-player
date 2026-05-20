@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v153-home-just-this-dance-lara-wolf-songs-folder-fix-20260520 -->
+<!-- Version: v154-home-just-this-dance-lara-wolf-final-teaser-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -5387,7 +5387,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v128-zero-bottom-gap-20260520';
+  const VERSION = 'v154-just-this-dance-lara-wolf-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -5482,7 +5482,7 @@ showHome = function(){
   const teaser = document.getElementById('twiwTeaser');
   if(!teaser) return;
 
-  const THIS_WORLD_IS_WIDE = {
+  const JUST_THIS_DANCE_LARA_WOLF = {
     title: 'Just This Dance',
     artist: 'Lara Wolf',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/just-this-dance-lara-wolf-cover-2-1.jpg',
@@ -5491,7 +5491,7 @@ showHome = function(){
   let twiwActive = false;
 
   function isThisSong(){
-    return audio && audio.src && audio.src === THIS_WORLD_IS_WIDE.mp3;
+    return audio && audio.src && audio.src === JUST_THIS_DANCE_LARA_WOLF.mp3;
   }
   function syncState(){
     const playing = twiwActive && isThisSong() && !audio.paused;
@@ -5514,22 +5514,22 @@ showHome = function(){
     featuredMode = true;
     twiwActive = true;
     playerBar.classList.remove('visible');
-    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'just-this-dance' } }));
-    audio.src = THIS_WORLD_IS_WIDE.mp3;
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'just-this-dance-lara-wolf' } }));
+    audio.src = JUST_THIS_DANCE_LARA_WOLF.mp3;
     audio.load();
     audio.play().catch(()=>{});
     syncState();
   });
 
   window.addEventListener('hj:teaser-audio-switch', (e) => {
-    if(e.detail && e.detail.source !== 'just-this-dance'){
+    if(e.detail && e.detail.source !== 'just-this-dance-lara-wolf'){
       twiwActive = false;
       teaser.classList.remove('playing');
     }
   });
 
   audio.addEventListener('play', () => {
-    if(audio.src !== THIS_WORLD_IS_WIDE.mp3){
+    if(audio.src !== JUST_THIS_DANCE_LARA_WOLF.mp3){
       twiwActive = false;
       teaser.classList.remove('playing');
       return;
