@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260519-apostrophe-edit-fix-v2 -->
+<!-- Version: admin-v20260520-duplicate-title-slug-guard -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -731,6 +731,15 @@ function makeSlug(t){
     .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
     .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
+function makeSmartSlug(title, artist){
+  const base = makeSlug(title);
+  if(!base) return '';
+  const exists = allSongs.some(s => s.slug === base);
+  if(!exists) return base;
+  const artistPart = makeSlug(artist || '');
+  if(artistPart) return `${base}-${artistPart}`;
+  return base;
+}
 
 /* ── UPLOAD STATE ── */
 const files = { mp3: null, cover: null, cover21: null, lyrics: null };
@@ -752,11 +761,16 @@ function updateHints(){
   h('hintMp3',n.mp3); h('hintCover',n.cover); h('hintCover21',n.cover21); h('hintLyrics',n.lyrics);
 }
 
-document.getElementById('addTitle').addEventListener('input', e=>{
+function refreshAutoSlug(){
   const sl = document.getElementById('addSlug');
-  if(!sl.dataset.m) sl.value = makeSlug(e.target.value);
+  if(!sl || sl.dataset.m) return;
+  const title = document.getElementById('addTitle').value.trim();
+  const artist = document.getElementById('addArtist').value.trim();
+  sl.value = makeSmartSlug(title, artist);
   updateHints();
-});
+}
+document.getElementById('addTitle').addEventListener('input', refreshAutoSlug);
+document.getElementById('addArtist').addEventListener('input', refreshAutoSlug);
 document.getElementById('addSlug').addEventListener('input', e=>{
   e.target.dataset.m = '1';
   updateHints();
