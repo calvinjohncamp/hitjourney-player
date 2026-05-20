@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v135-no-safe-area-strip-20260520 -->
+<!-- Version: v136-remove-controls-strip-div-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -3202,10 +3202,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
-<!-- Zeit-Labels: unsichtbar im DOM, JS braucht sie -->
-<div class="hj-controls-strip" style="display:none">
-<div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
-</div>
+<!-- Zeit-Labels: unsichtbar, JS braucht die IDs -->
+<span id="tElapsed" style="display:none">0:00</span><span id="tRemain" style="display:none">—</span>
 </div>
 <script>
 // ── SUPABASE CONFIG ──
