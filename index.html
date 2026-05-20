@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v128-zero-bottom-gap-20260520 -->
+<!-- Version: v129-nowplaying-fixed-fullscreen-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -627,13 +627,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(6,20,32,1);
   display:none;
   flex-direction:column;
-  height:100%;
   overflow:hidden;
   /* Kein padding-bottom hier — der Hintergrund zieht bis ganz ans untere Ende.
      Die Safe-Area wird von .np-bottom getragen (nur die Controls, nicht der Hintergrund). */
   box-sizing: border-box;
 }
-#screenNowPlaying.active{display:flex;}
+#screenNowPlaying.active{
+  display:flex;
+  /* Vollbild: überdeckt alles inkl. Player-Bar und Safe-Area-Streifen */
+  position:fixed;
+  inset:0;
+  z-index:250;
+  padding-top:env(safe-area-inset-top);
+}
 /* ── Now Playing: iPhone default (original, unverändert) ── */
 .np-header{position:absolute;top:0;left:0;right:0;height:0;z-index:5}
 .np-down-btn{position:absolute;left:18px;top:82px;background:none;border:none;cursor:pointer;color:rgba(133,172,201,.72);padding:4px;display:flex;z-index:9999}
