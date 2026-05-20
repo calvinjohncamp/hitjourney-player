@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v142-language-lyrics-fit-icons-20260520 -->
+<!-- Version: v145-ipad-random-transparent-bigger-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1105,9 +1105,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   min-height:94px;
 }
 .language-dice-btn{grid-column:1;}
-.language-repeat-btn{grid-column:2;}
+.language-play-btn{grid-column:2;}
 .language-dice-btn,
-.language-repeat-btn{
+.language-play-btn{
   border:0;
   background:transparent;
   padding:0;
@@ -1119,26 +1119,35 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   -webkit-tap-highlight-color:transparent;
 }
 .language-dice-btn:active,
-.language-repeat-btn:active{transform:scale(.92);opacity:.82;}
+.language-play-btn:active{transform:scale(.92);opacity:.82;}
 .language-dice-img{
-  width:clamp(46px,6vw,75px);
-  height:clamp(46px,6vw,75px);
+  width:clamp(61px,8vw,100px);
+  height:clamp(61px,8vw,100px);
   object-fit:contain;
   display:block;
+  background:transparent;
+  pointer-events:none;
 }
-.language-repeat-btn{
-  color:rgba(133,172,201,.72);
+.language-play-btn{
+  width:clamp(31px,4vw,51px);
+  height:clamp(31px,4vw,51px);
+  border-radius:50%;
+  border:1px solid rgba(133,172,201,.32);
+  background:#0B2A42;
+  color:#85ACC9;
+  box-shadow:0 4px 18px rgba(0,0,0,.34);
 }
-.language-repeat-btn svg{
-  width:clamp(16px,2.4vw,25px);
-  height:clamp(16px,2.4vw,25px);
+.language-play-btn:hover{background:#123048;color:#cfe5f5;}
+.language-play-btn svg{
+  width:45%;
+  height:45%;
   display:block;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:2;
-  stroke-linecap:round;
-  stroke-linejoin:round;
+  fill:currentColor;
+  stroke:none;
 }
+.language-play-btn .icon-pause{display:none;}
+.language-play-btn.playing .icon-play{display:none;}
+.language-play-btn.playing .icon-pause{display:block;}
 .language-grid{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
@@ -1165,9 +1174,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .language-titleblock{grid-column:1;}
   .language-actions{grid-column:2;grid-template-columns:1fr 1fr;min-height:74px;}
   .language-dice-btn{grid-column:1;}
-  .language-repeat-btn{grid-column:2;}
+  .language-play-btn{grid-column:2;}
   .language-dice-img{width:59px;height:59px;}
-  .language-repeat-btn svg{width:20px;height:20px;}
+  .language-play-btn{width:40px;height:40px;}
   .language-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .language-headline{font-size:34px;margin-top:0;}
 }
@@ -2497,8 +2506,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
         <button class="language-dice-btn" type="button" onclick="shuffleLanguage('de')" aria-label="German Songs zufällig abspielen">
           <img class="language-dice-img" alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"/>
         </button>
-        <button class="language-repeat-btn" type="button" onclick="document.getElementById('btnRepeat').click()" aria-label="German Songs Wiederholen">
-          <svg viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+        <button class="language-play-btn" id="languageDePlay" type="button" onclick="toggleLanguagePlayFromStart('de')" aria-label="German Songs von Anfang abspielen oder pausieren">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>
         </button>
       </div>
     </div>
@@ -2516,8 +2526,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
         <button class="language-dice-btn" type="button" onclick="shuffleLanguage('en')" aria-label="English Songs zufällig abspielen">
           <img class="language-dice-img" alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"/>
         </button>
-        <button class="language-repeat-btn" type="button" onclick="document.getElementById('btnRepeat').click()" aria-label="English Songs Repeat">
-          <svg viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+        <button class="language-play-btn" id="languageEnPlay" type="button" onclick="toggleLanguagePlayFromStart('en')" aria-label="English Songs from beginning abspielen oder pausieren">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>
         </button>
       </div>
     </div>
@@ -4168,6 +4179,18 @@ function renderLanguageGrid(lang, songs){
     grid.appendChild(card);
   });
 }
+function syncLanguagePlayButtons(){
+  document.querySelectorAll('.language-play-btn').forEach(b=>b.classList.remove('playing'));
+  if(!audio.paused){
+    if(curAlbum === 'languageGerman'){
+      const b = document.getElementById('languageDePlay');
+      if(b) b.classList.add('playing');
+    } else if(curAlbum === 'languageEnglish'){
+      const b = document.getElementById('languageEnPlay');
+      if(b) b.classList.add('playing');
+    }
+  }
+}
 function showLanguage(lang){
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
@@ -4190,6 +4213,30 @@ function showLanguage(lang){
   if(screen) screen.scrollTop = 0;
   prevScreen = isDe ? 'languageGerman' : 'languageEnglish';
   updateLanguageHighlight();
+  syncLanguagePlayButtons();
+}
+function toggleLanguagePlayFromStart(lang){
+  const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+  if(!ALBUMS[key] || !ALBUMS[key].songs || !ALBUMS[key].songs.length) return;
+  const isSameLanguage = curAlbum === key;
+  const isPlayingThisLanguage = isSameLanguage && !audio.paused && queueIdx >= 0;
+  if(isPlayingThisLanguage){
+    audio.pause();
+    updateLanguageHighlight();
+    syncLanguagePlayButtons();
+    return;
+  }
+  curAlbum = key;
+  shuffleOn = false;
+  btnShuffle.classList.remove('active');
+  npBtnShuffle.classList.remove('active');
+  queue = ALBUMS[key].songs.map((_,i)=>i);
+  queueIdx = 0;
+  prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+  languageCoverClickState = { key, idx:0, phase:1 };
+  loadPlayNoScroll(0);
+  updateLanguageHighlight();
+  syncLanguagePlayButtons();
 }
 function shuffleLanguage(lang){
   const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
@@ -4604,6 +4651,7 @@ function updatePlayBtns(){
   refreshHighlight(false); // KEIN scrollIntoView — verhindert Scroll-zurück-Bug bei langen Listen
   refreshArchiveHighlight();
   updateLanguageHighlight();
+  syncLanguagePlayButtons();
 }
 function syncRepeatBtn(btn){
   btn.classList.remove('repeat-all','repeat-one','active');
