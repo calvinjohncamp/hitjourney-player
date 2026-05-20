@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v130-body-padding-bottom-fix-20260520 -->
+<!-- Version: v131-spacer-flex-fix-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -3152,6 +3152,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <svg viewbox="0 0 24 24"><polyline points="18,15 12,9 6,15"></polyline></svg>
 </button>
 <audio id="hjAudio" preload="none"></audio>
+<!-- Spacer im Body-Flex: reserviert die Höhe der fixed Player-Bar, damit Screens nicht darunter reichen -->
+<div id="hjPlayerSpacer" style="flex-shrink:0;height:0;transition:height .3s ease"></div>
 <!-- Player Bar -->
 <div class="hj-player" id="playerBar">
 <!-- Upper strip: now playing (clickable → Now Playing screen) -->
@@ -4639,6 +4641,10 @@ function updateBottomPads(){
   // Body-padding-bottom = Player-Bar-Höhe → Screens enden exakt an der Oberkante der Bar,
   // kein ungenutzter Leerraum zwischen letztem Song und Player-Bar auf dem iPhone.
   document.body.style.paddingBottom = pad + 'px';
+  // Spacer im Body-Flex reserviert die Höhe des fixed Player-Bars,
+  // damit die Screens (flex:1) exakt bis zur Oberkante der Bar reichen.
+  const spacer = document.getElementById('hjPlayerSpacer');
+  if(spacer) spacer.style.height = (isVisible ? h : 0) + 'px';
 }
 
 // Albumseiten: dezenter UP-Button über der Playerleiste
