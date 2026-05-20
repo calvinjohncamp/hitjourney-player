@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v126-safearea-lyrics-npbg-20260520 -->
+<!-- Version: v127-no-bottom-gap-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -629,8 +629,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-direction:column;
   height:100%;
   overflow:hidden;
-  /* Hintergrund auch in den Safe-Area-Bereich unten ziehen */
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Kein padding-bottom hier — der Hintergrund zieht bis ganz ans untere Ende.
+     Die Safe-Area wird von .np-bottom getragen (nur die Controls, nicht der Hintergrund). */
   box-sizing: border-box;
 }
 #screenNowPlaying.active{display:flex;}
@@ -670,7 +670,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .np-bottom{
     justify-content:center;
     padding-top:12px;
-    padding-bottom:16px;
+    padding-bottom:16px; /* iPad hat keinen Home-Indicator */
   }
   .np-controls{
     padding-top:14px;
@@ -694,13 +694,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
 .np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np-artist{font-size:14px;color:rgba(133,172,201,.6)}
-/* Bottom section: pushed to bottom. Safe-Area wird vom Eltern-Screen getragen. */
+/* Bottom section: pushed to bottom. Safe-Area hier tragen damit Hintergrund bis Rand geht. */
 .np-bottom{
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 8px;
+  padding:0 0 calc(8px + env(safe-area-inset-bottom, 0px));
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -4627,7 +4627,7 @@ function updateBottomPads(){
   // Nur echte Höhe wenn Player sichtbar — sonst kompakter Fallback
   const isVisible = playerBar.classList.contains('visible');
   const h = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
-  const pad = h + 8;
+  const pad = h; // kein zusätzlicher Puffer — die Player-Bar selbst trägt bereits die Safe-Area
   document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
 }
 
@@ -4761,7 +4761,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v124m-playerbar-safearea-ipad-20260520';
+  const VERSION = 'v127-no-bottom-gap-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
