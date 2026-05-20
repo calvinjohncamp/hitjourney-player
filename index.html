@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v125-fix-cover-playerbar-safearea-20260520 -->
+<!-- Version: v126-safearea-lyrics-npbg-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -629,6 +629,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-direction:column;
   height:100%;
   overflow:hidden;
+  /* Hintergrund auch in den Safe-Area-Bereich unten ziehen */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
 }
 #screenNowPlaying.active{display:flex;}
 /* ── Now Playing: iPhone default (original, unverändert) ── */
@@ -667,7 +670,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .np-bottom{
     justify-content:center;
     padding-top:12px;
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 16px);
+    padding-bottom:16px;
   }
   .np-controls{
     padding-top:14px;
@@ -691,24 +694,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-info{text-align:center;padding:24px 24px 0;flex-shrink:0}
 .np-title{font-size:20px;font-weight:700;color:#cfe5f5;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np-artist{font-size:14px;color:rgba(133,172,201,.6)}
-/* Bottom section: pushed to bottom, with safe-area padding only (no player bar here — it's hidden in NowPlaying mode) */
+/* Bottom section: pushed to bottom. Safe-Area wird vom Eltern-Screen getragen. */
 .np-bottom{
   flex:1;
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-  padding:0 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
-}
-/* Füllt den Home-Indicator-Streifen mit dem App-Hintergrund (kein farblicher Versatz) */
-#screenNowPlaying::after{
-  content:'';
-  position:fixed;
-  left:0;right:0;
-  bottom:0;
-  height:env(safe-area-inset-bottom, 0px);
-  background:rgba(6,20,32,1);
-  pointer-events:none;
-  z-index:1;
+  padding:0 0 8px;
 }
 /* Progress */
 .np-prog-wrap{margin:0 24px;height:3px;background:rgba(133,172,201,.18);border-radius:2px;cursor:pointer;flex-shrink:0}
@@ -820,22 +812,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .hj-btn-repeat.repeat-one .icon-rpt-one{display:block}
 
-/* iPhone PWA bottom anchoring: fill the Home Indicator area without lifting the buttons.
-   ::after wächst nach UNTEN in den Safe-Area-Bereich — die Bar-Buttons bleiben
-   an ihrer Position, nur der Hintergrund füllt den Indicator-Streifen.
-   WICHTIG: padding-bottom muss 0 bleiben — sonst hebt padding die gesamte Bar ab! */
+/* ══ iPhone Safe-Area Fix ══
+   padding-bottom füllt den Home-Indicator-Streifen mit dem Bar-Hintergrund.
+   Die Buttons sitzen im oberen Teil der Bar (padding des .hj-now) — unverändert.
+   JS setzt zusätzlich --sab als konkreten px-Wert als Fallback. */
 .hj-player{
-  padding-bottom: 0 !important;
-}
-.hj-player::after{
-  content:'';
-  position:absolute;
-  left:0;right:0;
-  bottom:calc(-1 * env(safe-area-inset-bottom, 0px));
-  height:env(safe-area-inset-bottom, 0px);
-  background:rgba(6,20,32,1);
-  pointer-events:none;
-  z-index:-1;
+  padding-bottom: var(--sab, env(safe-area-inset-bottom, 0px));
 }
 
 /* v91 — iPad/large screens only: reduced breathing room under the full player controls.
@@ -3990,6 +3972,9 @@ function openLyrics() {
     song = KNW_SONGS[knwActiveSongIdx];
   } else if(curAlbum && queueIdx >= 0){
     song = ALBUMS[curAlbum].songs[queue[queueIdx]];
+  } else if(curAlbum && ALBUMS[curAlbum]){
+    // Preview-Modus: kein Song läuft, aber Album ist offen → Song 0 als Fallback
+    song = ALBUMS[curAlbum].songs[0];
   }
   const lyricsUrls = getLyricsUrlsForSong(song);
   if (!song || !lyricsUrls.length) return;
@@ -5224,6 +5209,22 @@ showHome = function(){
 })();
 
 // Bottom-Pads initial setzen und bei Orientierungswechsel/Resize aktualisieren
+
+// ── Safe-Area-Inset-Bottom per JS messen und als CSS-Variable setzen ──
+// Wir messen den tatsächlichen Wert über ein unsichtbares Test-Element,
+// da env() in JS nicht direkt auslesbar ist.
+function updateSafeAreaBottom(){
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';
+  document.body.appendChild(el);
+  const sab = el.getBoundingClientRect().height;
+  document.body.removeChild(el);
+  document.documentElement.style.setProperty('--sab', sab + 'px');
+  return sab;
+}
+updateSafeAreaBottom();
+window.addEventListener('resize', updateSafeAreaBottom);
+window.addEventListener('orientationchange', ()=>{ setTimeout(updateSafeAreaBottom, 100); });
 
 // Dynamische Berechnung der Player-Bar-Höhe zur Vermeidung von Leerraum auf iPhones
 function updatePlayerBarHeight(){
