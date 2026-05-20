@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v144-tante-paula-dynamic-audio-fix-20260520 -->
+<!-- Version: v142-language-lyrics-fit-icons-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1172,23 +1172,20 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .language-headline{font-size:34px;margin-top:0;}
 }
 
-/* v143 — Lyrics-Sheet komplett sichtbar: Header im Lyrics-Modus kollabiert, Bild höher gesetzt */
-#screenNowPlaying.lyrics-open .np-header{
-  display:none;
-}
+/* v142 — Lyrics-Sheet komplett sichtbar: Hochformat volle Breite, Desktop/Landscape als ganzes Quadrat */
 #screenNowPlaying.lyrics-open .np-cover-wrap{
   flex:1;
   align-items:flex-start;
   justify-content:center;
-  padding:calc(env(safe-area-inset-top, 0px) + 18px) 0 0;
-  overflow:hidden;
+  padding:calc(env(safe-area-inset-top, 0px) + 58px) 0 0;
+  overflow:auto;
   -webkit-overflow-scrolling:touch;
 }
 #screenNowPlaying.lyrics-open .np-cover{
-  width:min(100vw, calc(100dvh - env(safe-area-inset-top, 0px) - 18px));
+  width:min(100vw, calc(100dvh - env(safe-area-inset-top, 0px) - 58px));
   max-width:100vw;
   height:auto;
-  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 18px);
+  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 58px);
   aspect-ratio:auto;
   object-fit:contain;
   border-radius:0;
@@ -1200,11 +1197,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 @media(min-width:600px){
   #screenNowPlaying.lyrics-open .np-cover-wrap{
-    padding:18px 0 0;
+    padding:72px 0 0;
   }
   #screenNowPlaying.lyrics-open .np-cover{
-    width:min(100vw, calc(100dvh - 18px));
-    max-height:calc(100dvh - 18px);
+    width:min(100vw, calc(100dvh - 72px));
+    max-height:calc(100dvh - 72px);
   }
 }
 
@@ -4402,27 +4399,13 @@ function closeLyrics() {
   lyricsOpen = false;
 }
 
-function closeLanguageLyricsAndReturn(){
-  if(!lyricsOpen) return;
-  closeLyrics();
-  if(screenNP.classList.contains('active')) hideNowPlaying();
-  if(languageCoverClickState && languageCoverClickState.phase === 2){
-    languageCoverClickState.phase = 3;
-  }
-  updateLanguageHighlight();
-}
-
-npCoverImg.addEventListener('click',(e)=>{
+npCoverImg.addEventListener('click',()=>{
   if(lyricsOpen && languageCoverClickState && languageCoverClickState.phase === 2){
-    e.stopPropagation();
-    closeLanguageLyricsAndReturn();
+    closeLyrics();
+    if(screenNP.classList.contains('active')) hideNowPlaying();
+    languageCoverClickState.phase = 3;
+    updateLanguageHighlight();
   }
-});
-
-screenNP.addEventListener('click',(e)=>{
-  if(!lyricsOpen || !languageCoverClickState || languageCoverClickState.phase !== 2) return;
-  if(e.target.closest('.np-cover,.np-down-btn,.np-btn,.np-controls,.np-prog-wrap')) return;
-  closeLanguageLyricsAndReturn();
 });
 
 npCoverWrap.addEventListener('touchstart',e=>{
@@ -5199,7 +5182,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v144-tante-paula-dynamic-audio-fix-20260520';
+  const VERSION = 'v128-zero-bottom-gap-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
@@ -5224,26 +5207,16 @@ showHome = function(){
   const teaser = document.getElementById('tpTeaser');
   if(!teaser) return;
 
-  const TANTE_PAULA_FALLBACK = {
+  const TANTE_PAULA = {
     title: 'Tante Paula',
     artist: 'Lara Wolff',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg',
-    // Fallback nur für den Notfall. Normalerweise wird die MP3 jetzt aus Supabase gelesen.
-    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula-lara-wolff.mp3'
+    mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/tante-paula.mp3'
   };
   let tpActive = false;
 
-  function norm(v){ return String(v || '').trim().toLowerCase(); }
-  function sameUrl(a,b){ return decodeURIComponent(String(a || '')) === decodeURIComponent(String(b || '')); }
-  function getTantePaulaSong(){
-    const songs = (SUPABASE_SONGS && SUPABASE_SONGS.length) ? SUPABASE_SONGS : [];
-    return songs.find(s => norm(s.title) === 'tante paula' && /lara\s+wol(ff|fe)/i.test(String(s.artist || '')))
-        || songs.find(s => norm(s.slug).includes('tante-paula') && /lara\s+wol(ff|fe)/i.test(String(s.artist || '')))
-        || TANTE_PAULA_FALLBACK;
-  }
   function isThisSong(){
-    const s = getTantePaulaSong();
-    return audio && audio.src && s && s.mp3 && sameUrl(audio.src, s.mp3);
+    return audio && audio.src && audio.src === TANTE_PAULA.mp3;
   }
   function syncState(){
     const playing = tpActive && isThisSong() && !audio.paused;
@@ -5251,8 +5224,6 @@ showHome = function(){
   }
 
   teaser.addEventListener('click', () => {
-    const s = getTantePaulaSong();
-    if(!s || !s.mp3) return;
     if(isThisSong()){
       if(audio.paused){
         featuredMode = true;
@@ -5269,7 +5240,7 @@ showHome = function(){
     tpActive = true;
     playerBar.classList.remove('visible');
     window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'tante-paula' } }));
-    audio.src = s.mp3;
+    audio.src = TANTE_PAULA.mp3;
     audio.load();
     audio.play().catch(()=>{});
     syncState();
@@ -5284,7 +5255,7 @@ showHome = function(){
   });
 
   audio.addEventListener('play', () => {
-    if(!isThisSong()){
+    if(audio.src !== TANTE_PAULA.mp3){
       tpActive = false;
       teaser.classList.remove('playing');
       return;
