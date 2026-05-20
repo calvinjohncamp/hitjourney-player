@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v136-remove-controls-strip-div-20260520 -->
+<!-- Version: v143-language-lyrics-position-close-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -1023,6 +1023,189 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .ft-text{top:3%;}
   .ft-label{margin-bottom:clamp(5px,1.2vw,10px);}
   .ft-dots{bottom:7%;}
+}
+
+
+
+/* ══ GERMAN / ENGLISH CHAPTER ══ */
+.language-teaser{
+  grid-column:1/-1;
+  position:relative;
+  aspect-ratio:2/1;
+  border-radius:8px;
+  overflow:hidden;
+  background:#050505;
+  margin:0 0 14px;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+}
+.language-teaser img{
+  width:100%;height:100%;display:block;object-fit:cover;
+}
+.language-teaser-half{
+  position:absolute;top:0;bottom:0;width:50%;
+  border:0;background:transparent;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.language-teaser-half.left{left:0;}
+.language-teaser-half.right{right:0;}
+.language-teaser-half:active{background:rgba(255,255,255,.06);}
+.language-teaser-split{
+  position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:rgba(255,255,255,.10);pointer-events:none;
+}
+#screenLanguageGerman,
+#screenLanguageEnglish{
+  display:none;
+  background:rgba(6,20,32,1);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+#screenLanguageGerman.active,
+#screenLanguageEnglish.active{
+  display:block;
+}
+.language-wrap{
+  width:100%;
+  padding:16px 14px 210px;
+}
+.language-topbar{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:12px;
+  align-items:center;
+  margin:8px 0 14px;
+}
+.language-titleblock{
+  grid-column:1 / span 1;
+  min-width:0;
+}
+.language-headline{
+  font-family:'Anton',sans-serif;
+  font-size:clamp(30px,7vw,58px);
+  line-height:.95;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#cfe5f5;
+  margin:0 0 10px;
+}
+.language-subline{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(133,172,201,.48);
+  margin-bottom:0;
+}
+.language-actions{
+  grid-column:2 / span 3;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:center;
+  justify-items:center;
+  min-height:94px;
+}
+.language-dice-btn{grid-column:1;}
+.language-repeat-btn{grid-column:2;}
+.language-dice-btn,
+.language-repeat-btn{
+  border:0;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .12s ease,opacity .14s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.language-dice-btn:active,
+.language-repeat-btn:active{transform:scale(.92);opacity:.82;}
+.language-dice-img{
+  width:clamp(46px,6vw,75px);
+  height:clamp(46px,6vw,75px);
+  object-fit:contain;
+  display:block;
+}
+.language-repeat-btn{
+  color:rgba(133,172,201,.72);
+}
+.language-repeat-btn svg{
+  width:clamp(16px,2.4vw,25px);
+  height:clamp(16px,2.4vw,25px);
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.language-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:12px;
+  align-items:start;
+}
+.language-card{
+  background:#0B2A42;
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .13s ease,opacity .13s ease,background .15s ease;
+}
+.language-card:active{transform:scale(.96);opacity:.86;}
+.language-card.active{background:#123048;}
+.language-cover{
+  width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#06141F;
+}
+.language-meta{display:none;}
+.language-title,.language-artist{display:none;}
+@media(max-width:599px){
+  .language-wrap{padding:14px 14px 190px;}
+  .language-topbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px;}
+  .language-titleblock{grid-column:1;}
+  .language-actions{grid-column:2;grid-template-columns:1fr 1fr;min-height:74px;}
+  .language-dice-btn{grid-column:1;}
+  .language-repeat-btn{grid-column:2;}
+  .language-dice-img{width:59px;height:59px;}
+  .language-repeat-btn svg{width:20px;height:20px;}
+  .language-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .language-headline{font-size:34px;margin-top:0;}
+}
+
+/* v143 — Lyrics-Sheet komplett sichtbar: Header im Lyrics-Modus kollabiert, Bild höher gesetzt */
+#screenNowPlaying.lyrics-open .np-header{
+  display:none;
+}
+#screenNowPlaying.lyrics-open .np-cover-wrap{
+  flex:1;
+  align-items:flex-start;
+  justify-content:center;
+  padding:calc(env(safe-area-inset-top, 0px) + 18px) 0 0;
+  overflow:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+#screenNowPlaying.lyrics-open .np-cover{
+  width:min(100vw, calc(100dvh - env(safe-area-inset-top, 0px) - 18px));
+  max-width:100vw;
+  height:auto;
+  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 18px);
+  aspect-ratio:auto;
+  object-fit:contain;
+  border-radius:0;
+  box-shadow:none;
+}
+#screenNowPlaying.lyrics-open .np-info,
+#screenNowPlaying.lyrics-open .np-bottom{
+  display:none;
+}
+@media(min-width:600px){
+  #screenNowPlaying.lyrics-open .np-cover-wrap{
+    padding:18px 0 0;
+  }
+  #screenNowPlaying.lyrics-open .np-cover{
+    width:min(100vw, calc(100dvh - 18px));
+    max-height:calc(100dvh - 18px);
+  }
 }
 
 /* ══ EDITORIAL CARDS ══ */
@@ -2285,6 +2468,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 </div>
+<!-- German / English Split Teaser -->
+<div class="home-grid home-language-grid">
+  <div class="language-teaser" id="languageTeaser" aria-label="German and English Songs">
+    <img alt="German and English Songs" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg"/>
+    <button class="language-teaser-half left" type="button" onclick="showLanguage('de')" aria-label="German Songs"></button>
+    <button class="language-teaser-half right" type="button" onclick="showLanguage('en')" aria-label="English Songs"></button>
+    <div class="language-teaser-split" aria-hidden="true"></div>
+  </div>
+</div>
 <!-- Finaler Home-Teaser: This World Is Wide -->
 <div class="home-grid home-final-grid">
 <div class="wide-audio-teaser home-final-teaser" id="twiwTeaser" aria-label="This World Is Wide abspielen oder pausieren">
@@ -2294,6 +2486,46 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <footer class="home-info-footer" aria-label="Information">
 <button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information"><span class="home-info-i" aria-hidden="true">i</span></button>
 </footer>
+</div>
+
+<!-- LANGUAGE SONGS -->
+<div class="screen" id="screenLanguageGerman">
+  <div class="language-wrap">
+    <div class="language-topbar">
+      <div class="language-titleblock">
+        <div class="language-headline">German Songs</div>
+        <div class="language-subline" id="languageGermanCount">0 Songs</div>
+      </div>
+      <div class="language-actions" aria-label="German Songs Aktionen">
+        <button class="language-dice-btn" type="button" onclick="shuffleLanguage('de')" aria-label="German Songs zufällig abspielen">
+          <img class="language-dice-img" alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"/>
+        </button>
+        <button class="language-repeat-btn" type="button" onclick="document.getElementById('btnRepeat').click()" aria-label="German Songs Wiederholen">
+          <svg viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="language-grid" id="languageGermanGrid"></div>
+  </div>
+</div>
+<div class="screen" id="screenLanguageEnglish">
+  <div class="language-wrap">
+    <div class="language-topbar">
+      <div class="language-titleblock">
+        <div class="language-headline">English Songs</div>
+        <div class="language-subline" id="languageEnglishCount">0 Songs</div>
+      </div>
+      <div class="language-actions" aria-label="English Songs Aktionen">
+        <button class="language-dice-btn" type="button" onclick="shuffleLanguage('en')" aria-label="English Songs zufällig abspielen">
+          <img class="language-dice-img" alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';"/>
+        </button>
+        <button class="language-repeat-btn" type="button" onclick="document.getElementById('btnRepeat').click()" aria-label="English Songs Repeat">
+          <svg viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="language-grid" id="languageEnglishGrid"></div>
+  </div>
 </div>
 
 <!-- ABOUT / CONTACT -->
@@ -3226,27 +3458,33 @@ const ALBUM_ORDER = ['top50','grad30','stories30','grosseLiebe','poesie','buried
 
 // Werden async befüllt
 let ALBUMS = {};
+let SUPABASE_SONGS = [];
 
 // ── SUPABASE LOADER ──
 async function loadFromSupabase() {
   const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON };
 
   // 1. Alle Songs laden
-  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
   if (!songsRes.ok) throw new Error('Songs fetch failed: ' + songsRes.status);
   const songsRaw = await songsRes.json();
 
   // Songs-Map: slug → song-Objekt (im App-Format)
   const songMap = {};
+  SUPABASE_SONGS = [];
   songsRaw.forEach(row => {
-    songMap[row.slug] = {
+    const song = {
+      slug:     row.slug,
       title:    row.title,
       artist:   row.artist  || '',
+      language: row.language || 'english',
       mp3:      row.mp3_url,
       cover:    row.cover_url,
       lyrics:   row.lyrics_url   || null,
       lyrics21: row.lyrics21_url || null,
     };
+    songMap[row.slug] = song;
+    SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
   // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
@@ -3341,6 +3579,8 @@ const screenTL   = document.getElementById('screenTracklist');
 const screenNP   = document.getElementById('screenNowPlaying');
 const screenKnw  = document.getElementById('screenKursNordwest');
 const screenSwf  = document.getElementById('screenSongwritersFavorites');
+const screenLangDe = document.getElementById('screenLanguageGerman');
+const screenLangEn = document.getElementById('screenLanguageEnglish');
 const screenAbout = document.getElementById('screenAbout');
 const aboutFinalArt = document.getElementById('aboutFinalArt');
 const aboutArtLightbox = document.getElementById('aboutArtLightbox');
@@ -3351,6 +3591,15 @@ let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
 const durationCache={};
 let prevScreen = 'home'; // track where to go back from NP
 let arcQueue=[], arcQueueIdx=-1;
+
+
+function hideLanguageScreens(){
+  if(screenLangDe) screenLangDe.classList.remove('active');
+  if(screenLangEn) screenLangEn.classList.remove('active');
+}
+function isLanguageScreenActive(){
+  return (screenLangDe && screenLangDe.classList.contains('active')) || (screenLangEn && screenLangEn.classList.contains('active'));
+}
 
 // ── Helpers ──
 function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
@@ -3735,6 +3984,7 @@ function showKursNordwest(){
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenSwf) screenSwf.style.display='none';
+  hideLanguageScreens();
   screenKnw.style.display = 'block';
   backBtn.classList.add('visible');
   logoHome.style.display = 'none';
@@ -3756,6 +4006,7 @@ function showSongwritersFavorites(){
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
+  hideLanguageScreens();
   screenSwf.style.display = 'block';
   backBtn.classList.add('visible');
   logoHome.style.display = 'none';
@@ -3778,6 +4029,7 @@ function showAbout(){
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
   if(screenSwf) screenSwf.style.display='none';
+  hideLanguageScreens();
   if(screenAbout) screenAbout.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
@@ -3799,11 +4051,13 @@ function showHome(){
   if(aboutArtLightbox) aboutArtLightbox.setAttribute('aria-hidden','true');
   if(screenKnw) screenKnw.style.display='none';
   if(screenSwf) screenSwf.style.display='none';
+  hideLanguageScreens();
   backBtn.classList.remove('visible');
   logoHome.style.display='';
   makingWaves.style.display='';
   headerRight.textContent='';
   mainHeader.style.display='';
+  languageCoverClickState = { key:null, idx:-1, phase:0 };
   prevScreen='home';
 }
 function showAlbum(key){
@@ -3830,6 +4084,7 @@ function showAlbum(key){
   screenNP.classList.remove('active');
   screenArchive.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
+  hideLanguageScreens();
   screenTL.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
@@ -3854,6 +4109,7 @@ function showNowPlaying(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  hideLanguageScreens();
   screenNP.classList.add('active');
   mainHeader.style.display='none';
   playerBar.classList.remove('visible');
@@ -3878,7 +4134,132 @@ function hideNowPlaying(){
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
   else if(prevScreen==='kursNordwest'){ if(screenKnw) screenKnw.style.display='block'; }
   else if(prevScreen==='songwritersFavorites'){ if(screenSwf) screenSwf.style.display='block'; }
+  else if(prevScreen==='languageGerman'){ if(screenLangDe) screenLangDe.classList.add('active'); updateLanguageHighlight(); }
+  else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); updateLanguageHighlight(); }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
+}
+
+
+// ── German / English chapter ──
+function buildLanguageSongs(){
+  const source = (SUPABASE_SONGS && SUPABASE_SONGS.length) ? SUPABASE_SONGS : ALL_SONGS;
+  const german = source.filter(s => (s.language || '').toLowerCase() === 'german');
+  const english = source.filter(s => (s.language || '').toLowerCase() === 'english');
+  german.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
+  english.sort((a,b)=>a.title.localeCompare(b.title,'en',{sensitivity:'base'}));
+  ALBUMS.languageGerman = { title:'German Songs', meta:german.length + ' Songs', cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg', songs:german };
+  ALBUMS.languageEnglish = { title:'English Songs', meta:english.length + ' Songs', cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg', songs:english };
+  renderLanguageGrid('de', german);
+  renderLanguageGrid('en', english);
+}
+function renderLanguageGrid(lang, songs){
+  const grid = document.getElementById(lang === 'de' ? 'languageGermanGrid' : 'languageEnglishGrid');
+  const count = document.getElementById(lang === 'de' ? 'languageGermanCount' : 'languageEnglishCount');
+  if(!grid) return;
+  grid.innerHTML = '';
+  if(count) count.textContent = songs.length + ' Songs';
+  songs.forEach((s,i)=>{
+    const card = document.createElement('div');
+    card.className = 'language-card';
+    card.dataset.lang = lang;
+    card.dataset.idx = i;
+    card.innerHTML = '<img class="language-cover" loading="lazy" alt=""/>';
+    const cover = card.querySelector('.language-cover');
+    cover.alt = [s.title, s.artist].filter(Boolean).join(' · ');
+    setImgSrcWithFallback(cover, getImgUrls(s,'cover'));
+    card.addEventListener('click',()=>playLanguageSong(lang, i));
+    grid.appendChild(card);
+  });
+}
+function showLanguage(lang){
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
+  screenHome.classList.remove('active');
+  screenTL.classList.remove('active');
+  screenArchive.classList.remove('active');
+  screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
+  if(screenKnw) screenKnw.style.display='none';
+  if(screenSwf) screenSwf.style.display='none';
+  hideLanguageScreens();
+  const isDe = lang === 'de';
+  const screen = isDe ? screenLangDe : screenLangEn;
+  if(screen) screen.classList.add('active');
+  backBtn.classList.add('visible');
+  logoHome.style.display='none';
+  makingWaves.style.display='none';
+  headerRight.textContent = isDe ? 'German Songs' : 'English Songs';
+  mainHeader.style.display='';
+  if(screen) screen.scrollTop = 0;
+  prevScreen = isDe ? 'languageGerman' : 'languageEnglish';
+  updateLanguageHighlight();
+}
+function shuffleLanguage(lang){
+  const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+  if(!ALBUMS[key] || !ALBUMS[key].songs || !ALBUMS[key].songs.length) return;
+  curAlbum = key;
+  shuffleOn = true;
+  btnShuffle.classList.add('active');
+  npBtnShuffle.classList.add('active');
+  queue = shuffleArr(ALBUMS[key].songs.map((_,i)=>i));
+  queueIdx = 0;
+  prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+  languageCoverClickState = { key, idx:queue[0], phase:1 };
+  loadPlayNoScroll(queue[0]);
+  updateLanguageHighlight();
+}
+let languageCoverClickState = { key:null, idx:-1, phase:0 };
+
+function playLanguageSong(lang, idx){
+  const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+  const sameCard = languageCoverClickState.key === key && languageCoverClickState.idx === idx;
+  const isCurrent = curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx;
+
+  // 1. Klick auf neues Cover: Song starten, aber auf der Sprach-Kachelseite bleiben.
+  if(!sameCard || !isCurrent){
+    if(lyricsOpen) closeLyrics();
+    curAlbum = key;
+    queue = buildQueue(idx);
+    queueIdx = queue.indexOf(idx);
+    prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+    languageCoverClickState = { key, idx, phase:1 };
+    loadPlayNoScroll(idx);
+    updateLanguageHighlight();
+    return;
+  }
+
+  // 2. Klick auf dasselbe Cover: Lyrics-Sheet groß öffnen.
+  if(languageCoverClickState.phase === 1){
+    if(audio.paused) audio.play().catch(()=>{});
+    prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+    showNowPlaying();
+    requestAnimationFrame(()=>{ openLyrics(); });
+    languageCoverClickState.phase = 2;
+    updateLanguageHighlight();
+    return;
+  }
+
+  // 3. Klick nach geöffnetem Lyrics-Sheet: Lyrics schließen und zur Kachelseite zurück.
+  if(languageCoverClickState.phase === 2){
+    if(lyricsOpen) closeLyrics();
+    if(screenNP.classList.contains('active')) hideNowPlaying();
+    languageCoverClickState.phase = 3;
+    updateLanguageHighlight();
+    return;
+  }
+
+  // 4. Klick auf dasselbe Cover: Song anhalten.
+  if(!audio.paused) audio.pause();
+  languageCoverClickState.phase = 0;
+  updateLanguageHighlight();
+}
+function updateLanguageHighlight(){
+  document.querySelectorAll('.language-card').forEach(card=>{
+    const lang = card.dataset.lang;
+    const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
+    const idx = parseInt(card.dataset.idx,10);
+    card.classList.toggle('active', curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx && !audio.paused);
+  });
 }
 
 // ── Click handlers ──
@@ -3888,6 +4269,7 @@ backBtn.addEventListener('click',()=>{
   else if(screenNP.classList.contains('active')) hideNowPlaying();
   else if(screenKnw && screenKnw.style.display==='block') hideKursNordwest();
   else if(screenSwf && screenSwf.style.display==='block') showHome();
+  else if(isLanguageScreenActive()) showHome();
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
@@ -4019,6 +4401,29 @@ function closeLyrics() {
   npPinchScale = 1; npPinchLast = 1;
   lyricsOpen = false;
 }
+
+function closeLanguageLyricsAndReturn(){
+  if(!lyricsOpen) return;
+  closeLyrics();
+  if(screenNP.classList.contains('active')) hideNowPlaying();
+  if(languageCoverClickState && languageCoverClickState.phase === 2){
+    languageCoverClickState.phase = 3;
+  }
+  updateLanguageHighlight();
+}
+
+npCoverImg.addEventListener('click',(e)=>{
+  if(lyricsOpen && languageCoverClickState && languageCoverClickState.phase === 2){
+    e.stopPropagation();
+    closeLanguageLyricsAndReturn();
+  }
+});
+
+screenNP.addEventListener('click',(e)=>{
+  if(!lyricsOpen || !languageCoverClickState || languageCoverClickState.phase !== 2) return;
+  if(e.target.closest('.np-cover,.np-down-btn,.np-btn,.np-controls,.np-prog-wrap')) return;
+  closeLanguageLyricsAndReturn();
+});
 
 npCoverWrap.addEventListener('touchstart',e=>{
   swipeStartX=e.touches[0].clientX;
@@ -4215,6 +4620,7 @@ function updatePlayBtns(){
   });
   refreshHighlight(false); // KEIN scrollIntoView — verhindert Scroll-zurück-Bug bei langen Listen
   refreshArchiveHighlight();
+  updateLanguageHighlight();
 }
 function syncRepeatBtn(btn){
   btn.classList.remove('repeat-all','repeat-one','active');
@@ -4451,6 +4857,7 @@ function initApp() {
     return all;
   }
   ALL_SONGS = buildAllSongs();
+  buildLanguageSongs();
 
   // Letter strip: Pinterest-style rows
   const ALPHABET_ROWS = [
