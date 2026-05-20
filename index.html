@@ -10,7 +10,7 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <title>hitjourney</title>
-<!-- Version: v117-home-about-isolation-fix-20260519 -->
+<!-- Version: v124g-icon-gap-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -422,84 +422,179 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 /* ══ TRACKLIST ══ */
-/* Album header: cover aligned with track thumbnails + album random play */
+/* Album header v120: iPhone = Cover links + Info+Buttons rechts / iPad = 2 Spalten */
+
+/* ── Gemeinsame Basis ── */
 .tl-top{
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  padding:20px 16px 16px 74px; /* 32px row padding + 28px number column + 14px gap */
+  padding:14px 16px 12px;
   background:transparent;
-  border-bottom:none;
-  max-width:680px;
-  margin:0 auto;
   width:100%;
+  box-sizing:border-box;
 }
-.tl-hero{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:clamp(46px,8vw,92px);
-  width:100%;
-}
-.tl-cover-stack{
-  width:min(160px,40vw);
-  flex:0 0 auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
+/* ══ TRACKLIST HEADER — Basis-Stile (beide Geräte) ══ */
+
 .tl-top-cover{
-  width:100%;height:auto;aspect-ratio:1/1;
+  display:block;width:100%;aspect-ratio:1/1;
   border-radius:8px;object-fit:cover;
-  background:#0B2A42;
-  box-shadow:0 8px 32px rgba(0,0,0,.6);
+  background:#0B2A42;box-shadow:0 6px 24px rgba(0,0,0,.55);
 }
-.tl-top-info{text-align:center;margin-top:12px;width:100%;}
-.tl-top-title{font-size:17px;font-weight:700;color:#cfe5f5;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-top-meta{font-size:12px;color:rgba(133,172,201,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-top-title{font-size:16px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-top-meta{font-size:11px;color:rgba(133,172,201,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Würfel — Basis */
 .tl-album-random-btn{
-  width:clamp(46px,8.3vw,66px);
-  height:clamp(46px,8.3vw,66px);
-  flex:0 0 auto;
-  border-radius:50%;
-  border:0;
-  background:transparent;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  padding:0;
-  overflow:visible;
+  flex:0 0 auto;border-radius:50%;border:0;background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;overflow:visible;
   transition:transform .12s ease,opacity .15s ease;
 }
-.tl-album-random-btn:active{transform:scale(.92);opacity:.88}
+.tl-album-random-btn:active{transform:scale(.91);opacity:.85}
 .tl-album-random-btn .arc-shuffle-img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none}
-@media(min-width:600px){
-  .tl-cover-stack{width:160px;}
-  .tl-top{padding-top:24px;padding-bottom:16px;}
-  .tl-hero{align-items:flex-start;}
-  .tl-album-random-btn{
-    width:112px;  /* iPad: ca. 30% größer */
-    height:112px;
-    margin-top:42px; /* wieder sauber mittig zur Coverhöhe */
-  }
+
+/* Repeat — Basis */
+.tl-repeat-btn{
+  flex:0 0 auto;border-radius:50%;border:0;background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;transition:transform .12s ease;
+  position:relative;
 }
+.tl-repeat-btn:active{transform:scale(.87);}
+.tl-repeat-btn svg{
+  display:block;fill:none;stroke:rgba(133,172,201,.35);
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .2s;
+}
+.tl-repeat-btn.active svg{stroke:rgba(133,172,201,.9);}
+.tl-repeat-one-label{
+  display:none;position:absolute;bottom:2px;right:2px;
+  font-size:8px;font-weight:700;color:rgba(133,172,201,.9);line-height:1;
+}
+.tl-repeat-btn.repeat-one .tl-repeat-one-label{display:block;}
+.tl-repeat-btn.active::after{
+  content:'';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#85ACC9;
+}
+
+/* tl-icon-group — Würfel + Repeat immer als fester Block nebeneinander */
+.tl-icon-group{
+  display:flex;flex-direction:row;align-items:center;
+  flex:0 0 auto;
+}
+
+/* ══ iPhone (≤599px) ══
+   Layout: [Cover] [Titel+Meta — nur so breit wie nötig] [Icon-Block — flex:1, zentriert im Leerraum]
+   Der Icon-Block bekommt den gesamten Restplatz rechts vom Titel und zentriert sich darin.
+   → Bei kurzem Titel viel Raum, bei langem Titel wenig Raum, aber immer mittig.
+*/
 @media(max-width:599px){
-  .tl-top{padding-left:74px;padding-right:16px;}
+  .tl-top{padding:14px 14px 12px;}
   .tl-hero{
-    gap:48px;
-    align-items:flex-start;
+    display:flex;flex-direction:row;align-items:center;
+    gap:0;width:100%;
   }
-  .tl-cover-stack{width:min(140px,38vw);}
+  /* Cover: feste Breite ~26vw */
+  .tl-cover-stack{flex:0 0 auto;width:min(100px,26vw);margin-right:0;order:1;}
+
+  /* Titel+Meta: nimmt nur seinen natürlichen Textbedarf, kein flex:1 */
+  .tl-side{
+    flex:0 0 auto;min-width:0;max-width:45%;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:5px;padding:0 8px;
+    order:2;
+  }
+
+  /* Icon-Block: bekommt den gesamten Restplatz und zentriert die Symbole darin */
+  .tl-icon-group{
+    flex:1;
+    justify-content:center;
+    align-items:center;
+    gap:57px;
+    order:3;
+  }
+
+  /* Würfel: 72px, unveränderte Größe wie bisher */
   .tl-album-random-btn{
-    width:68px;
-    height:68px;
-    margin-top:41px; /* minimal tiefer + optisch exakt mittig */
-    transform:translateX(8px); /* etwas weiter rechts */
+    width:72px!important;height:72px!important;
+    flex:0 0 72px;
+    margin:0;transform:none;
   }
-  .tl-album-random-btn:active{
-    transform:translateX(8px) scale(.92);
+
+  /* Repeat: 36px, unveränderte Größe wie bisher */
+  .tl-repeat-btn{
+    flex:0 0 36px;
+    width:36px;height:36px;
+    margin:0;transform:none;
   }
+  .tl-repeat-btn svg{width:24px;height:24px;}
+}
+
+/* ══ iPad (≥600px) ══
+   Linke Spalte: Cover zentriert oben → Würfel zentriert, 1cm darunter → Repeat zentriert, 1.5cm darunter
+   Alle gestapelt, kein Nebeneinander
+*/
+@media(min-width:600px){
+  #screenTracklist.active{display:flex!important;flex-direction:row;overflow:hidden;}
+  #tlLeftCol{
+    width:240px;flex:0 0 240px;
+    display:flex;flex-direction:column;
+    border-right:1px solid rgba(133,172,201,.1);
+    overflow-y:auto;overscroll-behavior:contain;
+    padding-bottom:160px;box-sizing:border-box;
+  }
+  #tlRightCol{
+    flex:1;min-width:0;
+    overflow-y:auto;overscroll-behavior:contain;
+    padding-bottom:160px;box-sizing:border-box;
+  }
+  #tlList{max-width:none;margin:0;width:100%;}
+  .tl-bottom-pad{height:20px!important;}
+
+  .tl-top{padding:24px 16px 20px;}
+
+  /* iPad: Hero wird zur vertikalen Spalte */
+  .tl-hero{
+    display:flex;flex-direction:column;
+    align-items:center;gap:0;width:100%;
+  }
+
+  /* Cover: zentriert oben */
+  .tl-cover-stack{
+    width:180px;flex:0 0 auto;
+    order:1;margin-bottom:14px;
+  }
+
+  /* Titel + Meta: zentriert unter Cover */
+  .tl-side{
+    order:2;
+    display:flex;flex-direction:column;
+    align-items:center;gap:5px;
+    width:100%;margin-bottom:0;
+  }
+  .tl-top-title{font-size:15px;text-align:center;}
+  .tl-top-meta{text-align:center;}
+
+  /* Icon-Group: zentriert, ~2cm (76px) unter Titel/Meta; stapelt Würfel+Repeat vertikal */
+  .tl-icon-group{
+    order:3;
+    flex-direction:column;
+    align-items:center;
+    margin-top:76px;
+    gap:0;
+  }
+
+  /* Würfel: zentriert */
+  .tl-album-random-btn{
+    width:82px;height:82px;
+    margin:0;transform:none;
+  }
+
+  /* Repeat: zentriert, ~2.5cm (94px) unter Würfel */
+  .tl-repeat-btn{
+    width:38px;height:38px;
+    margin-top:94px;
+    transform:none;
+  }
+  .tl-repeat-btn svg{width:25px;height:25px;}
 }
 
 /* Track rows — bigger, Spotify-sized */
@@ -523,6 +618,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-title{font-size:18px;font-weight:500;color:#f1ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
+.tl-duration{font-size:13px;color:rgba(133,172,201,.38);flex-shrink:0;font-variant-numeric:tabular-nums;min-width:34px;text-align:right;padding-right:2px;}
 .tl-bottom-pad{height:260px}
 
 /* Tracklist container: max-width for iPad readability — definiert oben im Screen-Block */
@@ -638,53 +734,61 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   background:rgba(8,24,37,.88);
   box-shadow:0 -6px 24px rgba(0,0,0,.34);
 }
-/* One grouped player surface */
+/* ── Player Bar: eine kompakte Zeile ── */
 .hj-now-strip{
   background:transparent;
   border-top:1px solid rgba(133,172,201,.16);
   cursor:pointer;
 }
-.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:height .18s ease,opacity .18s ease}
+.hj-prog-wrap{height:2px;background:rgba(133,172,201,.15);transition:opacity .18s ease}
 .hj-prog-fill{height:100%;background:#85ACC9;width:0%;transition:width .1s linear}
-.hj-now{display:flex;align-items:center;gap:12px;padding:8px 16px 6px;transition:padding .2s ease,min-height .2s ease}
-.hj-now-num{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;transition:width .2s ease,opacity .18s ease}
-.hj-now-numtxt{display:none}
-.hj-now-cover{width:52px;height:52px;border-radius:5px;object-fit:cover;background:#0B2A42;flex-shrink:0;transition:width .2s ease,height .2s ease,border-radius .2s ease}
-.hj-now-info{flex:1;min-width:0}
-.hj-now-title{font-size:17px;font-weight:500;color:#85ACC9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-size .18s ease,color .18s ease}
-.hj-now-artist{font-size:13px;color:rgba(133,172,201,.5);margin-top:2px;transition:opacity .18s ease,max-height .18s ease,margin .18s ease}
-/* Lower controls strip: compact, visually grouped with status */
-.hj-controls-strip{
-  background:transparent;
-  padding-bottom:0;
-  overflow:hidden;
-  max-height:86px;
-  opacity:1;
-  transition:max-height .22s ease,opacity .18s ease;
+/* Einzeilige Now-Playing-Zeile: Cover + Info + Controls */
+.hj-now{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 10px 7px 12px;
+  padding-bottom:calc(7px + env(safe-area-inset-bottom, 0px));
 }
-.hj-time{display:flex;justify-content:space-between;padding:4px 20px 0;font-size:11px;color:rgba(133,172,201,.85);font-variant-numeric:tabular-nums}
-.hj-controls{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 12px}
+.hj-now-num{display:none}/* Track-Nummer ausgeblendet im Footer */
+.hj-now-numtxt{display:none}
+.hj-now-cover{
+  width:42px;height:42px;border-radius:5px;
+  object-fit:cover;background:#0B2A42;flex-shrink:0;
+}
+.hj-now-info{flex:1;min-width:0}
+.hj-now-title{
+  font-size:15px;font-weight:500;color:#85ACC9;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hj-now-artist{font-size:12px;color:rgba(133,172,201,.5);margin-top:1px;}
+/* Controls direkt in der Now-Zeile */
+.hj-controls-strip{display:none}/* Separate Strip entfällt */
+.hj-time{display:none}/* Zeitanzeige: Labels bleiben im DOM, aber unsichtbar */
+.hj-controls{
+  display:flex;align-items:center;gap:0;flex-shrink:0;
+}
+/* Prev/Next haben doppelten Abstand zum Play-Button */
+.hj-controls #btnPrev{margin-right:12px;}
+.hj-controls #btnNext{margin-left:12px;}
 
-/* Minimized: tap anywhere on the mini dock to reopen */
-.hj-player.minimized .hj-prog-wrap{height:0;opacity:0}
-.hj-player.minimized .hj-now{min-height:54px;padding:7px 14px}
-.hj-player.minimized .hj-now-num{width:0;opacity:0;overflow:hidden}
-.hj-player.minimized .hj-now-cover{width:40px;height:40px;border-radius:6px}
-.hj-player.minimized .hj-now-title{font-size:15px;color:#cfe5f5}
+/* Minimized: nur Cover + Titel sichtbar, Controls verschwinden */
+.hj-player.minimized .hj-prog-wrap{opacity:0}
+.hj-player.minimized .hj-now{padding:8px 14px 8px;}
+.hj-player.minimized .hj-now-cover{width:36px;height:36px;border-radius:5px;}
+.hj-player.minimized .hj-now-title{font-size:14px;color:#cfe5f5}
 .hj-player.minimized .hj-now-artist{opacity:0;max-height:0;margin-top:0;overflow:hidden}
-.hj-player.minimized .hj-controls-strip{max-height:0;opacity:0;pointer-events:none}
+.hj-player.minimized .hj-controls{opacity:0;pointer-events:none}
 
-.hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:9px;position:relative;transition:color .15s,transform .1s}
+.hj-btn{background:none;border:none;cursor:pointer;color:rgba(133,172,201,.55);display:flex;align-items:center;justify-content:center;border-radius:50%;padding:7px;position:relative;transition:color .15s,transform .1s}
 .hj-btn:active{transform:scale(.84)}
 .hj-btn:hover{color:rgba(207,229,245,.9)}
-.hj-btn svg{display:block;width:25px;height:25px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.hj-btn svg{display:block;width:22px;height:22px;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .hj-btn.filled svg{fill:currentColor;stroke:none}
 .hj-btn.active{color:#85ACC9}
 .hj-btn.active::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#85ACC9}
-.hj-btn-play{width:54px;height:54px;background:#0B2A42;border:1px solid rgba(133,172,201,.32);border-radius:50%;color:#85ACC9;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.34);transition:background .15s,color .15s,transform .1s;padding:0}
+.hj-btn-play{width:44px;height:44px;background:#0B2A42;border:1px solid rgba(133,172,201,.32);border-radius:50%;color:#85ACC9;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.34);transition:background .15s,color .15s,transform .1s;padding:0}
 .hj-btn-play:active{transform:scale(.9)}
 .hj-btn-play:hover{background:#123048;color:#cfe5f5}
-.hj-btn-play svg{width:24px;height:24px;fill:currentColor;stroke:none}
+.hj-btn-play svg{width:20px;height:20px;fill:currentColor;stroke:none}
 .hj-btn-play .icon-pause{display:none}
 .hj-btn-play.playing .icon-play{display:none}
 .hj-btn-play.playing .icon-pause{display:block}
@@ -707,19 +811,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    Compared with v90, roughly two thirds of the extra bottom air were removed.
    iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  .hj-player.visible:not(.minimized) .hj-controls-strip{
-    max-height:100px;
+  /* iPad: etwas mehr Padding links/rechts im Footer */
+  .hj-player.visible:not(.minimized) .hj-now{
+    padding-left:24px;padding-right:16px;
   }
-  .hj-player.visible:not(.minimized) .hj-controls{
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 22px);
-  }
+  .hj-btn-play{width:46px;height:46px;}
 }
 @media (min-width:900px){
-  .hj-player.visible:not(.minimized) .hj-controls-strip{
-    max-height:105px;
-  }
-  .hj-player.visible:not(.minimized) .hj-controls{
-    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 29px);
+  .hj-player.visible:not(.minimized) .hj-now{
+    padding-left:32px;padding-right:24px;
   }
 }
 
@@ -1800,8 +1900,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .hj-player{
     left:0;right:0;
   }
-  .hj-now-strip .hj-now{padding:12px 32px}
-  .hj-controls{padding:10px 32px 18px}
+  .hj-now-strip .hj-now{padding:7px 32px 7px;}
 
   /* Bottom pad: slightly less on desktop */
   .home-bottom-pad{height:180px}
@@ -2950,25 +3049,39 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 <!-- TRACKLIST -->
 <div class="screen" id="screenTracklist">
+<!-- Linke Spalte: Cover + Buttons (auf iPhone: volle Breite oben) -->
+<div id="tlLeftCol">
 <div class="tl-top">
+<!-- iPhone: [Cover] [Titel+Meta] [Würfel] [Repeat] — 4 Spalten gleichmäßig -->
+<!-- iPad: [Cover zentriert] → [Würfel zentriert] → [Repeat zentriert] gestapelt -->
 <div class="tl-hero">
-<div class="tl-cover-stack">
-<img alt="" class="tl-top-cover" id="tlCover" src=""/>
-<div class="tl-top-info">
-<div class="tl-top-title" id="tlTitle"></div>
-<div class="tl-top-meta" id="tlMeta"></div>
+  <div class="tl-cover-stack">
+    <img alt="" class="tl-top-cover" id="tlCover" src=""/>
+  </div>
+  <div class="tl-side">
+    <div class="tl-top-title" id="tlTitle"></div>
+    <div class="tl-top-meta" id="tlMeta"></div>
+  </div>
+  <div class="tl-icon-group">
+    <button aria-label="Album zufällig abspielen" class="tl-album-random-btn" id="tlAlbumShuffleBtn">
+      <img alt="" class="arc-shuffle-img" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"/>
+    </button>
+    <button aria-label="Wiederholung umschalten" class="tl-repeat-btn" id="tlRepeatBtn">
+      <svg viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
+      <span class="tl-repeat-one-label">1</span>
+    </button>
+  </div>
 </div>
 </div>
-<button aria-label="Album zufällig abspielen" class="tl-album-random-btn" id="tlAlbumShuffleBtn">
-<img alt="" class="arc-shuffle-img" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"/>
-</button>
-</div>
-</div>
+</div><!-- /tlLeftCol -->
+<!-- Rechte Spalte: Songliste (auf iPhone: volle Breite darunter) -->
+<div id="tlRightCol">
 <div id="tlList"></div>
+<div class="tl-bottom-pad"></div>
+</div><!-- /tlRightCol -->
 <button aria-label="Zurück zum Album-Anfang" class="tl-top-btn" id="tlTopBtn">
 <img alt="" class="tl-top-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/UP%20Button.png"/>
 </button>
-<div class="tl-bottom-pad"></div>
 </div>
 <!-- NOW PLAYING -->
 <div id="screenNowPlaying">
@@ -3021,21 +3134,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div class="hj-now-strip" id="nowStrip">
 <div class="hj-prog-wrap"><div class="hj-prog-fill" id="progFill"></div></div>
 <div class="hj-now">
-<div class="hj-now-num">
-<span class="hj-now-numtxt" id="nowNum">—</span>
-</div>
+<div class="hj-now-num"><span class="hj-now-numtxt" id="nowNum">—</span></div>
 <img alt="" class="hj-now-cover" id="nowCover" src="" style="visibility:hidden"/>
 <div class="hj-now-info" id="nowInfo" style="visibility:hidden">
 <div class="hj-now-title" id="nowTitle"></div>
-<div class="hj-now-artist">Jörn Kämper</div>
+<div class="hj-now-artist" id="nowArtist">Jörn Kämper</div>
 </div>
-</div>
-</div>
-<!-- Lower strip: controls -->
-<div class="hj-controls-strip">
-<div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
+<!-- Controls direkt in der Now-Zeile -->
 <div class="hj-controls">
-<button class="hj-btn" id="btnShuffle">
+<button class="hj-btn" id="btnShuffle" style="display:none">
 <img alt="" class="custom-random-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png"/>
 </button>
 <button class="hj-btn filled" id="btnPrev">
@@ -3048,12 +3155,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <button class="hj-btn filled" id="btnNext">
 <svg viewbox="0 0 24 24"><path d="M6 18l11-6L6 6v12zm13-12h-2v12h2z"></path></svg>
 </button>
-<button class="hj-btn hj-btn-repeat" id="btnRepeat">
+<button class="hj-btn hj-btn-repeat" id="btnRepeat" style="display:none">
 <svg class="icon-rpt-off" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
 <svg class="icon-rpt-all" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
 <svg class="icon-rpt-one" style="fill:none;stroke:currentColor" viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path><text fill="currentColor" font-family="sans-serif" font-size="5.5" font-weight="900" stroke="none" text-anchor="middle" x="12" y="15.5">1</text></svg>
 </button>
 </div>
+</div>
+</div>
+<!-- Zeit-Labels: unsichtbar im DOM, JS braucht sie -->
+<div class="hj-controls-strip" style="display:none">
+<div class="hj-time"><span id="tElapsed">0:00</span><span id="tRemain">—</span></div>
 </div>
 </div>
 <script>
@@ -3063,13 +3175,13 @@ const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // Playlist-Slug → ALBUMS-Key + Metadaten
 const PLAYLIST_MAP = {
-  'songwriters-picks': { key:'top50',        title:'Top 50',          meta:"Songwriter's Picks · 50 Songs", cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg' },
-  '30-grad':        { key:'grad30',       title:'30° Grad',        meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg' },
-  '30-stories':     { key:'stories30',    title:'30 Stories',      meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg' },
-  'grosse-liebe':   { key:'grosseLiebe',  title:'Grosse Liebe',    meta:'BRO · 30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg' },
-  'poesie':         { key:'poesie',       title:'Poesie',          meta:'BRO · 11 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg' },
-  'buried-diamonds':{ key:'buriedDiamonds',title:'Buried Diamonds',meta:'BRO · 66 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Cover.jpg' },
-  'top-100':        { key:'top100',       title:'Top 100',         meta:'Hitjourney · 100 Songs',         cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg' },
+  'songwriters-picks': { key:'top50',        title:'Top 50',          meta:"50 Songs", cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg' },
+  '30-grad':        { key:'grad30',       title:'30° Grad',        meta:'30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg' },
+  '30-stories':     { key:'stories30',    title:'30 Stories',      meta:'30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg' },
+  'grosse-liebe':   { key:'grosseLiebe',  title:'Grosse Liebe',    meta:'30 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg' },
+  'poesie':         { key:'poesie',       title:'Poesie',          meta:'11 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg' },
+  'buried-diamonds':{ key:'buriedDiamonds',title:'Buried Diamonds',meta:'66 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Cover.jpg' },
+  'top-100':        { key:'top100',       title:'Top 100',         meta:'100 Songs',               cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg' },
 };
 
 // Reihenfolge der Alben im Player
@@ -3170,6 +3282,7 @@ const btnPrev      = document.getElementById('btnPrev');
 const btnNext      = document.getElementById('btnNext');
 const btnShuffle   = document.getElementById('btnShuffle');
 const btnRepeat    = document.getElementById('btnRepeat');
+const tlRepeatBtn  = document.getElementById('tlRepeatBtn');
 // Now Playing screen
 const npCover      = document.getElementById('npCover');
 const npTitle      = document.getElementById('npTitle');
@@ -3198,6 +3311,7 @@ const homeInfoBtn = document.getElementById('homeInfoBtn');
 
 // ── State ──
 let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
+const durationCache={};
 let prevScreen = 'home'; // track where to go back from NP
 let arcQueue=[], arcQueueIdx=-1;
 
@@ -3664,11 +3778,13 @@ function showAlbum(key){
   alb.songs.forEach((s,i)=>{
     const row=document.createElement('div');
     row.className='tl-track'; row.dataset.idx=i;
+    const cachedDur=durationCache[s.mp3]?fmt(durationCache[s.mp3]):'';
     row.innerHTML=
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
-      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>';
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>'+
+      '<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>';
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playIdx(i));
     tlList.appendChild(row);
@@ -4054,10 +4170,27 @@ function syncRepeatBtn(btn){
   if(repeatMode==='all') btn.classList.add('repeat-all','active');
   else if(repeatMode==='one') btn.classList.add('repeat-one','active');
 }
+function syncTlRepeatBtn(){
+  if(!tlRepeatBtn) return;
+  tlRepeatBtn.classList.remove('repeat-all','repeat-one','active');
+  if(repeatMode==='all') tlRepeatBtn.classList.add('repeat-all','active');
+  else if(repeatMode==='one') tlRepeatBtn.classList.add('repeat-one','active');
+}
 
 // ── Audio events ──
 audio.addEventListener('play', updatePlayBtns);
 audio.addEventListener('pause',updatePlayBtns);
+audio.addEventListener('loadedmetadata',()=>{
+  if(audio.src&&audio.duration&&isFinite(audio.duration)){
+    durationCache[audio.src]=audio.duration;
+    document.querySelectorAll('.tl-duration').forEach(el=>{
+      try{
+        if(decodeURIComponent(el.dataset.mp3||'')=== decodeURIComponent(audio.src))
+          el.textContent=fmt(audio.duration);
+      }catch(e){}
+    });
+  }
+});
 audio.addEventListener('timeupdate',()=>{
   if(!audio.duration)return;
   const pct=(audio.currentTime/audio.duration*100)+'%';
@@ -4157,7 +4290,9 @@ btnRepeat.addEventListener('click',()=>{
   repeatMode=repeatMode==='off'?'all':repeatMode==='all'?'one':'off';
   syncRepeatBtn(btnRepeat);
   syncRepeatBtn(npBtnRepeat);
+  syncTlRepeatBtn();
 });
+if(tlRepeatBtn) tlRepeatBtn.addEventListener('click',()=>btnRepeat.click());
 
 // Progress bar
 document.querySelector('.hj-prog-wrap').addEventListener('click',e=>{
@@ -4330,11 +4465,13 @@ function renderArchiveList(songs){
     }
     const row=document.createElement('div');
     row.className='tl-track'; row.dataset.arcIdx=i; row.dataset.firstLetter=label;
+    const cachedDur=durationCache[s.mp3]?fmt(durationCache[s.mp3]):'';
     row.innerHTML=
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
-      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>';
+      '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>'+
+      '<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>';
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playArchiveSong(i,songs));
     arcList.appendChild(row);
