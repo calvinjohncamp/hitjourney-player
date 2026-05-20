@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v124j-player-footer-fix-20260520 -->
+<!-- Version: v124k-bottom-pad-ipad-footer-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -63,7 +63,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 .tl-bottom-pad {
-  height: calc(var(--player-bar-h, 142px) + 2px);
+  height: 90px;
 }
 .screen::-webkit-scrollbar{display:none}
 
@@ -812,12 +812,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    Compared with v90, roughly two thirds of the extra bottom air were removed.
    iPhone and the minimized swipe-down dock stay unchanged. */
 @media (min-width:600px){
-  /* iPad: mehr Padding + vertikale Zentrierung im Footer */
-  .hj-player.visible:not(.minimized) .hj-now{
+  /* iPad: Footer vertikal zentrieren */
+  .hj-player .hj-now{
     padding-left:24px;padding-right:16px;
-    padding-top:14px;padding-bottom:14px;
-    min-height:72px;align-items:center;
+    padding-top:12px;padding-bottom:12px;
+    min-height:68px;
   }
+  .hj-now{align-items:center;}
   .hj-btn-play{width:46px;height:46px;}
 }
 @media (min-width:900px){
@@ -4596,7 +4597,7 @@ backBtn.addEventListener('click',()=>{
 
 // Bottom-Pads dynamisch auf echte Player-Bar-Höhe setzen
 function updateBottomPads(){
-  // Nur echte Höhe verwenden wenn Player sichtbar — sonst minimaler Pad
+  // Nur echte Höhe wenn Player sichtbar — sonst kompakter Fallback
   const isVisible = playerBar.classList.contains('visible');
   const h = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
   const pad = h + 8;
@@ -4733,7 +4734,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v124j-player-footer-fix-20260520';
+  const VERSION = 'v124k-bottom-pad-ipad-footer-20260520';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
