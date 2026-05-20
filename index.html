@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v129-nowplaying-fixed-fullscreen-20260520 -->
+<!-- Version: v130-body-padding-bottom-fix-20260520 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4636,6 +4636,9 @@ function updateBottomPads(){
   const h = isVisible ? (playerBar.getBoundingClientRect().height || 80) : 80;
   const pad = h; // kein zusätzlicher Puffer — die Player-Bar selbst trägt bereits die Safe-Area
   document.querySelectorAll('.tl-bottom-pad,.home-bottom-pad').forEach(el => el.style.height = pad + 'px');
+  // Body-padding-bottom = Player-Bar-Höhe → Screens enden exakt an der Oberkante der Bar,
+  // kein ungenutzter Leerraum zwischen letztem Song und Player-Bar auf dem iPhone.
+  document.body.style.paddingBottom = pad + 'px';
 }
 
 // Albumseiten: dezenter UP-Button über der Playerleiste
