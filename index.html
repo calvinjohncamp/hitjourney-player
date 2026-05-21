@@ -5964,6 +5964,14 @@ document.querySelector('.hj-controls')?.addEventListener('touchend', function(e)
   e.stopPropagation();
 }, true);
 </script>
+<script>
+// v159: Footer-Buttons behalten ihre eigene Funktion; nur das Nach-oben-Blubbern zur Player-Leiste wird verhindert.
+['btnPlay','btnPrev','btnNext','btnShuffle','btnRepeat'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('click', function(e){ e.stopPropagation(); }, false);
+});
+</script>
 </body>
 </html>
 
