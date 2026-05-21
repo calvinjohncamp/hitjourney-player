@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v152-buried-diamonds-alpha-sort-20260520 -->
+<!-- Version: v153-tracklist-header-gap-fix-20260521 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -44,7 +44,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   flex-shrink:0;
 }
 #screenHome{padding-top:10px}
-#screenTracklist{padding-top:8px}
+#screenTracklist{padding-top:0}
 /* Flex restoration and layout stability */
 .screen.active {
   display: flex;
@@ -629,6 +629,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     background:rgba(6,20,32,1);
     box-shadow:0 10px 24px rgba(6,20,32,.92);
     border-bottom:1px solid rgba(133,172,201,.10);
+    overflow:hidden; /* verhindert Aufblitzen gescrollter Songs oberhalb des Album-Headers */
   }
   #tlLeftCol::after{
     content:'';
