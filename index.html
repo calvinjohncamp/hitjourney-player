@@ -4782,9 +4782,6 @@ nowStrip.addEventListener('touchmove',e=>{
   stripTouchMoved=true;
 },{passive:true});
 nowStrip.addEventListener('touchend',e=>{
-  // v158: Taps auf die Footer-Buttons dürfen NICHT die große Now-Playing-Ansicht öffnen.
-  // Die Buttons selbst behalten ihre direkte Funktion: Play/Pause, Prev, Next, Shuffle, Repeat.
-  if(e.target.closest('button') || e.target.closest('.hj-controls')) return;
   const dx=e.changedTouches[0].clientX-stripStartX;
   const dy=e.changedTouches[0].clientY-stripStartY;
   if(Math.abs(dy)>Math.abs(dx)*1.2 && dy>36){
@@ -5956,21 +5953,29 @@ playerBar.classList.add = function(...args){
 </script>
 
 <script>
-// v158: Footer-Controls direkt bedienbar halten; kein Öffnen der Großansicht durch Button-Tap.
-document.querySelector('.hj-controls')?.addEventListener('click', function(e){
-  e.stopPropagation();
-}, true);
-document.querySelector('.hj-controls')?.addEventListener('touchend', function(e){
-  e.stopPropagation();
-}, true);
-</script>
-<script>
-// v159: Footer-Buttons behalten ihre eigene Funktion; nur das Nach-oben-Blubbern zur Player-Leiste wird verhindert.
-['btnPlay','btnPrev','btnNext','btnShuffle','btnRepeat'].forEach(function(id){
-  var el = document.getElementById(id);
-  if(!el) return;
-  el.addEventListener('click', function(e){ e.stopPropagation(); }, false);
-});
+// v160: Mobile-Fix für Footer-Buttons.
+// Auf iPhone/iPad darf ein Touch auf Play/Pause, Vor, Zurück, Shuffle, Repeat
+// nicht von der gesamten Player-Leiste abgefangen werden.
+// Wir stoppen deshalb den Touch und lösen danach gezielt die vorhandene Button-Click-Funktion aus.
+(function(){
+  const footerButtonIds = ['btnPlay','btnPrev','btnNext','btnShuffle','btnRepeat'];
+
+  footerButtonIds.forEach(function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+
+    el.addEventListener('touchend', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+
+      // Vorhandene Click-Logik der App nutzen, damit keine Playback-Logik dupliziert wird.
+      setTimeout(function(){
+        el.click();
+      }, 0);
+    }, {passive:false, capture:true});
+  });
+})();
 </script>
 </body>
 </html>
