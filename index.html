@@ -4772,16 +4772,26 @@ function setPlayerMinimized(minimized){
   });
 }
 
-let stripStartX=0, stripStartY=0, stripTouchMoved=false;
+let stripStartX=0, stripStartY=0, stripTouchMoved=false, stripTouchStartedOnButton=false;
 nowStrip.addEventListener('touchstart',e=>{
   stripStartX=e.touches[0].clientX;
   stripStartY=e.touches[0].clientY;
   stripTouchMoved=false;
+  // v161: Wenn der Touch auf einem echten Footer-Button beginnt, darf die Leiste
+  // daraus keine Großansicht machen. Der normale Button-Click läuft danach unverändert.
+  stripTouchStartedOnButton = !!e.target.closest('button, .hj-btn, .hj-btn-play');
 },{passive:true});
 nowStrip.addEventListener('touchmove',e=>{
   stripTouchMoved=true;
 },{passive:true});
 nowStrip.addEventListener('touchend',e=>{
+  // v161: Button-Touch komplett der nativen Button-Click-Logik überlassen.
+  // Kein preventDefault, kein künstliches .click(), kein Stoppen des Button-Handlers.
+  if(stripTouchStartedOnButton){
+    stripTouchStartedOnButton=false;
+    return;
+  }
+
   const dx=e.changedTouches[0].clientX-stripStartX;
   const dy=e.changedTouches[0].clientY-stripStartY;
   if(Math.abs(dy)>Math.abs(dx)*1.2 && dy>36){
@@ -5952,31 +5962,6 @@ playerBar.classList.add = function(...args){
 };
 </script>
 
-<script>
-// v160: Mobile-Fix für Footer-Buttons.
-// Auf iPhone/iPad darf ein Touch auf Play/Pause, Vor, Zurück, Shuffle, Repeat
-// nicht von der gesamten Player-Leiste abgefangen werden.
-// Wir stoppen deshalb den Touch und lösen danach gezielt die vorhandene Button-Click-Funktion aus.
-(function(){
-  const footerButtonIds = ['btnPlay','btnPrev','btnNext','btnShuffle','btnRepeat'];
-
-  footerButtonIds.forEach(function(id){
-    const el = document.getElementById(id);
-    if(!el) return;
-
-    el.addEventListener('touchend', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      if(typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-
-      // Vorhandene Click-Logik der App nutzen, damit keine Playback-Logik dupliziert wird.
-      setTimeout(function(){
-        el.click();
-      }, 0);
-    }, {passive:false, capture:true});
-  });
-})();
-</script>
 </body>
 </html>
 
