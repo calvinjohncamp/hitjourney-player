@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v156-language-swipe-always-cover-fix-20260521 -->
+<!-- Version: v153-tracklist-header-gap-fix-20260521 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -2433,6 +2433,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .about-wrap{padding-left:32px;padding-right:32px;}
 }
 
+
+/* footer-controls-direct-access-fix */
+.hj-controls,
+.hj-btn,
+.hj-btn-play{
+  pointer-events:auto!important;
+  position:relative;
+  z-index:5;
+}
+
 </style>
 </head>
 <body>
@@ -2443,7 +2453,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </svg>
   <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
 </div>
-<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}
+/* footer-controls-direct-access-fix */
+.hj-controls,
+.hj-btn,
+.hj-btn-play{
+  pointer-events:auto!important;
+  position:relative;
+  z-index:5;
+}
+
+</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
@@ -4542,50 +4562,6 @@ function isLanguageImageCycleActive(){
   return !!(languageCoverClickState && (languageCoverClickState.key === 'languageGerman' || languageCoverClickState.key === 'languageEnglish') && screenNP.classList.contains('active'));
 }
 
-
-function playRandomLanguageFromImageFrame(){
-  if(!isLanguageImageCycleActive()) return false;
-  const key = languageCoverClickState.key;
-  const album = ALBUMS[key];
-  if(!album || !album.songs || !album.songs.length) return false;
-
-  // Nach horizontalem Swipe aus Cover ODER Lyrics immer hart zurück in den Cover-Zustand.
-  // Wichtig: kein btnShuffle.click(), weil der Button nur Shuffle an/aus toggelt und auf iOS
-  // nach dem Swipe zusätzlich ein synthetischer Click entstehen kann, der sonst Lyrics erneut öffnet.
-  const currentIdx = (queueIdx >= 0 && queue && queue.length) ? queue[queueIdx] : languageCoverClickState.idx;
-  let indices = album.songs.map((_, i) => i);
-  if(indices.length > 1){
-    indices = indices.filter(i => i !== currentIdx);
-  }
-  const nextIdx = indices[Math.floor(Math.random() * indices.length)];
-
-  // Overlay-Zustände vollständig neutralisieren, bevor der neue Song geladen wird.
-  lyricsOpen = false;
-  languageCoverFrameOpen = false;
-  npCoverImg.classList.remove('lyrics-active','swipe-left','swipe-right','no-transition');
-  npCoverWrap.classList.remove('lyrics-mode');
-  screenNP.classList.remove('lyrics-open');
-  resetImageFrameTransform();
-
-  curAlbum = key;
-  shuffleOn = true;
-  btnShuffle.classList.add('active');
-  npBtnShuffle.classList.add('active');
-  queue = shuffleArr(album.songs.map((_, i) => i));
-  queueIdx = queue.indexOf(nextIdx);
-  if(queueIdx < 0){ queueIdx = 0; }
-  prevScreen = key;
-  languageCoverClickState = { key, idx: queue[queueIdx], phase: 1 };
-  languageCycleTouchTime = Date.now();
-
-  loadPlayNoScroll(queue[queueIdx]);
-  if(!screenNP.classList.contains('active')) showNowPlaying();
-  requestAnimationFrame(()=>{ openLanguageCoverFrame(); });
-  updateLanguageHighlight();
-  syncLanguagePlayButtons();
-  return true;
-}
-
 function advanceLanguageImageCycle(e){
   if(!isLanguageImageCycleActive()) return false;
   if(e && e.target && e.target.closest && e.target.closest('.np-btn,.np-down-btn,.np-prog-wrap,.np-time')) return false;
@@ -4720,28 +4696,13 @@ npCoverWrap.addEventListener('touchend',e=>{
       updateLanguageHighlight();
     } else if(lyricsOpen) closeLyrics();
     else hideNowPlaying();
-  } else if(absDx>absDy*1.5&&absDx>40){ // swipe left/right — German/English immer Zufall + immer beim neuen Cover starten
-    languageCycleTouchTime = Date.now();
+  } else if(!lyricsOpen && !languageCoverFrameOpen && absDx>absDy*1.5&&absDx>40){ // swipe left/right — nur ohne Lyrics/Großcover
     if(dx<0){
       npCoverImg.classList.add('swipe-left');
-      setTimeout(()=>{
-        if(isLanguageImageCycleActive()){
-          playRandomLanguageFromImageFrame();
-        } else {
-          npCoverImg.classList.remove('swipe-left');
-          btnShuffle.click();
-        }
-      },180);
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
     } else {
       npCoverImg.classList.add('swipe-right');
-      setTimeout(()=>{
-        if(isLanguageImageCycleActive()){
-          playRandomLanguageFromImageFrame();
-        } else {
-          npCoverImg.classList.remove('swipe-right');
-          btnShuffle.click();
-        }
-      },180);
+      setTimeout(()=>{npCoverImg.classList.remove('swipe-right');btnPrev.click();},180);
     }
   }
 },{passive:true});
@@ -5952,6 +5913,18 @@ playerBar.classList.add = function(...args){
 };
 </script>
 
+<script>
+/* data-footer-controls-fix */
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.hj-btn, .hj-btn-play');
+  if(!btn) return;
+
+  const insidePlayer = e.target.closest('.hj-controls');
+  if(!insidePlayer) return;
+
+  e.stopPropagation();
+}, true);
+</script>
 </body>
 </html>
 
