@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v153-tracklist-header-gap-fix-20260521 -->
+<!-- Version: v154-language-cover-lyrics-swipe-shuffle-20260521 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4542,6 +4542,52 @@ function isLanguageImageCycleActive(){
   return !!(languageCoverClickState && (languageCoverClickState.key === 'languageGerman' || languageCoverClickState.key === 'languageEnglish') && screenNP.classList.contains('active'));
 }
 
+
+function shuffleLanguageImageCycle(keepLyricsMode){
+  if(!isLanguageImageCycleActive()) return false;
+  const key = languageCoverClickState.key;
+  const album = ALBUMS[key];
+  if(!album || !album.songs || !album.songs.length) return false;
+
+  const currentIdx = (queueIdx >= 0 && queue[queueIdx] !== undefined) ? queue[queueIdx] : languageCoverClickState.idx;
+  let nextIdx = currentIdx;
+  if(album.songs.length > 1){
+    while(nextIdx === currentIdx){
+      nextIdx = Math.floor(Math.random() * album.songs.length);
+    }
+  }
+
+  curAlbum = key;
+  shuffleOn = true;
+  btnShuffle.classList.add('active');
+  npBtnShuffle.classList.add('active');
+  queue = shuffleArr(album.songs.map((_,i)=>i));
+  queueIdx = queue.indexOf(nextIdx);
+  if(queueIdx < 0){
+    queue.unshift(nextIdx);
+    queueIdx = 0;
+  }
+  prevScreen = key === 'languageGerman' ? 'languageGerman' : 'languageEnglish';
+  languageCoverClickState = { key, idx:nextIdx, phase: keepLyricsMode ? 2 : 1 };
+
+  loadPlayNoScroll(nextIdx);
+
+  // loadPlay() schließt Lyrics bewusst. Danach stellen wir den gewünschten großen Rahmen wieder her.
+  requestAnimationFrame(()=>{
+    if(keepLyricsMode){
+      openLyrics();
+      languageCoverFrameOpen = false;
+      languageCoverClickState.phase = 2;
+    } else {
+      openLanguageCoverFrame();
+      languageCoverClickState.phase = 1;
+    }
+    updateLanguageHighlight();
+    syncLanguagePlayButtons();
+  });
+  return true;
+}
+
 function advanceLanguageImageCycle(e){
   if(!isLanguageImageCycleActive()) return false;
   if(e && e.target && e.target.closest && e.target.closest('.np-btn,.np-down-btn,.np-prog-wrap,.np-time')) return false;
@@ -4676,7 +4722,15 @@ npCoverWrap.addEventListener('touchend',e=>{
       updateLanguageHighlight();
     } else if(lyricsOpen) closeLyrics();
     else hideNowPlaying();
-  } else if(!lyricsOpen && !languageCoverFrameOpen && absDx>absDy*1.5&&absDx>40){ // swipe left/right — nur ohne Lyrics/Großcover
+  } else if(isLanguageImageCycleActive() && (languageCoverFrameOpen || lyricsOpen) && absDx>absDy*1.5&&absDx>40){
+    // German/English Großcover + Lyrics: horizontaler Swipe = immer zufällige weitere Wiedergabe.
+    const keepLyricsMode = lyricsOpen;
+    npCoverImg.classList.add(dx<0 ? 'swipe-left' : 'swipe-right');
+    setTimeout(()=>{
+      npCoverImg.classList.remove('swipe-left','swipe-right');
+      shuffleLanguageImageCycle(keepLyricsMode);
+    },180);
+  } else if(!lyricsOpen && !languageCoverFrameOpen && absDx>absDy*1.5&&absDx>40){ // normale Now-Playing-Sicht: Prev/Next unverändert
     if(dx<0){
       npCoverImg.classList.add('swipe-left');
       setTimeout(()=>{npCoverImg.classList.remove('swipe-left');btnNext.click();},180);
@@ -5397,7 +5451,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v152-buried-diamonds-alpha-sort-20260520';
+  const VERSION = 'v154-language-cover-lyrics-swipe-shuffle-20260521';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
