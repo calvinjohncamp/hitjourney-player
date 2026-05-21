@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v153-tracklist-header-gap-fix-20260521 -->
+<!-- Version: v156-language-swipe-always-cover-fix-20260521 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -4542,6 +4542,50 @@ function isLanguageImageCycleActive(){
   return !!(languageCoverClickState && (languageCoverClickState.key === 'languageGerman' || languageCoverClickState.key === 'languageEnglish') && screenNP.classList.contains('active'));
 }
 
+
+function playRandomLanguageFromImageFrame(){
+  if(!isLanguageImageCycleActive()) return false;
+  const key = languageCoverClickState.key;
+  const album = ALBUMS[key];
+  if(!album || !album.songs || !album.songs.length) return false;
+
+  // Nach horizontalem Swipe aus Cover ODER Lyrics immer hart zurück in den Cover-Zustand.
+  // Wichtig: kein btnShuffle.click(), weil der Button nur Shuffle an/aus toggelt und auf iOS
+  // nach dem Swipe zusätzlich ein synthetischer Click entstehen kann, der sonst Lyrics erneut öffnet.
+  const currentIdx = (queueIdx >= 0 && queue && queue.length) ? queue[queueIdx] : languageCoverClickState.idx;
+  let indices = album.songs.map((_, i) => i);
+  if(indices.length > 1){
+    indices = indices.filter(i => i !== currentIdx);
+  }
+  const nextIdx = indices[Math.floor(Math.random() * indices.length)];
+
+  // Overlay-Zustände vollständig neutralisieren, bevor der neue Song geladen wird.
+  lyricsOpen = false;
+  languageCoverFrameOpen = false;
+  npCoverImg.classList.remove('lyrics-active','swipe-left','swipe-right','no-transition');
+  npCoverWrap.classList.remove('lyrics-mode');
+  screenNP.classList.remove('lyrics-open');
+  resetImageFrameTransform();
+
+  curAlbum = key;
+  shuffleOn = true;
+  btnShuffle.classList.add('active');
+  npBtnShuffle.classList.add('active');
+  queue = shuffleArr(album.songs.map((_, i) => i));
+  queueIdx = queue.indexOf(nextIdx);
+  if(queueIdx < 0){ queueIdx = 0; }
+  prevScreen = key;
+  languageCoverClickState = { key, idx: queue[queueIdx], phase: 1 };
+  languageCycleTouchTime = Date.now();
+
+  loadPlayNoScroll(queue[queueIdx]);
+  if(!screenNP.classList.contains('active')) showNowPlaying();
+  requestAnimationFrame(()=>{ openLanguageCoverFrame(); });
+  updateLanguageHighlight();
+  syncLanguagePlayButtons();
+  return true;
+}
+
 function advanceLanguageImageCycle(e){
   if(!isLanguageImageCycleActive()) return false;
   if(e && e.target && e.target.closest && e.target.closest('.np-btn,.np-down-btn,.np-prog-wrap,.np-time')) return false;
@@ -4676,30 +4720,27 @@ npCoverWrap.addEventListener('touchend',e=>{
       updateLanguageHighlight();
     } else if(lyricsOpen) closeLyrics();
     else hideNowPlaying();
-  } else if(absDx>absDy*1.5&&absDx>40){ // swipe left/right — immer Zufall + immer beim neuen Cover starten
-    const wasLyricsOpen = lyricsOpen;
-    const wasLanguageFrame = languageCoverFrameOpen;
+  } else if(absDx>absDy*1.5&&absDx>40){ // swipe left/right — German/English immer Zufall + immer beim neuen Cover starten
+    languageCycleTouchTime = Date.now();
     if(dx<0){
       npCoverImg.classList.add('swipe-left');
       setTimeout(()=>{
-        npCoverImg.classList.remove('swipe-left');
-        if(wasLyricsOpen) closeLyrics();
-        if(wasLanguageFrame || wasLyricsOpen){
-          languageCoverFrameOpen = true;
-          languageCoverClickState.phase = 1;
+        if(isLanguageImageCycleActive()){
+          playRandomLanguageFromImageFrame();
+        } else {
+          npCoverImg.classList.remove('swipe-left');
+          btnShuffle.click();
         }
-        btnShuffle.click();
       },180);
     } else {
       npCoverImg.classList.add('swipe-right');
       setTimeout(()=>{
-        npCoverImg.classList.remove('swipe-right');
-        if(wasLyricsOpen) closeLyrics();
-        if(wasLanguageFrame || wasLyricsOpen){
-          languageCoverFrameOpen = true;
-          languageCoverClickState.phase = 1;
+        if(isLanguageImageCycleActive()){
+          playRandomLanguageFromImageFrame();
+        } else {
+          npCoverImg.classList.remove('swipe-right');
+          btnShuffle.click();
         }
-        btnShuffle.click();
       },180);
     }
   }
