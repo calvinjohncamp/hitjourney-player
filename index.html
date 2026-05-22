@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v161-diashow-frame-fill-no-start-20260522 -->
+<!-- Version: v162-diashow-cover-fit-square-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -2480,25 +2480,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .about-wrap{padding-left:32px;padding-right:32px;}
 }
 
-
-/* v162 – Diashow Title/Number Typography + precise alignment */
-.slideshow-overlay-title,
-.slideshow-overlay-number,
-.tp-teaser-title,
-.tp-teaser-number{
-  font-family:'Special Elite', cursive !important;
-  letter-spacing:.02em;
-}
-
-.tp-teaser.left-align .tp-teaser-title,
-.tp-teaser.left-align .tp-teaser-number,
-.slideshow-overlay.left-align .slideshow-overlay-title,
-.slideshow-overlay.left-align .slideshow-overlay-number{
-  left:32px !important;
-  text-align:left !important;
-  transform:none !important;
-}
-
 </style>
 </head>
 <body>
@@ -2509,26 +2490,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </svg>
   <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
 </div>
-<style>@keyframes hjSpin{to{transform:rotate(360deg)}}
-/* v162 – Diashow Title/Number Typography + precise alignment */
-.slideshow-overlay-title,
-.slideshow-overlay-number,
-.tp-teaser-title,
-.tp-teaser-number{
-  font-family:'Special Elite', cursive !important;
-  letter-spacing:.02em;
-}
-
-.tp-teaser.left-align .tp-teaser-title,
-.tp-teaser.left-align .tp-teaser-number,
-.slideshow-overlay.left-align .slideshow-overlay-title,
-.slideshow-overlay.left-align .slideshow-overlay-number{
-  left:32px !important;
-  text-align:left !important;
-  transform:none !important;
-}
-
-</style>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
@@ -5417,6 +5379,7 @@ function buildSlideshowEl(cell){
   const pos     = cell.overlayPos || 'bottom-left';
   const slug    = cell.slug    || '';
   const startColor = cell.startColor || '#0A0A0A';
+  const coverFitSquare = !!cell.coverFitSquare;
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5429,7 +5392,7 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
@@ -5459,7 +5422,7 @@ function buildSlideshowEl(cell){
       <img class="active ft-blank" src=""/>
       ${slides.map(s=>`<img loading="lazy" src="${resolveSlideImg(s)}"/>`).join('')}
     </div>
-    ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager"/>` : ''}
+    ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager" crossorigin="anonymous" onload="hjFitSlideshowCoverWindow(this)"/>` : ''}
     <div class="ft-text">
       <div class="ft-label">${slides.length} Songs</div>
       <div style="font-size:clamp(28px,8vw,52px);font-weight:900;letter-spacing:-.01em;line-height:.95;color:#f1ecdf;text-transform:uppercase">
@@ -5476,6 +5439,52 @@ function buildSlideshowEl(cell){
   // Init slideshow after DOM insert (passes click handler via initDynamicSlideshow)
   requestAnimationFrame(()=> initDynamicSlideshow(wrap.id, slides));
   return wrap;
+}
+
+
+/* v162 – Fit the slide cover layer into the transparent PNG window.
+   Works best with PNG frames whose transparent area is the intended square cover window.
+   If the alpha scan is blocked or no transparent area is found, the old full-area layout remains active. */
+function hjFitSlideshowCoverWindow(frameImg){
+  const wrap = frameImg && frameImg.closest && frameImg.closest('.featured-teaser.cover-fit-square');
+  if(!wrap) return;
+  const covers = wrap.querySelector('.ft-covers');
+  if(!covers) return;
+  try{
+    const w = frameImg.naturalWidth || 0;
+    const h = frameImg.naturalHeight || 0;
+    if(!w || !h) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d', {willReadFrequently:true});
+    ctx.drawImage(frameImg, 0, 0, w, h);
+    const data = ctx.getImageData(0,0,w,h).data;
+    let minX=w, minY=h, maxX=-1, maxY=-1, count=0;
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const a = data[(y*w+x)*4+3];
+        if(a < 24){
+          if(x<minX) minX=x; if(x>maxX) maxX=x;
+          if(y<minY) minY=y; if(y>maxY) maxY=y;
+          count++;
+        }
+      }
+    }
+    if(count < (w*h*0.02) || maxX <= minX || maxY <= minY) return;
+    const left = minX / w * 100;
+    const top = minY / h * 100;
+    const width = (maxX-minX+1) / w * 100;
+    const height = (maxY-minY+1) / h * 100;
+    covers.style.left = left + '%';
+    covers.style.top = top + '%';
+    covers.style.width = width + '%';
+    covers.style.height = height + '%';
+    covers.style.transform = 'none';
+    covers.style.aspectRatio = 'auto';
+    covers.style.borderRadius = '0';
+  }catch(e){
+    console.warn('[hitjourney] Cover 1:1 einpassen: transparente Frame-Fläche konnte nicht analysiert werden', e);
+  }
 }
 
 /* ── Init a dynamic slideshow — mirrors original featuredTeaser logic exactly ── */
