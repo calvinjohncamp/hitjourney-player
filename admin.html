@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-cover-fit-square-v5 -->
+<!-- Version: admin-v20260522-diashow-cover-fit-square-v6-text-toggle-angle -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -953,6 +953,32 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span style="font-size:12px;color:#cfe5f5;font-weight:700">Cover 1:1 einpassen</span>
         </label>
         <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Voreinstellung bleibt wie bisher. Diese Option passt quadratische Cover vollständig in den transparenten PNG-Freiraum ein.</div>
+      </div>
+
+      <!-- Cover-Winkel Feinjustierung -->
+      <div class="htm-field">
+        <span class="htm-label">Cover-Winkel Feinjustierung</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="htm-input" id="htmSsCoverAngleAdjust" type="number" step="0.5" min="-25" max="25" value="0" style="font-family:'SF Mono','Menlo',monospace;flex:1"/>
+          <span style="font-size:12px;color:rgba(133,172,201,.55);width:34px">Grad</span>
+        </div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Korrigiert nur den Winkel des eingepassten Covers im transparenten Quadrat. Negativ = weiter nach links drehen, positiv = weiter nach rechts drehen.</div>
+      </div>
+
+      <!-- Beschreibungstext ein-/ausblenden -->
+      <div class="htm-field">
+        <span class="htm-label">Beschreibungstext im Frame</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
+            <input type="checkbox" id="htmSsShowSongTitle" checked style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
+            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songtitel anzeigen</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
+            <input type="checkbox" id="htmSsShowSongNumber" checked style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
+            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songnummer anzeigen</span>
+          </label>
+        </div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Für Frame-Teaser wie „Velvet Radio“ kannst du Titel und Positionsnummer abschalten, wenn sie bereits im Covermotiv stehen.</div>
       </div>
 
       <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
@@ -2246,7 +2272,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false,coverAngleAdjust:0,showSongTitle:true,showSongNumber:true}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2261,7 +2287,7 @@ async function loadHomeLayout(){
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
-      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', coverFitSquare:false, ...c}))
+      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', coverFitSquare:false, coverAngleAdjust:0, showSongTitle:true, showSongNumber:true, ...c}))
     }));
   } catch(e){
     homeLayout = [];
@@ -2924,6 +2950,9 @@ function openSlideshowModal(rowId){
   document.getElementById('htmSsBgUrl').value        = (cell && cell.bgUrl) || '';
   document.getElementById('htmSsStartColor').value   = normalizeHexColor((cell && cell.startColor) || '#0A0A0A');
   document.getElementById('htmSsCoverFitSquare').checked = !!(cell && cell.coverFitSquare);
+  document.getElementById('htmSsCoverAngleAdjust').value = String((cell && Number.isFinite(Number(cell.coverAngleAdjust))) ? Number(cell.coverAngleAdjust) : 0);
+  document.getElementById('htmSsShowSongTitle').checked = !(cell && cell.showSongTitle === false);
+  document.getElementById('htmSsShowSongNumber').checked = !(cell && cell.showSongNumber === false);
   document.getElementById('ssSongSearch').value      = '';
   document.getElementById('ssAnalyseResult').style.display = 'none';
 
@@ -3282,7 +3311,7 @@ function importCurrentHome(){
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, coverAngleAdjust:0, showSongTitle:true, showSongNumber:true, playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 

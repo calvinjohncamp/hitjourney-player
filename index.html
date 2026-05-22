@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v162-diashow-cover-fit-square-20260522 -->
+<!-- Version: v163-diashow-cover-fit-square-text-toggle-angle-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1014,6 +1014,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   pointer-events:none;
 }
 .featured-teaser.has-frame .ft-text{display:none;}
+
+
+/* v163 — Admin-Schalter für Beschreibungstext im Diashow-Frame */
+.featured-teaser.hide-slide-title .ft-song-artist,
+.featured-teaser.hide-slide-title .ft-song-title{display:none!important;}
+.featured-teaser.hide-slide-number .ft-song-num{display:none!important;}
 
 /* Text overlay — in front of everything, uses mix-blend-mode */
 .ft-text {
@@ -2502,12 +2508,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .about-wrap{padding-left:32px;padding-right:32px;}
 }
 
-
-.slide-song-hidden .slideshow-song-title,
-.slide-song-hidden .slideshow-song-number{
-  display:none!important;
-}
-
 </style>
 </head>
 <body>
@@ -2518,13 +2518,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </svg>
   <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
 </div>
-<style>@keyframes hjSpin{to{transform: rotate(-8deg)}}
-.slide-song-hidden .slideshow-song-title,
-.slide-song-hidden .slideshow-song-number{
-  display:none!important;
-}
-
-</style>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
@@ -5414,6 +5408,9 @@ function buildSlideshowEl(cell){
   const slug    = cell.slug    || '';
   const startColor = cell.startColor || '#0A0A0A';
   const coverFitSquare = !!cell.coverFitSquare;
+  const coverAngleAdjust = Number(cell.coverAngleAdjust || 0) || 0;
+  const showSongTitle = cell.showSongTitle !== false;
+  const showSongNumber = cell.showSongNumber !== false;
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5426,7 +5423,8 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (!showSongTitle ? ' hide-slide-title' : '') + (!showSongNumber ? ' hide-slide-number' : '');
+  wrap.dataset.coverAngleAdjust = String(coverAngleAdjust);
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
@@ -5541,7 +5539,9 @@ function hjFitSlideshowCoverWindow(frameImg){
     if(Number.isFinite(s1) && Number.isFinite(s2)) slope = (s1+s2)/2;
     else if(Number.isFinite(s1)) slope = s1;
     else if(Number.isFinite(s2)) slope = s2;
-    const angleDeg = -Math.atan(slope) * 180 / Math.PI;
+    const autoAngleDeg = -Math.atan(slope) * 180 / Math.PI;
+    const angleAdjust = Number(wrap.dataset.coverAngleAdjust || 0) || 0;
+    const angleDeg = autoAngleDeg + angleAdjust;
 
     // Nicht die Achsen-Bounding-Box verwenden, sondern die echte Quadratgröße aus der transparenten Fläche.
     // So wird das Cover nicht rechteckig verzerrt und nicht unnötig vergrößert.
