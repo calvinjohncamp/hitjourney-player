@@ -5525,7 +5525,7 @@ function buildSlideshowEl(cell){
     <div class="ft-circle"></div>
     <div class="ft-covers" id="ftCovers_${wrap.id}">
       <img class="ft-blank" src=""/>
-      ${slides.map(s=>`<img loading="lazy" src="${resolveSlideImg(s)}"/>`).join('')}
+      ${slides.map((s,i)=>`<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${resolveSlideImg(s)}"/>`).join('')}
     </div>
     ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager" crossorigin="anonymous" onload="hjFitSlideshowCoverWindow(this)"/>` : ''}
     <div class="ft-text">
@@ -5681,6 +5681,7 @@ function initDynamicSlideshow(id, slides){
   let featuredCurrentMp3 = null;
   let timer = null;
   const intervalMs = 4000;
+  const initialDelayMs = 1200;
 
   // Build dots
   if(dotsEl){
@@ -5719,11 +5720,20 @@ function initDynamicSlideshow(id, slides){
     if(numEl && !wrap.classList.contains('hide-song-number'))    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
   }
 
-  function startRotation(){ stopRotation(); timer = setInterval(()=>goTo(cur < 0 ? 0 : cur+1), intervalMs); }
-  function stopRotation(){ clearInterval(timer); }
+  function startRotation(){
+    stopRotation();
+    timer = setTimeout(()=>{
+      goTo(cur < 0 ? 0 : cur+1);
+      timer = setInterval(()=>goTo(cur < 0 ? 0 : cur+1), intervalMs);
+    }, cur < 0 ? initialDelayMs : intervalMs);
+  }
+  function stopRotation(){ clearTimeout(timer); clearInterval(timer); timer = null; }
 
   goTo(-1);
-  startRotation();
+  // Erstes echtes Cover bewusst vorladen; danach startet die Diashow automatisch nach kurzer Hex-/Startfarben-Pause.
+  if(imgs[0] && imgs[0].complete) startRotation();
+  else if(imgs[0]){ imgs[0].addEventListener('load', startRotation, {once:true}); imgs[0].addEventListener('error', startRotation, {once:true}); }
+  else startRotation();
 
   // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
   wrap.addEventListener('click', ()=>{

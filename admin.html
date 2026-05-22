@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v172-real-covers-drag-overlays -->
+<!-- Version: admin-v20260522-diashow-v173-real-covers-upload-faster-start -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -950,7 +950,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <span class="htm-label">Frame / Hintergrundbild (2:1)</span>
         <input type="hidden" id="htmSsBgUrl"/>
         <div class="upload-zone wide" id="zSsFrame" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onSsFrameDrop(event)">
-          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="onSsFrameFile(this)"/>
+          <input type="file" id="ssFrameFileInput" accept="image/png,image/jpeg,image/webp" onchange="onSsFrameFile(this)"/>
           <img class="zone-preview" id="prevSsFrame" alt="Frame Vorschau"/>
           <div class="upload-zone-icon">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1015,6 +1015,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <button type="button" id="ssShapeCircle" onclick="ssWysSetShape('circle')">Kreis</button>
             <button type="button" id="ssFitContain" onclick="ssWysSetFit('contain')">Ganzes Cover</button>
             <button type="button" id="ssFitCover" onclick="ssWysSetFit('cover')">Fläche füllen</button>
+            <button type="button" id="ssUploadFrameBtn" onclick="ssTriggerFrameUpload()">Frame/Motiv hochladen</button>
             <button type="button" id="ssFocusText" onclick="ssWysFocusOverlay('text')">Songtitel + Nr.</button>
             <button type="button" id="ssFocusDots" onclick="ssWysFocusOverlay('dots')">Fortschrittsleiste</button>
             <button type="button" onclick="ssWysReset()">Reset</button>
@@ -3051,6 +3052,11 @@ function htmSlideshowSetFn(fn){
 function ssBgPreviewUpdate(){
   // Kompatibilität: URL wird intern weitergeführt, Eingabe erfolgt jetzt über Upload-Zone.
   setSsFramePreview(document.getElementById('htmSsBgUrl').value.trim());
+}
+
+function ssTriggerFrameUpload(){
+  const input = document.getElementById('ssFrameFileInput');
+  if(input) input.click();
 }
 
 
