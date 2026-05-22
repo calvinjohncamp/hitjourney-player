@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v171-real-covers-free-overlays -->
+<!-- Version: admin-v20260522-diashow-v172-real-covers-drag-overlays -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -472,11 +472,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-wys-cover,.ss-wys-box{aspect-ratio:1/1}
 .ss-wys-rotate{position:absolute;left:50%;top:-34px;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#0B2A42;border:2px solid #85ACC9;color:#85ACC9;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 .ss-wys-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}.ss-wys-controls button{border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;border-radius:8px;padding:8px 6px;font-size:11px;font-weight:700;cursor:pointer}.ss-wys-controls button.active{background:rgba(133,172,201,.2);color:#cfe5f5;border-color:#85ACC9}
+.ss-wys-controls button.overlay-focus{border-color:#6fda9a;color:#6fda9a;background:rgba(50,180,100,.12)}
 .ss-wys-mini{margin-top:7px;font-size:10.5px;color:rgba(133,172,201,.38);line-height:1.35}
 .ss-wys-overlay{position:absolute;z-index:6;touch-action:none;user-select:none;cursor:move;border:1px dashed rgba(133,172,201,.65);border-radius:7px;background:rgba(6,20,32,.28);box-shadow:0 4px 14px rgba(0,0,0,.28);padding:5px 7px;color:#f1ecdf;font-family:'Special Elite','Courier New',monospace;text-shadow:0 1px 4px rgba(0,0,0,.95);font-size:13px;line-height:1.1}
 .ss-wys-overlay.dots{display:flex;gap:5px;align-items:center;padding:7px}
 .ss-wys-overlay .dot{width:6px;height:6px;border-radius:50%;background:#f1ecdf;opacity:.35}.ss-wys-overlay .dot.active{opacity:1}
 .ss-wys-overlay .small{font-size:9px;opacity:.75;letter-spacing:.14em;margin-top:3px}
+.ss-wys-overlay.pulse{animation:ssPulse .7s ease}
+@keyframes ssPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.28)}50%{box-shadow:0 0 0 4px rgba(111,218,154,.35),0 8px 24px rgba(0,0,0,.38)}}
 
 /* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
 .he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none}
@@ -975,8 +978,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
       <!-- Anzeige Songtitel / Nummer -->
       <div class="htm-field">
-        <span class="htm-label">Beschreibungstext im Frame</span>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <span class="htm-label">Einblendungen im Frame</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
           <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
             <input type="checkbox" id="htmSsShowSongTitle" checked style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
             <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songtitel anzeigen</span>
@@ -985,8 +988,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <input type="checkbox" id="htmSsShowSongNumber" checked style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
             <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songnummer anzeigen</span>
           </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
+            <input type="checkbox" id="htmSsShowProgressDots" checked style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
+            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Fortschritt anzeigen</span>
+          </label>
         </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Bei Covern mit eigener Schrift bitte beide Haken entfernen. Die Punkte bleiben sichtbar.</div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Songtitel und Songnummer laufen als gemeinsamer Block. Textblock und Fortschrittspunkte lassen sich unten im WYSIWYG-Feld frei ziehen.</div>
       </div>
 
       <!-- WYSIWYG Cover-Platzierung -->
@@ -1008,8 +1015,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <button type="button" id="ssShapeCircle" onclick="ssWysSetShape('circle')">Kreis</button>
             <button type="button" id="ssFitContain" onclick="ssWysSetFit('contain')">Ganzes Cover</button>
             <button type="button" id="ssFitCover" onclick="ssWysSetFit('cover')">Fläche füllen</button>
+            <button type="button" id="ssFocusText" onclick="ssWysFocusOverlay('text')">Songtitel + Nr.</button>
+            <button type="button" id="ssFocusDots" onclick="ssWysFocusOverlay('dots')">Fortschrittsleiste</button>
             <button type="button" onclick="ssWysReset()">Reset</button>
-            <button type="button" onclick="ssWysNudge(-1,0)">←</button>
           </div>
           <div class="ss-wys-mini">Quadrat/Kreis, Fortschrittspunkte und Songtitel/Nummer direkt im Teaser ziehen. Unten rechts wird proportional skaliert – Kreis bleibt rund, Quadrat bleibt quadratisch.</div>
         </div>
@@ -1020,24 +1028,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <input type="hidden" id="htmSsDotsX" value="4"><input type="hidden" id="htmSsDotsY" value="86">
       </div>
 
-      <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
-      <div class="htm-field">
-        <span class="htm-label">Text-Position im Frame</span>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px" id="ssPosGrid">
-          <button class="ss-pos-btn" data-pos="top-left" onclick="ssSetPos(this)">Oben links</button>
-          <button class="ss-pos-btn" data-pos="top-center" onclick="ssSetPos(this)">Oben Mitte</button>
-          <button class="ss-pos-btn" data-pos="top-right" onclick="ssSetPos(this)">Oben rechts</button>
-          <button class="ss-pos-btn" data-pos="half-left" onclick="ssSetPos(this)">1/2 links</button>
-          <button class="ss-pos-btn" data-pos="half-center" onclick="ssSetPos(this)">1/2 Mitte</button>
-          <button class="ss-pos-btn" data-pos="half-right" onclick="ssSetPos(this)">1/2 rechts</button>
-          <button class="ss-pos-btn" data-pos="twothirds-left" onclick="ssSetPos(this)">2/3 links</button>
-          <button class="ss-pos-btn" data-pos="twothirds-center" onclick="ssSetPos(this)">2/3 Mitte</button>
-          <button class="ss-pos-btn" data-pos="twothirds-right" onclick="ssSetPos(this)">2/3 rechts</button>
-          <button class="ss-pos-btn" data-pos="bottom-left" onclick="ssSetPos(this)">Unten links</button>
-          <button class="ss-pos-btn" data-pos="bottom-center" onclick="ssSetPos(this)">Unten Mitte</button>
-          <button class="ss-pos-btn" data-pos="bottom-right" onclick="ssSetPos(this)">Unten rechts</button>
-        </div>
-      </div>
+      <input type="hidden" id="ssPosGrid" value="bottom-left">
+
 
       <!-- Titel -->
       <div class="htm-field">
@@ -2311,7 +2303,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2327,7 +2319,7 @@ async function loadHomeLayout(){
       id:      row.id,
       editing: false,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -3010,6 +3002,7 @@ function openSlideshowModal(rowId){
     hjSetChecked('htmSsCoverFitSquare', !!(cell && cell.coverFitSquare));
     hjSetChecked('htmSsShowSongTitle', !(cell && cell.showSongTitle === false));
     hjSetChecked('htmSsShowSongNumber', !(cell && cell.showSongNumber === false));
+    hjSetChecked('htmSsShowProgressDots', !(cell && cell.showProgressDots === false));
 
     hjSetVal('htmSsCoverAngleOffset', Number.isFinite(Number(cell && cell.coverAngleOffset)) ? Number(cell.coverAngleOffset) : 0);
     hjSetVal('htmSsFitLeft',   (cell && cell.coverFitLeft   !== undefined && cell.coverFitLeft   !== '') ? cell.coverFitLeft   : 0);
@@ -3239,7 +3232,7 @@ let ssWysDrag = null;
 function ssWysNum(v, fallback){ const n=parseFloat(v); return Number.isFinite(n) ? n : fallback; }
 function ssWysFirstSlideCover(){
   const s = htmSlides && htmSlides[0];
-  if(s) return s.coverUrl || ''; // bewusst kein Fokus-Crop im WYSIWYG
+  if(s) return s.coverUrl || s.cover || s.cover_url || ''; // bewusst kein Fokus-Crop im WYSIWYG
   const song = allSongs && allSongs[0];
   return song ? (song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`) : '';
 }
@@ -3303,7 +3296,7 @@ function ssWysApply(){
   const tx=ssWysNum(document.getElementById('htmSsTitleX')?.value,4), ty=ssWysNum(document.getElementById('htmSsTitleY')?.value,78);
   const dx=ssWysNum(document.getElementById('htmSsDotsX')?.value,4), dy=ssWysNum(document.getElementById('htmSsDotsY')?.value,86);
   if(titleOv){ titleOv.style.left=tx+'%'; titleOv.style.top=ty+'%'; titleOv.style.display=((document.getElementById('htmSsShowSongTitle')?.checked||document.getElementById('htmSsShowSongNumber')?.checked)?'':'none'); }
-  if(dotsOv){ dotsOv.style.left=dx+'%'; dotsOv.style.top=dy+'%'; }
+  if(dotsOv){ dotsOv.style.left=dx+'%'; dotsOv.style.top=dy+'%'; dotsOv.style.display=(document.getElementById('htmSsShowProgressDots')?.checked ? 'flex' : 'none'); }
   document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
   document.getElementById('ssShapeCircle')?.classList.toggle('active', ssWysState.shape==='circle');
   document.getElementById('ssFitContain')?.classList.toggle('active', ssWysState.fit==='contain');
@@ -3335,11 +3328,20 @@ function ssOverlayMove(e){
   ssWysApply(); e.preventDefault();
 }
 function ssOverlayEnd(){ ssOverlayDrag=null; }
+function ssWysFocusOverlay(kind){
+  const el=document.getElementById(kind==='dots'?'ssWysDots':'ssWysText');
+  if(!el) return;
+  el.classList.add('pulse');
+  document.getElementById('ssFocusText')?.classList.toggle('overlay-focus', kind==='text');
+  document.getElementById('ssFocusDots')?.classList.toggle('overlay-focus', kind==='dots');
+  setTimeout(()=>el.classList.remove('pulse'), 700);
+}
 function ssWysBind(){
   const stage=document.getElementById('ssWysStage'), box=document.getElementById('ssWysBox'), handle=document.getElementById('ssWysHandle'), rot=document.getElementById('ssWysRotate');
   if(!stage || !box || !handle || !rot || stage.dataset.bound) return;
   stage.dataset.bound='1';
   const dotsOv=document.getElementById('ssWysDots'), textOv=document.getElementById('ssWysText');
+  ['htmSsShowSongTitle','htmSsShowSongNumber','htmSsShowProgressDots'].forEach(id=>document.getElementById(id)?.addEventListener('change', ssWysApply));
   if(dotsOv) dotsOv.addEventListener('pointerdown', e=>ssOverlayStart('dots',e));
   if(textOv) textOv.addEventListener('pointerdown', e=>ssOverlayStart('title',e));
   const start=(mode,e)=>{ const p=ssWysPoint(e); const r=stage.getBoundingClientRect(); ssWysDrag={mode,sx:p.clientX,sy:p.clientY,start:{...ssWysState},rect:r}; e.preventDefault(); };
@@ -3514,6 +3516,7 @@ async function saveSlideshowTile(){
   cell.coverFitSquare = true; // v168: WYSIWYG nutzt immer die platzierte Fläche
   cell.showSongTitle = !!document.getElementById('htmSsShowSongTitle')?.checked;
   cell.showSongNumber = !!document.getElementById('htmSsShowSongNumber')?.checked;
+  cell.showProgressDots = !!document.getElementById('htmSsShowProgressDots')?.checked;
   cell.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(document.getElementById('htmSsCoverAngleOffset')?.value || 0) || 0));
   cell.coverFitLeft   = document.getElementById('htmSsFitLeft')?.value?.trim()   || '';
   cell.coverFitTop    = document.getElementById('htmSsFitTop')?.value?.trim()    || '';
@@ -3525,7 +3528,7 @@ async function saveSlideshowTile(){
   cell.titleY = document.getElementById('htmSsTitleY')?.value?.trim() || '78';
   cell.dotsX  = document.getElementById('htmSsDotsX')?.value?.trim() || '4';
   cell.dotsY  = document.getElementById('htmSsDotsY')?.value?.trim() || '86';
-  cell.slides     = htmSlides.map(s=>({...s, coverUrl:s.coverUrl, focusUrl:s.coverUrl}));
+  cell.slides     = htmSlides.map(s=>({...s, coverUrl:s.coverUrl || s.cover || s.cover_url || '', focusUrl:s.coverUrl || s.cover || s.cover_url || ''}));
 
   // Wichtig v166:
   // „Übernehmen“ im Diashow-Modal speichert jetzt sofort in Supabase.
@@ -3556,7 +3559,7 @@ function importCurrentHome(){
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 

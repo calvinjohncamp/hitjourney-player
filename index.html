@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v171-real-covers-free-overlays-20260522 -->
+<!-- Version: v172-real-covers-drag-overlays-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -963,6 +963,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .featured-teaser.hide-song-title .ft-song-title,
 .featured-teaser.hide-song-title .ft-song-artist{display:none!important}
 .featured-teaser.hide-song-number .ft-song-num{display:none!important}
+.featured-teaser.hide-progress-dots .ft-dots{display:none!important}
 
 /* Dynamic Admin frames: the slide image fills the full teaser behind the PNG.
    The opaque pixels of the frame cover everything else; only the transparent
@@ -5451,6 +5452,7 @@ function buildSlideshowEl(cell){
   // Robust gegen ältere/abweichende Feldnamen und stringifizierte Werte aus Supabase/JSON.
   const showSongTitle = boolVal(cell.showSongTitle ?? cell.showTitle ?? cell.titleVisible, true);
   const showSongNumber = boolVal(cell.showSongNumber ?? cell.showNumber ?? cell.numberVisible, true);
+  const showProgressDots = boolVal(cell.showProgressDots ?? cell.showDots ?? cell.progressVisible, true);
   const coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cell.coverAngleOffset ?? cell.coverRotateOffset ?? cell.coverRotationOffset ?? 0) || 0));
   const coverFitLeft = cell.coverFitLeft ?? cell.fitLeft ?? '';
   const coverFitTop = cell.coverFitTop ?? cell.fitTop ?? '';
@@ -5478,7 +5480,7 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (coverShape==='circle' ? ' cover-shape-circle' : ' cover-shape-square') + (coverFitMode==='cover' ? ' cover-fit-cover' : ' cover-fit-contain') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (coverShape==='circle' ? ' cover-shape-circle' : ' cover-shape-square') + (coverFitMode==='cover' ? ' cover-fit-cover' : ' cover-fit-contain') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '') + (!showProgressDots ? ' hide-progress-dots' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.dataset.coverAngleOffset = String(coverAngleOffset);
   wrap.dataset.coverFitLeft = String(coverFitLeft);
@@ -5512,7 +5514,8 @@ function buildSlideshowEl(cell){
   }
   function resolveSlideImg(s){
     const live = SUPABASE_SONGS.find(x=>x.slug===(s.slug||'').trim());
-    if(live && live.cover) return live.cover;
+    if(live && (live.cover || live.cover_url)) return live.cover || live.cover_url;
+    if(s.cover || s.cover_url) return s.cover || s.cover_url;
     if(s.coverUrl && !/fokus/i.test(s.coverUrl)) return s.coverUrl;
     if(s.coverUrl) return focusToCoverUrl(s.coverUrl);
     if(s.focusUrl) return focusToCoverUrl(s.focusUrl);
