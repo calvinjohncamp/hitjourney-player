@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v182-lyrics21-custom-motif-visible-no-strip-20260522 -->
+<!-- Version: v183-lyrics-context-isolated-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -4472,6 +4472,26 @@ function shuffleLanguage(lang){
 let languageCoverClickState = { key:null, idx:-1, phase:0 };
 let homeCoverClickState = { slug:null, phase:0, el:null };
 
+function clearHomeLyricsContext(){
+  // v183: Die Home-Sonderansicht (Lyrics-Sheet 21 / Tante Paula / Just This Dance)
+  // darf niemals als globaler Lyrics-Fallback für normale Songs weiterleben.
+  window._hjHomeLyricsSong = null;
+  if(curAlbum !== '__homeLyricsCycle'){
+    homeCoverClickState = { slug:null, phase:0, el:null };
+  }
+  screenNP.classList.remove('home-cover-open');
+}
+
+function isHomeLyricsContextActive(){
+  return !!(
+    window._hjHomeLyricsSong &&
+    curAlbum === '__homeLyricsCycle' &&
+    screenNP.classList.contains('home-cover-open') &&
+    homeCoverClickState &&
+    homeCoverClickState.slug === window._hjHomeLyricsSong.slug
+  );
+}
+
 function findHomeSongByCell(cell){
   if(!cell || !cell.slug) return null;
   const wanted = normalizeTeaserSlug(cell.slug);
@@ -4513,6 +4533,9 @@ function closeHomeImageFrame(returnHome){
     hideNowPlaying();
     /* Home-Lyrics-Cycle: keine Funktionsleiste unten einblenden; der nächste Klick auf das Cover pausiert. */
     playerBar.classList.remove('visible');
+  }
+  if(returnHome){
+    clearHomeLyricsContext();
   }
 }
 
@@ -4568,6 +4591,7 @@ function advanceHomeImageCycle(e){
 }
 
 function playLanguageSong(lang, idx){
+  clearHomeLyricsContext();
   const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
   const sameCard = languageCoverClickState.key === key && languageCoverClickState.idx === idx;
   const isCurrent = curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx;
@@ -4684,6 +4708,7 @@ function isArchiveMode(){
 }
 
 function loadArchiveSongByIndex(idx){
+  clearHomeLyricsContext();
   featuredMode = false; // Featured-Modus beenden
   if(!arcQueue.length)return;
   arcQueueIdx=(idx+arcQueue.length)%arcQueue.length;
@@ -4761,6 +4786,7 @@ function isLanguageImageCycleActive(){
 
 
 function playRandomLanguageFromImageFrame(){
+  clearHomeLyricsContext();
   if(!isLanguageImageCycleActive()) return false;
   const key = languageCoverClickState.key;
   const album = ALBUMS[key];
@@ -4831,7 +4857,7 @@ function openLyrics() {
     song = arcQueue[arcQueueIdx];
   } else if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0){
     song = KNW_SONGS[knwActiveSongIdx];
-  } else if(window._hjHomeLyricsSong){
+  } else if(isHomeLyricsContextActive()){
     song = window._hjHomeLyricsSong;
   } else if(curAlbum && queueIdx >= 0){
     song = ALBUMS[curAlbum].songs[queue[queueIdx]];
@@ -4846,7 +4872,7 @@ function openLyrics() {
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
-  if(!window._hjHomeLyricsSong) screenNP.classList.remove('home-cover-open');
+  if(!isHomeLyricsContextActive()) screenNP.classList.remove('home-cover-open');
   resetImageFrameTransform();
   languageCoverFrameOpen = false;
   lyricsOpen = true;
@@ -4857,7 +4883,7 @@ function closeLyrics() {
   npCoverImg.classList.remove('lyrics-active');
   npCoverWrap.classList.remove('lyrics-mode');
   screenNP.classList.remove('lyrics-open');
-  if(homeCoverClickState && homeCoverClickState.slug && screenNP.classList.contains('active')) screenNP.classList.add('home-cover-open');
+  if(isHomeLyricsContextActive() && screenNP.classList.contains('active')) screenNP.classList.add('home-cover-open');
   resetImageFrameTransform();
   lyricsOpen = false;
   languageCoverFrameOpen = false;
@@ -5069,6 +5095,7 @@ function loadPlayNoScroll(songIdx){
   setTimeout(()=>{ suppressTrackScroll = false; }, 500);
 }
 function loadPlay(songIdx){
+  clearHomeLyricsContext();
   featuredMode = false; // Featured-Modus beenden
   const s=ALBUMS[curAlbum].songs[songIdx];
   if(lyricsOpen) closeLyrics();
@@ -6114,6 +6141,7 @@ function playSongOrAlbum(cell){
 
 /* ── Play a single song by slug ── */
 function playSongBySlug(slug){
+  clearHomeLyricsContext();
   const song = SUPABASE_SONGS.find(s=>s.slug===slug);
   if(!song || !song.mp3) return;
   featuredMode = false;
