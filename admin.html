@@ -338,14 +338,26 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-bar-btn.done:hover{background:rgba(50,180,100,.25)}
 .he-row-bar-btn.edit-row{background:rgba(133,172,201,.08);color:#85ACC9;font-size:10px;letter-spacing:.04em}
 .he-row-bar-btn.edit-row:hover{background:rgba(133,172,201,.18)}
-.he-row-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px}
-.he-cell{position:relative;border-radius:7px;overflow:hidden;background:#0B1E2D;border:1px solid rgba(133,172,201,.1);aspect-ratio:1/1;transition:border-color .15s,background .15s}
-.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}
-.he-cell.span-4{grid-column:span 4;aspect-ratio:4/1}
-.he-cell.span-slide{grid-column:span 4;aspect-ratio:2/1}
-.he-cell.trio-a{grid-column:1;grid-row:1;aspect-ratio:1/1}
-.he-cell.trio-b{grid-column:2/4;grid-row:2;aspect-ratio:2/1}
-.he-cell.trio-c{grid-column:4;grid-row:1/3;aspect-ratio:unset}
+/* WYSIWYG grid — mirrors live index.html exactly */
+/* Mobile: 2 cols (default), Desktop: 4 cols */
+.he-row-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:8px}
+@media(min-width:600px){.he-row-grid{grid-template-columns:repeat(4,1fr)}}
+.he-cell{position:relative;border-radius:8px;overflow:hidden;background:#0B1E2D;border:1px solid rgba(133,172,201,.1);aspect-ratio:1/1;transition:border-color .15s,background .15s}
+/* span-2: 2 cols wide, 2:1 ratio */
+.he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
+@media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
+/* span-4: full width, 4:1 ratio on desktop, 2:1 on mobile */
+.he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
+@media(min-width:600px){.he-cell.span-4{grid-column:span 4;aspect-ratio:4/1}}
+/* slideshow: full width, 2:1 */
+.he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
+/* Trio layout — mobile: stacked, desktop: gl bd po */
+.he-row-grid.trio-grid{grid-template-areas:'gl gl' 'bd po';grid-template-rows:auto auto;gap:10px}
+@media(min-width:600px){.he-row-grid.trio-grid{grid-template-columns:1fr 2fr 1fr;grid-template-areas:'gl bd po';grid-template-rows:auto}}
+.he-cell.trio-a{grid-area:gl;aspect-ratio:1/1}
+.he-cell.trio-b{grid-area:bd;aspect-ratio:2/1}
+@media(min-width:600px){.he-cell.trio-b{aspect-ratio:2/1}}
+.he-cell.trio-c{grid-area:po;aspect-ratio:1/1}
 .he-cell.hidden-cell{display:none}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
@@ -356,6 +368,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell img.he-cell-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .he-cell-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,20,32,.8) 0%,transparent 55%);display:flex;align-items:flex-start;justify-content:space-between;padding:4px;opacity:0;transition:opacity .18s}
 .he-cell:hover .he-cell-overlay{opacity:1}
+.he-cell.editing-mode:hover .he-cell-overlay{opacity:1}
+/* Alt label — bottom of cell, always visible */
+.he-cell-altlabel{position:absolute;bottom:0;left:0;right:0;padding:18px 8px 7px;background:linear-gradient(transparent,rgba(6,20,32,.75));font-size:10px;font-weight:700;color:rgba(207,229,245,.8);letter-spacing:.04em;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
 .badge-play{background:rgba(50,180,100,.8)}
 .badge-link{background:rgba(88,132,164,.8)}
@@ -2208,7 +2223,7 @@ function buildRowEl(row, idx){
   bar.appendChild(btnDel);
 
   if(row.editing){
-    const btnDone = makeBarBtn('Fertig ✓','done','Bearbeitung abschließen', ()=>finishRow(row.id));
+    const btnDone = makeBarBtn('✓ Fertig','done','Bearbeitung abschließen', ()=>finishRow(row.id));
     bar.appendChild(btnDone);
   } else {
     const btnEdit = makeBarBtn('Bearbeiten','edit-row','Zeile bearbeiten', ()=>editRow(row.id));
@@ -2238,6 +2253,7 @@ function makeBarBtn(label, cls, title, fn){
 /* ── Build cells into grid ── */
 function buildCells(row, grid){
   grid.innerHTML = '';
+  grid.className = 'he-row-grid';
   const c = row.cells;
   const editing = row.editing;
 
@@ -2252,25 +2268,29 @@ function buildCells(row, grid){
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
     grid.appendChild(buildCell(row, 0, 'span-2', editing));
-    // cells 1,2,3 rendered as normal 1:1 if they have content, else hidden
-    for(let i=1;i<4;i++) grid.appendChild(buildCell(row,i,'',editing));
+    // In editing mode show remaining cells (they may be filled); in view mode hide empty ones
+    for(let i=1;i<4;i++){
+      const cell = c[i];
+      if(editing || (cell.imageUrl || cell.bgUrl)){
+        grid.appendChild(buildCell(row,i,'',editing));
+      }
+    }
 
   } else if(t0 === 'trio-a'){
-    // trio: a(col1 row1), c(col4 rows1-2), b(cols2-3 row2)
-    const cellA = buildCell(row,0,'trio-a',editing);
-    const cellC = buildCell(row,2,'trio-c',editing);
-    const cellB = buildCell(row,1,'trio-b',editing);
-    // Place in correct grid positions
-    cellA.style.gridColumn='1'; cellA.style.gridRow='1';
-    cellC.style.gridColumn='4'; cellC.style.gridRow='1/3';
-    cellB.style.gridColumn='2/4'; cellB.style.gridRow='2';
-    grid.appendChild(cellA);
-    grid.appendChild(cellC);
-    grid.appendChild(cellB);
+    // Trio: use CSS grid-areas gl/bd/po
+    grid.classList.add('trio-grid');
+    grid.appendChild(buildCell(row, 0, 'trio-a', editing)); // gl
+    grid.appendChild(buildCell(row, 1, 'trio-b', editing)); // bd
+    grid.appendChild(buildCell(row, 2, 'trio-c', editing)); // po
 
   } else {
-    // Default: all 4 cells as 1:1
-    for(let i=0;i<4;i++) grid.appendChild(buildCell(row,i,'',editing));
+    // Default: 1:1 cells — in view mode skip empty ones
+    for(let i=0;i<4;i++){
+      const cell = c[i];
+      if(cell.type === 'hidden') continue;
+      if(!editing && !(cell.imageUrl || cell.bgUrl)) continue;
+      grid.appendChild(buildCell(row,i,'',editing));
+    }
   }
 }
 
@@ -2286,7 +2306,7 @@ function buildCell(row, cellIdx, extraClass, editing){
   const isSlide  = cell.type === 'slideshow';
 
   if(isFilled || isSlide){
-    // Filled
+    // Filled — always show image
     const imgSrc = isSlide ? (cell.bgUrl||cell.imageUrl) : cell.imageUrl;
     if(imgSrc){
       const img = document.createElement('img');
@@ -2296,33 +2316,42 @@ function buildCell(row, cellIdx, extraClass, editing){
       img.onerror = ()=>{ img.style.opacity='.15'; };
       el.appendChild(img);
     }
-    // Overlay (edit/remove buttons, badge)
-    const ov = document.createElement('div');
-    ov.className = 'he-cell-overlay';
-    const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
-    const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
-    ov.innerHTML = `
-      <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
-      <div class="he-cell-acts">
-        <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
-        <button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>
-      </div>`;
-    el.appendChild(ov);
-    if(isSlide){
+    // Alt text overlay (bottom, always visible, subtle)
+    if(cell.alt){
       const lbl = document.createElement('div');
-      lbl.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.7);pointer-events:none';
-      lbl.textContent = (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
+      lbl.className = 'he-cell-altlabel';
+      lbl.textContent = cell.alt;
       el.appendChild(lbl);
     }
-  } else {
-    // Empty
+    // Edit/remove overlay — only visible in editing mode (via CSS hover)
+    if(editing){
+      const ov = document.createElement('div');
+      ov.className = 'he-cell-overlay';
+      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
+      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+      ov.innerHTML = `
+        <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
+        <div class="he-cell-acts">
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
+          <button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>
+        </div>`;
+      el.appendChild(ov);
+    }
+    if(isSlide){
+      const lbl2 = document.createElement('div');
+      lbl2.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.7);pointer-events:none';
+      lbl2.textContent = (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
+      el.appendChild(lbl2);
+    }
+  } else if(editing){
+    // Empty cell — only show "+" in editing mode
     const emp = document.createElement('div');
     emp.className = 'he-cell-empty';
-    emp.innerHTML = `<div class="he-cell-plus">+</div><div class="he-cell-hint">${editing?'Typ wählen':''}</div>`;
+    emp.innerHTML = `<div class="he-cell-plus">+</div><div class="he-cell-hint">Typ wählen</div>`;
     el.appendChild(emp);
   }
 
-  // Click → open type menu (editing empty) or open edit modal (filled)
+  // Click → only in editing mode
   el.onclick = ()=>{
     if(!editing) return;
     if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
@@ -2890,7 +2919,7 @@ function importCurrentHome(){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
              bgUrl:'', overlayPos:'bottom-left', slides:[], playlistSlug:'', ...overrides };
   }
-  function row(cells){ return { id:uid(), editing:false, cells }; }
+  function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
   homeLayout = [
     // Z1: Tante Paula — 2:1 teaser (span-2, Play)
