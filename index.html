@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v172-real-covers-drag-overlays-20260522 -->
+<!-- Version: v177-spotlight-real-supabase-covers-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5435,6 +5435,120 @@ if(!window._hjStandaloneHomeTeaserListeners){
 }
 
 /* ── Build a slideshow (featured-teaser style) ── */
+
+/* v177 — zentrale Cover-Auflösung für Diashows:
+   Für Spotlight/Velvet-Radio wird nicht mehr der alte gespeicherte Screenshot/Fokus-Pfad
+   als Wahrheit genommen. Die App sucht zuerst den echten Song in den geladenen
+   Supabase-Songs (Slug, Alias, Titel, MP3, Dateiname) und nimmt dessen cover_url. */
+const HJ_SPOTLIGHT_SLUG_ALIASES = {
+  'neues-licht': 'neues-licht-dieselben-scheiben',
+  'half-past-nine': 'half-past-nine-on-main-street',
+  'half-past-nine-on-main-st': 'half-past-nine-on-main-street',
+  'pine-and-snow': 'pine-snow',
+  'the-cold-dont-lie': 'the-cold-don-t-lie',
+  'rita-forever': 'rita-4ever',
+  'rita-4-ever': 'rita-4ever'
+};
+function hjNormText(v){
+  return String(v||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/&/g,'and')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'');
+}
+function hjTitleFromArtworkUrl(url){
+  try{
+    const last = decodeURIComponent(String(url||'').split('/').pop()||'');
+    return last
+      .replace(/\.(jpg|jpeg|png|webp)$/i,'')
+      .replace(/\s*-\s*(cover|fokus|focus|preview|crop|frame|teaser)$/i,'');
+  }catch(_){ return ''; }
+}
+function hjFocusToCoverUrl(url){
+  if(!url) return '';
+  return String(url)
+    .replace(/%20-%20Fokus(?=\.(jpg|jpeg|png|webp))/i, '%20-%20Cover')
+    .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
+    .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover')
+    .replace(/focus(?=\.(jpg|jpeg|png|webp))/i, 'cover');
+}
+function hjAllLiveSongs(){
+  const songs = [];
+  if(Array.isArray(SUPABASE_SONGS)) songs.push(...SUPABASE_SONGS);
+  if(typeof ALL_SONGS !== 'undefined' && Array.isArray(ALL_SONGS)) songs.push(...ALL_SONGS);
+  const uniq = [];
+  const seen = new Set();
+  songs.forEach(x=>{
+    const k = (x.slug||'') + '|' + (x.title||'') + '|' + (x.mp3||'');
+    if(!seen.has(k)){ seen.add(k); uniq.push(x); }
+  });
+  return uniq;
+}
+function hjFindLiveSong(ref){
+  ref = ref || {};
+  const songs = hjAllLiveSongs();
+  if(!songs.length) return null;
+
+  const slugRaw = String(ref.slug || ref.song_slug || ref.songSlug || '').trim();
+  const mp3Raw  = String(ref.mp3 || ref.mp3_url || '').trim();
+  const urlTitle = hjTitleFromArtworkUrl(ref.coverUrl || ref.cover_url || ref.cover || ref.image || ref.imageUrl || ref.focusUrl);
+  const titleRaw = String(ref.title || ref.name || ref.display || urlTitle || '').replace(/<br\s*\/?>/gi,' ').trim();
+
+  const slugNorm = hjNormText(slugRaw);
+  const titleNorm = hjNormText(titleRaw);
+  const fileTitleNorm = hjNormText(urlTitle);
+  const mp3Norm = hjNormText((mp3Raw.split('/').pop() || '').replace(/\.(mp3|m4a|wav)$/i,''));
+
+  function bySlug(n){
+    if(!n) return null;
+    const alias = HJ_SPOTLIGHT_SLUG_ALIASES[n] || '';
+    return songs.find(x=>hjNormText(x.slug)===n)
+        || (alias ? songs.find(x=>hjNormText(x.slug)===alias) : null)
+        || (n.length>=8 ? songs.find(x=>hjNormText(x.slug).startsWith(n) || hjNormText(x.slug).includes(n) || n.includes(hjNormText(x.slug))) : null);
+  }
+  function byTitle(n){
+    if(!n) return null;
+    return songs.find(x=>hjNormText(x.title)===n)
+        || songs.find(x=>{
+             const t = hjNormText(x.title);
+             return n.length>=6 && t.length>=6 && (t.includes(n) || n.includes(t));
+           });
+  }
+
+  return bySlug(slugNorm)
+      || bySlug(mp3Norm)
+      || byTitle(titleNorm)
+      || byTitle(fileTitleNorm)
+      || null;
+}
+function hjCoverCandidatesFor(ref){
+  ref = ref || {};
+  const out = [];
+  const add = u => { if(u && !out.includes(u)) out.push(u); };
+  const live = hjFindLiveSong(ref);
+  if(live) add(live.cover || live.cover_url);
+  add(ref.cover || ref.cover_url);
+  add(ref.coverUrl);
+  add(ref.image);
+  add(ref.imageUrl);
+  add(hjFocusToCoverUrl(ref.focusUrl));
+  add(hjFocusToCoverUrl(ref.coverUrl));
+  add(ref.focusUrl);
+  return out.filter(Boolean);
+}
+function hjBindCoverFallback(img){
+  if(!img || img._hjCoverFallbackBound) return;
+  img._hjCoverFallbackBound = true;
+  img._hjSrcIdx = 0;
+  img.addEventListener('error', ()=>{
+    const list = String(img.dataset.srcs||'').split('||').filter(Boolean);
+    img._hjSrcIdx = (img._hjSrcIdx || 0) + 1;
+    if(list[img._hjSrcIdx]) img.src = list[img._hjSrcIdx];
+  });
+}
+
 function buildSlideshowEl(cell){
   const slides  = cell.slides  || [];
   const bgUrl   = cell.bgUrl   || cell.imageUrl || '';
@@ -5509,118 +5623,16 @@ function buildSlideshowEl(cell){
   }
 
   // Full slideshow — reuse existing featured-teaser CSS
-  // Resolve cover URL: always prefer the real uploaded 1:1 song cover.
-  // Older slideshow data sometimes stored a generated *Fokus.jpg* crop as coverUrl/focusUrl;
-  // this mode must not use those crops.
-  function focusToCoverUrl(url){
-    if(!url) return '';
-    return String(url)
-      .replace(/%20-%20Fokus(?=\.(jpg|jpeg|png|webp))/i, '%20-%20Cover')
-      .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
-      .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover');
-  }
-  function normText(v){
-    return String(v||'')
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
-      .replace(/&/g,'and')
-      .replace(/[^a-z0-9]+/g,'-')
-      .replace(/^-+|-+$/g,'');
-  }
-  function titleFromArtworkUrl(url){
-    try{
-      const last = decodeURIComponent(String(url||'').split('/').pop()||'');
-      return last
-        .replace(/\.(jpg|jpeg|png|webp)$/i,'')
-        .replace(/\s*-\s*(cover|fokus|focus|preview|crop|frame)$/i,'');
-    }catch(_){ return ''; }
-  }
-  // v176: Alte Spotlight-Konfigurationen enthalten noch verkürzte/falsche Slugs
-  // (z. B. neues-licht statt neues-licht-dieselben-scheiben). Deshalb wird hier
-  // nicht mehr blind die gespeicherte Cover-URL genutzt, sondern zuerst der echte
-  // Song aus Supabase ermittelt — inklusive Alias-/Teiltreffer-Logik.
-  const SPOTLIGHT_SLUG_ALIASES = {
-    'neues-licht': 'neues-licht-dieselben-scheiben',
-    'half-past-nine': 'half-past-nine-on-main-street',
-    'half-past-nine-on-main-st': 'half-past-nine-on-main-street',
-    'pine-and-snow': 'pine-snow',
-    'the-cold-dont-lie': 'the-cold-don-t-lie',
-    'rita-forever': 'rita-4ever'
-  };
-  function liveSongForSlide(s){
-    const slug = (s && (s.slug || s.song_slug || s.songSlug) ? String(s.slug || s.song_slug || s.songSlug).trim() : '');
-    const title = s && (s.title || s.name || titleFromArtworkUrl(s.coverUrl || s.cover_url || s.cover || s.image || s.imageUrl || s.focusUrl));
-    const songs = [];
-    if(Array.isArray(SUPABASE_SONGS)) songs.push(...SUPABASE_SONGS);
-    if(typeof ALL_SONGS !== 'undefined' && Array.isArray(ALL_SONGS)) songs.push(...ALL_SONGS);
-    const uniq = [];
-    const seen = new Set();
-    songs.forEach(x=>{ const k=(x.slug||'')+'|'+(x.title||''); if(!seen.has(k)){seen.add(k); uniq.push(x);} });
-    if(slug){
-      const slugNorm = normText(slug);
-      const alias = SPOTLIGHT_SLUG_ALIASES[slugNorm] || '';
-      let live = uniq.find(x=>String(x.slug||'').trim()===slug);
-      if(live) return live;
-      if(alias){
-        live = uniq.find(x=>normText(x.slug)===alias);
-        if(live) return live;
-      }
-      live = uniq.find(x=>normText(x.slug)===slugNorm);
-      if(live) return live;
-      // Verkürzte alte Slugs dürfen echte längere Supabase-Slugs treffen,
-      // aber nur eindeutig genug (mind. 8 Zeichen), damit keine falschen Cover gezogen werden.
-      if(slugNorm.length >= 8){
-        live = uniq.find(x=>normText(x.slug).startsWith(slugNorm) || normText(x.slug).includes(slugNorm));
-        if(live) return live;
-      }
-    }
-    if(title){
-      let live = uniq.find(x=>normText(x.title)===normText(title));
-      if(live) return live;
-      live = uniq.find(x=>normText(x.title).includes(normText(title)) || normText(title).includes(normText(x.title)));
-      if(live) return live;
-    }
-    // Letzte Chance: aus alter Cover-Datei den Titel herauslesen und damit matchen.
-    const fileTitle = titleFromArtworkUrl(s && (s.coverUrl || s.focusUrl || s.image || s.imageUrl || s.cover_url || s.cover));
-    if(fileTitle){
-      const live = uniq.find(x=>normText(x.title)===normText(fileTitle) || normText(x.slug)===normText(fileTitle));
-      if(live) return live;
-    }
-    return null;
-  }
-  function focusToCoverUrl(url){
-    if(!url) return '';
-    return String(url)
-      .replace(/%20-%20Fokus(?=\.(jpg|jpeg|png|webp))/i, '%20-%20Cover')
-      .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
-      .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover')
-      .replace(/focus(?=\.(jpg|jpeg|png|webp))/i, 'cover');
-  }
-  function slideImgCandidates(s){
-    const out = [];
-    const add = u => { if(u && !out.includes(u)) out.push(u); };
-    const live = liveSongForSlide(s || {});
-    if(live) add(live.cover || live.cover_url);
-    add(s.cover || s.cover_url);
-    add(s.coverUrl);
-    add(s.image);
-    add(s.imageUrl);
-    add(focusToCoverUrl(s.focusUrl));
-    add(focusToCoverUrl(s.coverUrl));
-    add(s.focusUrl);
-    // v175: niemals schwarz bleiben. Wenn Supabase/Slug einmal nicht greift,
-    // wird wenigstens jede gespeicherte alte URL als Fallback versucht.
-    return out.filter(Boolean);
-  }
-  function resolveSlideImg(s){
-    return (slideImgCandidates(s || {})[0] || '');
-  }
+  // v177: Cover kommen zuerst aus dem echten Supabase-Songdatensatz.
+  function slideImgCandidates(s){ return hjCoverCandidatesFor(s || {}); }
   function escAttr(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
   function slideImgTag(s,i){
     const c = slideImgCandidates(s||{});
     const src = c[0] || '';
-    return `<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${escAttr(src)}" data-srcs="${escAttr(c.join('||'))}" data-slide-slug="${escAttr(s.slug||s.song_slug||s.songSlug||'')}" data-slide-title="${escAttr(s.title||'')}"/>`;
+    const live = hjFindLiveSong(s||{});
+    const slug = (s && (s.slug||s.song_slug||s.songSlug)) || (live && live.slug) || '';
+    const titleResolved = (s && s.title) || (live && live.title) || '';
+    return `<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${escAttr(src)}" data-srcs="${escAttr(c.join('||'))}" data-slide-slug="${escAttr(slug)}" data-slide-title="${escAttr(titleResolved)}"/>`;
   }
   wrap.innerHTML = `
     <div class="ft-circle"></div>
@@ -5781,16 +5793,7 @@ function initDynamicSlideshow(id, slides){
   // v175: schwarze/fehlende Spotlight-Cover vermeiden. Jedes Bild bekommt eine
   // Kandidatenliste (Supabase-Cover zuerst, gespeicherte URLs danach) und versucht
   // bei Ladefehler automatisch die nächste echte Cover-URL.
-  imgs.forEach(img=>{
-    if(img._hjCoverFallbackBound) return;
-    img._hjCoverFallbackBound = true;
-    img._hjSrcIdx = 0;
-    img.addEventListener('error', ()=>{
-      const list = String(img.dataset.srcs||'').split('||').filter(Boolean);
-      img._hjSrcIdx = (img._hjSrcIdx || 0) + 1;
-      if(list[img._hjSrcIdx]) img.src = list[img._hjSrcIdx];
-    });
-  });
+  imgs.forEach(img=>hjBindCoverFallback(img));
 
   let cur = -1; // -1 = Startbild/Frame ohne Dia; bleibt genauso lange stehen wie jedes Dia
   let featuredCurrentMp3 = null;
@@ -5865,25 +5868,10 @@ function initDynamicSlideshow(id, slides){
     if(cur < 0) return;
     const slide = slides[cur];
     if(!slide) return;
-    // Slug → Song aus SUPABASE_SONGS, inkl. alter Spotlight-Aliase.
-    const norm = v => String(v||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-    const aliases = {
-      'neues-licht': 'neues-licht-dieselben-scheiben',
-      'half-past-nine': 'half-past-nine-on-main-street',
-      'half-past-nine-on-main-st': 'half-past-nine-on-main-street',
-      'pine-and-snow': 'pine-snow',
-      'the-cold-dont-lie': 'the-cold-don-t-lie',
-      'rita-forever': 'rita-4ever'
-    };
-    const wanted = norm(slide.slug);
-    const alias = aliases[wanted] || '';
-    let song = SUPABASE_SONGS.find(s=>s.slug===slide.slug)
-            || SUPABASE_SONGS.find(s=>s.slug===(slide.slug||'').trim())
-            || (alias ? SUPABASE_SONGS.find(s=>norm(s.slug)===alias) : null)
-            || SUPABASE_SONGS.find(s=>norm(s.slug)===wanted)
-            || SUPABASE_SONGS.find(s=>wanted.length>=8 && (norm(s.slug).startsWith(wanted) || norm(s.slug).includes(wanted)));
+    // Slug/Titel/MP3 → echter Song aus Supabase, inkl. alter Spotlight-Aliase.
+    let song = hjFindLiveSong(slide);
     if(!song || !song.mp3) {
-      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slug:', slide.slug, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,12).map(s=>s.slug));
+      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slide:', slide, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,12).map(s=>s.slug));
       return;
     }
 
@@ -6077,6 +6065,24 @@ function initFeaturedTeaser(){
   const dotsEl   = document.getElementById('ftDots');
 
   if(!teaser || !imgEls.length) return;
+
+  // v177: Hardcoded Spotlight-Bilder sofort durch echte Supabase-Cover ersetzen.
+  // Der Index der img-Tags entspricht FEATURED_SONGS: 0 = Blank/Start, 1..10 = Songs.
+  FEATURED_SONGS.forEach((song, i)=>{
+    if(!song || !song.title || !imgEls[i]) return;
+    const live = hjFindLiveSong(song);
+    const candidates = hjCoverCandidatesFor(song);
+    if(live){
+      if(live.cover) song.cover = live.cover;
+      if(live.mp3) song.mp3 = live.mp3;
+      if(live.artist) song.artist = live.artist;
+    }
+    imgEls[i].dataset.srcs = candidates.join('||');
+    imgEls[i].dataset.slideTitle = song.title || '';
+    imgEls[i].dataset.slideSlug = (live && live.slug) || '';
+    if(candidates[0]) imgEls[i].src = candidates[0];
+    hjBindCoverFallback(imgEls[i]);
+  });
 
   // Dots aufbauen (vorher leeren, falls bereits befüllt)
   if(dotsEl) {
