@@ -5466,8 +5466,17 @@ function buildSlideshowEl(cell){
   const dotsY  = cell.dotsY  ?? cell.progressY ?? '';
   const hasTitleCustom = titleX !== '' && titleY !== '' && titleX !== undefined && titleY !== undefined;
   const hasDotsCustom  = dotsX !== '' && dotsY !== '' && dotsX !== undefined && dotsY !== undefined;
-  const titleStyle = hasTitleCustom ? `--ft-title-x:${parseFloat(titleX)||0}%;--ft-title-y:${parseFloat(titleY)||0}%;` : '';
-  const dotsStyle  = hasDotsCustom  ? `--ft-dots-x:${parseFloat(dotsX)||0}%;--ft-dots-y:${parseFloat(dotsY)||0}%;` : '';
+  function edgePct(v, fallback){
+    let n = parseFloat(v);
+    if(!Number.isFinite(n)) n = fallback;
+    // v174: WYSIWYG darf optisch bis fast an den Rand. Alte gespeicherte Werte
+    // wie 86% lagen noch zu weit innen; nahe Kanten werden deshalb leicht nach außen interpretiert.
+    if(n >= 70) n = Math.min(98, n + 8);
+    else if(n <= 20) n = Math.max(1, n - 3);
+    return n;
+  }
+  const titleStyle = hasTitleCustom ? `--ft-title-x:${edgePct(titleX,4)}%;--ft-title-y:${edgePct(titleY,78)}%;` : '';
+  const dotsStyle  = hasDotsCustom  ? `--ft-dots-x:${edgePct(dotsX,4)}%;--ft-dots-y:${edgePct(dotsY,86)}%;` : '';
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5512,12 +5521,32 @@ function buildSlideshowEl(cell){
       .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
       .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover');
   }
+  function liveSongForSlide(s){
+    const slug = (s && s.slug ? String(s.slug).trim() : '');
+    const norm = (v)=> (typeof normalizeTeaserSlug === 'function' ? normalizeTeaserSlug(v||'') : String(v||'').toLowerCase().trim());
+    let live = slug ? SUPABASE_SONGS.find(x=>String(x.slug||'').trim()===slug) : null;
+    if(!live && slug) live = SUPABASE_SONGS.find(x=>norm(x.slug)===norm(slug));
+    if(!live && s && s.title) live = SUPABASE_SONGS.find(x=>norm(x.title)===norm(s.title) && (!s.artist || norm(x.artist)===norm(s.artist)));
+    if(!live && typeof ALL_SONGS !== 'undefined' && slug) live = ALL_SONGS.find(x=>norm(x.slug)===norm(slug));
+    return live || null;
+  }
+  function focusToCoverUrl(url){
+    if(!url) return '';
+    return String(url)
+      .replace(/%20-%20Fokus(?=\.(jpg|jpeg|png|webp))/i, '%20-%20Cover')
+      .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
+      .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover')
+      .replace(/focus(?=\.(jpg|jpeg|png|webp))/i, 'cover');
+  }
   function resolveSlideImg(s){
-    const live = SUPABASE_SONGS.find(x=>x.slug===(s.slug||'').trim());
+    // v174: Immer zuerst das echte Songobjekt verwenden. Gespeicherte Fokus-/Crop-/Preview-URLs
+    // werden nur noch als letzte Notlösung benutzt, damit keine schwarzen/alten KI-Crops erscheinen.
+    const live = liveSongForSlide(s || {});
     if(live && (live.cover || live.cover_url)) return live.cover || live.cover_url;
     if(s.cover || s.cover_url) return s.cover || s.cover_url;
-    if(s.coverUrl && !/fokus/i.test(s.coverUrl)) return s.coverUrl;
-    if(s.coverUrl) return focusToCoverUrl(s.coverUrl);
+    const cu = s.coverUrl || s.image || s.imageUrl || '';
+    if(cu && !/(fokus|focus|preview|frame|crop)/i.test(cu)) return cu;
+    if(cu) return focusToCoverUrl(cu);
     if(s.focusUrl) return focusToCoverUrl(s.focusUrl);
     return '';
   }
@@ -5731,9 +5760,16 @@ function initDynamicSlideshow(id, slides){
 
   goTo(-1);
   // Erstes echtes Cover bewusst vorladen; danach startet die Diashow automatisch nach kurzer Hex-/Startfarben-Pause.
-  if(imgs[0] && imgs[0].complete) startRotation();
-  else if(imgs[0]){ imgs[0].addEventListener('load', startRotation, {once:true}); imgs[0].addEventListener('error', startRotation, {once:true}); }
-  else startRotation();
+  // v174: Nicht endlos auf ein langsam ladendes/fehlendes erstes Cover warten.
+  // Nach kurzer Hex-Farbton-Pause startet die Diashow zuverlässig automatisch.
+  let autoStarted = false;
+  function safeStart(){ if(autoStarted) return; autoStarted = true; startRotation(); }
+  const startFallback = setTimeout(safeStart, 900);
+  if(imgs[0] && imgs[0].complete) { clearTimeout(startFallback); safeStart(); }
+  else if(imgs[0]){
+    imgs[0].addEventListener('load', ()=>{ clearTimeout(startFallback); safeStart(); }, {once:true});
+    imgs[0].addEventListener('error', ()=>{ clearTimeout(startFallback); safeStart(); }, {once:true});
+  } else { clearTimeout(startFallback); safeStart(); }
 
   // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
   wrap.addEventListener('click', ()=>{
