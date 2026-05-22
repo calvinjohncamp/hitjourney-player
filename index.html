@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v158-spotlight-cover-audio-fix-20260522 -->
+<!-- Version: v159-spotlight-hardcoded-fix-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -5107,6 +5107,9 @@ function initApp() {
   // Home-Layout dynamisch rendern
   renderHomeLayout();
 
+  // Statische Spotlight-Diashow initialisieren (hardcoded, kein Supabase-Slug-Lookup)
+  initFeaturedTeaser();
+
 } // END initApp()
 
 // ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
@@ -5492,6 +5495,130 @@ function getFallbackHomeHTML(){
 }
 
 // ══ END HOME LAYOUT RENDERER ═══════════════════════════════════════════════
+
+// ══ FEATURED TEASER / IN THE SPOTLIGHT ══════════════════════════════════════
+// Hardcoded — unabhängig von Supabase home_layout. Initialisiert #featuredTeaser
+// sobald er im DOM ist (Fallback-HTML oder dynamisch gerendert).
+function initFeaturedTeaser(){
+  const FEATURED_SONGS = [
+    { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: schwarzer Kreis
+    { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
+    { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
+    { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
+    { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
+    { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
+    { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
+    { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3' },
+    { title: 'Keys on the Floor', display: 'Keys On The Floor', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3' },
+    { title: 'Rita 4ever', display: 'Rita 4 Ever', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
+    { title: 'My piece of heaven', display: 'My Piece Of Heaven', artist: 'Jörn Kämper',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
+      mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
+  ];
+
+  const teaser   = document.getElementById('featuredTeaser');
+  const coversEl = document.getElementById('ftCovers');
+  const imgEls   = coversEl ? Array.from(coversEl.querySelectorAll('img')) : [];
+  const titleEl  = document.getElementById('ftSongTitle');
+  const artistEl = document.getElementById('ftSongArtist');
+  const numEl    = document.getElementById('ftSongNum');
+  const dotsEl   = document.getElementById('ftDots');
+
+  if(!teaser || !imgEls.length) return;
+
+  // Dots aufbauen (vorher leeren, falls bereits befüllt)
+  if(dotsEl) {
+    dotsEl.innerHTML = '';
+    FEATURED_SONGS.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'ft-dot' + (i===0?' active':'');
+      dotsEl.appendChild(d);
+    });
+  }
+  const dots = dotsEl ? Array.from(dotsEl.querySelectorAll('.ft-dot')) : [];
+
+  let current = 0;
+  let timer = null;
+
+  function goTo(idx) {
+    if(imgEls[current]) imgEls[current].classList.remove('active');
+    if(dots[current])   dots[current].classList.remove('active');
+    current = (idx + FEATURED_SONGS.length) % FEATURED_SONGS.length;
+    if(imgEls[current]) imgEls[current].classList.add('active');
+    if(dots[current])   dots[current].classList.add('active');
+    const song = FEATURED_SONGS[current];
+    if(titleEl)  titleEl.innerHTML    = song.display || '';
+    if(artistEl) artistEl.textContent = song.artist  || '';
+    if(numEl)    numEl.textContent    = song.title ? String(current).padStart(2,'0') + ' / ' + (FEATURED_SONGS.length - 1) : '';
+  }
+
+  function startRotation() { timer = setInterval(() => goTo(current + 1), 3200); }
+  function stopRotation()  { clearInterval(timer); }
+
+  if(titleEl)  titleEl.innerHTML   = '';
+  if(artistEl) artistEl.textContent = '';
+  if(numEl)    numEl.textContent   = '';
+  startRotation();
+
+  let featuredCurrentMp3 = null;
+
+  teaser.addEventListener('click', () => {
+    const song = FEATURED_SONGS[current];
+    if(!song || !song.mp3) return;
+    if(featuredCurrentMp3 === song.mp3) {
+      if(audio.paused) audio.play().catch(()=>{});
+      else             audio.pause();
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'spotlight' } }));
+    featuredMode = true;
+    featuredCurrentMp3 = song.mp3;
+    playerBar.classList.remove('visible');
+    audio.src = song.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+  });
+
+  window.addEventListener('hj:teaser-audio-switch', (e) => {
+    if(e.detail && e.detail.source !== 'spotlight') featuredCurrentMp3 = null;
+  });
+
+  audio.addEventListener('play', () => {
+    if(featuredMode && audio.src !== featuredCurrentMp3) {
+      featuredMode = false;
+      featuredCurrentMp3 = null;
+    }
+  });
+
+  let touchX = null;
+  teaser.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; stopRotation(); }, {passive:true});
+  teaser.addEventListener('touchend',   e => {
+    if(touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 30) goTo(current + (dx < 0 ? 1 : -1));
+    touchX = null;
+    startRotation();
+  }, {passive:true});
+}
+// ══ END FEATURED TEASER ══════════════════════════════════════════════════════
 
 // ── BOOTSTRAP ──
 loadFromSupabase()
