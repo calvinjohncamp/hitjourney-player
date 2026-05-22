@@ -6,8 +6,8 @@
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
-<title>hitjourney · Admin · v170-layout-options</title>
-<!-- Version: admin-v20260522-diashow-v165-save-fit-fields -->
+<title>hitjourney · Admin</title>
+<!-- Version: admin-v20260522-diashow-v168-modal-hardfix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2912,6 +2912,11 @@ function saveHomeTile(){
 
 /* ══ SLIDESHOW MODAL ════════════════════════════════════════════════════════ */
 
+
+function hjSetVal(id, value){ const el=document.getElementById(id); if(el) el.value=value; return el; }
+function hjSetChecked(id, value){ const el=document.getElementById(id); if(el) el.checked=!!value; return el; }
+function hjSetDisplay(id, value){ const el=document.getElementById(id); if(el) el.style.display=value; return el; }
+
 let htmSlideshowRowId = null;
 let htmSlides = [];
 let ssOverlayPos = 'bottom-left';
@@ -2939,18 +2944,14 @@ function updateSsFrameHint(){
 function setSsFramePreview(url){
   const zone = document.getElementById('zSsFrame');
   const img  = document.getElementById('prevSsFrame');
-  if(!zone || !img) return;
-  if(url){
-    img.src = url;
-    zone.classList.add('has-file');
-    document.getElementById('ssAnalyseBtn').style.display = '';
-  } else {
-    img.src = '';
-    zone.classList.remove('has-file');
-    document.getElementById('ssAnalyseBtn').style.display = 'none';
-  }
-  setTimeout(()=>ssWysRefresh(), 20);
+  if(url && img) img.src = url;
+  if(!url && img) img.src = '';
+  if(zone) zone.classList.toggle('has-file', !!url);
+  hjSetDisplay('ssAnalyseBtn', url ? '' : 'none');
+  // WYSIWYG nur aktualisieren, wenn der Editor bereits im DOM/Modal sichtbar ist
+  if(document.getElementById('ssWysStage')) setTimeout(()=>ssWysRefresh(), 20);
 }
+
 function onSsFrameFile(input){
   const file = input.files && input.files[0];
   if(!file) return;
@@ -2982,43 +2983,52 @@ function clearSsFrame(e){
 }
 
 function openSlideshowModal(rowId){
-  htmSlideshowRowId = rowId;
-  const row  = rowById(rowId);
-  const cell = row && row.cells[0];
+  try{
+    htmSlideshowRowId = rowId;
+    const row  = rowById(rowId);
+    const cell = row && row.cells ? row.cells[0] : null;
 
-  htmSlides      = (cell && cell.slides) ? cell.slides.map(s=>({...s})) : [];
-  ssOverlayPos   = (cell && cell.overlayPos) || 'bottom-left';
+    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
+    ssOverlayPos = (cell && cell.overlayPos) || 'bottom-left';
+    ssFrameFile  = null;
 
-  document.getElementById('htmSlideshowTitle').value = (cell && cell.alt)   || '';
-  document.getElementById('htmSlideshowFn').value    = (cell && cell.fn)    || 'play';
-  document.getElementById('htmSlideshowSlug').value  = (cell && cell.slug)  || '';
-  document.getElementById('htmSlideshowUrl').value   = (cell && cell.url)   || '';
-  ssFrameFile = null;
-  document.getElementById('htmSsBgUrl').value        = (cell && cell.bgUrl) || '';
-  document.getElementById('htmSsStartColor').value   = normalizeHexColor((cell && cell.startColor) || '#0A0A0A');
-  document.getElementById('htmSsCoverFitSquare').checked = !!(cell && cell.coverFitSquare);
-  document.getElementById('htmSsShowSongTitle').checked = !(cell && cell.showSongTitle === false);
-  document.getElementById('htmSsShowSongNumber').checked = !(cell && cell.showSongNumber === false);
-  document.getElementById('htmSsCoverAngleOffset').value = Number.isFinite(Number(cell && cell.coverAngleOffset)) ? Number(cell.coverAngleOffset) : 0;
-  document.getElementById('htmSsFitLeft').value   = (cell && cell.coverFitLeft   !== undefined && cell.coverFitLeft !== '') ? cell.coverFitLeft   : 0;
-  document.getElementById('htmSsFitTop').value    = (cell && cell.coverFitTop    !== undefined && cell.coverFitTop !== '') ? cell.coverFitTop    : 7;
-  document.getElementById('htmSsFitWidth').value  = (cell && cell.coverFitWidth  !== undefined && cell.coverFitWidth !== '') ? cell.coverFitWidth  : 52;
-  document.getElementById('htmSsFitHeight').value = (cell && cell.coverFitHeight !== undefined && cell.coverFitHeight !== '') ? cell.coverFitHeight : 86;
-  document.getElementById('htmSsCoverShape').value = (cell && cell.coverShape) || 'square';
-  document.getElementById('htmSsCoverFitMode').value = (cell && cell.coverFitMode) || 'contain';
-  document.getElementById('ssSongSearch').value      = '';
-  document.getElementById('ssAnalyseResult').style.display = 'none';
+    hjSetVal('htmSlideshowTitle', (cell && cell.alt) || '');
+    hjSetVal('htmSlideshowFn', (cell && cell.fn) || 'play');
+    hjSetVal('htmSlideshowSlug', (cell && cell.slug) || '');
+    hjSetVal('htmSlideshowUrl', (cell && cell.url) || '');
+    hjSetVal('htmSsBgUrl', (cell && cell.bgUrl) || '');
+    hjSetVal('htmSsStartColor', normalizeHexColor((cell && cell.startColor) || '#0A0A0A'));
 
-  htmSlideshowSetFn(document.getElementById('htmSlideshowFn').value);
-  setSsFramePreview(document.getElementById('htmSsBgUrl').value);
-  updateSsFrameHint();
-  ssStartColorPreviewUpdate();
-  ssMarkPos(ssOverlayPos);
-  renderSlidesList();
-  renderSsPicker();
+    hjSetChecked('htmSsCoverFitSquare', !!(cell && cell.coverFitSquare));
+    hjSetChecked('htmSsShowSongTitle', !(cell && cell.showSongTitle === false));
+    hjSetChecked('htmSsShowSongNumber', !(cell && cell.showSongNumber === false));
 
-  document.getElementById('homeSlideshowModal').style.display = 'flex';
-  setTimeout(()=>{ ssWysBind(); ssWysRefresh(); }, 40);
+    hjSetVal('htmSsCoverAngleOffset', Number.isFinite(Number(cell && cell.coverAngleOffset)) ? Number(cell.coverAngleOffset) : 0);
+    hjSetVal('htmSsFitLeft',   (cell && cell.coverFitLeft   !== undefined && cell.coverFitLeft   !== '') ? cell.coverFitLeft   : 0);
+    hjSetVal('htmSsFitTop',    (cell && cell.coverFitTop    !== undefined && cell.coverFitTop    !== '') ? cell.coverFitTop    : 7);
+    hjSetVal('htmSsFitWidth',  (cell && cell.coverFitWidth  !== undefined && cell.coverFitWidth  !== '') ? cell.coverFitWidth  : 52);
+    hjSetVal('htmSsFitHeight', (cell && cell.coverFitHeight !== undefined && cell.coverFitHeight !== '') ? cell.coverFitHeight : 86);
+    hjSetVal('htmSsCoverShape', (cell && cell.coverShape) || 'square');
+    hjSetVal('htmSsCoverFitMode', (cell && cell.coverFitMode) || 'contain');
+    hjSetVal('ssSongSearch', '');
+    hjSetDisplay('ssAnalyseResult', 'none');
+
+    htmSlideshowSetFn(hjSetVal('htmSlideshowFn', (cell && cell.fn) || 'play')?.value || 'play');
+    setSsFramePreview(document.getElementById('htmSsBgUrl')?.value || '');
+    updateSsFrameHint();
+    ssStartColorPreviewUpdate();
+    ssMarkPos(ssOverlayPos);
+    renderSlidesList();
+    renderSsPicker();
+
+    const modal = document.getElementById('homeSlideshowModal');
+    if(!modal) throw new Error('homeSlideshowModal fehlt');
+    modal.style.display = 'flex';
+    setTimeout(()=>{ ssWysBind(); ssWysRefresh(); }, 80);
+  }catch(e){
+    console.error('Slideshow editor open error', e);
+    toast('Editor konnte nicht geöffnet werden: '+e.message,'err');
+  }
 }
 
 function closeSlideshowModal(){
@@ -3027,10 +3037,10 @@ function closeSlideshowModal(){
 }
 
 function htmSlideshowSetFn(fn){
-  document.getElementById('htmSlideshowFn').value = fn;
+  hjSetVal('htmSlideshowFn', fn);
   document.querySelectorAll('.htm-slideshow-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.fn===fn));
-  document.getElementById('htmSsPlayField').style.display = fn==='play' ? '' : 'none';
-  document.getElementById('htmSsLinkField').style.display = fn==='link' ? '' : 'none';
+  hjSetDisplay('htmSsPlayField', fn==='play' ? '' : 'none');
+  hjSetDisplay('htmSsLinkField', fn==='link' ? '' : 'none');
 }
 
 function ssBgPreviewUpdate(){
@@ -3232,15 +3242,16 @@ function ssWysLoadFromFields(){
 }
 function ssWysWriteFields(){
   const f=(n)=>Number(n).toFixed(2).replace(/\.00$/,'');
-  document.getElementById('htmSsFitLeft').value=f(ssWysState.x);
-  document.getElementById('htmSsFitTop').value=f(ssWysState.y);
-  document.getElementById('htmSsFitWidth').value=f(ssWysState.w);
-  document.getElementById('htmSsFitHeight').value=f(ssWysState.h);
-  document.getElementById('htmSsCoverAngleOffset').value=f(ssWysState.r);
-  document.getElementById('htmSsCoverShape').value=ssWysState.shape;
-  document.getElementById('htmSsCoverFitMode').value=ssWysState.fit;
-  const cb=document.getElementById('htmSsCoverFitSquare'); if(cb) cb.checked=true;
+  hjSetVal('htmSsFitLeft', f(ssWysState.x));
+  hjSetVal('htmSsFitTop', f(ssWysState.y));
+  hjSetVal('htmSsFitWidth', f(ssWysState.w));
+  hjSetVal('htmSsFitHeight', f(ssWysState.h));
+  hjSetVal('htmSsCoverAngleOffset', f(ssWysState.r));
+  hjSetVal('htmSsCoverShape', ssWysState.shape);
+  hjSetVal('htmSsCoverFitMode', ssWysState.fit);
+  hjSetChecked('htmSsCoverFitSquare', true);
 }
+
 function ssWysEnforceShape(){
   // Die Bühne ist 2:1. Damit Kreis/Quadrat optisch wirklich rund/quadratisch bleiben,
   // muss die Prozent-Höhe doppelt so groß sein wie die Prozent-Breite.
@@ -3252,25 +3263,37 @@ function ssWysEnforceShape(){
   ssWysState.h = Math.max(8, Math.min(190, ssWysState.h));
 }
 function ssWysApply(){
-  ssWysEnforceShape();
   const cover=document.getElementById('ssWysCover'), box=document.getElementById('ssWysBox'), img=document.getElementById('ssWysCoverImg'), frame=document.getElementById('ssWysFrame');
-  if(!cover||!box) return;
+  if(!cover || !box) return;
+  ssWysEnforceShape();
   [cover,box].forEach(el=>{
-    el.style.left=ssWysState.x+'%'; el.style.top=ssWysState.y+'%'; el.style.width=ssWysState.w+'%'; el.style.height=ssWysState.h+'%'; el.style.transform='rotate('+ssWysState.r+'deg)';
-    el.classList.toggle('circle', ssWysState.shape==='circle'); el.classList.toggle('square', ssWysState.shape!=='circle');
+    if(!el) return;
+    el.style.left=ssWysState.x+'%';
+    el.style.top=ssWysState.y+'%';
+    el.style.width=ssWysState.w+'%';
+    el.style.height=ssWysState.h+'%';
+    el.style.transform='rotate('+ssWysState.r+'deg)';
+    el.classList.toggle('circle', ssWysState.shape==='circle');
+    el.classList.toggle('square', ssWysState.shape!=='circle');
   });
   cover.classList.toggle('cover', ssWysState.fit==='cover');
   const sc = normalizeHexColor(document.getElementById('htmSsStartColor')?.value || '#0A0A0A');
   cover.style.background = sc;
-  if(img) img.style.background = sc;
-  if(img && !img.src) img.src=ssWysFirstSlideCover();
-  if(frame){ const pv=document.getElementById('prevSsFrame'); frame.src = (pv && pv.src) ? pv.src : (document.getElementById('htmSsBgUrl')?.value || ''); }
+  if(img){
+    img.style.background = sc;
+    if(!img.src) img.src=ssWysFirstSlideCover();
+  }
+  if(frame){
+    const pv=document.getElementById('prevSsFrame');
+    frame.src = (pv && pv.src) ? pv.src : (document.getElementById('htmSsBgUrl')?.value || '');
+  }
   document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
   document.getElementById('ssShapeCircle')?.classList.toggle('active', ssWysState.shape==='circle');
   document.getElementById('ssFitContain')?.classList.toggle('active', ssWysState.fit==='contain');
   document.getElementById('ssFitCover')?.classList.toggle('active', ssWysState.fit==='cover');
   ssWysWriteFields();
 }
+
 function ssWysRefresh(){ ssWysLoadFromFields(); ssWysApply(); }
 function ssWysSetShape(shape){ ssWysState.shape=shape; ssWysApply(); }
 function ssWysSetFit(fit){ ssWysState.fit=fit; ssWysApply(); }
@@ -3279,7 +3302,8 @@ function ssWysNudge(dx,dy){ ssWysState.x+=dx; ssWysState.y+=dy; ssWysApply(); }
 function ssWysPoint(e){ return e.touches&&e.touches[0] ? e.touches[0] : e; }
 function ssWysBind(){
   const stage=document.getElementById('ssWysStage'), box=document.getElementById('ssWysBox'), handle=document.getElementById('ssWysHandle'), rot=document.getElementById('ssWysRotate');
-  if(!stage||!box||stage.dataset.bound) return; stage.dataset.bound='1';
+  if(!stage || !box || !handle || !rot || stage.dataset.bound) return;
+  stage.dataset.bound='1';
   const start=(mode,e)=>{ const p=ssWysPoint(e); const r=stage.getBoundingClientRect(); ssWysDrag={mode,sx:p.clientX,sy:p.clientY,start:{...ssWysState},rect:r}; e.preventDefault(); };
   box.addEventListener('pointerdown', e=>{ if(e.target===handle||e.target===rot) return; start('move',e); });
   handle.addEventListener('pointerdown', e=>start('resize',e));
@@ -3291,7 +3315,6 @@ function ssWysBind(){
     }else if(d.mode==='resize'){
       const dx=(p.clientX-d.sx)/r.width*100;
       const dy=(p.clientY-d.sy)/r.height*100;
-      // proportional skalieren: kein Rechteck, kein Ei
       const ratio = (r.width || 2) / (r.height || 1);
       const deltaFromY = dy / ratio;
       const delta = Math.abs(dx) > Math.abs(deltaFromY) ? dx : deltaFromY;
@@ -3306,6 +3329,7 @@ function ssWysBind(){
   }, {passive:false});
   window.addEventListener('pointerup', ()=>{ ssWysDrag=null; });
 }
+
 
 async function analyseFrame(){
   const bgUrl = document.getElementById('htmSsBgUrl').value.trim();
@@ -3583,7 +3607,3 @@ loadSongs();
 </script>
 </body>
 </html>
-
-<!-- Added extended slideshow positioning options: left, 1/3 left, center, 2/3 right, right -->
-
-<!-- Added lower progress dots positioning support -->

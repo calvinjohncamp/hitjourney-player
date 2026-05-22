@@ -10,8 +10,8 @@
 <meta content="#06141F" name="theme-color"/>
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
-<title>hitjourney · v170-layout-options</title>
-<!-- Version: v165-diashow-save-fit-fields-20260522 -->
+<title>hitjourney</title>
+<!-- Version: v169-velvet-square-visible-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1012,6 +1012,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers,
 .featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers img{border-radius:50%;}
 .featured-teaser.frame-fill.cover-fit-square.cover-fit-cover .ft-covers img{object-fit:cover!important;}
+
+/* v169 — Velvet Radio / PNG-frame fallback:
+   Wenn ein hochgeladenes Frame keine echte Alpha-Transparenz liefert oder die
+   transparente Flaeche vom Browser nicht auslesbar ist, liegt das 1:1-Cover-Fenster
+   sichtbar ueber dem Frame. So bleibt das manuell justierte Quadrat sichtbar und klickbar. */
+.featured-teaser.frame-fill.cover-fit-square .ft-covers{
+  z-index:4;
+  box-shadow:0 0 0 1px rgba(6,20,32,.18);
+}
+.featured-teaser.frame-fill.cover-fit-square .ft-frame{
+  z-index:3;
+}
+.featured-teaser.frame-fill.cover-fit-square .ft-song-name,
+.featured-teaser.frame-fill.cover-fit-square .ft-dots{
+  z-index:5;
+}
 
 .ft-frame {
   position:absolute;
