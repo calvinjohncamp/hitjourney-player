@@ -5211,14 +5211,12 @@ function buildHomeCard(cell, extraClass){
 
   // Click action
   el.addEventListener('click', () => {
-    if(cell.fn === 'link' && cell.url){
-      window.open(cell.url, '_blank', 'noopener');
-    } else if(albumKey){
-      showAlbum(albumKey);
-    } else if(cell.slug){
-      // Single song play
-      playSongBySlug(cell.slug);
+    if(cell.fn === 'link'){
+      if(cell.url === '#archive'){ showArchive(); return; }
+      if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
+    if(albumKey) showAlbum(albumKey);
+    else if(cell.slug) playSongBySlug(cell.slug);
   });
   return el;
 }
@@ -5336,7 +5334,10 @@ function resolveAlbumKey(slug){
 
 /* ── Play song or album based on cell config ── */
 function playSongOrAlbum(cell){
-  if(cell.fn === 'link' && cell.url){ window.open(cell.url,'_blank','noopener'); return; }
+  if(cell.fn === 'link'){
+    if(cell.url === '#archive'){ showArchive(); return; }
+    if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
+  }
   const albumKey = resolveAlbumKey(cell.slug);
   if(albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
   if(cell.slug) playSongBySlug(cell.slug);
