@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v180-home-lyrics-cover-aligned-lyrics21-20260522 -->
+<!-- Version: v182-lyrics21-custom-motif-visible-no-strip-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -4523,8 +4523,9 @@ function playHomeLyricsCycle(cell, el){
 
   if(!same || homeCoverClickState.phase === 0){
     window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', {detail:{source:'home-lyrics-cycle'}}));
-    featuredMode = false;
+    featuredMode = true; // v182: Home-Lyrics/21-Teaser = Fokusmodus ohne Footer-Player
     arcQueue=[]; arcQueueIdx=-1;
+    playerBar.classList.remove('visible');
     if(lyricsOpen) closeLyrics();
     audio.src = song.mp3;
     audio.load();
@@ -4534,6 +4535,7 @@ function playHomeLyricsCycle(cell, el){
     nowArtist.textContent = song.artist || '';
     nowNum.textContent = '';
     showNowStrip();
+    playerBar.classList.remove('visible');
     homeCoverClickState = { slug:song.slug, phase:1, el };
     openHomeCoverFrame(song);
     return true;
@@ -5495,12 +5497,18 @@ function buildHomeCard(cell, extraClass){
   const img = document.createElement('img');
   img.alt = cell.alt || '';
   img.loading = 'lazy';
-  img.src = (cell.type === 'lyrics21' || cell.useCover21) ? (cell.cover21Url || cell.imageUrl) : cell.imageUrl;
+  // v182: Bei Lyrics-Sheet-21-Kacheln hat ein im Admin hochgeladenes eigenes Motiv immer Vorrang.
+  // Vorher wurde wegen cover21Url wieder das Song-2:1-Asset genommen — dadurch blieb die neue Kachel blau/leer.
+  img.src = (cell.type === 'lyrics21' || cell.useCover21)
+    ? (cell.customImageUrl || cell.imageUrl || cell.cover21Url)
+    : (cell.imageUrl || cell.customImageUrl);
   el.appendChild(img);
 
   // Click action
   el.addEventListener('click', () => {
-    if(cell.fn === 'play' && cell.lyricsCycle){
+    // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
+    // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
+    if(cell.fn === 'play' && (cell.lyricsCycle || cell.type === 'lyrics21' || cell.useCover21)){
       if(playHomeLyricsCycle(cell, el)) return;
     }
     if(cell.fn === 'link'){
