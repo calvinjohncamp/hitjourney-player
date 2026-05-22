@@ -2458,73 +2458,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 <!-- HOME -->
 <div class="screen active" id="screenHome">
-<div class="home-grid">
-<!-- Neuer Einstiegsteaser: Tante Paula -->
-<div class="tp-teaser" id="tpTeaser" aria-label="Tante Paula von Lara Wolff abspielen oder pausieren">
-<img alt="Tante Paula · Lara Wolff" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg"/>
-</div>
-<!-- Zeile 1: Top 50 · 30° Grad · 30 Stories · Top 100 -->
-<div class="home-card square" data-album="top50">
-<img alt="Top 50" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg"/>
-</div>
-<div class="home-card square" data-album="grad30">
-<img alt="30° Grad" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg"/>
-</div>
-<div class="home-card square" data-album="stories30">
-<img alt="30 Stories" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg"/>
-</div>
-<div class="home-card square" data-album="top100">
-<img alt="Top 100" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg"/>
-</div>
-<!-- Streifen 2: In The Spotlight (volle Breite) -->
-<div class="featured-teaser" id="featuredTeaser">
-<div class="ft-circle"></div>
-<div class="ft-covers" id="ftCovers">
-<img class="active ft-blank" loading="eager" src=""/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg"/>
-<img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg"/>
-</div>
-<div class="ft-text">
-<div class="ft-label">10 Songs im Fokus</div>
-<div class="ft-title-line ft-in">IN</div>
-<div class="ft-title-line ft-the">THE</div>
-<div class="ft-title-line ft-spot">SPOT</div>
-<div class="ft-title-line ft-light">LIGHT</div>
-</div>
-<div class="ft-song-name">
-<div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
-<div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
-<div class="ft-song-num" id="ftSongNum">01 / 10</div>
-</div>
-<div class="ft-dots" id="ftDots"></div>
-</div>
-<!-- Zeile 3: Große Liebe · Buried Diamonds 2:1 · Poesie -->
-<div class="home-trio wide">
-<div class="home-card trio-gl" data-album="grosseLiebe">
-<img alt="Grosse Liebe" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg"/>
-</div>
-<div class="home-card trio-bd" data-album="buriedDiamonds">
-<img alt="Buried Diamonds" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg"/>
-</div>
-<div class="home-card trio-po" data-album="poesie">
-<img alt="Poesie" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg"/>
-</div>
-</div>
-<!-- Streifen 4: The Archive (volle Breite) -->
-<div class="home-card wide" id="archiveCard">
-<img alt="the archive" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"/>
-</div>
+<div class="home-grid" id="homeGrid">
+<!-- dynamisch befüllt durch renderHomeLayout() -->
 </div>
 <!-- ══ EDITORIAL CARDS ══ -->
-<div class="ed-section">
+<div class="ed-section" id="edSection" style="display:none">
 <div class="ed-row">
 <!-- Card 1: Kurs Nordwest -->
 <div class="ed-card" id="edCardKnw" onclick="showKursNordwest()">
@@ -3631,6 +3569,13 @@ async function loadFromSupabase() {
   });
 
   console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
+
+  // 4. Home-Layout laden
+  try {
+    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers });
+    if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
+    else window._homeLayoutRows = [];
+  } catch(e){ window._homeLayoutRows = []; }
 }
 
 // ── DOM ──
@@ -4404,7 +4349,7 @@ function updateLanguageHighlight(){
 }
 
 // ── Click handlers ──
-document.querySelectorAll('[data-album]').forEach(el=>el.addEventListener('click',()=>showAlbum(el.dataset.album)));
+// data-album listeners now wired in wireHomeGrid() after dynamic render
 backBtn.addEventListener('click',()=>{
   if(screenAbout && screenAbout.classList.contains('active')) showHome();
   else if(screenNP.classList.contains('active')) hideNowPlaying();
@@ -5159,7 +5104,324 @@ function initApp() {
   const arcSongCountEl = document.getElementById('arcSongCount');
   if(arcSongCountEl) arcSongCountEl.textContent = ALL_SONGS.length + ' songs';
 
+  // Home-Layout dynamisch rendern
+  renderHomeLayout();
+
 } // END initApp()
+
+// ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
+
+function renderHomeLayout(){
+  const grid = document.getElementById('homeGrid');
+  if(!grid) return;
+
+  const rows = window._homeLayoutRows || [];
+
+  // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
+  if(rows.length === 0){
+    grid.innerHTML = getFallbackHomeHTML();
+    wireHomeGrid(grid);
+    return;
+  }
+
+  grid.innerHTML = '';
+
+  rows.forEach(row => {
+    const cells = row.cells || [];
+    if(!cells.length) return;
+    const t0 = cells[0] && cells[0].type;
+    if(!t0 || t0 === 'empty') return;
+
+    // ── Slideshow ──────────────────────────────────────────────────
+    if(t0 === 'slideshow'){
+      const cell = cells[0];
+      const el = buildSlideshowEl(cell);
+      grid.appendChild(el);
+      return;
+    }
+
+    // ── 4:1 volle Breite ──────────────────────────────────────────
+    if(t0 === 'span-4' || t0 === '4x1'){
+      const cell = cells[0];
+      if(!cell.imageUrl) return;
+      const el = buildHomeCard(cell, 'wide');
+      grid.appendChild(el);
+      return;
+    }
+
+    // ── 2:1 ───────────────────────────────────────────────────────
+    if(t0 === 'span-2' || t0 === '2x1'){
+      const cell = cells[0];
+      if(!cell.imageUrl) return;
+      const el = buildHomeCard(cell, 'wide');
+      grid.appendChild(el);
+      return;
+    }
+
+    // ── 3er Trio ──────────────────────────────────────────────────
+    if(t0 === 'trio-a'){
+      const cellA = cells[0]; // 1:1 top-left
+      const cellB = cells[1]; // 2:1 bottom-left
+      const cellC = cells[2]; // tall right
+      if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
+      const trio = document.createElement('div');
+      trio.className = 'home-trio wide';
+      // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
+      if(cellA.imageUrl) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+      if(cellB.imageUrl) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+      if(cellC.imageUrl) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      grid.appendChild(trio);
+      return;
+    }
+
+    // ── 1:1 (vier nebeneinander) ───────────────────────────────────
+    if(t0 === '1x1' || t0 === 'empty'){
+      cells.forEach(cell => {
+        if(!cell || !cell.imageUrl || cell.type === 'hidden') return;
+        const el = buildHomeCard(cell, 'square');
+        grid.appendChild(el);
+      });
+      return;
+    }
+
+    // ── default: alle nicht-hidden cells als 1:1 ───────────────────
+    cells.forEach(cell => {
+      if(!cell || !cell.imageUrl || cell.type === 'hidden') return;
+      grid.appendChild(buildHomeCard(cell, 'square'));
+    });
+  });
+
+  wireHomeGrid(grid);
+}
+
+/* ── Build a standard home-card div ── */
+function buildHomeCard(cell, extraClass){
+  const el = document.createElement('div');
+  el.className = 'home-card ' + (extraClass||'');
+
+  // album key from PLAYLIST_MAP or direct slug
+  const albumKey = resolveAlbumKey(cell.slug);
+  if(albumKey) el.dataset.album = albumKey;
+
+  const img = document.createElement('img');
+  img.alt = cell.alt || '';
+  img.loading = 'lazy';
+  img.src = cell.imageUrl;
+  el.appendChild(img);
+
+  // Click action
+  el.addEventListener('click', () => {
+    if(cell.fn === 'link' && cell.url){
+      window.open(cell.url, '_blank', 'noopener');
+    } else if(albumKey){
+      showAlbum(albumKey);
+    } else if(cell.slug){
+      // Single song play
+      playSongBySlug(cell.slug);
+    }
+  });
+  return el;
+}
+
+/* ── Build a slideshow (featured-teaser style) ── */
+function buildSlideshowEl(cell){
+  const slides  = cell.slides  || [];
+  const bgUrl   = cell.bgUrl   || cell.imageUrl || '';
+  const title   = cell.alt     || '';
+  const pos     = cell.overlayPos || 'bottom-left';
+  const slug    = cell.slug    || '';
+
+  // Map overlayPos → CSS alignment
+  const posMap = {
+    'top-left':     'flex-start flex-start',
+    'top-right':    'flex-start flex-end',
+    'center-left':  'center flex-start',
+    'center-right': 'center flex-end',
+    'bottom-left':  'flex-end flex-start',
+    'bottom-right': 'flex-end flex-end',
+  };
+  const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'featured-teaser';
+  wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
+  wrap.style.cursor = 'pointer';
+
+  if(slides.length === 0){
+    // Simple static image teaser
+    wrap.innerHTML = `
+      <img src="${bgUrl}" alt="${title}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"/>
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,20,32,.7) 0%,transparent 60%);display:flex;align-items:${alignY};justify-content:${alignX};padding:16px">
+        <div style="color:#cfe5f5;font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;line-height:1.1">${title}</div>
+      </div>`;
+    wrap.addEventListener('click', ()=>{ if(slug) playSongOrAlbum(cell); });
+    return wrap;
+  }
+
+  // Full slideshow — reuse existing featured-teaser CSS
+  wrap.innerHTML = `
+    <div class="ft-circle"></div>
+    <div class="ft-covers" id="ftCovers_${wrap.id}">
+      <img class="active ft-blank" src=""/>
+      ${slides.map(s=>`<img loading="lazy" src="${s.coverUrl||s.focusUrl||''}"/>`).join('')}
+    </div>
+    <div class="ft-text">
+      <div class="ft-label">${slides.length} Songs</div>
+      <div style="font-size:clamp(28px,8vw,52px);font-weight:900;letter-spacing:-.01em;line-height:.95;color:#f1ecdf;text-transform:uppercase">
+        ${title.split(' ').map(w=>`<div>${w}</div>`).join('')}
+      </div>
+    </div>
+    <div class="ft-song-name">
+      <div class="ft-song-artist" id="ftSongArtist_${wrap.id}"></div>
+      <div class="ft-song-title" id="ftSongTitle_${wrap.id}"></div>
+      <div class="ft-song-num" id="ftSongNum_${wrap.id}">01 / ${slides.length}</div>
+    </div>
+    <div class="ft-dots" id="ftDots_${wrap.id}"></div>`;
+
+  wrap.addEventListener('click', ()=>{ playSongOrAlbum(cell); });
+
+  // Init slideshow after DOM insert
+  requestAnimationFrame(()=> initDynamicSlideshow(wrap.id, slides));
+  return wrap;
+}
+
+/* ── Init a dynamic slideshow (same logic as existing featuredTeaser) ── */
+function initDynamicSlideshow(id, slides){
+  const wrap    = document.getElementById(id);
+  if(!wrap || !slides.length) return;
+  const covers  = wrap.querySelector('.ft-covers');
+  const imgs    = covers ? Array.from(covers.querySelectorAll('img:not(.ft-blank)')) : [];
+  const dotsEl  = document.getElementById('ftDots_'+id);
+  const artistEl= document.getElementById('ftSongArtist_'+id);
+  const titleEl = document.getElementById('ftSongTitle_'+id);
+  const numEl   = document.getElementById('ftSongNum_'+id);
+
+  let cur = 0;
+  // Build dots
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    slides.forEach((_,i)=>{
+      const d = document.createElement('div');
+      d.className = 'ft-dot' + (i===0?' active':'');
+      d.onclick = (e)=>{ e.stopPropagation(); goTo(i); };
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function goTo(idx){
+    cur = (idx + slides.length) % slides.length;
+    imgs.forEach((img,i)=> img.classList.toggle('active', i===cur));
+    if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+    const s = slides[cur];
+    if(artistEl) artistEl.textContent = s.artist||'';
+    if(titleEl)  titleEl.textContent  = s.title||'';
+    if(numEl)    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
+  }
+
+  goTo(0);
+  const timer = setInterval(()=>goTo(cur+1), 4000);
+  wrap._slideshowTimer = timer;
+}
+
+/* ── Resolve playlist slug → ALBUMS key ── */
+function resolveAlbumKey(slug){
+  if(!slug) return null;
+  // Direct key match
+  if(ALBUMS[slug]) return slug;
+  // Via PLAYLIST_MAP
+  const info = PLAYLIST_MAP[slug];
+  if(info) return info.key;
+  return null;
+}
+
+/* ── Play song or album based on cell config ── */
+function playSongOrAlbum(cell){
+  if(cell.fn === 'link' && cell.url){ window.open(cell.url,'_blank','noopener'); return; }
+  const albumKey = resolveAlbumKey(cell.slug);
+  if(albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
+  if(cell.slug) playSongBySlug(cell.slug);
+}
+
+/* ── Play a single song by slug ── */
+function playSongBySlug(slug){
+  const song = SUPABASE_SONGS.find(s=>s.slug===slug);
+  if(!song || !song.mp3) return;
+  featuredMode = false;
+  window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', {detail:{source:'dynamic'}}));
+  audio.src = song.mp3;
+  audio.load();
+  audio.play().catch(()=>{});
+  nowTitle.textContent  = song.title||'';
+  nowArtist.textContent = song.artist||'';
+  setImgSrcWithFallback(nowCover, getImgUrls(song,'cover'));
+  playerBar.classList.add('visible');
+}
+
+/* ── Wire data-album clicks on newly created cards ── */
+function wireHomeGrid(grid){
+  grid.querySelectorAll('[data-album]').forEach(el=>{
+    // Remove duplicates; buildHomeCard already attaches listener
+    // but for fallback HTML we need to attach here
+    if(!el._wired){
+      el._wired = true;
+      el.addEventListener('click',()=>showAlbum(el.dataset.album));
+    }
+  });
+  const archiveCard = document.getElementById('archiveCard');
+  if(archiveCard && !archiveCard._wired){
+    archiveCard._wired = true;
+    archiveCard.addEventListener('click', showArchive);
+  }
+}
+
+/* ── Fallback HTML (original hardcoded look) ── */
+function getFallbackHomeHTML(){
+  return `
+<div class="tp-teaser" id="tpTeaser" aria-label="Tante Paula von Lara Wolff abspielen oder pausieren">
+  <img alt="Tante Paula · Lara Wolff" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg"/>
+</div>
+<div class="home-card square" data-album="top50"><img alt="Top 50" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg"/></div>
+<div class="home-card square" data-album="grad30"><img alt="30° Grad" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg"/></div>
+<div class="home-card square" data-album="stories30"><img alt="30 Stories" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg"/></div>
+<div class="home-card square" data-album="top100"><img alt="Top 100" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg"/></div>
+<div class="featured-teaser" id="featuredTeaser">
+  <div class="ft-circle"></div>
+  <div class="ft-covers" id="ftCovers">
+    <img class="active ft-blank" loading="eager" src=""/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg"/>
+  </div>
+  <div class="ft-text">
+    <div class="ft-label">10 Songs im Fokus</div>
+    <div class="ft-title-line ft-in">IN</div>
+    <div class="ft-title-line ft-the">THE</div>
+    <div class="ft-title-line ft-spot">SPOT</div>
+    <div class="ft-title-line ft-light">LIGHT</div>
+  </div>
+  <div class="ft-song-name">
+    <div class="ft-song-artist" id="ftSongArtist">Jörn Kämper</div>
+    <div class="ft-song-title" id="ftSongTitle">Anywhere You Were With Me</div>
+    <div class="ft-song-num" id="ftSongNum">01 / 10</div>
+  </div>
+  <div class="ft-dots" id="ftDots"></div>
+</div>
+<div class="home-trio wide">
+  <div class="home-card trio-gl" data-album="grosseLiebe"><img alt="Grosse Liebe" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg"/></div>
+  <div class="home-card trio-bd" data-album="buriedDiamonds"><img alt="Buried Diamonds" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg"/></div>
+  <div class="home-card trio-po" data-album="poesie"><img alt="Poesie" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg"/></div>
+</div>
+<div class="home-card wide" id="archiveCard"><img alt="the archive" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"/></div>`;
+}
+
+// ══ END HOME LAYOUT RENDERER ═══════════════════════════════════════════════
 
 // ── BOOTSTRAP ──
 loadFromSupabase()
@@ -5299,7 +5561,7 @@ function hideArchive(){
   showHome();
 }
 
-document.getElementById('archiveCard').addEventListener('click',showArchive);
+// archiveCard listener now wired in wireHomeGrid()
 arcShuffleAllBtn.addEventListener('click',()=>{
   shuffleOn = true;
   btnShuffle.classList.add('active');

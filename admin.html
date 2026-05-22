@@ -312,6 +312,130 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.ok{color:#6fda9a;border-color:rgba(50,180,100,.3);background:rgba(6,28,20,.95)}
 #toast.err{color:#f08080;border-color:rgba(200,60,60,.3);background:rgba(28,6,6,.95)}
+
+/* ══ HOME TAB ══ */
+#tabHome{padding:0;flex-direction:column;overflow:hidden}
+#tabHome.active{display:flex}
+.home-editor-wrap{flex:1;overflow-y:auto;padding:10px 10px 100px}
+.home-editor-wrap::-webkit-scrollbar{display:none}
+.home-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.08)}
+.home-toolbar-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.4)}
+.home-toolbar-btn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.04em;background:rgba(133,172,201,.1);color:#85ACC9;transition:background .15s}
+.home-toolbar-btn:hover{background:rgba(133,172,201,.18)}
+.home-toolbar-btn.save{background:rgba(50,180,100,.12);color:#6fda9a;border:1px solid rgba(50,180,100,.2)}
+.home-toolbar-btn.save:hover{background:rgba(50,180,100,.22)}
+.he-row{margin-bottom:8px;border-radius:10px;border:1px solid rgba(133,172,201,.1);background:rgba(133,172,201,.03);overflow:hidden}
+.he-row.editing{border-color:rgba(133,172,201,.3);background:rgba(133,172,201,.06)}
+.he-row-bar{display:flex;align-items:center;gap:5px;padding:6px 8px;background:rgba(133,172,201,.05);border-bottom:1px solid rgba(133,172,201,.08)}
+.he-row-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.4);flex:1}
+.he-row-bar-btn{height:26px;border-radius:5px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:background .15s;flex-shrink:0;padding:0 8px}
+.he-row-bar-btn.move{background:rgba(133,172,201,.08);color:rgba(133,172,201,.5);width:26px;padding:0}
+.he-row-bar-btn.move:hover:not(:disabled){background:rgba(133,172,201,.18);color:#cfe5f5}
+.he-row-bar-btn.move:disabled{opacity:.2;cursor:default}
+.he-row-bar-btn.del{background:rgba(220,80,80,.08);color:rgba(220,80,80,.45);width:26px;padding:0}
+.he-row-bar-btn.del:hover{background:rgba(220,80,80,.2);color:#f08080}
+.he-row-bar-btn.done{background:rgba(50,180,100,.12);color:#6fda9a;font-size:10px;letter-spacing:.04em}
+.he-row-bar-btn.done:hover{background:rgba(50,180,100,.25)}
+.he-row-bar-btn.edit-row{background:rgba(133,172,201,.08);color:#85ACC9;font-size:10px;letter-spacing:.04em}
+.he-row-bar-btn.edit-row:hover{background:rgba(133,172,201,.18)}
+.he-row-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px}
+.he-cell{position:relative;border-radius:7px;overflow:hidden;background:#0B1E2D;border:1px solid rgba(133,172,201,.1);aspect-ratio:1/1;transition:border-color .15s,background .15s}
+.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}
+.he-cell.span-4{grid-column:span 4;aspect-ratio:4/1}
+.he-cell.span-slide{grid-column:span 4;aspect-ratio:2/1}
+.he-cell.trio-a{grid-column:1;grid-row:1;aspect-ratio:1/1}
+.he-cell.trio-b{grid-column:2/4;grid-row:2;aspect-ratio:2/1}
+.he-cell.trio-c{grid-column:4;grid-row:1/3;aspect-ratio:unset}
+.he-cell.hidden-cell{display:none}
+.he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
+.he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
+.he-cell.editing-mode:hover{border-color:rgba(133,172,201,.45);background:#0d2436}
+.he-cell.editing-mode .he-cell-empty{color:rgba(133,172,201,.4)}
+.he-cell-plus{font-size:18px;line-height:1;font-weight:300}
+.he-cell-hint{font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.he-cell img.he-cell-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.he-cell-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,20,32,.8) 0%,transparent 55%);display:flex;align-items:flex-start;justify-content:space-between;padding:4px;opacity:0;transition:opacity .18s}
+.he-cell:hover .he-cell-overlay{opacity:1}
+.he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
+.badge-play{background:rgba(50,180,100,.8)}
+.badge-link{background:rgba(88,132,164,.8)}
+.badge-slide{background:rgba(120,90,200,.8)}
+.he-cell-acts{display:flex;gap:2px}
+.he-cell-act{width:18px;height:18px;border-radius:3px;border:none;cursor:pointer;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.he-cell-act.edt{background:rgba(133,172,201,.3);color:#cfe5f5}
+.he-cell-act.edt:hover{background:rgba(133,172,201,.55)}
+.he-cell-act.rem{background:rgba(220,80,80,.3);color:#f08080}
+.he-cell-act.rem:hover{background:rgba(220,80,80,.55)}
+.he-type-menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:3px;background:rgba(6,14,22,.94);z-index:20;padding:5px}
+.he-type-btn{padding:5px 4px;border-radius:5px;border:none;cursor:pointer;font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;background:rgba(133,172,201,.1);color:#85ACC9;transition:background .15s;white-space:nowrap;text-align:center}
+.he-type-btn:hover{background:rgba(133,172,201,.28);color:#cfe5f5}
+.he-type-btn.selected{background:rgba(50,180,100,.15);color:#6fda9a;border:1px solid rgba(50,180,100,.3)}
+.he-type-btn.cancel{background:rgba(220,80,80,.08);color:rgba(220,80,80,.6);margin-top:1px}
+.he-type-btn.cancel:hover{background:rgba(220,80,80,.2)}
+.he-add-bar{display:flex;align-items:center;justify-content:center;padding:6px 0 2px}
+.he-add-btn{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;background:rgba(133,172,201,.08);color:#85ACC9;transition:background .15s}
+.he-add-btn:hover{background:rgba(133,172,201,.16)}
+/* Modal shared styles */
+.htm-title{font-size:15px;font-weight:700;color:#cfe5f5;margin-bottom:14px}
+.htm-field{margin-bottom:12px}
+.htm-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(133,172,201,.45);margin-bottom:6px;display:block}
+.htm-input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(133,172,201,.2);background:#06141F;color:#f1ecdf;font-size:13px;outline:none}
+.htm-input:focus{border-color:rgba(133,172,201,.45)}
+.htm-seg{display:flex;gap:6px;margin-bottom:12px}
+.htm-seg-btn{flex:1;padding:9px;border-radius:8px;border:1px solid rgba(133,172,201,.15);cursor:pointer;font-size:12px;font-weight:700;background:rgba(133,172,201,.06);color:rgba(133,172,201,.5);transition:all .15s;text-align:center}
+.htm-seg-btn.active{background:rgba(133,172,201,.18);color:#cfe5f5;border-color:rgba(133,172,201,.35)}
+.htm-preview-wrap{border-radius:8px;overflow:hidden;margin-bottom:14px;background:#0a1a27;min-height:60px;display:flex;align-items:center;justify-content:center}
+.htm-preview-wrap img{width:100%;display:block;object-fit:cover;max-height:160px}
+.htm-preview-placeholder{font-size:11px;color:rgba(133,172,201,.3);padding:16px}
+.htm-actions{display:flex;gap:8px;margin-top:4px}
+.htm-save{flex:1;padding:12px;border-radius:9px;border:none;cursor:pointer;font-size:14px;font-weight:700;background:rgba(50,180,100,.18);color:#6fda9a;border:1px solid rgba(50,180,100,.28)}
+.htm-cancel{padding:12px 18px;border-radius:9px;border:none;cursor:pointer;font-size:14px;font-weight:600;background:rgba(133,172,201,.1);color:#85ACC9}
+/* Tile modal */
+#homeTileModal{display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:20px}
+#homeTileModal.open{display:flex}
+.htm-inner{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px 16px 12px 12px;width:100%;max-width:500px;padding:20px;animation:fadeIn .2s ease;max-height:82vh;overflow-y:auto}
+
+/* Song list rows inside tile modal */
+.htm-song-row{display:flex;align-items:center;gap:9px;padding:7px 10px;cursor:pointer;border-bottom:1px solid rgba(133,172,201,.05);transition:background .12s}
+.htm-song-row:last-child{border-bottom:none}
+.htm-song-row:hover{background:rgba(133,172,201,.08)}
+.htm-song-row.selected{background:rgba(50,180,100,.08);border-left:2px solid rgba(50,180,100,.5)}
+.htm-song-row-cover{width:36px;height:36px;object-fit:cover;border-radius:5px;background:#0a1a27;flex-shrink:0}
+.htm-song-row-info{flex:1;min-width:0}
+.htm-song-row-title{font-size:12px;font-weight:600;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htm-song-row-artist{font-size:10px;color:rgba(133,172,201,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htm-song-row-check{font-size:14px;color:#6fda9a;flex-shrink:0;opacity:0}
+.htm-song-row.selected .htm-song-row-check{opacity:1}
+
+
+/* Pos buttons */
+.ss-pos-btn{padding:7px 6px;border-radius:7px;border:1px solid rgba(133,172,201,.12);cursor:pointer;font-size:10px;font-weight:700;background:rgba(133,172,201,.05);color:rgba(133,172,201,.5);transition:all .15s;text-align:center;white-space:nowrap}
+.ss-pos-btn:hover{background:rgba(133,172,201,.14);color:#cfe5f5}
+.ss-pos-btn.active{background:rgba(133,172,201,.2);color:#cfe5f5;border-color:rgba(133,172,201,.4)}
+
+/* Song-picker rows */
+.ss-song-row{display:flex;align-items:center;gap:9px;padding:7px 10px;cursor:pointer;border-bottom:1px solid rgba(133,172,201,.05);transition:background .12s;position:relative}
+.ss-song-row:last-child{border-bottom:none}
+.ss-song-row:hover{background:rgba(133,172,201,.07)}
+.ss-song-row.in-pool{background:rgba(50,180,100,.05)}
+.ss-song-thumb{width:36px;height:36px;object-fit:cover;border-radius:5px;background:#0a1a27;flex-shrink:0}
+.ss-song-info{flex:1;min-width:0}
+.ss-song-title{font-size:12px;font-weight:600;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-song-artist{font-size:10px;color:rgba(133,172,201,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-song-toggle{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:background .15s}
+.ss-song-toggle.add{background:rgba(133,172,201,.1);color:#85ACC9}
+.ss-song-toggle.add:hover{background:rgba(50,180,100,.2);color:#6fda9a}
+.ss-song-toggle.remove{background:rgba(50,180,100,.15);color:#6fda9a}
+.ss-song-toggle.remove:hover{background:rgba(220,80,80,.2);color:#f08080}
+
+/* Pool entry (in selected list) */
+.htm-slide-row{display:flex;align-items:center;gap:6px;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.1);border-radius:7px;padding:6px 8px;margin-bottom:5px}
+.htm-slide-thumb{width:44px;height:44px;object-fit:cover;border-radius:5px;background:#0a1a27;flex-shrink:0}
+.htm-slide-info{flex:1;min-width:0}
+.htm-slide-title{font-size:12px;font-weight:600;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htm-slide-artist{font-size:10px;color:rgba(133,172,201,.45)}
+.htm-slide-del{width:24px;height:24px;border-radius:5px;border:none;cursor:pointer;background:rgba(220,80,80,.15);color:#f08080;font-size:14px;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.htm-slide-del:hover{background:rgba(220,80,80,.3)}
 </style>
 </head>
 <body>
@@ -329,6 +453,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   <div class="tab active" data-tab="songs">Songs</div>
   <div class="tab" data-tab="add">Song hinzufügen</div>
   <div class="tab" data-tab="playlists">Alben</div>
+  <div class="tab" data-tab="home">Home</div>
 </div>
 
 <!-- ══ TAB: SONGS ══ -->
@@ -671,6 +796,161 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
+<!-- ══ TAB: HOME ══ -->
+<div class="screen" id="tabHome">
+  <div class="home-toolbar">
+    <span class="home-toolbar-title">Home-Editor</span>
+    <button class="home-toolbar-btn save" onclick="saveHomeLayout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Speichern
+    </button>
+  </div>
+  <div class="home-editor-wrap" id="homeEditorWrap">
+    <!-- rows rendered by JS -->
+  </div>
+</div>
+
+<!-- ══ HOME TILE MODAL ══ -->
+<div id="homeTileModal">
+  <div class="htm-inner">
+    <div class="htm-title" id="htmTitle">Kachel bearbeiten</div>
+
+    <!-- Funktion -->
+    <div class="htm-field">
+      <span class="htm-label">Funktion</span>
+      <div class="htm-seg">
+        <div class="htm-seg-btn active" data-fn="play" onclick="htmSetFn('play',this)">▶ Play</div>
+        <div class="htm-seg-btn" data-fn="link" onclick="htmSetFn('link',this)">🔗 Link</div>
+      </div>
+    </div>
+
+    <!-- PLAY: Playlist wählen + Song-Liste -->
+    <div id="htmPlayField">
+      <div class="htm-field">
+        <span class="htm-label">Playlist wählen</span>
+        <select class="htm-input" id="htmPlaylistSelect" onchange="htmLoadPlaylistSongs()">
+          <option value="">— Playlist wählen —</option>
+        </select>
+      </div>
+      <div class="htm-field">
+        <span class="htm-label">Song aus Playlist wählen</span>
+        <div id="htmSongList" style="max-height:200px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F">
+          <div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist wählen</div>
+        </div>
+      </div>
+      <!-- Selected song preview -->
+      <div id="htmSelectedSong" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(50,180,100,.07);border:1px solid rgba(50,180,100,.2);border-radius:9px;margin-bottom:12px">
+        <img id="htmSelectedCover" src="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#0a1a27;flex-shrink:0"/>
+        <div style="min-width:0;flex:1">
+          <div id="htmSelectedTitle" style="font-size:13px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="htmSelectedArtist" style="font-size:11px;color:rgba(133,172,201,.5)"></div>
+        </div>
+        <button onclick="htmClearSong()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">×</button>
+      </div>
+    </div>
+
+    <!-- LINK: URL -->
+    <div class="htm-field" id="htmLinkField" style="display:none">
+      <span class="htm-label">URL</span>
+      <input class="htm-input" id="htmLinkUrl" placeholder="https://…"/>
+    </div>
+
+    <div class="htm-actions">
+      <button class="htm-cancel" onclick="closeHomeTileModal()">Abbrechen</button>
+      <button class="htm-save" onclick="saveHomeTile()">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOME SLIDESHOW MODAL ══ -->
+<div id="homeSlideshowModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);flex-direction:column;align-items:center;justify-content:flex-end;padding:0">
+  <div style="width:100%;max-width:560px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:94vh;animation:fadeIn .2s ease">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(133,172,201,.1);flex-shrink:0">
+      <div class="htm-title" style="margin:0">◈ Diashow bearbeiten</div>
+      <button onclick="closeSlideshowModal()" style="background:rgba(133,172,201,.1);border:none;border-radius:6px;color:#85ACC9;width:28px;height:28px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+
+    <!-- Scrollable body -->
+    <div style="flex:1;overflow-y:auto;padding:14px 18px 0">
+
+      <!-- Hintergrundbild + KI-Analyse -->
+      <div class="htm-field">
+        <span class="htm-label">Hintergrundbild (2:1) — dein Frame</span>
+        <input class="htm-input" id="htmSsBgUrl" placeholder="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/…" oninput="ssBgPreviewUpdate()"/>
+        <div id="ssBgPreview" style="margin-top:8px;border-radius:8px;overflow:hidden;background:#06141F;min-height:0;position:relative">
+          <!-- preview injected by JS -->
+        </div>
+        <button id="ssAnalyseBtn" onclick="analyseFrame()" style="display:none;margin-top:8px;width:100%;padding:9px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s">
+          ✦ Frame analysieren — KI erkennt dunklen Bereich
+        </button>
+        <div id="ssAnalyseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:7px;background:rgba(50,180,100,.08);border:1px solid rgba(50,180,100,.2);font-size:11px;color:#6fda9a;line-height:1.5"></div>
+      </div>
+
+      <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
+      <div class="htm-field">
+        <span class="htm-label">Text-Position im Frame</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px" id="ssPosGrid">
+          <button class="ss-pos-btn" data-pos="top-left"     onclick="ssSetPos(this)">↖ Oben links</button>
+          <button class="ss-pos-btn" data-pos="top-right"    onclick="ssSetPos(this)">↗ Oben rechts</button>
+          <button class="ss-pos-btn" data-pos="center-left"  onclick="ssSetPos(this)">◀ Mitte links</button>
+          <button class="ss-pos-btn" data-pos="center-right" onclick="ssSetPos(this)">▶ Mitte rechts</button>
+          <button class="ss-pos-btn" data-pos="bottom-left"  onclick="ssSetPos(this)">↙ Unten links</button>
+          <button class="ss-pos-btn" data-pos="bottom-right" onclick="ssSetPos(this)">↘ Unten rechts</button>
+        </div>
+      </div>
+
+      <!-- Titel -->
+      <div class="htm-field">
+        <span class="htm-label">Titel / Overlay-Text</span>
+        <input class="htm-input" id="htmSlideshowTitle" placeholder="z. B. IN THE SPOTLIGHT"/>
+      </div>
+
+      <!-- Funktion -->
+      <div class="htm-field">
+        <span class="htm-label">Klick-Funktion</span>
+        <div class="htm-seg">
+          <div class="htm-slideshow-seg-btn htm-seg-btn active" data-fn="play" onclick="htmSlideshowSetFn('play')">▶ Play</div>
+          <div class="htm-slideshow-seg-btn htm-seg-btn" data-fn="link" onclick="htmSlideshowSetFn('link')">🔗 Link</div>
+        </div>
+      </div>
+      <input type="hidden" id="htmSlideshowFn" value="play"/>
+      <div class="htm-field" id="htmSsPlayField">
+        <span class="htm-label">Playlist-Slug</span>
+        <input class="htm-input" id="htmSlideshowSlug" placeholder="z. B. spotlight"/>
+      </div>
+      <div class="htm-field" id="htmSsLinkField" style="display:none">
+        <span class="htm-label">URL</span>
+        <input class="htm-input" id="htmSlideshowUrl" placeholder="https://…"/>
+      </div>
+
+      <!-- Song-Pool -->
+      <div class="htm-field">
+        <span class="htm-label">Song-Pool — ausgewählte Songs</span>
+        <div id="htmSlidesList" class="htm-slides-list" style="min-height:40px"></div>
+      </div>
+
+      <!-- Song-Picker -->
+      <div class="htm-field" style="padding-bottom:4px">
+        <span class="htm-label">Song hinzufügen — alle Songs durchscrollen</span>
+        <input class="htm-input" id="ssSongSearch" placeholder="Titel oder Artist filtern …" oninput="renderSsPicker()" style="margin-bottom:8px"/>
+        <div id="ssSongPicker" style="max-height:220px;overflow-y:auto;border:1px solid rgba(133,172,201,.1);border-radius:9px;background:#06141F">
+          <!-- song rows injected by JS -->
+        </div>
+      </div>
+
+    </div><!-- /scrollable body -->
+
+    <!-- Footer actions -->
+    <div style="padding:12px 18px 20px;border-top:1px solid rgba(133,172,201,.1);display:flex;gap:8px;flex-shrink:0">
+      <button class="htm-cancel" onclick="closeSlideshowModal()">Abbrechen</button>
+      <button class="htm-save" style="flex:1" onclick="saveSlideshowTile()">Übernehmen</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- ══ CONFIRM DIALOG ══ -->
 <div id="confirmOverlay">
   <div id="confirmDialog">
@@ -722,6 +1002,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
     document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.add('active');
     if(tab.dataset.tab==='playlists') loadPlaylists();
+    if(tab.dataset.tab==='home') initHomeEditor();
   });
 });
 
@@ -1809,6 +2090,786 @@ function updateAlbumDropdown(){
   sel.innerHTML = '<option value="">— Keine —</option>' +
     albumsData.map(a=>`<option value="${a.slug}">${esc(a.title||a.slug)}</option>`).join('');
 }
+
+/* ══ HOME EDITOR ══════════════════════════════════════════════════════════
+
+  Data model per row:
+  {
+    id: string,
+    editing: bool,          // is this row in edit mode?
+    cells: [                // always 4 logical cells
+      {
+        id: string,
+        type: 'empty'|'1x1'|'2x1'|'trio-a'|'trio-b'|'trio-c'|'4x1'|'slideshow'|'hidden',
+        fn: 'play'|'link',
+        slug: string, url: string, imageUrl: string, alt: string,
+        // slideshow extras:
+        bgUrl: string, overlayPos: string, slides: []
+      }, ...
+    ]
+  }
+
+  Visual mapping:
+    1×1           → cell[0]=1x1, cell[1..3]=hidden (1 visible 1:1 kachel)
+    2×1           → cell[0]=span-2, cell[1..3]=hidden (1 wide kachel)
+    3er Block     → cell[0]=trio-a (1:1 top-left), cell[1]=trio-b (2:1 bottom-left), cell[2]=trio-c (tall right), cell[3]=hidden
+    4×1           → cell[0]=span-4, cell[1..3]=hidden
+    Diashow       → cell[0]=slideshow (span-4, 2:1), cell[1..3]=hidden
+    (default)     → all 4 cells visible as 1:1, user clicks to merge
+*/
+
+let homeLayout = [];
+let homeEditorReady = false;
+
+/* ── helpers ── */
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function rowById(id){ return homeLayout.find(r=>r.id===id); }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',overlayPos:'bottom-left',slides:[]}; }
+
+function makeRow(){
+  return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
+}
+
+/* ── Load / Save Supabase ── */
+async function loadHomeLayout(){
+  try {
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs()});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows = await r.json();
+    homeLayout = rows.map(row=>({
+      id:      row.id,
+      editing: false,
+      cells:   (row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]
+    }));
+  } catch(e){
+    homeLayout = [];
+  }
+  if(homeLayout.length===0) homeLayout = [makeRow()];
+  renderHomeEditor();
+}
+
+async function saveHomeLayout(){
+  try {
+    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
+    await fetch(SB_URL+'/rest/v1/home_layout?id=neq.XXXXXXX'+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
+    if(payload.length>0){
+      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{
+        method:'POST', headers:{...hdrs(),'Prefer':'return=minimal'}, body:JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error(await res.text());
+    }
+    toast('Home gespeichert ✓','ok');
+  } catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════ */
+function renderHomeEditor(){
+  const wrap = document.getElementById('homeEditorWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  homeLayout.forEach((row,idx)=> wrap.appendChild(buildRowEl(row,idx)));
+  // Add row bar
+  const bar = document.createElement('div');
+  bar.className = 'he-add-bar';
+  bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile hinzufügen</button>';
+  wrap.appendChild(bar);
+}
+
+/* ── Row element ── */
+function buildRowEl(row, idx){
+  const el = document.createElement('div');
+  el.className = 'he-row' + (row.editing ? ' editing' : '');
+  el.dataset.rowId = row.id;
+
+  // ── Bar ──
+  const bar = document.createElement('div');
+  bar.className = 'he-row-bar';
+
+  const label = document.createElement('span');
+  label.className = 'he-row-label';
+  label.textContent = 'Z' + (idx+1);
+
+  const btnUp = makeBarBtn('↑','move','Nach oben', ()=>moveRow(row.id,-1));
+  btnUp.disabled = idx===0;
+  const btnDn = makeBarBtn('↓','move','Nach unten', ()=>moveRow(row.id,1));
+  btnDn.disabled = idx===homeLayout.length-1;
+  const btnDel = makeBarBtn('×','del','Zeile löschen', ()=>deleteRow(row.id));
+
+  bar.appendChild(label);
+  bar.appendChild(btnUp);
+  bar.appendChild(btnDn);
+  bar.appendChild(btnDel);
+
+  if(row.editing){
+    const btnDone = makeBarBtn('Fertig ✓','done','Bearbeitung abschließen', ()=>finishRow(row.id));
+    bar.appendChild(btnDone);
+  } else {
+    const btnEdit = makeBarBtn('Bearbeiten','edit-row','Zeile bearbeiten', ()=>editRow(row.id));
+    bar.appendChild(btnEdit);
+  }
+
+  el.appendChild(bar);
+
+  // ── Grid ──
+  const grid = document.createElement('div');
+  grid.className = 'he-row-grid';
+  buildCells(row, grid);
+  el.appendChild(grid);
+
+  return el;
+}
+
+function makeBarBtn(label, cls, title, fn){
+  const b = document.createElement('button');
+  b.className = 'he-row-bar-btn ' + cls;
+  b.title = title;
+  b.textContent = label;
+  b.onclick = fn;
+  return b;
+}
+
+/* ── Build cells into grid ── */
+function buildCells(row, grid){
+  grid.innerHTML = '';
+  const c = row.cells;
+  const editing = row.editing;
+
+  // Determine visual layout from cell types
+  const t0 = c[0].type;
+
+  if(t0 === 'slideshow'){
+    grid.appendChild(buildCell(row, 0, 'span-slide', editing));
+
+  } else if(t0 === 'span-4' || t0 === '4x1'){
+    grid.appendChild(buildCell(row, 0, 'span-4', editing));
+
+  } else if(t0 === 'span-2' || t0 === '2x1'){
+    grid.appendChild(buildCell(row, 0, 'span-2', editing));
+    // cells 1,2,3 rendered as normal 1:1 if they have content, else hidden
+    for(let i=1;i<4;i++) grid.appendChild(buildCell(row,i,'',editing));
+
+  } else if(t0 === 'trio-a'){
+    // trio: a(col1 row1), c(col4 rows1-2), b(cols2-3 row2)
+    const cellA = buildCell(row,0,'trio-a',editing);
+    const cellC = buildCell(row,2,'trio-c',editing);
+    const cellB = buildCell(row,1,'trio-b',editing);
+    // Place in correct grid positions
+    cellA.style.gridColumn='1'; cellA.style.gridRow='1';
+    cellC.style.gridColumn='4'; cellC.style.gridRow='1/3';
+    cellB.style.gridColumn='2/4'; cellB.style.gridRow='2';
+    grid.appendChild(cellA);
+    grid.appendChild(cellC);
+    grid.appendChild(cellB);
+
+  } else {
+    // Default: all 4 cells as 1:1
+    for(let i=0;i<4;i++) grid.appendChild(buildCell(row,i,'',editing));
+  }
+}
+
+/* ── Single cell ── */
+function buildCell(row, cellIdx, extraClass, editing){
+  const cell = row.cells[cellIdx];
+  const el = document.createElement('div');
+  el.className = 'he-cell' + (extraClass?' '+extraClass:'') + (editing?' editing-mode':'');
+  el.dataset.rowId = row.id;
+  el.dataset.cellIdx = cellIdx;
+
+  const isFilled = cell.imageUrl || cell.bgUrl;
+  const isSlide  = cell.type === 'slideshow';
+
+  if(isFilled || isSlide){
+    // Filled
+    const imgSrc = isSlide ? (cell.bgUrl||cell.imageUrl) : cell.imageUrl;
+    if(imgSrc){
+      const img = document.createElement('img');
+      img.className = 'he-cell-img';
+      img.src = imgSrc;
+      img.alt = cell.alt||'';
+      img.onerror = ()=>{ img.style.opacity='.15'; };
+      el.appendChild(img);
+    }
+    // Overlay (edit/remove buttons, badge)
+    const ov = document.createElement('div');
+    ov.className = 'he-cell-overlay';
+    const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
+    const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+    ov.innerHTML = `
+      <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
+      <div class="he-cell-acts">
+        <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
+        <button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>
+      </div>`;
+    el.appendChild(ov);
+    if(isSlide){
+      const lbl = document.createElement('div');
+      lbl.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.7);pointer-events:none';
+      lbl.textContent = (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
+      el.appendChild(lbl);
+    }
+  } else {
+    // Empty
+    const emp = document.createElement('div');
+    emp.className = 'he-cell-empty';
+    emp.innerHTML = `<div class="he-cell-plus">+</div><div class="he-cell-hint">${editing?'Typ wählen':''}</div>`;
+    el.appendChild(emp);
+  }
+
+  // Click → open type menu (editing empty) or open edit modal (filled)
+  el.onclick = ()=>{
+    if(!editing) return;
+    if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
+    toggleTypeMenu(el, row.id, cellIdx);
+  };
+
+  return el;
+}
+
+/* ── Type menu (appears on click on empty cell in edit mode) ── */
+function toggleTypeMenu(cellEl, rowId, cellIdx){
+  // Remove any existing menus
+  document.querySelectorAll('.he-type-menu').forEach(m=>m.remove());
+
+  const menu = document.createElement('div');
+  menu.className = 'he-type-menu';
+
+  const row = rowById(rowId);
+  const currentType = row.cells[cellIdx].type;
+
+  const types = [
+    {key:'1x1',      label:'1:1 · Quadratisch'},
+    {key:'2x1',      label:'2:1 · Quer (×2)'},
+    {key:'trio',     label:'3er Block'},
+    {key:'4x1',      label:'4:1 · Volle Breite'},
+    {key:'slideshow',label:'◈ Diashow'},
+  ];
+
+  types.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.className = 'he-type-btn' + (currentType===t.key?' selected':'');
+    btn.textContent = t.label;
+    btn.onclick = (e)=>{ e.stopPropagation(); applyType(rowId, cellIdx, t.key); };
+    menu.appendChild(btn);
+  });
+  const cancel = document.createElement('button');
+  cancel.className = 'he-type-btn cancel';
+  cancel.textContent = '× Abbrechen';
+  cancel.onclick = (e)=>{ e.stopPropagation(); menu.remove(); };
+  menu.appendChild(cancel);
+
+  cellEl.appendChild(menu);
+}
+
+/* ── Apply a type to a cell (may merge/reset siblings) ── */
+function applyType(rowId, cellIdx, type){
+  const row = rowById(rowId);
+  if(!type || !row) return;
+
+  // Reset all cells to empty first
+  row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+
+  if(type === '1x1'){
+    row.cells[cellIdx].type = '1x1';
+    // other 3 stay as empty (each can be their own 1:1)
+    for(let i=0;i<4;i++) if(i!==cellIdx) row.cells[i].type = 'empty';
+
+  } else if(type === '2x1'){
+    row.cells[0].type = 'span-2';
+    // cells 1-3 stay visible as empty 1:1
+
+  } else if(type === 'trio'){
+    row.cells[0].type = 'trio-a';   // top-left 1:1
+    row.cells[1].type = 'trio-b';   // bottom-left 2:1
+    row.cells[2].type = 'trio-c';   // right tall
+    row.cells[3].type = 'hidden';
+
+  } else if(type === '4x1'){
+    row.cells[0].type = 'span-4';
+    row.cells[1].type = 'hidden';
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === 'slideshow'){
+    row.cells[0].type = 'slideshow';
+    row.cells[1].type = 'hidden';
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+  }
+
+  renderHomeEditor();
+
+  // If slideshow: open slideshow modal immediately
+  if(type === 'slideshow'){
+    setTimeout(()=>openSlideshowModal(rowId), 80);
+  } else {
+    // Open fill modal for the primary cell
+    setTimeout(()=>openCellEdit(rowId, 0), 80);
+  }
+}
+
+/* ── Row operations ── */
+function addRow(){
+  homeLayout.push(makeRow());
+  renderHomeEditor();
+  // Scroll to bottom
+  setTimeout(()=>{
+    const w = document.getElementById('homeEditorWrap');
+    if(w) w.scrollTop = w.scrollHeight;
+  },60);
+}
+
+function deleteRow(id){
+  if(homeLayout.length===1){ toast('Letzte Zeile kann nicht gelöscht werden','err'); return; }
+  homeLayout = homeLayout.filter(r=>r.id!==id);
+  renderHomeEditor();
+}
+
+function moveRow(id, dir){
+  const idx = homeLayout.findIndex(r=>r.id===id);
+  const ni  = idx + dir;
+  if(ni<0||ni>=homeLayout.length) return;
+  [homeLayout[idx],homeLayout[ni]] = [homeLayout[ni],homeLayout[idx]];
+  renderHomeEditor();
+}
+
+function editRow(id){
+  const row = rowById(id);
+  if(row){ row.editing = true; renderHomeEditor(); }
+}
+
+function finishRow(id){
+  const row = rowById(id);
+  if(row){ row.editing = false; renderHomeEditor(); }
+}
+
+/* ── Cell edit: route to tile modal or slideshow modal ── */
+function openCellEdit(rowId, cellIdx){
+  const row  = rowById(rowId);
+  if(!row) return;
+  const cell = row.cells[cellIdx];
+  if(cell.type === 'slideshow'){
+    openSlideshowModal(rowId);
+  } else {
+    openHomeTileModal(rowId, cellIdx);
+  }
+}
+
+function clearCell(rowId, cellIdx){
+  const row = rowById(rowId);
+  if(!row) return;
+  const old = row.cells[cellIdx];
+  row.cells[cellIdx] = {...emptyCell(), type: old.type}; // keep type, clear content
+  renderHomeEditor();
+}
+
+/* ── Init ── */
+function initHomeEditor(){
+  if(homeEditorReady){ renderHomeEditor(); return; }
+  homeEditorReady = true;
+  loadHomeLayout();
+}
+
+/* ══ TILE MODAL ════════════════════════════════════════════════════════════ */
+
+let htmEditTarget  = null;  // { rowId, cellIdx }
+let htmSelectedSong = null; // { slug, title, artist, coverUrl, cover21Url }
+
+/* Virtual playlists for language filter */
+const VIRTUAL_PLAYLISTS = [
+  { slug: '__lang_de', title: 'Deutsch' },
+  { slug: '__lang_en', title: 'English' },
+];
+
+function openHomeTileModal(rowId, cellIdx){
+  htmEditTarget   = { rowId, cellIdx };
+  htmSelectedSong = null;
+
+  const row  = rowById(rowId);
+  const cell = row && row.cells[cellIdx];
+  const fn   = cell ? cell.fn : 'play';
+
+  // Restore previously saved song if any
+  if(cell && cell.slug && cell.imageUrl){
+    htmSelectedSong = {
+      slug:       cell.slug,
+      title:      cell.alt  || cell.slug,
+      artist:     cell.artist || '',
+      coverUrl:   cell.imageUrl,
+      cover21Url: cell.imageUrl
+    };
+  }
+
+  document.getElementById('htmLinkUrl').value = cell ? (cell.url||'') : '';
+  document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.fn===fn));
+  htmSetFn(fn, null);
+
+  // Populate playlist dropdown
+  htmPopulatePlaylists(cell ? cell.playlistSlug : '');
+  htmRenderSelectedSong();
+
+  document.getElementById('homeTileModal').classList.add('open');
+}
+
+function closeHomeTileModal(){
+  document.getElementById('homeTileModal').classList.remove('open');
+  htmEditTarget   = null;
+  htmSelectedSong = null;
+}
+
+function htmSetFn(fn, el){
+  if(el){
+    document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.getElementById('htmPlayField').style.display = fn==='play' ? '' : 'none';
+  document.getElementById('htmLinkField').style.display = fn==='link' ? '' : 'none';
+}
+
+/* ── Playlist dropdown ── */
+function htmPopulatePlaylists(selectedSlug){
+  const sel = document.getElementById('htmPlaylistSelect');
+  sel.innerHTML = '<option value="">— Playlist wählen —</option>';
+
+  // Virtual playlists first
+  VIRTUAL_PLAYLISTS.forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.slug;
+    opt.textContent = p.title;
+    if(p.slug === selectedSlug) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  // Real playlists from albumsData (loaded by existing Alben tab)
+  const playlists = (typeof albumsData !== 'undefined' ? albumsData : []);
+  if(playlists.length > 0){
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '── Alben ──';
+    sel.appendChild(sep);
+    playlists.forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.slug;
+      opt.textContent = p.title || p.slug;
+      if(p.slug === selectedSlug) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Load songs for currently selected playlist if we have one
+  if(selectedSlug) htmLoadPlaylistSongs();
+  else document.getElementById('htmSongList').innerHTML =
+    '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist wählen</div>';
+}
+
+/* ── Load songs for selected playlist ── */
+async function htmLoadPlaylistSongs(){
+  const slug = document.getElementById('htmPlaylistSelect').value;
+  const list = document.getElementById('htmSongList');
+  if(!slug){ list.innerHTML = '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist wählen</div>'; return; }
+
+  list.innerHTML = '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Lade Songs …</div>';
+
+  try {
+    let songs = [];
+
+    if(slug === '__lang_de' || slug === '__lang_en'){
+      const lang = slug === '__lang_de' ? 'german' : 'english';
+      songs = allSongs.filter(s=>(s.language||'').toLowerCase() === lang);
+    } else {
+      // Load tracks for this playlist
+      const r = await fetch(sbUrl(`/rest/v1/playlist_tracks?playlist_slug=eq.${slug}&select=song_slug,position&order=position.asc`),{headers:hdrs()});
+      const tracks = await r.json();
+      const slugSet = new Map(tracks.map(t=>[t.song_slug, t.position]));
+      songs = allSongs.filter(s=>slugSet.has(s.slug));
+      songs.sort((a,b)=>(slugSet.get(a.slug)||0)-(slugSet.get(b.slug)||0));
+    }
+
+    // Sort alphabetically by title (for virtual playlists) or keep playlist order
+    if(slug.startsWith('__lang_')){
+      songs.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+    }
+
+    htmRenderSongList(songs, slug);
+  } catch(e){
+    list.innerHTML = `<div style="padding:12px;font-size:11px;color:#f08080;text-align:center">Fehler: ${esc(e.message)}</div>`;
+  }
+}
+
+function htmRenderSongList(songs, playlistSlug){
+  const list = document.getElementById('htmSongList');
+  if(songs.length === 0){
+    list.innerHTML = '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs in dieser Playlist</div>';
+    return;
+  }
+  list.innerHTML = '';
+  songs.forEach(song=>{
+    const coverUrl = song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`;
+    const cover21  = song.cover21_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover-2-1.jpg`;
+    const isSelected = htmSelectedSong && htmSelectedSong.slug === song.slug;
+    const row = document.createElement('div');
+    row.className = 'htm-song-row' + (isSelected ? ' selected' : '');
+    row.innerHTML = `
+      <img class="htm-song-row-cover" src="${coverUrl}" onerror="this.style.opacity='.15'"/>
+      <div class="htm-song-row-info">
+        <div class="htm-song-row-title">${esc(song.title||song.slug)}</div>
+        <div class="htm-song-row-artist">${esc(song.artist||'')}</div>
+      </div>
+      <span class="htm-song-row-check">✓</span>`;
+    row.onclick = ()=>{
+      htmSelectedSong = { slug:song.slug, title:song.title||song.slug, artist:song.artist||'',
+        coverUrl, cover21Url:cover21, playlistSlug };
+      htmRenderSelectedSong();
+      // Update selection highlight in list
+      list.querySelectorAll('.htm-song-row').forEach(r=>r.classList.remove('selected'));
+      row.classList.add('selected');
+      row.querySelector('.htm-song-row-check').style.opacity='1';
+    };
+    list.appendChild(row);
+  });
+}
+
+/* ── Selected song preview ── */
+function htmRenderSelectedSong(){
+  const box = document.getElementById('htmSelectedSong');
+  if(!htmSelectedSong){ box.style.display='none'; return; }
+  box.style.display = 'flex';
+  document.getElementById('htmSelectedCover').src   = htmSelectedSong.coverUrl;
+  document.getElementById('htmSelectedTitle').textContent  = htmSelectedSong.title;
+  document.getElementById('htmSelectedArtist').textContent = htmSelectedSong.artist;
+}
+
+function htmClearSong(){
+  htmSelectedSong = null;
+  htmRenderSelectedSong();
+  // Remove selection highlights
+  document.querySelectorAll('#htmSongList .htm-song-row').forEach(r=>{
+    r.classList.remove('selected');
+    const chk = r.querySelector('.htm-song-row-check');
+    if(chk) chk.style.opacity='0';
+  });
+}
+
+/* ── Save ── */
+function saveHomeTile(){
+  if(!htmEditTarget) return;
+  const { rowId, cellIdx } = htmEditTarget;
+  const row  = rowById(rowId);
+  if(!row) return;
+  const fn   = document.querySelector('#homeTileModal .htm-seg-btn.active')?.dataset?.fn || 'play';
+  const cell = row.cells[cellIdx];
+
+  cell.fn = fn;
+  if(fn === 'play'){
+    if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
+    cell.slug         = htmSelectedSong.slug;
+    cell.playlistSlug = htmSelectedSong.playlistSlug || '';
+    cell.imageUrl     = htmSelectedSong.coverUrl;
+    cell.cover21Url   = htmSelectedSong.cover21Url;
+    cell.alt          = htmSelectedSong.title;
+    cell.artist       = htmSelectedSong.artist;
+    cell.url          = '';
+  } else {
+    cell.url          = document.getElementById('htmLinkUrl').value.trim();
+    cell.slug         = '';
+    cell.imageUrl     = '';
+    cell.alt          = '';
+  }
+
+  closeHomeTileModal();
+  renderHomeEditor();
+}
+
+/* ══ SLIDESHOW MODAL ════════════════════════════════════════════════════════ */
+
+let htmSlideshowRowId = null;
+let htmSlides = [];
+let ssOverlayPos = 'bottom-left';
+
+function openSlideshowModal(rowId){
+  htmSlideshowRowId = rowId;
+  const row  = rowById(rowId);
+  const cell = row && row.cells[0];
+
+  htmSlides      = (cell && cell.slides) ? cell.slides.map(s=>({...s})) : [];
+  ssOverlayPos   = (cell && cell.overlayPos) || 'bottom-left';
+
+  document.getElementById('htmSlideshowTitle').value = (cell && cell.alt)   || '';
+  document.getElementById('htmSlideshowFn').value    = (cell && cell.fn)    || 'play';
+  document.getElementById('htmSlideshowSlug').value  = (cell && cell.slug)  || '';
+  document.getElementById('htmSlideshowUrl').value   = (cell && cell.url)   || '';
+  document.getElementById('htmSsBgUrl').value        = (cell && cell.bgUrl) || '';
+  document.getElementById('ssSongSearch').value      = '';
+  document.getElementById('ssAnalyseResult').style.display = 'none';
+
+  htmSlideshowSetFn(document.getElementById('htmSlideshowFn').value);
+  ssBgPreviewUpdate();
+  ssMarkPos(ssOverlayPos);
+  renderSlidesList();
+  renderSsPicker();
+
+  document.getElementById('homeSlideshowModal').style.display = 'flex';
+}
+
+function closeSlideshowModal(){
+  document.getElementById('homeSlideshowModal').style.display = 'none';
+  htmSlideshowRowId = null;
+}
+
+function htmSlideshowSetFn(fn){
+  document.getElementById('htmSlideshowFn').value = fn;
+  document.querySelectorAll('.htm-slideshow-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.fn===fn));
+  document.getElementById('htmSsPlayField').style.display = fn==='play' ? '' : 'none';
+  document.getElementById('htmSsLinkField').style.display = fn==='link' ? '' : 'none';
+}
+
+function ssBgPreviewUpdate(){
+  const url     = document.getElementById('htmSsBgUrl').value.trim();
+  const preview = document.getElementById('ssBgPreview');
+  const btn     = document.getElementById('ssAnalyseBtn');
+  if(url){
+    preview.innerHTML = `<img src="${url}" style="width:100%;display:block;object-fit:cover;aspect-ratio:2/1;border-radius:8px" onerror="this.parentElement.innerHTML='<div style=padding:12px;font-size:11px;color:rgba(133,172,201,.4)>Bild nicht erreichbar</div>'"/>`;
+    btn.style.display = '';
+  } else {
+    preview.innerHTML = '';
+    btn.style.display = 'none';
+  }
+}
+
+function ssSetPos(btn){ ssMarkPos(btn.dataset.pos); }
+function ssMarkPos(pos){
+  ssOverlayPos = pos;
+  document.querySelectorAll('.ss-pos-btn').forEach(b=>b.classList.toggle('active', b.dataset.pos===pos));
+}
+
+function renderSlidesList(){
+  const list = document.getElementById('htmSlidesList');
+  if(!list) return;
+  if(htmSlides.length===0){
+    list.innerHTML = '<div style="font-size:11px;color:rgba(133,172,201,.3);padding:10px 6px">Noch keine Songs ausgewählt</div>';
+    return;
+  }
+  list.innerHTML = '';
+  htmSlides.forEach((s,i)=>{
+    const div = document.createElement('div');
+    div.className = 'htm-slide-row';
+    div.innerHTML = `
+      <img class="htm-slide-thumb" src="${s.coverUrl||''}" onerror="this.style.opacity='.2'"/>
+      <div class="htm-slide-info">
+        <div class="htm-slide-title">${esc(s.title||s.slug)}</div>
+        <div class="htm-slide-artist">${esc(s.artist||'')}</div>
+      </div>
+      <button class="htm-slide-del" onclick="removeSlide(${i})" title="Entfernen">×</button>`;
+    list.appendChild(div);
+  });
+  renderSsPicker();
+}
+
+function removeSlide(idx){
+  htmSlides.splice(idx,1);
+  renderSlidesList();
+}
+
+function renderSsPicker(){
+  const container = document.getElementById('ssSongPicker');
+  if(!container) return;
+  const q = (document.getElementById('ssSongSearch').value||'').toLowerCase();
+  const inPoolSlugs = new Set(htmSlides.map(s=>s.slug));
+  const filtered = allSongs
+    .filter(s=>!q||(s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q))
+    .slice(0,120);
+  if(filtered.length===0){
+    container.innerHTML = '<div style="padding:14px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs gefunden</div>';
+    return;
+  }
+  container.innerHTML = '';
+  filtered.forEach(song=>{
+    const inPool   = inPoolSlugs.has(song.slug);
+    const coverUrl = song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`;
+    const row = document.createElement('div');
+    row.className = 'ss-song-row' + (inPool?' in-pool':'');
+    row.innerHTML = `
+      <img class="ss-song-thumb" src="${coverUrl}" onerror="this.style.opacity='.15'"/>
+      <div class="ss-song-info">
+        <div class="ss-song-title">${esc(song.title||song.slug)}</div>
+        <div class="ss-song-artist">${esc(song.artist||'')}</div>
+      </div>
+      <button class="ss-song-toggle ${inPool?'remove':'add'}">${inPool?'−':'＋'}</button>`;
+    row.querySelector('button').onclick = (e)=>{
+      e.stopPropagation();
+      if(inPool){
+        htmSlides = htmSlides.filter(s=>s.slug!==song.slug);
+      } else {
+        htmSlides.push({ slug:song.slug, title:song.title||song.slug, artist:song.artist||'',
+          coverUrl, focusUrl: song.focus_url||song.cover21_url||coverUrl });
+      }
+      renderSlidesList();
+    };
+    container.appendChild(row);
+  });
+}
+
+async function analyseFrame(){
+  const bgUrl = document.getElementById('htmSsBgUrl').value.trim();
+  if(!bgUrl){ toast('Bitte zuerst eine Bild-URL eingeben','err'); return; }
+  const btn    = document.getElementById('ssAnalyseBtn');
+  const result = document.getElementById('ssAnalyseResult');
+  btn.textContent = '✦ Analysiere …';
+  btn.disabled = true;
+  result.style.display = 'none';
+  try {
+    const imgResp = await fetch(bgUrl);
+    if(!imgResp.ok) throw new Error('Bild nicht erreichbar');
+    const blob = await imgResp.blob();
+    const b64  = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.readAsDataURL(blob); });
+    const mime = blob.type || 'image/jpeg';
+    const apiResp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:300,
+        system:`Antworte NUR in diesem JSON-Format ohne Markdown: {"position":"top-left|top-right|center-left|center-right|bottom-left|bottom-right","reason":"max 15 Wörter","textColor":"light|dark"}`,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+          {type:'text',text:'Wo ist der dunkelste/kontrastreichste Bereich für ein Text-Overlay mit Song-Cover und Titel?'}
+        ]}]
+      })
+    });
+    if(!apiResp.ok) throw new Error('API Fehler '+apiResp.status);
+    const data   = await apiResp.json();
+    const raw    = data.content.find(b=>b.type==='text')?.text||'';
+    const parsed = JSON.parse(raw.trim());
+    ssMarkPos(parsed.position);
+    result.style.display=''; result.style.background='rgba(50,180,100,.08)'; result.style.borderColor='rgba(50,180,100,.2)'; result.style.color='#6fda9a';
+    result.innerHTML = `✦ KI: <strong>${parsed.position}</strong> — ${esc(parsed.reason)}`;
+  } catch(e){
+    result.style.display=''; result.style.background='rgba(220,80,80,.08)'; result.style.borderColor='rgba(220,80,80,.2)'; result.style.color='#f08080';
+    result.textContent='✕ '+e.message;
+  } finally {
+    btn.textContent='✦ Frame analysieren — KI erkennt dunklen Bereich'; btn.disabled=false;
+  }
+}
+
+function saveSlideshowTile(){
+  const row = rowById(htmSlideshowRowId);
+  if(!row) return;
+  const fn    = document.getElementById('htmSlideshowFn').value;
+  const bgUrl = document.getElementById('htmSsBgUrl').value.trim();
+  const cell  = row.cells[0];
+  cell.fn         = fn;
+  cell.slug       = document.getElementById('htmSlideshowSlug').value.trim();
+  cell.url        = document.getElementById('htmSlideshowUrl').value.trim();
+  cell.alt        = document.getElementById('htmSlideshowTitle').value.trim();
+  cell.bgUrl      = bgUrl;
+  cell.imageUrl   = bgUrl;
+  cell.overlayPos = ssOverlayPos;
+  cell.slides     = htmSlides.map(s=>({...s}));
+  closeSlideshowModal();
+  renderHomeEditor();
+}
+
+/* ══ END HOME EDITOR ══════════════════════════════════════════════════════ */
+
 
 /* ── INIT ── */
 loadSongs();
