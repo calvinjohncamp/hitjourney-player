@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260520-duplicate-title-slug-guard -->
+<!-- Version: admin-v20260522-diashow-admin-startcolor -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -324,6 +324,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .home-toolbar-btn:hover{background:rgba(133,172,201,.18)}
 .home-toolbar-btn.save{background:rgba(50,180,100,.12);color:#6fda9a;border:1px solid rgba(50,180,100,.2)}
 .home-toolbar-btn.save:hover{background:rgba(50,180,100,.22)}
+.home-toolbar-btn.undo{background:rgba(133,172,201,.08);color:#85ACC9;border:1px solid rgba(133,172,201,.16)}
+.home-toolbar-btn.cancel{background:rgba(220,80,80,.08);color:#e08080;border:1px solid rgba(220,80,80,.18)}
+.home-toolbar-btn:disabled{opacity:.35;cursor:not-allowed}
 .he-row{margin-bottom:8px;border-radius:10px;border:1px solid rgba(133,172,201,.1);background:rgba(133,172,201,.03);overflow:hidden}
 .he-row.editing{border-color:rgba(133,172,201,.3);background:rgba(133,172,201,.06)}
 .he-row-bar{display:flex;align-items:center;gap:5px;padding:6px 8px;background:rgba(133,172,201,.05);border-bottom:1px solid rgba(133,172,201,.08)}
@@ -698,6 +701,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
+    <button class="edit-nav-save" onclick="undoEditChanges()" title="Ursprungszustand wiederherstellen" style="background:rgba(133,172,201,.12);color:#85ACC9;border:1px solid rgba(133,172,201,.18);margin-right:6px">Rückgängig</button>
+    <button class="edit-nav-save" onclick="cancelEditChanges()" title="Bearbeitung abbrechen" style="background:rgba(220,80,80,.10);color:#e08080;border:1px solid rgba(220,80,80,.20);margin-right:6px">Abbrechen</button>
     <button class="edit-nav-save" onclick="saveEdit()">Speichern</button>
   </div>
 
@@ -806,6 +811,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     </div>
 
     <div class="form-msg" id="editMsg" style="margin-top:4px"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-cancel" onclick="undoEditChanges()" style="flex:1">Rückgängig</button>
+      <button class="btn-cancel" onclick="cancelEditChanges()" style="flex:1;background:rgba(220,80,80,.10);color:#e08080">Abbrechen</button>
+    </div>
     <button class="btn-primary" onclick="saveEdit()" id="editSaveBtn">Änderungen speichern</button>
   </div>
 </div>
@@ -817,6 +826,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     <div style="display:flex;gap:6px">
       <button class="home-toolbar-btn" onclick="importCurrentHome()" id="importHomeBtn" title="Aktuelle hardcoded Startseite als Startpunkt laden">
         ↓ Aktuelle Seite importieren
+      </button>
+      <button class="home-toolbar-btn undo" id="homeUndoBtn" onclick="undoHomeAction()" title="Letzte Änderung rückgängig machen" disabled>
+        ↶ Rückgängig
+      </button>
+      <button class="home-toolbar-btn cancel" id="homeCancelBtn" onclick="cancelHomeEdits()" title="Alle ungespeicherten Änderungen verwerfen" disabled>
+        Abbrechen
       </button>
       <button class="home-toolbar-btn save" onclick="saveHomeLayout()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -894,17 +909,37 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     <!-- Scrollable body -->
     <div style="flex:1;overflow-y:auto;padding:14px 18px 0">
 
-      <!-- Hintergrundbild + KI-Analyse -->
+      <!-- Frame Upload + KI-Analyse -->
       <div class="htm-field">
-        <span class="htm-label">Hintergrundbild (2:1) — dein Frame</span>
-        <input class="htm-input" id="htmSsBgUrl" placeholder="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/…" oninput="ssBgPreviewUpdate()"/>
-        <div id="ssBgPreview" style="margin-top:8px;border-radius:8px;overflow:hidden;background:#06141F;min-height:0;position:relative">
-          <!-- preview injected by JS -->
+        <span class="htm-label">Frame / Hintergrundbild (2:1)</span>
+        <input type="hidden" id="htmSsBgUrl"/>
+        <div class="upload-zone wide" id="zSsFrame" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onSsFrameDrop(event)">
+          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="onSsFrameFile(this)"/>
+          <img class="zone-preview" id="prevSsFrame" alt="Frame Vorschau"/>
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Frame anklicken / hochladen</span>
+            <small>PNG/JPG · 2:1</small>
+          </div>
+          <button type="button" class="zone-clear" onclick="clearSsFrame(event)">×</button>
+          <div class="upload-progress" id="progSsFrame"></div>
         </div>
+        <div class="s3-hint" id="hintSsFrame"></div>
         <button id="ssAnalyseBtn" onclick="analyseFrame()" style="display:none;margin-top:8px;width:100%;padding:9px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s">
           ✦ Frame analysieren — KI erkennt dunklen Bereich
         </button>
         <div id="ssAnalyseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:7px;background:rgba(50,180,100,.08);border:1px solid rgba(50,180,100,.2);font-size:11px;color:#6fda9a;line-height:1.5"></div>
+      </div>
+
+
+      <!-- Startfarbe für transparenten Bereich -->
+      <div class="htm-field">
+        <span class="htm-label">Startfarbe transparenter Bereich</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="htm-input" id="htmSsStartColor" placeholder="#0A0A0A" value="#0A0A0A" oninput="ssStartColorPreviewUpdate()" style="font-family:'SF Mono','Menlo',monospace;flex:1"/>
+          <div id="ssStartColorPreview" style="width:42px;height:42px;border-radius:9px;border:1px solid rgba(133,172,201,.25);background:#0A0A0A;flex-shrink:0"></div>
+        </div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Diese Farbe liegt am Anfang hinter dem transparenten Frame und bleibt sichtbar, bis das erste Dia eingeblendet wird.</div>
       </div>
 
       <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
@@ -923,7 +958,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <!-- Titel -->
       <div class="htm-field">
         <span class="htm-label">Titel / Overlay-Text</span>
-        <input class="htm-input" id="htmSlideshowTitle" placeholder="z. B. IN THE SPOTLIGHT"/>
+        <input class="htm-input" id="htmSlideshowTitle" placeholder="z. B. IN THE SPOTLIGHT" oninput="updateSsFrameHint()"/>
       </div>
 
       <!-- Funktion -->
@@ -937,7 +972,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <input type="hidden" id="htmSlideshowFn" value="play"/>
       <div class="htm-field" id="htmSsPlayField">
         <span class="htm-label">Playlist-Slug</span>
-        <input class="htm-input" id="htmSlideshowSlug" placeholder="z. B. spotlight"/>
+        <input class="htm-input" id="htmSlideshowSlug" placeholder="z. B. spotlight" oninput="updateSsFrameHint()"/>
       </div>
       <div class="htm-field" id="htmSsLinkField" style="display:none">
         <span class="htm-label">URL</span>
@@ -964,7 +999,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     <!-- Footer actions -->
     <div style="padding:12px 18px 20px;border-top:1px solid rgba(133,172,201,.1);display:flex;gap:8px;flex-shrink:0">
       <button class="htm-cancel" onclick="closeSlideshowModal()">Abbrechen</button>
-      <button class="htm-save" style="flex:1" onclick="saveSlideshowTile()">Übernehmen</button>
+      <button class="htm-save" id="ssSaveBtn" style="flex:1" onclick="saveSlideshowTile()">Übernehmen</button>
     </div>
 
   </div>
@@ -1369,6 +1404,23 @@ async function confirmDeleteSong(){
 
 /* ── EDIT SCREEN ── */
 const editFiles = { mp3: null, cover: null, cover21: null, lyrics: null };
+let editOriginalState = null;
+function captureEditState(){
+  return {
+    title:document.getElementById('eTitle')?.value||'', artist:document.getElementById('eArtist')?.value||'',
+    slug:document.getElementById('eSlug')?.value||'', lang:document.getElementById('eLang')?.value||'english',
+    playlists:[...document.querySelectorAll('#ePlaylistChecks input:checked')].map(i=>i.value)
+  };
+}
+function restoreEditState(st){
+  if(!st) return;
+  document.getElementById('eTitle').value=st.title; document.getElementById('eArtist').value=st.artist;
+  document.getElementById('eSlug').value=st.slug; document.getElementById('eLang').value=st.lang;
+  document.querySelectorAll('#ePlaylistChecks input').forEach(i=>{ i.checked = st.playlists.includes(i.value); });
+  Object.keys(editFiles).forEach(k=>editFiles[k]=null);
+}
+function undoEditChanges(){ restoreEditState(editOriginalState); toast('Änderungen zurückgesetzt','ok'); }
+function cancelEditChanges(){ undoEditChanges(); closeEdit(); }
 let editSongList = [];
 let editSongIdx  = -1;
 
@@ -1464,6 +1516,8 @@ function _fillEditForm(s){
       <input type="checkbox" value="${al.slug}" ${currentPlaylists.has(al.slug)?'checked':''}/> 
       ${esc(al.title||al.slug)}
     </label>`).join('');
+
+  editOriginalState = captureEditState();
 
   document.getElementById('editMsg').className = 'form-msg';
   document.getElementById('editMsg').textContent = '';
@@ -2139,11 +2193,41 @@ function updateAlbumDropdown(){
 
 let homeLayout = [];
 let homeEditorReady = false;
+let homeLayoutBase = null;       // Zustand seit letztem Laden/Speichern
+let homeUndoStack = [];          // letzte lokale Aktionen für Rückgängig
+
+function cloneHomeLayout(src){ return JSON.parse(JSON.stringify(src||[])); }
+function cleanHomeLayoutForCompare(src){ return cloneHomeLayout(src).map(r=>({...r, editing:false})); }
+function homeDirty(){ return JSON.stringify(cleanHomeLayoutForCompare(homeLayout)) !== JSON.stringify(cleanHomeLayoutForCompare(homeLayoutBase||[])); }
+function updateHomeUndoUi(){
+  const undo = document.getElementById('homeUndoBtn');
+  const cancel = document.getElementById('homeCancelBtn');
+  if(undo) undo.disabled = homeUndoStack.length===0;
+  if(cancel) cancel.disabled = !homeDirty();
+}
+function markHomeAction(){
+  homeUndoStack.push(cloneHomeLayout(homeLayout));
+  if(homeUndoStack.length>30) homeUndoStack.shift();
+  updateHomeUndoUi();
+}
+function undoHomeAction(){
+  if(!homeUndoStack.length) return;
+  homeLayout = homeUndoStack.pop();
+  renderHomeEditor();
+  toast('Letzte Änderung rückgängig gemacht','ok');
+}
+function cancelHomeEdits(){
+  if(!homeLayoutBase) return;
+  homeLayout = cloneHomeLayout(homeLayoutBase);
+  homeUndoStack = [];
+  renderHomeEditor();
+  toast('Ursprungszustand wiederhergestellt','ok');
+}
 
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',overlayPos:'bottom-left',slides:[]}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[]}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2158,12 +2242,14 @@ async function loadHomeLayout(){
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
-      cells:   (row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]
+      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', ...c}))
     }));
   } catch(e){
     homeLayout = [];
   }
   if(homeLayout.length===0) homeLayout = [makeRow()];
+  homeLayoutBase = cloneHomeLayout(homeLayout);
+  homeUndoStack = [];
   renderHomeEditor();
 }
 
@@ -2177,6 +2263,9 @@ async function saveHomeLayout(){
       });
       if(!res.ok) throw new Error(await res.text());
     }
+    homeLayoutBase = cloneHomeLayout(homeLayout);
+    homeUndoStack = [];
+    renderHomeEditor();
     toast('Home gespeichert ✓','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); }
 }
@@ -2194,6 +2283,7 @@ function renderHomeEditor(){
   bar.className = 'he-add-bar';
   bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile hinzufügen</button>';
   wrap.appendChild(bar);
+  updateHomeUndoUi();
 }
 
 /* ── Row element ── */
@@ -2403,6 +2493,8 @@ function applyType(rowId, cellIdx, type){
   const row = rowById(rowId);
   if(!type || !row) return;
 
+  markHomeAction();
+
   // Reset all cells to empty first
   row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
 
@@ -2447,6 +2539,7 @@ function applyType(rowId, cellIdx, type){
 
 /* ── Row operations ── */
 function addRow(){
+  markHomeAction();
   homeLayout.push(makeRow());
   renderHomeEditor();
   // Scroll to bottom
@@ -2458,6 +2551,7 @@ function addRow(){
 
 function deleteRow(id){
   if(homeLayout.length===1){ toast('Letzte Zeile kann nicht gelöscht werden','err'); return; }
+  markHomeAction();
   homeLayout = homeLayout.filter(r=>r.id!==id);
   renderHomeEditor();
 }
@@ -2466,6 +2560,7 @@ function moveRow(id, dir){
   const idx = homeLayout.findIndex(r=>r.id===id);
   const ni  = idx + dir;
   if(ni<0||ni>=homeLayout.length) return;
+  markHomeAction();
   [homeLayout[idx],homeLayout[ni]] = [homeLayout[ni],homeLayout[idx]];
   renderHomeEditor();
 }
@@ -2495,6 +2590,7 @@ function openCellEdit(rowId, cellIdx){
 function clearCell(rowId, cellIdx){
   const row = rowById(rowId);
   if(!row) return;
+  markHomeAction();
   const old = row.cells[cellIdx];
   row.cells[cellIdx] = {...emptyCell(), type: old.type}; // keep type, clear content
   renderHomeEditor();
@@ -2701,6 +2797,7 @@ function saveHomeTile(){
   const fn   = document.querySelector('#homeTileModal .htm-seg-btn.active')?.dataset?.fn || 'play';
   const cell = row.cells[cellIdx];
 
+  markHomeAction();
   cell.fn = fn;
   if(fn === 'play'){
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
@@ -2727,6 +2824,70 @@ function saveHomeTile(){
 let htmSlideshowRowId = null;
 let htmSlides = [];
 let ssOverlayPos = 'bottom-left';
+let ssFrameFile = null;
+
+
+function ssFrameExt(file){
+  const name = (file && file.name || '').toLowerCase();
+  if(name.endsWith('.png')) return '.png';
+  if(name.endsWith('.webp')) return '.webp';
+  if(name.endsWith('.jpeg')) return '.jpg';
+  return '.jpg';
+}
+function ssFrameS3Key(file){
+  const title = document.getElementById('htmSlideshowTitle')?.value?.trim() || document.getElementById('htmSlideshowSlug')?.value?.trim() || 'diashow-frame';
+  const slug = makeSlug(title) || ('diashow-frame-'+Date.now());
+  return `artwork/${slug}-frame${ssFrameExt(file)}`;
+}
+function updateSsFrameHint(){
+  const hint = document.getElementById('hintSsFrame');
+  if(!hint) return;
+  if(ssFrameFile) hint.textContent = '→ ' + ssFrameS3Key(ssFrameFile);
+  else hint.textContent = '';
+}
+function setSsFramePreview(url){
+  const zone = document.getElementById('zSsFrame');
+  const img  = document.getElementById('prevSsFrame');
+  if(!zone || !img) return;
+  if(url){
+    img.src = url;
+    zone.classList.add('has-file');
+    document.getElementById('ssAnalyseBtn').style.display = '';
+  } else {
+    img.src = '';
+    zone.classList.remove('has-file');
+    document.getElementById('ssAnalyseBtn').style.display = 'none';
+  }
+}
+function onSsFrameFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  ssFrameFile = file;
+  document.getElementById('htmSsBgUrl').value = '';
+  setSsFramePreview(URL.createObjectURL(file));
+  updateSsFrameHint();
+}
+function onSsFrameDrop(e){
+  e.preventDefault();
+  offDrag(document.getElementById('zSsFrame'));
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  ssFrameFile = file;
+  document.getElementById('htmSsBgUrl').value = '';
+  setSsFramePreview(URL.createObjectURL(file));
+  updateSsFrameHint();
+}
+function clearSsFrame(e){
+  if(e && e.preventDefault){ e.preventDefault(); e.stopPropagation(); }
+  ssFrameFile = null;
+  document.getElementById('htmSsBgUrl').value = '';
+  const input = document.querySelector('#zSsFrame input[type=file]');
+  if(input) input.value = '';
+  const prog = document.getElementById('progSsFrame');
+  if(prog) prog.style.width = '0%';
+  setSsFramePreview('');
+  updateSsFrameHint();
+}
 
 function openSlideshowModal(rowId){
   htmSlideshowRowId = rowId;
@@ -2740,12 +2901,16 @@ function openSlideshowModal(rowId){
   document.getElementById('htmSlideshowFn').value    = (cell && cell.fn)    || 'play';
   document.getElementById('htmSlideshowSlug').value  = (cell && cell.slug)  || '';
   document.getElementById('htmSlideshowUrl').value   = (cell && cell.url)   || '';
+  ssFrameFile = null;
   document.getElementById('htmSsBgUrl').value        = (cell && cell.bgUrl) || '';
+  document.getElementById('htmSsStartColor').value   = normalizeHexColor((cell && cell.startColor) || '#0A0A0A');
   document.getElementById('ssSongSearch').value      = '';
   document.getElementById('ssAnalyseResult').style.display = 'none';
 
   htmSlideshowSetFn(document.getElementById('htmSlideshowFn').value);
-  ssBgPreviewUpdate();
+  setSsFramePreview(document.getElementById('htmSsBgUrl').value);
+  updateSsFrameHint();
+  ssStartColorPreviewUpdate();
   ssMarkPos(ssOverlayPos);
   renderSlidesList();
   renderSsPicker();
@@ -2766,16 +2931,28 @@ function htmSlideshowSetFn(fn){
 }
 
 function ssBgPreviewUpdate(){
-  const url     = document.getElementById('htmSsBgUrl').value.trim();
-  const preview = document.getElementById('ssBgPreview');
-  const btn     = document.getElementById('ssAnalyseBtn');
-  if(url){
-    preview.innerHTML = `<img src="${url}" style="width:100%;display:block;object-fit:cover;aspect-ratio:2/1;border-radius:8px" onerror="this.parentElement.innerHTML='<div style=padding:12px;font-size:11px;color:rgba(133,172,201,.4)>Bild nicht erreichbar</div>'"/>`;
-    btn.style.display = '';
-  } else {
-    preview.innerHTML = '';
-    btn.style.display = 'none';
+  // Kompatibilität: URL wird intern weitergeführt, Eingabe erfolgt jetzt über Upload-Zone.
+  setSsFramePreview(document.getElementById('htmSsBgUrl').value.trim());
+}
+
+
+function normalizeHexColor(value){
+  let v = (value||'').trim();
+  if(!v) return '#0A0A0A';
+  if(v[0] !== '#') v = '#'+v;
+  if(/^#[0-9a-fA-F]{3}$/.test(v)){
+    v = '#' + v.slice(1).split('').map(ch=>ch+ch).join('');
   }
+  if(!/^#[0-9a-fA-F]{6}$/.test(v)) return '#0A0A0A';
+  return v.toUpperCase();
+}
+
+function ssStartColorPreviewUpdate(){
+  const input = document.getElementById('htmSsStartColor');
+  const prev  = document.getElementById('ssStartColorPreview');
+  if(!input || !prev) return;
+  const color = normalizeHexColor(input.value);
+  prev.style.background = color;
 }
 
 function ssSetPos(btn){ ssMarkPos(btn.dataset.pos); }
@@ -2853,16 +3030,21 @@ function renderSsPicker(){
 
 async function analyseFrame(){
   const bgUrl = document.getElementById('htmSsBgUrl').value.trim();
-  if(!bgUrl){ toast('Bitte zuerst eine Bild-URL eingeben','err'); return; }
+  if(!bgUrl && !ssFrameFile){ toast('Bitte zuerst einen Frame hochladen','err'); return; }
   const btn    = document.getElementById('ssAnalyseBtn');
   const result = document.getElementById('ssAnalyseResult');
   btn.textContent = '✦ Analysiere …';
   btn.disabled = true;
   result.style.display = 'none';
   try {
-    const imgResp = await fetch(bgUrl);
-    if(!imgResp.ok) throw new Error('Bild nicht erreichbar');
-    const blob = await imgResp.blob();
+    let blob;
+    if(ssFrameFile){
+      blob = ssFrameFile;
+    } else {
+      const imgResp = await fetch(bgUrl);
+      if(!imgResp.ok) throw new Error('Bild nicht erreichbar');
+      blob = await imgResp.blob();
+    }
     const b64  = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.readAsDataURL(blob); });
     const mime = blob.type || 'image/jpeg';
     const apiResp = await fetch('https://api.anthropic.com/v1/messages',{
@@ -2891,20 +3073,35 @@ async function analyseFrame(){
   }
 }
 
-function saveSlideshowTile(){
+async function saveSlideshowTile(){
   const row = rowById(htmSlideshowRowId);
   if(!row) return;
   const fn    = document.getElementById('htmSlideshowFn').value;
-  const bgUrl = document.getElementById('htmSsBgUrl').value.trim();
+  let bgUrl = document.getElementById('htmSsBgUrl').value.trim();
   const cell  = row.cells[0];
+  const btn = document.getElementById('ssSaveBtn');
+  if(ssFrameFile){
+    try{
+      if(btn){ btn.disabled = true; btn.textContent = 'Frame wird hochgeladen …'; }
+      bgUrl = await uploadToS3(ssFrameFile, ssFrameS3Key(ssFrameFile), 'progSsFrame');
+      document.getElementById('htmSsBgUrl').value = bgUrl;
+    } catch(e){
+      toast('Frame-Upload fehlgeschlagen: '+e.message,'err');
+      if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
+      return;
+    }
+  }
+  markHomeAction();
   cell.fn         = fn;
   cell.slug       = document.getElementById('htmSlideshowSlug').value.trim();
   cell.url        = document.getElementById('htmSlideshowUrl').value.trim();
   cell.alt        = document.getElementById('htmSlideshowTitle').value.trim();
   cell.bgUrl      = bgUrl;
   cell.imageUrl   = bgUrl;
+  cell.startColor = normalizeHexColor(document.getElementById('htmSsStartColor').value);
   cell.overlayPos = ssOverlayPos;
   cell.slides     = htmSlides.map(s=>({...s}));
+  if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
   closeSlideshowModal();
   renderHomeEditor();
 }
@@ -2915,11 +3112,13 @@ function importCurrentHome(){
     if(!confirm('Achtung: Es gibt bereits befüllte Zeilen. Import überschreibt alles. Fortfahren?')) return;
   }
 
+  markHomeAction();
+
   const S3 = 'https://hitjourney.s3.eu-west-1.amazonaws.com';
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', overlayPos:'bottom-left', slides:[], playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
@@ -2952,6 +3151,7 @@ function importCurrentHome(){
         bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
         imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
         overlayPos:'bottom-left',
+        startColor:'#0A0A0A',
         slides:[
           { slug:'neues-licht',           title:'Neues Licht',              artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,                   focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg` },
           { slug:'half-past-nine',         title:'Half Past Nine On Main St',artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg` },

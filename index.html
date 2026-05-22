@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v159-spotlight-hardcoded-fix-20260522 -->
+<!-- Version: v160-diashow-admin-startcolor-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -925,7 +925,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position: absolute;
   width: 85%;
   aspect-ratio: 1 / 1;
-  background: #0a0a0a;
+  background: var(--ft-start-color, #0a0a0a);
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -957,6 +957,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border-radius: 50%;
 }
 .ft-covers img.active { opacity: 1; }
+.ft-frame {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:3;
+  pointer-events:none;
+}
+.featured-teaser.has-frame .ft-text{display:none;}
 
 /* Text overlay — in front of everything, uses mix-blend-mode */
 .ft-text {
@@ -5231,6 +5241,7 @@ function buildSlideshowEl(cell){
   const title   = cell.alt     || '';
   const pos     = cell.overlayPos || 'bottom-left';
   const slug    = cell.slug    || '';
+  const startColor = cell.startColor || '#0A0A0A';
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5244,9 +5255,10 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser';
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.style.cursor = 'pointer';
+  wrap.style.setProperty('--ft-start-color', startColor);
 
   if(slides.length === 0){
     // Simple static image teaser
@@ -5273,6 +5285,7 @@ function buildSlideshowEl(cell){
       <img class="active ft-blank" src=""/>
       ${slides.map(s=>`<img loading="lazy" src="${resolveSlideImg(s)}"/>`).join('')}
     </div>
+    ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager"/>` : ''}
     <div class="ft-text">
       <div class="ft-label">${slides.length} Songs</div>
       <div style="font-size:clamp(28px,8vw,52px);font-weight:900;letter-spacing:-.01em;line-height:.95;color:#f1ecdf;text-transform:uppercase">
@@ -5303,23 +5316,33 @@ function initDynamicSlideshow(id, slides){
   const titleEl = document.getElementById('ftSongTitle_'+id);
   const numEl   = document.getElementById('ftSongNum_'+id);
 
-  let cur = 0;
+  let cur = -1; // -1 = Startbild/Frame ohne Dia; bleibt genauso lange stehen wie jedes Dia
   let featuredCurrentMp3 = null;
   let timer = null;
+  const intervalMs = 4000;
 
   // Build dots
   if(dotsEl){
     dotsEl.innerHTML = '';
     slides.forEach((_,i)=>{
       const d = document.createElement('div');
-      d.className = 'ft-dot' + (i===0?' active':'');
+      d.className = 'ft-dot';
       d.onclick = (e)=>{ e.stopPropagation(); goTo(i); };
       dotsEl.appendChild(d);
     });
   }
 
   function goTo(idx){
-    cur = (idx + slides.length) % slides.length;
+    if(idx < 0){
+      cur = -1;
+      imgs.forEach(img=>img.classList.remove('active'));
+      if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach(d=>d.classList.remove('active'));
+      if(artistEl) artistEl.textContent = '';
+      if(titleEl)  titleEl.textContent  = '';
+      if(numEl)    numEl.textContent    = 'START';
+      return;
+    }
+    cur = idx % slides.length;
     imgs.forEach((img,i)=>{
       img.classList.toggle('active', i===cur);
       // Lazy-fill missing cover from live song data
@@ -5335,14 +5358,15 @@ function initDynamicSlideshow(id, slides){
     if(numEl)    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
   }
 
-  function startRotation(){ timer = setInterval(()=>goTo(cur+1), 4000); }
+  function startRotation(){ stopRotation(); timer = setInterval(()=>goTo(cur < 0 ? 0 : cur+1), intervalMs); }
   function stopRotation(){ clearInterval(timer); }
 
-  goTo(0);
+  goTo(-1);
   startRotation();
 
   // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
   wrap.addEventListener('click', ()=>{
+    if(cur < 0) return;
     const slide = slides[cur];
     if(!slide) return;
     // Slug → Song aus SUPABASE_SONGS (mit Trim-Fallback für Whitespace-Fehler)
@@ -5549,7 +5573,7 @@ function initFeaturedTeaser(){
     dotsEl.innerHTML = '';
     FEATURED_SONGS.forEach((_, i) => {
       const d = document.createElement('div');
-      d.className = 'ft-dot' + (i===0?' active':'');
+      d.className = 'ft-dot';
       dotsEl.appendChild(d);
     });
   }
@@ -6132,7 +6156,7 @@ showHome = function(){
   // Build dots
   FEATURED_SONGS.forEach((_, i) => {
     const d = document.createElement('div');
-    d.className = 'ft-dot' + (i===0?' active':'');
+    d.className = 'ft-dot';
     dotsEl.appendChild(d);
   });
   const dots = Array.from(dotsEl.querySelectorAll('.ft-dot'));
