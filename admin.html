@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-cover-fit-square-v6-text-toggle-angle -->
+<!-- Version: admin-v20260522-diashow-v164-text-toggle-angle-active -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -955,17 +955,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Voreinstellung bleibt wie bisher. Diese Option passt quadratische Cover vollständig in den transparenten PNG-Freiraum ein.</div>
       </div>
 
-      <!-- Cover-Winkel Feinjustierung -->
-      <div class="htm-field">
-        <span class="htm-label">Cover-Winkel Feinjustierung</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="htm-input" id="htmSsCoverAngleAdjust" type="number" step="0.5" min="-25" max="25" value="0" style="font-family:'SF Mono','Menlo',monospace;flex:1"/>
-          <span style="font-size:12px;color:rgba(133,172,201,.55);width:34px">Grad</span>
-        </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Korrigiert nur den Winkel des eingepassten Covers im transparenten Quadrat. Negativ = weiter nach links drehen, positiv = weiter nach rechts drehen.</div>
-      </div>
 
-      <!-- Beschreibungstext ein-/ausblenden -->
+
+      <!-- Anzeige Songtitel / Nummer -->
       <div class="htm-field">
         <span class="htm-label">Beschreibungstext im Frame</span>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -978,7 +970,17 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songnummer anzeigen</span>
           </label>
         </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Für Frame-Teaser wie „Velvet Radio“ kannst du Titel und Positionsnummer abschalten, wenn sie bereits im Covermotiv stehen.</div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Bei Covern mit eigener Schrift bitte beide Haken entfernen. Die Punkte bleiben sichtbar.</div>
+      </div>
+
+      <!-- Cover-Winkel Feinjustierung -->
+      <div class="htm-field">
+        <span class="htm-label">Cover-Winkel Feinjustierung</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="htm-input" id="htmSsCoverAngleOffset" type="number" min="-25" max="25" step="0.5" value="0" style="font-family:'SF Mono','Menlo',monospace;flex:1"/>
+          <span style="font-size:12px;color:rgba(133,172,201,.55);width:34px">Grad</span>
+        </div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">0 = automatisch erkannter Winkel. Negative Werte drehen leicht nach links, positive nach rechts.</div>
       </div>
 
       <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
@@ -2272,7 +2274,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false,coverAngleAdjust:0,showSongTitle:true,showSongNumber:true}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2287,7 +2289,7 @@ async function loadHomeLayout(){
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
-      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', coverFitSquare:false, coverAngleAdjust:0, showSongTitle:true, showSongNumber:true, ...c}))
+      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, ...c}))
     }));
   } catch(e){
     homeLayout = [];
@@ -2950,9 +2952,9 @@ function openSlideshowModal(rowId){
   document.getElementById('htmSsBgUrl').value        = (cell && cell.bgUrl) || '';
   document.getElementById('htmSsStartColor').value   = normalizeHexColor((cell && cell.startColor) || '#0A0A0A');
   document.getElementById('htmSsCoverFitSquare').checked = !!(cell && cell.coverFitSquare);
-  document.getElementById('htmSsCoverAngleAdjust').value = String((cell && Number.isFinite(Number(cell.coverAngleAdjust))) ? Number(cell.coverAngleAdjust) : 0);
   document.getElementById('htmSsShowSongTitle').checked = !(cell && cell.showSongTitle === false);
   document.getElementById('htmSsShowSongNumber').checked = !(cell && cell.showSongNumber === false);
+  document.getElementById('htmSsCoverAngleOffset').value = Number.isFinite(Number(cell && cell.coverAngleOffset)) ? Number(cell.coverAngleOffset) : 0;
   document.getElementById('ssSongSearch').value      = '';
   document.getElementById('ssAnalyseResult').style.display = 'none';
 
@@ -3311,7 +3313,7 @@ function importCurrentHome(){
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, coverAngleAdjust:0, showSongTitle:true, showSongNumber:true, playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
