@@ -3734,34 +3734,55 @@ async function loadFromSupabase() {
     SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
-  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
-  const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
-    { headers }
-  );
+  // 2. Playlists + Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
+  const [playlistsRes, tracksRes] = await Promise.all([
+    fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title.asc', { headers }),
+    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
+  ]);
+  const playlistsRaw = playlistsRes.ok ? await playlistsRes.json() : [];
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
 
   // 3. ALBUMS aufbauen
+  // Wichtig: Neben den fest gemappten Standard-Alben werden jetzt auch neu im Admin
+  // angelegte Playlists/Alben automatisch als spielbare Alben registriert.
   ALBUMS = {};
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
+  const dynamicPlaylistInfo = {};
+  playlistsRaw.forEach(pl => {
+    if(!pl || !pl.slug) return;
+    const mapped = PLAYLIST_MAP[pl.slug];
+    dynamicPlaylistInfo[pl.slug] = mapped || {
+      key: pl.slug,
+      title: pl.title || pl.slug,
+      meta: '',
+      cover: pl.cover_url || ''
+    };
+  });
+
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const info = PLAYLIST_MAP[playlistSlug];
+    const info = dynamicPlaylistInfo[playlistSlug] || PLAYLIST_MAP[playlistSlug];
     if (!info) return;
     const song = songMap[row.song_slug];
     if (!song) return;
 
     if (!ALBUMS[info.key]) {
       ALBUMS[info.key] = {
-        title: info.title,
-        meta:  info.meta,
-        cover: info.cover,
+        title: info.title || playlistSlug,
+        meta:  info.meta || '',
+        cover: info.cover || song.cover || '',
         songs: []
       };
     }
     ALBUMS[info.key].songs.push(song);
+  });
+
+  // Meta bei dynamischen Alben sauber aus tatsächlicher Songzahl bilden
+  Object.keys(ALBUMS).forEach(k => {
+    const a = ALBUMS[k];
+    if(a && (!a.meta || /^\d+ Songs?$/.test(String(a.meta)))) a.meta = a.songs.length + ' Songs';
   });
 
   // Null-Einträge entfernen

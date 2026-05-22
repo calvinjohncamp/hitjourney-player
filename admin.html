@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-album-teaser-4x1-v181-album-home-select-fix -->
+<!-- Version: admin-v20260522-home-album-4x1-v182-click-order-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2562,8 +2562,8 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
-      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='album' ? 'badge-play' : cell.fn==='play' ? 'badge-play' : 'badge-link';
+      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='album' ? '▣ Album' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
