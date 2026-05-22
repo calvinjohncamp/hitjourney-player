@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v168-modal-hardfix -->
+<!-- Version: admin-v20260522-diashow-v170-real-cover-slides -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2988,7 +2988,7 @@ function openSlideshowModal(rowId){
     const row  = rowById(rowId);
     const cell = row && row.cells ? row.cells[0] : null;
 
-    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
+    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>ssNormalizeSlideToRealCover(s)) : [];
     ssOverlayPos = (cell && cell.overlayPos) || 'bottom-left';
     ssFrameFile  = null;
 
@@ -3074,6 +3074,25 @@ function ssMarkPos(pos){
   document.querySelectorAll('.ss-pos-btn').forEach(b=>b.classList.toggle('active', b.dataset.pos===pos));
 }
 
+
+function ssIsFocusLikeUrl(url){
+  return /(?:fokus|focus|cover-2-1|lyrics21)/i.test(String(url || ''));
+}
+function ssRealCoverForSlug(slug, fallback){
+  const song = (allSongs || []).find(x => x.slug === slug || x.slug === String(slug || '').trim());
+  const real = song && song.cover_url ? song.cover_url : '';
+  if(real) return real;
+  if(fallback && !ssIsFocusLikeUrl(fallback)) return fallback;
+  return fallback || '';
+}
+function ssNormalizeSlideToRealCover(slide){
+  const s = {...(slide || {})};
+  const current = s.coverUrl || s.cover_url || '';
+  const focus = s.focusUrl || s.focus_url || (ssIsFocusLikeUrl(current) ? current : '');
+  s.coverUrl = ssRealCoverForSlug(s.slug, current);
+  if(focus && focus !== s.coverUrl) s.focusUrl = focus;
+  return s;
+}
 function renderSlidesList(){
   const list = document.getElementById('htmSlidesList');
   if(!list) return;
@@ -3090,7 +3109,7 @@ function renderSlidesList(){
     div.setAttribute('draggable','true');
     div.innerHTML = `
       <div class="htm-slide-grip" title="Greifen und verschieben">⋮⋮</div>
-      <img class="htm-slide-thumb" src="${s.coverUrl||''}" onerror="this.style.opacity='.2'"/>
+      <img class="htm-slide-thumb" src="${ssRealCoverForSlug(s.slug, s.coverUrl||s.focusUrl||'')}" onerror="this.style.opacity='.2'"/>
       <div class="htm-slide-info">
         <div class="htm-slide-title">${esc(s.title||s.slug)}</div>
         <div class="htm-slide-artist">${esc(s.artist||'')}</div>
@@ -3212,7 +3231,7 @@ function renderSsPicker(){
         htmSlides = htmSlides.filter(s=>s.slug!==song.slug);
       } else {
         htmSlides.push({ slug:song.slug, title:song.title||song.slug, artist:song.artist||'',
-          coverUrl, focusUrl: song.focus_url||song.cover21_url||coverUrl });
+          coverUrl: ssRealCoverForSlug(song.slug, coverUrl), focusUrl: song.focus_url||song.cover21_url||coverUrl });
       }
       renderSlidesList();
     };
@@ -3227,7 +3246,7 @@ let ssWysDrag = null;
 function ssWysNum(v, fallback){ const n=parseFloat(v); return Number.isFinite(n) ? n : fallback; }
 function ssWysFirstSlideCover(){
   const s = htmSlides && htmSlides[0];
-  if(s) return s.coverUrl || s.focusUrl || '';
+  if(s) return ssRealCoverForSlug(s.slug, s.coverUrl || s.focusUrl || '');
   const song = allSongs && allSongs[0];
   return song ? (song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`) : '';
 }
@@ -3483,7 +3502,7 @@ async function saveSlideshowTile(){
   cell.coverFitHeight = document.getElementById('htmSsFitHeight')?.value?.trim() || '';
   cell.coverShape = document.getElementById('htmSsCoverShape')?.value || 'square';
   cell.coverFitMode = document.getElementById('htmSsCoverFitMode')?.value || 'contain';
-  cell.slides     = htmSlides.map(s=>({...s}));
+  cell.slides     = htmSlides.map(s=>ssNormalizeSlideToRealCover(s));
 
   // Wichtig v166:
   // „Übernehmen“ im Diashow-Modal speichert jetzt sofort in Supabase.

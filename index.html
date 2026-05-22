@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v169-velvet-square-visible-20260522 -->
+<!-- Version: v170-real-cover-slides-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5419,6 +5419,10 @@ if(!window._hjStandaloneHomeTeaserListeners){
 }
 
 /* ── Build a slideshow (featured-teaser style) ── */
+
+function hjIsFocusLikeUrl(url){
+  return /(?:fokus|focus|cover-2-1|lyrics21)/i.test(String(url || ''));
+}
 function buildSlideshowEl(cell){
   const slides  = cell.slides  || [];
   const bgUrl   = cell.bgUrl   || cell.imageUrl || '';
@@ -5479,10 +5483,15 @@ function buildSlideshowEl(cell){
   // Full slideshow — reuse existing featured-teaser CSS
   // Resolve cover URL: prefer stored coverUrl/focusUrl, fall back to SUPABASE_SONGS live data
   function resolveSlideImg(s){
-    if(s.coverUrl) return s.coverUrl;
-    if(s.focusUrl) return s.focusUrl;
-    const live = SUPABASE_SONGS.find(x=>x.slug===s.slug);
-    return (live && live.cover) ? live.cover : '';
+    const live = SUPABASE_SONGS.find(x=>x.slug===s.slug || x.slug===(s.slug||'').trim());
+    const liveCover = (live && live.cover) ? live.cover : '';
+    const storedCover = s.coverUrl || s.cover_url || '';
+    const storedFocus = s.focusUrl || s.focus_url || '';
+    // v170: In Diashows immer zuerst das echte 1:1-Cover verwenden.
+    // Alte Spotlight-Daten enthielten teilweise „Fokus“-Ausschnitte; diese bleiben nur Fallback.
+    if(liveCover) return liveCover;
+    if(storedCover && !hjIsFocusLikeUrl(storedCover)) return storedCover;
+    return storedCover || storedFocus || '';
   }
   wrap.innerHTML = `
     <div class="ft-circle"></div>
