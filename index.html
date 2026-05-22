@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v185-home-album-teaser-4x1-20260522 -->
+<!-- Version: v186-home-album-teaser-4x1-album-click-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5572,7 +5572,7 @@ function buildHomeCard(cell, extraClass){
   el.className = 'home-card ' + (extraClass||'');
 
   // album key from PLAYLIST_MAP or direct slug
-  const albumKey = resolveAlbumKey(cell.slug);
+  const albumKey = resolveAlbumKey(cell.albumSlug || cell.playlistSlug || cell.slug);
   if(albumKey) el.dataset.album = albumKey;
 
   const img = document.createElement('img');
@@ -5587,6 +5587,7 @@ function buildHomeCard(cell, extraClass){
 
   // Click action
   el.addEventListener('click', () => {
+    if(cell.fn === 'album' && albumKey){ showAlbum(albumKey); return; }
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
     if(cell.fn === 'play' && (cell.lyricsCycle || cell.type === 'lyrics21' || cell.useCover21)){

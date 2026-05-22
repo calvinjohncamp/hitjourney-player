@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-album-teaser-4x1-v179 -->
+<!-- Version: admin-v20260522-home-album-teaser-4x1-v180-fixed-modal-album -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -898,6 +898,16 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div class="htm-seg">
         <div class="htm-seg-btn active" data-fn="play" onclick="htmSetFn('play',this)">▶ Play</div>
         <div class="htm-seg-btn" data-fn="link" onclick="htmSetFn('link',this)">🔗 Link</div>
+        <div class="htm-seg-btn" data-fn="album" onclick="htmSetFn('album',this)">▣ Album</div>
+      </div>
+    </div>
+
+    <div id="htmAlbumField" style="display:none">
+      <div class="htm-field">
+        <span class="htm-label">Album wählen</span>
+        <select class="htm-input" id="htmAlbumSelect" onchange="htmOnAlbumSelect()">
+          <option value="">— Album wählen —</option>
+        </select>
       </div>
     </div>
 
@@ -2785,6 +2795,42 @@ const VIRTUAL_PLAYLISTS = [
   { slug: '__lang_en', title: 'English' },
 ];
 
+let htmSelectedAlbum = null; // { slug, title, coverUrl }
+
+function htmIs4x1Target(){
+  const row = htmEditTarget && rowById(htmEditTarget.rowId);
+  const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
+  return !!(cell && cell.type === '4x1');
+}
+function htmUpdateMotifZoneForTarget(){
+  const zone=document.getElementById('zHtmMotif');
+  const label=document.querySelector('#htmCustomMotifField .htm-label');
+  const small=document.querySelector('#zHtmMotif small');
+  if(!zone) return;
+  const is4=htmIs4x1Target();
+  zone.classList.toggle('wide4', is4);
+  zone.classList.toggle('wide', !is4);
+  if(label) label.textContent = is4 ? 'Motiv-Upload für 4:1-Album-Teaser' : 'Motiv-Upload für diese Home-Kachel / Lyrics-Sheet 21';
+  if(small) small.textContent = is4 ? 'PNG/JPG/WebP · 4:1 wird nicht zugeschnitten' : 'PNG/JPG/WebP · 2:1 oder volle Breite';
+}
+function htmFillAlbumSelect(selected){
+  const sel=document.getElementById('htmAlbumSelect');
+  if(!sel) return;
+  const opts = (albumsData||[]).slice().sort((a,b)=>String(a.title||a.slug).localeCompare(String(b.title||b.slug),'de'));
+  sel.innerHTML = '<option value="">— Album wählen —</option>' + opts.map(a=>`<option value="${esc(a.slug)}">${esc(a.title||a.slug)}</option>`).join('');
+  if(selected) sel.value = selected;
+  htmSelectedAlbum = albumsData.find(a=>a.slug===sel.value) || null;
+}
+function htmOnAlbumSelect(){
+  const slug=document.getElementById('htmAlbumSelect')?.value || '';
+  htmSelectedAlbum = albumsData.find(a=>a.slug===slug) || null;
+  if(htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && htmSelectedAlbum.cover_url){
+    htmMotifUrl = htmSelectedAlbum.cover_url;
+    htmSetMotifPreview(htmMotifUrl);
+    updateHtmMotifHint();
+  }
+}
+
 
 function htmMotifExt(file){
   const name=(file&&file.name||'').toLowerCase();
@@ -2796,8 +2842,8 @@ function htmMotifExt(file){
 function htmMotifS3Key(file){
   const row = htmEditTarget && rowById(htmEditTarget.rowId);
   const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
-  const base = (htmSelectedSong && htmSelectedSong.slug) || (cell && cell.slug) || ('home-motiv-'+Date.now());
-  const kind = (cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile';
+  const base = (htmSelectedAlbum && htmSelectedAlbum.slug) || (htmSelectedSong && htmSelectedSong.slug) || (cell && (cell.albumSlug || cell.slug)) || ('home-motiv-'+Date.now());
+  const kind = (cell && cell.type === '4x1') ? 'album-teaser-4x1' : ((cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile');
   return `artwork/${makeSlug(base)||base}-${kind}${htmMotifExt(file)}`;
 }
 function htmSetMotifPreview(url){
@@ -2844,6 +2890,7 @@ function clearHtmMotif(e){
 function openHomeTileModal(rowId, cellIdx){
   htmEditTarget   = { rowId, cellIdx };
   htmSelectedSong = null;
+  htmSelectedAlbum = null;
   htmMotifFile = null;
   htmMotifUrl  = '';
 
@@ -2855,6 +2902,10 @@ function openHomeTileModal(rowId, cellIdx){
   htmMotifUrl = (cell && (cell.customImageUrl || cell.customMotifUrl)) || '';
   htmSetMotifPreview(htmMotifUrl);
   updateHtmMotifHint();
+  htmUpdateMotifZoneForTarget();
+  const albumPreset = cell && (cell.albumSlug || (cell.fn==='album' ? (cell.playlistSlug || cell.slug) : ''));
+  if(!albumsData.length){ loadPlaylists().then(()=>htmFillAlbumSelect(albumPreset)); }
+  else htmFillAlbumSelect(albumPreset);
 
   // Restore previously saved song if any
   if(cell && cell.slug && cell.imageUrl){
@@ -3053,10 +3104,34 @@ async function saveHomeTile(){
     cell.artist       = htmSelectedSong.artist;
     cell.url          = '';
     cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
+  } else if(fn === 'album'){
+    const albumSlug = document.getElementById('htmAlbumSelect')?.value || '';
+    const album = albumsData.find(a=>a.slug===albumSlug);
+    if(!album){ toast('Bitte ein Album auswählen','err'); return; }
+    let customUrl = htmMotifUrl || album.cover_url || '';
+    if(htmMotifFile){
+      try{
+        toast('4:1-Teaser wird hochgeladen …','ok');
+        customUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
+      }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
+    }
+    cell.fn = 'album';
+    cell.albumSlug = album.slug;
+    cell.playlistSlug = album.slug;
+    cell.slug = album.slug;
+    cell.imageUrl = customUrl || album.cover_url || '';
+    cell.customImageUrl = customUrl || '';
+    cell.cover21Url = '';
+    cell.useCover21 = false;
+    cell.alt = album.title || album.slug;
+    cell.artist = '';
+    cell.url = '';
+    cell.lyricsCycle = false;
   } else {
     cell.url          = document.getElementById('htmLinkUrl').value.trim();
     cell.lyricsCycle  = false;
     cell.slug         = '';
+    cell.albumSlug    = '';
     cell.imageUrl     = '';
     cell.customImageUrl = '';
     cell.alt          = '';
