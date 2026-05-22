@@ -1043,6 +1043,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   pointer-events: none;
   max-width: 62%;
 }
+.ft-song-name.pos-top-left{left:3%;right:auto;top:8%;bottom:auto;text-align:left}
+.ft-song-name.pos-top-right{right:3%;left:auto;top:8%;bottom:auto;text-align:right}
+.ft-song-name.pos-center-left{left:3%;right:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:left}
+.ft-song-name.pos-center-right{right:3%;left:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:right}
+.ft-song-name.pos-bottom-left{left:3%;right:auto;bottom:18%;top:auto;text-align:left}
+.ft-song-name.pos-bottom-right{right:3%;left:auto;bottom:18%;top:auto;text-align:right}
 .ft-song-title {
   font-family: 'Anton', sans-serif;
   font-size: clamp(17px, 3.6vw, 38px);
@@ -5417,7 +5423,7 @@ function buildSlideshowEl(cell){
         ${title.split(' ').map(w=>`<div>${w}</div>`).join('')}
       </div>
     </div>
-    <div class="ft-song-name">
+    <div class="ft-song-name pos-${pos}">
       <div class="ft-song-artist" id="ftSongArtist_${wrap.id}"></div>
       <div class="ft-song-title" id="ftSongTitle_${wrap.id}"></div>
       <div class="ft-song-num" id="ftSongNum_${wrap.id}">01 / ${slides.length}</div>
