@@ -5265,10 +5265,98 @@ function buildHomeCard(cell, extraClass){
       if(cell.url === '#archive'){ showArchive(); return; }
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
+
+    // Home-Sonderfall: einzelne Audio-Teaser wie oben „Tante Paula“
+    // verhalten sich wie „Just This Dance“: Klick 1 = Play, Klick 2 = Pause,
+    // ohne die untere Player-Bar einzublenden.
+    if(isStandaloneHomeAudioTeaser(cell)){
+      toggleStandaloneHomeAudioTeaser(cell, el);
+      return;
+    }
+
     if(albumKey) showAlbum(albumKey);
     else if(cell.slug) playSongBySlug(cell.slug);
   });
   return el;
+}
+
+function normalizeTeaserSlug(v){
+  return String(v||'').toLowerCase().trim().replace(/_/g,'-').replace(/\s+/g,'-');
+}
+
+function isStandaloneHomeAudioTeaser(cell){
+  if(!cell || !cell.slug) return false;
+  const slug = normalizeTeaserSlug(cell.slug);
+  const hay = [cell.slug, cell.title, cell.alt, cell.imageUrl, cell.mp3]
+    .filter(Boolean).join(' ').toLowerCase();
+  return slug === 'tante-paula' || slug.includes('tante-paula') || hay.includes('tante paula');
+}
+
+function sameAudioUrl(a,b){
+  if(!a || !b) return false;
+  try{ return new URL(a, location.href).href === new URL(b, location.href).href; }
+  catch(_){ return String(a) === String(b); }
+}
+
+function toggleStandaloneHomeAudioTeaser(cell, el){
+  const rawSlug = cell.slug || '';
+  const wanted = normalizeTeaserSlug(rawSlug);
+  let song = SUPABASE_SONGS.find(s => normalizeTeaserSlug(s.slug) === wanted);
+  if(!song && wanted.includes('tante-paula')){
+    song = SUPABASE_SONGS.find(s => normalizeTeaserSlug(s.slug).includes('tante-paula'));
+  }
+  if(!song || !song.mp3) return;
+
+  const current = audio.currentSrc || audio.src || '';
+  const isThisSong = sameAudioUrl(current, song.mp3);
+
+  // Gleicher Teaser-Song: nur Play/Pause toggeln, kein Player.
+  if(isThisSong){
+    featuredMode = true;
+    playerBar.classList.remove('visible');
+    if(audio.paused) audio.play().catch(()=>{});
+    else audio.pause();
+    el.classList.toggle('playing', !audio.paused);
+    window._hjStandaloneHomeTeaser = { mp3: song.mp3, el };
+    return;
+  }
+
+  // Neuer Teaser-Song: exklusiv starten, ohne Player-Bar.
+  window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'home-standalone-teaser' } }));
+  featuredMode = true;
+  playerBar.classList.remove('visible');
+  if(window._hjStandaloneHomeTeaser && window._hjStandaloneHomeTeaser.el){
+    window._hjStandaloneHomeTeaser.el.classList.remove('playing');
+  }
+  window._hjStandaloneHomeTeaser = { mp3: song.mp3, el };
+  audio.src = song.mp3;
+  audio.load();
+  audio.play().then(()=>{ el.classList.add('playing'); }).catch(()=>{});
+}
+
+if(!window._hjStandaloneHomeTeaserListeners){
+  window._hjStandaloneHomeTeaserListeners = true;
+  window.addEventListener('hj:teaser-audio-switch', (e)=>{
+    if(e.detail && e.detail.source !== 'home-standalone-teaser' && window._hjStandaloneHomeTeaser && window._hjStandaloneHomeTeaser.el){
+      window._hjStandaloneHomeTeaser.el.classList.remove('playing');
+    }
+  });
+  audio.addEventListener('pause', ()=>{
+    const st = window._hjStandaloneHomeTeaser;
+    if(st && st.el && sameAudioUrl(audio.currentSrc || audio.src, st.mp3)) st.el.classList.remove('playing');
+  });
+  audio.addEventListener('play', ()=>{
+    const st = window._hjStandaloneHomeTeaser;
+    if(st && st.el && sameAudioUrl(audio.currentSrc || audio.src, st.mp3)){
+      featuredMode = true;
+      playerBar.classList.remove('visible');
+      st.el.classList.add('playing');
+    }
+  });
+  audio.addEventListener('ended', ()=>{
+    const st = window._hjStandaloneHomeTeaser;
+    if(st && st.el) st.el.classList.remove('playing');
+  });
 }
 
 /* ── Build a slideshow (featured-teaser style) ── */
@@ -5986,7 +6074,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v157-tante-paula-lara-wolff-audio-fix-20260521';
+  const VERSION = 'v162-home-top-teaser-toggle-no-player-20260522';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
