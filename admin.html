@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-lyrics-cycle-v176-lyrics21 -->
+<!-- Version: admin-v20260522-home-lyrics-cycle-v177-lyrics21-upload -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -924,6 +924,22 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <span style="font-size:12px;color:#cfe5f5;font-weight:600">Lyrics-Klickfolge aktivieren</span>
         <span style="font-size:10px;color:rgba(133,172,201,.45);margin-left:auto">Play → Lyrics → Schließen → Pause</span>
       </label>
+
+      <div class="htm-field" id="htmCustomMotifField">
+        <span class="htm-label">Eigenes Motiv für diese Kachel / Lyrics-Sheet 21</span>
+        <div class="upload-zone wide" id="zHtmMotif" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmMotifDrop(event)">
+          <input id="htmMotifFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmMotifFile(this)"/>
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Motiv hochladen</span>
+            <small>PNG/JPG/WebP · 2:1 oder volle Breite</small>
+          </div>
+          <img class="zone-preview" id="prevHtmMotif" alt=""/>
+          <div class="upload-progress" id="progHtmMotif"></div>
+          <button class="zone-clear" onclick="clearHtmMotif(event)" title="Entfernen">×</button>
+        </div>
+        <div class="s3-hint" id="hintHtmMotif"></div>
+      </div>
 
     </div>
 
@@ -2751,6 +2767,8 @@ function initHomeEditor(){
 
 let htmEditTarget  = null;  // { rowId, cellIdx }
 let htmSelectedSong = null; // { slug, title, artist, coverUrl, cover21Url }
+let htmMotifFile = null;
+let htmMotifUrl  = ''; // bereits hochgeladenes Custom-Motiv für diese Home-Kachel
 
 /* Virtual playlists for language filter */
 const VIRTUAL_PLAYLISTS = [
@@ -2758,13 +2776,76 @@ const VIRTUAL_PLAYLISTS = [
   { slug: '__lang_en', title: 'English' },
 ];
 
+
+function htmMotifExt(file){
+  const name=(file&&file.name||'').toLowerCase();
+  if(name.endsWith('.png')) return '.png';
+  if(name.endsWith('.webp')) return '.webp';
+  if(name.endsWith('.jpeg')) return '.jpg';
+  return '.jpg';
+}
+function htmMotifS3Key(file){
+  const row = htmEditTarget && rowById(htmEditTarget.rowId);
+  const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
+  const base = (htmSelectedSong && htmSelectedSong.slug) || (cell && cell.slug) || ('home-motiv-'+Date.now());
+  const kind = (cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile';
+  return `artwork/${makeSlug(base)||base}-${kind}${htmMotifExt(file)}`;
+}
+function htmSetMotifPreview(url){
+  const zone=document.getElementById('zHtmMotif');
+  const img=document.getElementById('prevHtmMotif');
+  if(img) img.src = url || '';
+  if(zone) zone.classList.toggle('has-file', !!url);
+}
+function updateHtmMotifHint(){
+  const hint=document.getElementById('hintHtmMotif');
+  if(!hint) return;
+  if(htmMotifFile) hint.textContent = '→ ' + htmMotifS3Key(htmMotifFile);
+  else if(htmMotifUrl) hint.textContent = 'Vorhandenes Motiv bleibt aktiv';
+  else hint.textContent = '';
+}
+function onHtmMotifFile(input){
+  const file=input.files && input.files[0];
+  if(!file) return;
+  htmMotifFile = file;
+  htmSetMotifPreview(URL.createObjectURL(file));
+  updateHtmMotifHint();
+}
+function onHtmMotifDrop(e){
+  e.preventDefault();
+  offDrag(document.getElementById('zHtmMotif'));
+  const file=e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  htmMotifFile = file;
+  htmSetMotifPreview(URL.createObjectURL(file));
+  updateHtmMotifHint();
+}
+function clearHtmMotif(e){
+  if(e && e.preventDefault){ e.preventDefault(); e.stopPropagation(); }
+  htmMotifFile = null;
+  htmMotifUrl = '';
+  const input=document.getElementById('htmMotifFileInput');
+  if(input) input.value='';
+  const prog=document.getElementById('progHtmMotif');
+  if(prog) prog.style.width='0%';
+  htmSetMotifPreview('');
+  updateHtmMotifHint();
+}
+
 function openHomeTileModal(rowId, cellIdx){
   htmEditTarget   = { rowId, cellIdx };
   htmSelectedSong = null;
+  htmMotifFile = null;
+  htmMotifUrl  = '';
 
   const row  = rowById(rowId);
   const cell = row && row.cells[cellIdx];
   const fn   = cell ? cell.fn : 'play';
+
+  // Restore previously saved custom motif if any
+  htmMotifUrl = (cell && (cell.customImageUrl || cell.customMotifUrl)) || '';
+  htmSetMotifPreview(htmMotifUrl);
+  updateHtmMotifHint();
 
   // Restore previously saved song if any
   if(cell && cell.slug && cell.imageUrl){
@@ -2794,6 +2875,8 @@ function closeHomeTileModal(){
   document.getElementById('homeTileModal').classList.remove('open');
   htmEditTarget   = null;
   htmSelectedSong = null;
+  htmMotifFile = null;
+  htmMotifUrl = '';
 }
 
 function htmSetFn(fn, el){
@@ -2932,7 +3015,7 @@ function htmClearSong(){
 }
 
 /* ── Save ── */
-function saveHomeTile(){
+async function saveHomeTile(){
   if(!htmEditTarget) return;
   const { rowId, cellIdx } = htmEditTarget;
   const row  = rowById(rowId);
@@ -2944,11 +3027,19 @@ function saveHomeTile(){
   cell.fn = fn;
   if(fn === 'play'){
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
+    let customUrl = htmMotifUrl || '';
+    if(htmMotifFile){
+      try{
+        toast('Motiv wird hochgeladen …','ok');
+        customUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
+      }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
+    }
     cell.slug         = htmSelectedSong.slug;
     cell.playlistSlug = htmSelectedSong.playlistSlug || '';
     cell.cover21Url   = htmSelectedSong.cover21Url;
     cell.useCover21   = (cell.type === 'lyrics21') || !!cell.useCover21;
-    cell.imageUrl     = cell.useCover21 ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl;
+    cell.customImageUrl = customUrl || '';
+    cell.imageUrl     = customUrl || (cell.useCover21 ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl);
     cell.alt          = htmSelectedSong.title;
     cell.artist       = htmSelectedSong.artist;
     cell.url          = '';
@@ -2958,6 +3049,7 @@ function saveHomeTile(){
     cell.lyricsCycle  = false;
     cell.slug         = '';
     cell.imageUrl     = '';
+    cell.customImageUrl = '';
     cell.alt          = '';
   }
 
