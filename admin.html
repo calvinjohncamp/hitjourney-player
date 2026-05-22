@@ -2300,7 +2300,20 @@ async function loadHomeLayout(){
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
-      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>({startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', ...c}))
+      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', ...c};
+        // Kompatibilität mit älteren Feldnamen/Strings
+        const bv = (v, fallback=true) => {
+          if(v === undefined || v === null || v === '') return fallback;
+          if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
+          return true;
+        };
+        cc.coverFitSquare = bv(cc.coverFitSquare, false);
+        cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
+        cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
+        cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
+        return cc;
+      })
     }));
   } catch(e){
     homeLayout = [];
@@ -2325,7 +2338,7 @@ async function saveHomeLayout(){
     homeUndoStack = [];
     renderHomeEditor();
     toast('Home gespeichert ✓','ok');
-  } catch(e){ toast('Fehler: '+e.message,'err'); }
+  } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -3323,9 +3336,22 @@ async function saveSlideshowTile(){
   cell.coverFitWidth  = document.getElementById('htmSsFitWidth')?.value?.trim()  || '';
   cell.coverFitHeight = document.getElementById('htmSsFitHeight')?.value?.trim() || '';
   cell.slides     = htmSlides.map(s=>({...s}));
-  if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
-  closeSlideshowModal();
+
+  // Wichtig v166:
+  // „Übernehmen“ im Diashow-Modal speichert jetzt sofort in Supabase.
+  // Vorher wurden Text-Ausblendung, Winkel und Prozent-Feintuning nur lokal im Admin-Editor
+  // geändert und waren auf der Live-Seite erst nach einem zusätzlichen Home-Speichern sichtbar.
   renderHomeEditor();
+  try{
+    if(btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
+    await saveHomeLayout();
+    toast('Diashow gespeichert ✓','ok');
+  }catch(e){
+    toast('Diashow konnte nicht gespeichert werden: '+e.message,'err');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
+    closeSlideshowModal();
+  }
 }
 
 /* ── Import current hardcoded home as starting point ── */

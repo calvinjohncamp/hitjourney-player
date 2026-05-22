@@ -5406,14 +5406,20 @@ function buildSlideshowEl(cell){
   const pos     = cell.overlayPos || 'bottom-left';
   const slug    = cell.slug    || '';
   const startColor = cell.startColor || '#0A0A0A';
-  const coverFitSquare = !!cell.coverFitSquare;
-  const showSongTitle = cell.showSongTitle !== false;
-  const showSongNumber = cell.showSongNumber !== false;
-  const coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cell.coverAngleOffset || 0) || 0));
-  const coverFitLeft = cell.coverFitLeft ?? '';
-  const coverFitTop = cell.coverFitTop ?? '';
-  const coverFitWidth = cell.coverFitWidth ?? '';
-  const coverFitHeight = cell.coverFitHeight ?? '';
+  const boolVal = (v, fallback=true) => {
+    if(v === undefined || v === null || v === '') return fallback;
+    if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
+    return true;
+  };
+  const coverFitSquare = boolVal(cell.coverFitSquare, false);
+  // Robust gegen ältere/abweichende Feldnamen und stringifizierte Werte aus Supabase/JSON.
+  const showSongTitle = boolVal(cell.showSongTitle ?? cell.showTitle ?? cell.titleVisible, true);
+  const showSongNumber = boolVal(cell.showSongNumber ?? cell.showNumber ?? cell.numberVisible, true);
+  const coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cell.coverAngleOffset ?? cell.coverRotateOffset ?? cell.coverRotationOffset ?? 0) || 0));
+  const coverFitLeft = cell.coverFitLeft ?? cell.fitLeft ?? '';
+  const coverFitTop = cell.coverFitTop ?? cell.fitTop ?? '';
+  const coverFitWidth = cell.coverFitWidth ?? cell.fitWidth ?? '';
+  const coverFitHeight = cell.coverFitHeight ?? cell.fitHeight ?? '';
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5469,9 +5475,9 @@ function buildSlideshowEl(cell){
       </div>
     </div>
     <div class="ft-song-name pos-${pos}">
-      <div class="ft-song-artist" id="ftSongArtist_${wrap.id}"></div>
-      <div class="ft-song-title" id="ftSongTitle_${wrap.id}"></div>
-      <div class="ft-song-num" id="ftSongNum_${wrap.id}">01 / ${slides.length}</div>
+      <div class="ft-song-artist" id="ftSongArtist_${wrap.id}" style="${!showSongTitle ? 'display:none!important' : ''}"></div>
+      <div class="ft-song-title" id="ftSongTitle_${wrap.id}" style="${!showSongTitle ? 'display:none!important' : ''}"></div>
+      <div class="ft-song-num" id="ftSongNum_${wrap.id}" style="${!showSongNumber ? 'display:none!important' : ''}">01 / ${slides.length}</div>
     </div>
     <div class="ft-dots" id="ftDots_${wrap.id}"></div>`;
 
@@ -5621,9 +5627,9 @@ function initDynamicSlideshow(id, slides){
       cur = -1;
       imgs.forEach(img=>img.classList.remove('active'));
       if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach(d=>d.classList.remove('active'));
-      if(artistEl) artistEl.textContent = '';
-      if(titleEl)  titleEl.textContent  = '';
-      if(numEl)    numEl.textContent    = '';
+      if(artistEl && !wrap.classList.contains('hide-song-title')) artistEl.textContent = '';
+      if(titleEl && !wrap.classList.contains('hide-song-title'))  titleEl.textContent  = '';
+      if(numEl && !wrap.classList.contains('hide-song-number'))    numEl.textContent    = '';
       return;
     }
     cur = idx % slides.length;
@@ -5637,9 +5643,9 @@ function initDynamicSlideshow(id, slides){
     });
     if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
     const s = slides[cur];
-    if(artistEl) artistEl.textContent = s.artist||'';
-    if(titleEl)  titleEl.textContent  = s.title||'';
-    if(numEl)    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
+    if(artistEl && !wrap.classList.contains('hide-song-title')) artistEl.textContent = s.artist||'';
+    if(titleEl && !wrap.classList.contains('hide-song-title'))  titleEl.textContent  = s.title||'';
+    if(numEl && !wrap.classList.contains('hide-song-number'))    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
   }
 
   function startRotation(){ stopRotation(); timer = setInterval(()=>goTo(cur < 0 ? 0 : cur+1), intervalMs); }
