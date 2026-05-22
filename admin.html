@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-album-4x1-v182-click-order-fix -->
+<!-- Version: admin-v20260522-album-cover-teaser-separation-v183 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -705,16 +705,37 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
     </div>
 
-    <div class="section-label">Cover / schmaler Album-Teaser</div>
-    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Akzeptiert 1:1-Cover und schmale 4:1-Teaser. 4:1 wird beim Hochladen nicht zugeschnitten.</div>
-    <div class="upload-zone wide4 cover-fit" id="zAlbumCover" style="width:100%;max-width:420px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
-      <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileAlbum(this)"/>
+    <div class="section-label">Album-Cover für Albumseite</div>
+    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Dieses Motiv erscheint auf der Albumseite und in der Trackliste. Empfehlung: 1:1 quadratisch.</div>
+    <div class="upload-zone sq cover-fit" id="zAlbumCover" style="width:180px;max-width:42vw" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
+      <input type="file" accept="image/png,image/webp,image/jpeg,image/jpg,.png,.webp,.jpg,.jpeg" onchange="onFileAlbum(this)"/>
       <div class="upload-zone-icon">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>Cover</span>
+        <span>Cover 1:1</span>
       </div>
       <img class="zone-preview" id="prevAlbumCover" alt=""/>
       <button class="zone-clear" onclick="clearAlbumCover(event)" title="Entfernen">×</button>
+    </div>
+
+    <div class="section-label">Optionaler Home-Teaser</div>
+    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Nur für Home/Teaser-Kacheln. Das Album selbst verwendet trotzdem das Cover oben.</div>
+    <div class="field" style="margin-bottom:8px;max-width:220px">
+      <div class="field-label">Teaser-Format</div>
+      <select class="ai" id="naTeaserFormat" onchange="updateNewAlbumTeaserZone()">
+        <option value="1x1">1:1</option>
+        <option value="2x1">2:1</option>
+        <option value="4x1" selected>4:1</option>
+      </select>
+    </div>
+    <div class="upload-zone wide4 cover-fit" id="zAlbumTeaser" style="width:100%;max-width:420px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbumTeaser(event)">
+      <input type="file" accept="image/png,image/webp,image/jpeg,image/jpg,.png,.webp,.jpg,.jpeg" onchange="onFileAlbumTeaser(this)"/>
+      <div class="upload-zone-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Teaser</span>
+        <small>für HOME</small>
+      </div>
+      <img class="zone-preview" id="prevAlbumTeaser" alt=""/>
+      <button class="zone-clear" onclick="clearAlbumTeaser(event)" title="Entfernen">×</button>
     </div>
 
     <div class="form-msg" id="naMsg" style="margin-top:12px"></div>
@@ -1892,7 +1913,8 @@ function showMsg(el,text,type){ el.textContent=text; el.className='form-msg '+ty
 
 /* ══ ALBEN ══ */
 let albumsData = [];      // [{slug, title, cover_url, tracks:[{song_slug, position}]}]
-let albumFileNew = null;  // file for new album cover upload
+let albumFileNew = null;
+let albumTeaserFileNew = null;  // file for new album cover upload
 
 async function loadPlaylists(){
   const list = document.getElementById('albumList');
@@ -2194,10 +2216,16 @@ async function saveOrder(albumSlug){
 /* ── NEW ALBUM ── */
 function openNewAlbum(){
   albumFileNew = null;
+  albumTeaserFileNew = null;
   document.getElementById('naName').value='';
   document.getElementById('naSlug').value='';
+  document.getElementById('naSlug').dataset.m='';
   document.getElementById('prevAlbumCover').src='';
   document.getElementById('zAlbumCover').classList.remove('has-file');
+  const tf=document.getElementById('naTeaserFormat'); if(tf) tf.value='4x1';
+  const pt=document.getElementById('prevAlbumTeaser'); if(pt) pt.src='';
+  const zt=document.getElementById('zAlbumTeaser'); if(zt) zt.classList.remove('has-file');
+  updateNewAlbumTeaserZone();
   document.getElementById('naMsg').className='form-msg';
   document.getElementById('newAlbumOverlay').classList.add('open');
 }
@@ -2214,6 +2242,20 @@ function onFileAlbum(input){ if(input.files[0]){ albumFileNew=input.files[0]; do
 function onDropAlbum(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumCover')); const f=e.dataTransfer.files[0]; if(f){ albumFileNew=f; document.getElementById('prevAlbumCover').src=URL.createObjectURL(f); document.getElementById('zAlbumCover').classList.add('has-file'); } }
 function clearAlbumCover(e){ e.preventDefault(); e.stopPropagation(); albumFileNew=null; document.getElementById('prevAlbumCover').src=''; document.getElementById('zAlbumCover').classList.remove('has-file'); }
 
+function updateNewAlbumTeaserZone(){
+  const fmt=document.getElementById('naTeaserFormat')?.value || '4x1';
+  const z=document.getElementById('zAlbumTeaser');
+  if(!z) return;
+  z.classList.toggle('sq', fmt==='1x1');
+  z.classList.toggle('wide', fmt==='2x1');
+  z.classList.toggle('wide4', fmt==='4x1');
+  const sm=z.querySelector('small');
+  if(sm) sm.textContent = fmt + ' für HOME';
+}
+function onFileAlbumTeaser(input){ if(input.files[0]){ albumTeaserFileNew=input.files[0]; document.getElementById('prevAlbumTeaser').src=URL.createObjectURL(albumTeaserFileNew); document.getElementById('zAlbumTeaser').classList.add('has-file'); } }
+function onDropAlbumTeaser(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumTeaser')); const f=e.dataTransfer.files[0]; if(f){ albumTeaserFileNew=f; document.getElementById('prevAlbumTeaser').src=URL.createObjectURL(f); document.getElementById('zAlbumTeaser').classList.add('has-file'); } }
+function clearAlbumTeaser(e){ e.preventDefault(); e.stopPropagation(); albumTeaserFileNew=null; document.getElementById('prevAlbumTeaser').src=''; document.getElementById('zAlbumTeaser').classList.remove('has-file'); }
+
 async function saveNewAlbum(){
   const name = document.getElementById('naName').value.trim();
   const slug = document.getElementById('naSlug').value.trim()||makeSlug(name);
@@ -2223,19 +2265,35 @@ async function saveNewAlbum(){
   btn.disabled=true; btn.textContent='Speichern …';
 
   let coverUrl = null;
+  let teaserUrl = null;
+  const imgExt = (f)=> {
+    const n=String(f&&f.name||'').toLowerCase();
+    if(n.endsWith('.png')) return '.png';
+    if(n.endsWith('.webp')) return '.webp';
+    return '.jpg';
+  };
   if(albumFileNew){
     try{
       btn.textContent='Cover hochladen …';
-      coverUrl = await uploadToS3(albumFileNew, `artwork/${name} - Cover.jpg`, null);
-    } catch(e){ showMsg(msgEl,'Upload-Fehler: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
+      coverUrl = await uploadToS3(albumFileNew, `artwork/${name} - Album Cover${imgExt(albumFileNew)}`, null);
+    } catch(e){ showMsg(msgEl,'Upload-Fehler Cover: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
+  }
+  if(albumTeaserFileNew){
+    try{
+      btn.textContent='Teaser hochladen …';
+      const fmt = document.getElementById('naTeaserFormat')?.value || '4x1';
+      teaserUrl = await uploadToS3(albumTeaserFileNew, `artwork/${name} - Home Teaser ${fmt}${imgExt(albumTeaserFileNew)}`, null);
+    } catch(e){ showMsg(msgEl,'Upload-Fehler Teaser: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
   }
 
   try{
+    // Datenbank bleibt kompatibel: cover_url ist ausschließlich das Album-Cover.
+    // Der optionale Teaser wird hochgeladen und im Admin für die direkte Home-Auswahl in dieser Sitzung mitgeführt.
     const body={slug,title:name,cover_url:coverUrl};
     const r=await fetch(sbUrl('/rest/v1/playlists'),{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
     const saved=await r.json();
-    const newAl = {...(saved[0]||{slug,title:name,cover_url:coverUrl}), tracks:[]};
+    const newAl = {...(saved[0]||{slug,title:name,cover_url:coverUrl}), teaser_url:teaserUrl, teaser_format:(document.getElementById('naTeaserFormat')?.value||'4x1'), tracks:[]};
     albumsData.push(newAl);
     albumsData.sort((a,b)=>(a.title||a.slug).localeCompare(b.title||b.slug));
     renderAlbums();
@@ -2824,8 +2882,8 @@ function htmFillAlbumSelect(selected){
   if(selected) sel.value = selected;
   htmSelectedAlbum = albumsData.find(a=>a.slug===sel.value) || null;
   const activeFn = document.querySelector('#homeTileModal .htm-seg-btn.active')?.dataset?.fn || '';
-  if(activeFn === 'album' && htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && htmSelectedAlbum.cover_url){
-    htmMotifUrl = htmSelectedAlbum.cover_url;
+  if(activeFn === 'album' && htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && (htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url)){
+    htmMotifUrl = htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url;
     htmSetMotifPreview(htmMotifUrl);
     updateHtmMotifHint();
   }
@@ -2833,8 +2891,8 @@ function htmFillAlbumSelect(selected){
 function htmOnAlbumSelect(){
   const slug=document.getElementById('htmAlbumSelect')?.value || '';
   htmSelectedAlbum = albumsData.find(a=>a.slug===slug) || null;
-  if(htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && htmSelectedAlbum.cover_url){
-    htmMotifUrl = htmSelectedAlbum.cover_url;
+  if(htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && (htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url)){
+    htmMotifUrl = htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url;
     htmSetMotifPreview(htmMotifUrl);
     updateHtmMotifHint();
   }
@@ -3127,7 +3185,7 @@ async function saveHomeTile(){
     const albumSlug = document.getElementById('htmAlbumSelect')?.value || '';
     const album = albumsData.find(a=>a.slug===albumSlug);
     if(!album){ toast('Bitte ein Album auswählen','err'); return; }
-    let customUrl = htmMotifUrl || album.cover_url || '';
+    let customUrl = htmMotifUrl || album.teaser_url || album.cover_url || '';
     if(htmMotifFile){
       try{
         toast('4:1-Teaser wird hochgeladen …','ok');
@@ -3138,7 +3196,7 @@ async function saveHomeTile(){
     cell.albumSlug = album.slug;
     cell.playlistSlug = album.slug;
     cell.slug = album.slug;
-    cell.imageUrl = customUrl || album.cover_url || '';
+    cell.imageUrl = customUrl || album.teaser_url || album.cover_url || '';
     cell.customImageUrl = customUrl || '';
     cell.cover21Url = '';
     cell.useCover21 = false;

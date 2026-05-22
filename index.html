@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v186-home-album-teaser-4x1-album-click-20260522 -->
+<!-- Version: v187-album-cover-teaser-separation-home-order-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -3750,6 +3750,12 @@ async function loadFromSupabase() {
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   const dynamicPlaylistInfo = {};
+  function albumCoverForPlaylist(pl, fallback){
+    // Albumseite nutzt immer das eigentliche quadratische Cover, falls vorhanden.
+    // Teaser-Motive für Home bleiben reine Home-Kacheln und werden nicht mehr als Albumcover missbraucht.
+    return (pl && (pl.album_cover_url || pl.square_cover_url || pl.cover_url)) || fallback || '';
+  }
+
   playlistsRaw.forEach(pl => {
     if(!pl || !pl.slug) return;
     const mapped = PLAYLIST_MAP[pl.slug];
@@ -3757,7 +3763,7 @@ async function loadFromSupabase() {
       key: pl.slug,
       title: pl.title || pl.slug,
       meta: '',
-      cover: pl.cover_url || ''
+      cover: albumCoverForPlaylist(pl, '')
     };
   });
 
@@ -4347,7 +4353,7 @@ function showHome(){
 function showAlbum(key){
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
-  const alb=ALBUMS[key]; curAlbum=key;
+  const alb=ALBUMS[key]; if(!alb) return; curAlbum=key;
   setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
@@ -5486,7 +5492,7 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = window._homeLayoutRows || [];
+  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>((a.row_order ?? 0) - (b.row_order ?? 0)));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
