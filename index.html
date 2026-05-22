@@ -982,6 +982,28 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border-radius:0;
   object-fit:cover;
 }
+
+/* v163 — Cover 1:1 einpassen:
+   In diesem Modus wird das komplette quadratische Songcover sichtbar.
+   Der Frame bleibt darüber liegen; wenn der transparente PNG-Bereich per Alpha lesbar ist,
+   setzt JS die exakten Koordinaten. Sonst bleibt diese konservative Quadrat-Voreinstellung. */
+.featured-teaser.frame-fill.cover-fit-square .ft-covers{
+  left:0%;
+  top:7%;
+  width:52%;
+  height:86%;
+  transform:none;
+  aspect-ratio:1 / 1;
+  border-radius:0;
+  background:var(--ft-start-color, #0a0a0a);
+}
+.featured-teaser.frame-fill.cover-fit-square .ft-covers img{
+  object-fit:contain !important;
+  object-position:center center;
+  border-radius:0;
+  background:var(--ft-start-color, #0a0a0a);
+}
+
 .ft-frame {
   position:absolute;
   inset:0;
@@ -5471,16 +5493,25 @@ function hjFitSlideshowCoverWindow(frameImg){
       }
     }
     if(count < (w*h*0.02) || maxX <= minX || maxY <= minY) return;
-    const left = minX / w * 100;
-    const top = minY / h * 100;
-    const width = (maxX-minX+1) / w * 100;
-    const height = (maxY-minY+1) / h * 100;
+    // Use the alpha bounding box as the visible window.
+    // If it is roughly square, keep it as an exact square so complete 1:1 covers are visible.
+    let bx = minX, by = minY, bw = (maxX-minX+1), bh = (maxY-minY+1);
+    const side = Math.min(bw, bh);
+    if(bw/bh > 0.82 && bw/bh < 1.22){
+      bx = minX + (bw-side)/2;
+      by = minY + (bh-side)/2;
+      bw = side; bh = side;
+    }
+    const left = bx / w * 100;
+    const top = by / h * 100;
+    const width = bw / w * 100;
+    const height = bh / h * 100;
     covers.style.left = left + '%';
     covers.style.top = top + '%';
     covers.style.width = width + '%';
     covers.style.height = height + '%';
     covers.style.transform = 'none';
-    covers.style.aspectRatio = 'auto';
+    covers.style.aspectRatio = '1 / 1';
     covers.style.borderRadius = '0';
   }catch(e){
     console.warn('[hitjourney] Cover 1:1 einpassen: transparente Frame-Fläche konnte nicht analysiert werden', e);

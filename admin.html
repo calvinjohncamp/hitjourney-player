@@ -930,7 +930,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <div class="s3-hint" id="hintSsFrame"></div>
         <button id="ssAnalyseBtn" onclick="analyseFrame()" style="display:none;margin-top:8px;width:100%;padding:9px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s">
-          ✦ Frame analysieren — KI erkennt dunklen Bereich
+          ✦ Frame analysieren — transparenter Bereich / Quadrat
         </button>
         <div id="ssAnalyseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:7px;background:rgba(50,180,100,.08);border:1px solid rgba(50,180,100,.2);font-size:11px;color:#6fda9a;line-height:1.5"></div>
       </div>
@@ -3131,43 +3131,108 @@ async function analyseFrame(){
   if(!bgUrl && !ssFrameFile){ toast('Bitte zuerst einen Frame hochladen','err'); return; }
   const btn    = document.getElementById('ssAnalyseBtn');
   const result = document.getElementById('ssAnalyseResult');
-  btn.textContent = '✦ Analysiere …';
+  btn.textContent = '✦ Analysiere Transparenz …';
   btn.disabled = true;
   result.style.display = 'none';
-  try {
-    let blob;
-    if(ssFrameFile){
-      blob = ssFrameFile;
-    } else {
-      const imgResp = await fetch(bgUrl);
-      if(!imgResp.ok) throw new Error('Bild nicht erreichbar');
-      blob = await imgResp.blob();
-    }
-    const b64  = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.readAsDataURL(blob); });
-    const mime = blob.type || 'image/jpeg';
-    const apiResp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:300,
-        system:`Antworte NUR in diesem JSON-Format ohne Markdown: {"position":"top-left|top-center|top-right|half-left|half-center|half-right|twothirds-left|twothirds-center|twothirds-right|bottom-left|bottom-center|bottom-right","reason":"max 15 Wörter","textColor":"light|dark"}`,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
-          {type:'text',text:'Wo ist der dunkelste/kontrastreichste Bereich für ein Text-Overlay mit Song-Cover und Titel?'}
-        ]}]
-      })
+
+  function loadImageFromBlob(blob){
+    return new Promise((resolve,reject)=>{
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = ()=>{ URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('Frame konnte nicht gelesen werden')); };
+      img.src = url;
     });
-    if(!apiResp.ok) throw new Error('API Fehler '+apiResp.status);
-    const data   = await apiResp.json();
-    const raw    = data.content.find(b=>b.type==='text')?.text||'';
-    const parsed = JSON.parse(raw.trim());
-    ssMarkPos(parsed.position);
-    result.style.display=''; result.style.background='rgba(50,180,100,.08)'; result.style.borderColor='rgba(50,180,100,.2)'; result.style.color='#6fda9a';
-    result.innerHTML = `✦ KI: <strong>${parsed.position}</strong> — ${esc(parsed.reason)}`;
+  }
+
+  function loadImageFromUrl(url){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('Frame-URL nicht analysierbar. Bitte Frame neu hochladen oder Option ohne Analyse speichern.'));
+      img.src = url + (url.includes('?') ? '&' : '?') + 'hjcache=' + Date.now();
+    });
+  }
+
+  function analyzeTransparentWindow(img){
+    const w = img.naturalWidth || img.width || 0;
+    const h = img.naturalHeight || img.height || 0;
+    if(!w || !h) throw new Error('Frame hat keine lesbare Größe');
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d', {willReadFrequently:true});
+    ctx.drawImage(img,0,0,w,h);
+    const data = ctx.getImageData(0,0,w,h).data;
+
+    let minX=w,minY=h,maxX=-1,maxY=-1,count=0;
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const a = data[(y*w+x)*4+3];
+        if(a < 32){
+          if(x<minX) minX=x; if(x>maxX) maxX=x;
+          if(y<minY) minY=y; if(y>maxY) maxY=y;
+          count++;
+        }
+      }
+    }
+
+    const minPixels = w*h*0.01;
+    if(count >= minPixels && maxX>minX && maxY>minY){
+      const bw=maxX-minX+1, bh=maxY-minY+1;
+      const ratio=bw/bh;
+      return {ok:true, type:'transparent', minX,minY,maxX,maxY,bw,bh,ratio,count,w,h};
+    }
+
+    // Fallback: search for a large near-square dark/empty area.
+    // This is intentionally conservative and only used when alpha cannot be found.
+    const step = Math.max(2, Math.round(Math.min(w,h)/350));
+    let darkMinX=w,darkMinY=h,darkMaxX=-1,darkMaxY=-1,darkCount=0;
+    for(let y=0;y<h;y+=step){
+      for(let x=0;x<w;x+=step){
+        const i=(y*w+x)*4;
+        const r=data[i], g=data[i+1], b=data[i+2], a=data[i+3];
+        const lum=(0.2126*r+0.7152*g+0.0722*b);
+        if(a>200 && lum < 42){
+          if(x<darkMinX) darkMinX=x; if(x>darkMaxX) darkMaxX=x;
+          if(y<darkMinY) darkMinY=y; if(y>darkMaxY) darkMaxY=y;
+          darkCount++;
+        }
+      }
+    }
+    if(darkCount > (w/step*h/step)*0.01 && darkMaxX>darkMinX && darkMaxY>darkMinY){
+      const bw=darkMaxX-darkMinX+1, bh=darkMaxY-darkMinY+1;
+      return {ok:true, type:'dark-square-fallback', minX:darkMinX,minY:darkMinY,maxX:darkMaxX,maxY:darkMaxY,bw,bh,ratio:bw/bh,count:darkCount,w,h};
+    }
+
+    return {ok:false,w,h};
+  }
+
+  try{
+    const img = ssFrameFile ? await loadImageFromBlob(ssFrameFile) : await loadImageFromUrl(bgUrl);
+    const a = analyzeTransparentWindow(img);
+    if(!a.ok) throw new Error('Kein transparenter Bereich und kein klares Quadrat erkannt');
+
+    const isSquare = a.ratio > 0.82 && a.ratio < 1.22;
+    document.getElementById('htmSsCoverFitSquare').checked = true;
+
+    result.style.display='';
+    result.style.background='rgba(50,180,100,.08)';
+    result.style.borderColor='rgba(50,180,100,.2)';
+    result.style.color='#6fda9a';
+    result.innerHTML =
+      `✓ ${a.type==='transparent' ? 'Transparenter PNG-Bereich' : 'Quadrat-Fallback'} erkannt` +
+      `<br>Bereich: ${Math.round(a.bw)} × ${Math.round(a.bh)} px` +
+      `<br>${isSquare ? 'Cover 1:1 einpassen wurde aktiviert.' : 'Bereich ist nicht ganz quadratisch, Option wurde trotzdem aktiviert.'}`;
   } catch(e){
-    result.style.display=''; result.style.background='rgba(220,80,80,.08)'; result.style.borderColor='rgba(220,80,80,.2)'; result.style.color='#f08080';
+    result.style.display='';
+    result.style.background='rgba(220,80,80,.08)';
+    result.style.borderColor='rgba(220,80,80,.2)';
+    result.style.color='#f08080';
     result.textContent='✕ '+e.message;
   } finally {
-    btn.textContent='✦ Frame analysieren — KI erkennt dunklen Bereich'; btn.disabled=false;
+    btn.textContent='✦ Frame analysieren — transparenter Bereich / Quadrat';
+    btn.disabled=false;
   }
 }
 
