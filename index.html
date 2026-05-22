@@ -5464,9 +5464,9 @@ function buildSlideshowEl(cell){
 }
 
 
-/* v162 – Fit the slide cover layer into the transparent PNG window.
-   Works best with PNG frames whose transparent area is the intended square cover window.
-   If the alpha scan is blocked or no transparent area is found, the old full-area layout remains active. */
+/* v164 – Fit the slide cover layer into the transparent PNG window.
+   Bei quadratischen, gedrehten PNG-Freiräumen wird das Cover jetzt ebenfalls gedreht.
+   Dadurch bleibt das komplette 1:1-Cover sichtbar und sitzt exakt im schrägen Quadrat. */
 function hjFitSlideshowCoverWindow(frameImg){
   const wrap = frameImg && frameImg.closest && frameImg.closest('.featured-teaser.cover-fit-square');
   if(!wrap) return;
@@ -5481,38 +5481,75 @@ function hjFitSlideshowCoverWindow(frameImg){
     const ctx = canvas.getContext('2d', {willReadFrequently:true});
     ctx.drawImage(frameImg, 0, 0, w, h);
     const data = ctx.getImageData(0,0,w,h).data;
+
     let minX=w, minY=h, maxX=-1, maxY=-1, count=0;
+    const rowMin = new Array(h).fill(Infinity);
+    const rowMax = new Array(h).fill(-Infinity);
+
     for(let y=0;y<h;y++){
       for(let x=0;x<w;x++){
         const a = data[(y*w+x)*4+3];
         if(a < 24){
           if(x<minX) minX=x; if(x>maxX) maxX=x;
           if(y<minY) minY=y; if(y>maxY) maxY=y;
+          if(x<rowMin[y]) rowMin[y]=x;
+          if(x>rowMax[y]) rowMax[y]=x;
           count++;
         }
       }
     }
     if(count < (w*h*0.02) || maxX <= minX || maxY <= minY) return;
-    // Use the alpha bounding box as the visible window.
-    // If it is roughly square, keep it as an exact square so complete 1:1 covers are visible.
-    let bx = minX, by = minY, bw = (maxX-minX+1), bh = (maxY-minY+1);
-    const side = Math.min(bw, bh);
-    if(bw/bh > 0.82 && bw/bh < 1.22){
-      bx = minX + (bw-side)/2;
-      by = minY + (bh-side)/2;
-      bw = side; bh = side;
+
+    // Winkel des transparenten Fensters ermitteln: linke und rechte Maskenkante pro Zeile fitten.
+    function fitEdge(points){
+      const n = points.length;
+      if(n < 12) return null;
+      let sy=0,sx=0,syy=0,syx=0;
+      for(const p of points){ sy+=p.y; sx+=p.x; syy+=p.y*p.y; syx+=p.y*p.x; }
+      const den = n*syy - sy*sy;
+      if(Math.abs(den) < 1e-6) return null;
+      return (n*syx - sy*sx) / den; // dx / dy
     }
-    const left = bx / w * 100;
-    const top = by / h * 100;
-    const width = bw / w * 100;
-    const height = bh / h * 100;
+    const leftPts=[], rightPts=[];
+    for(let y=minY;y<=maxY;y++){
+      if(!isFinite(rowMin[y]) || !isFinite(rowMax[y])) continue;
+      const span = rowMax[y] - rowMin[y];
+      if(span < 10) continue;
+      leftPts.push({x:rowMin[y], y});
+      rightPts.push({x:rowMax[y], y});
+    }
+    const trim = pts => {
+      const n = pts.length;
+      const cut = Math.floor(n * 0.18); // Top/Bottom-Ecken ausblenden, nur echte Kanten fitten
+      return pts.slice(cut, Math.max(cut+1, n-cut));
+    };
+    const s1 = fitEdge(trim(leftPts));
+    const s2 = fitEdge(trim(rightPts));
+    let slope = 0;
+    if(Number.isFinite(s1) && Number.isFinite(s2)) slope = (s1+s2)/2;
+    else if(Number.isFinite(s1)) slope = s1;
+    else if(Number.isFinite(s2)) slope = s2;
+    const angleDeg = -Math.atan(slope) * 180 / Math.PI;
+
+    // Nicht die Achsen-Bounding-Box verwenden, sondern die echte Quadratgröße aus der transparenten Fläche.
+    // So wird das Cover nicht rechteckig verzerrt und nicht unnötig vergrößert.
+    const sidePx = Math.sqrt(count);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const left = (cx - sidePx/2) / w * 100;
+    const top = (cy - sidePx/2) / h * 100;
+    const width = sidePx / w * 100;
+    const height = sidePx / h * 100;
+
     covers.style.left = left + '%';
     covers.style.top = top + '%';
     covers.style.width = width + '%';
     covers.style.height = height + '%';
-    covers.style.transform = 'none';
     covers.style.aspectRatio = '1 / 1';
     covers.style.borderRadius = '0';
+    covers.style.transformOrigin = '50% 50%';
+    covers.style.transform = 'rotate(' + angleDeg.toFixed(2) + 'deg)';
+    covers.dataset.fitAngle = angleDeg.toFixed(2);
   }catch(e){
     console.warn('[hitjourney] Cover 1:1 einpassen: transparente Frame-Fläche konnte nicht analysiert werden', e);
   }

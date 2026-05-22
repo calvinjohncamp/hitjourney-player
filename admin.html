@@ -930,7 +930,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <div class="s3-hint" id="hintSsFrame"></div>
         <button id="ssAnalyseBtn" onclick="analyseFrame()" style="display:none;margin-top:8px;width:100%;padding:9px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s">
-          ✦ Frame analysieren — transparenter Bereich / Quadrat
+          ✦ Frame analysieren — transparenter Bereich / gedrehtes Quadrat
         </button>
         <div id="ssAnalyseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:7px;background:rgba(50,180,100,.08);border:1px solid rgba(50,180,100,.2);font-size:11px;color:#6fda9a;line-height:1.5"></div>
       </div>
@@ -3231,7 +3231,7 @@ async function analyseFrame(){
     result.style.color='#f08080';
     result.textContent='✕ '+e.message;
   } finally {
-    btn.textContent='✦ Frame analysieren — transparenter Bereich / Quadrat';
+    btn.textContent='✦ Frame analysieren — transparenter Bereich / gedrehtes Quadrat';
     btn.disabled=false;
   }
 }
