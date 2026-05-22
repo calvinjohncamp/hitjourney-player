@@ -1008,6 +1008,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border-radius:0;
   background:var(--ft-start-color, #0a0a0a);
 }
+.featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers,
+.featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers img{border-radius:50%;}
+.featured-teaser.frame-fill.cover-fit-square.cover-fit-cover .ft-covers img{object-fit:cover!important;}
 
 .ft-frame {
   position:absolute;
@@ -5420,6 +5423,8 @@ function buildSlideshowEl(cell){
   const coverFitTop = cell.coverFitTop ?? cell.fitTop ?? '';
   const coverFitWidth = cell.coverFitWidth ?? cell.fitWidth ?? '';
   const coverFitHeight = cell.coverFitHeight ?? cell.fitHeight ?? '';
+  const coverShape = (cell.coverShape || 'square').toLowerCase();
+  const coverFitMode = (cell.coverFitMode || 'contain').toLowerCase();
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5432,7 +5437,7 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (coverShape==='circle' ? ' cover-shape-circle' : ' cover-shape-square') + (coverFitMode==='cover' ? ' cover-fit-cover' : ' cover-fit-contain') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.dataset.coverAngleOffset = String(coverAngleOffset);
   wrap.dataset.coverFitLeft = String(coverFitLeft);
@@ -5495,6 +5500,15 @@ function hjFitSlideshowCoverWindow(frameImg){
   if(!wrap) return;
   const covers = wrap.querySelector('.ft-covers');
   if(!covers) return;
+  // v167: WYSIWYG placement aus dem Admin hat Vorrang vor jeder automatischen Transparenzanalyse.
+  const manualVals = [wrap.dataset.coverFitLeft, wrap.dataset.coverFitTop, wrap.dataset.coverFitWidth, wrap.dataset.coverFitHeight].map(v=>parseFloat(v));
+  if(manualVals.every(Number.isFinite)){
+    const [lf,tp,wd,ht] = manualVals;
+    const ang = parseFloat(wrap.dataset.coverAngleOffset || '0') || 0;
+    covers.style.left = lf + '%'; covers.style.top = tp + '%'; covers.style.width = wd + '%'; covers.style.height = ht + '%';
+    covers.style.aspectRatio = 'auto'; covers.style.transformOrigin = '50% 50%'; covers.style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
+    return;
+  }
   try{
     const w = frameImg.naturalWidth || 0;
     const h = frameImg.naturalHeight || 0;

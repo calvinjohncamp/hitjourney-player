@@ -457,6 +457,22 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .htm-slide-artist{font-size:10px;color:rgba(133,172,201,.45)}
 .htm-slide-del{width:24px;height:24px;border-radius:5px;border:none;cursor:pointer;background:rgba(220,80,80,.15);color:#f08080;font-size:14px;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .htm-slide-del:hover{background:rgba(220,80,80,.3)}
+
+
+/* v167 — Diashow WYSIWYG Cover-Platzierung */
+.ss-wys-card{border:1px solid rgba(133,172,201,.16);border-radius:12px;background:rgba(6,20,32,.45);padding:10px;margin-top:8px}
+.ss-wys-stage{position:relative;width:100%;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#090f16;touch-action:none;user-select:none;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.ss-wys-cover{position:absolute;left:0;top:0;width:48%;height:86%;background:#111;overflow:hidden;transform-origin:50% 50%;z-index:1;box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.ss-wys-cover.circle{border-radius:50%}.ss-wys-cover.square{border-radius:0}
+.ss-wys-cover img{width:100%;height:100%;object-fit:contain;display:block;background:#0A0A0A;pointer-events:none}.ss-wys-cover.cover img{object-fit:cover}
+.ss-wys-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none}
+.ss-wys-box{position:absolute;left:0;top:0;width:48%;height:86%;border:2px solid #85ACC9;outline:9999px solid rgba(0,0,0,.06);transform-origin:50% 50%;z-index:4;cursor:move;touch-action:none}
+.ss-wys-box.circle{border-radius:50%}.ss-wys-box.square{border-radius:0}
+.ss-wys-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#85ACC9;border:2px solid #06141F;right:-10px;bottom:-10px;cursor:nwse-resize;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.ss-wys-rotate{position:absolute;left:50%;top:-34px;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#0B2A42;border:2px solid #85ACC9;color:#85ACC9;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.ss-wys-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}.ss-wys-controls button{border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;border-radius:8px;padding:8px 6px;font-size:11px;font-weight:700;cursor:pointer}.ss-wys-controls button.active{background:rgba(133,172,201,.2);color:#cfe5f5;border-color:#85ACC9}
+.ss-wys-mini{margin-top:7px;font-size:10.5px;color:rgba(133,172,201,.38);line-height:1.35}
+
 </style>
 </head>
 <body>
@@ -973,25 +989,31 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Bei Covern mit eigener Schrift bitte beide Haken entfernen. Die Punkte bleiben sichtbar.</div>
       </div>
 
-      <!-- Cover-Winkel Feinjustierung -->
+      <!-- WYSIWYG Cover-Platzierung -->
       <div class="htm-field">
-        <span class="htm-label">Cover-Winkel Feinjustierung</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="htm-input" id="htmSsCoverAngleOffset" type="number" min="-25" max="25" step="0.5" value="0" style="font-family:'SF Mono','Menlo',monospace;flex:1"/>
-          <span style="font-size:12px;color:rgba(133,172,201,.55);width:34px">Grad</span>
+        <span class="htm-label">Cover-Platzierung direkt im Teaser</span>
+        <div class="ss-wys-card">
+          <div class="ss-wys-stage" id="ssWysStage">
+            <div class="ss-wys-cover square" id="ssWysCover"><img id="ssWysCoverImg" alt="Cover Vorschau"></div>
+            <img class="ss-wys-frame" id="ssWysFrame" alt="Frame Vorschau">
+            <div class="ss-wys-box square" id="ssWysBox">
+              <div class="ss-wys-rotate" id="ssWysRotate">↻</div>
+              <div class="ss-wys-handle" id="ssWysHandle"></div>
+            </div>
+          </div>
+          <div class="ss-wys-controls">
+            <button type="button" id="ssShapeSquare" onclick="ssWysSetShape('square')">Quadrat</button>
+            <button type="button" id="ssShapeCircle" onclick="ssWysSetShape('circle')">Kreis</button>
+            <button type="button" id="ssFitContain" onclick="ssWysSetFit('contain')">Ganzes Cover</button>
+            <button type="button" id="ssFitCover" onclick="ssWysSetFit('cover')">Fläche füllen</button>
+            <button type="button" onclick="ssWysReset()">Reset</button>
+            <button type="button" onclick="ssWysNudge(-1,0)">←</button>
+          </div>
+          <div class="ss-wys-mini">Den Rahmen direkt ziehen, unten rechts skalieren, oben drehen. Gespeichert wird exakt diese Position. Die alten Prozentfelder werden automatisch mitgeführt.</div>
         </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">0 = automatisch erkannter Winkel. Negative Werte drehen leicht nach links, positive nach rechts.</div>
-      </div>
-
-      <div class="htm-field">
-        <span class="htm-label">Cover-Fenster Feinjustierung in %</span>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
-          <input class="htm-input" id="htmSsFitLeft" type="number" step="0.1" placeholder="Links" style="font-family:'SF Mono','Menlo',monospace"/>
-          <input class="htm-input" id="htmSsFitTop" type="number" step="0.1" placeholder="Oben" style="font-family:'SF Mono','Menlo',monospace"/>
-          <input class="htm-input" id="htmSsFitWidth" type="number" step="0.1" placeholder="Breite" style="font-family:'SF Mono','Menlo',monospace"/>
-          <input class="htm-input" id="htmSsFitHeight" type="number" step="0.1" placeholder="Höhe" style="font-family:'SF Mono','Menlo',monospace"/>
-        </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Leer lassen = automatische Erkennung des transparenten PNG-Fensters. Werte überschreiben nur die Cover-Fläche, nicht den Frame.</div>
+        <input type="hidden" id="htmSsCoverAngleOffset" value="0">
+        <input type="hidden" id="htmSsFitLeft"><input type="hidden" id="htmSsFitTop"><input type="hidden" id="htmSsFitWidth"><input type="hidden" id="htmSsFitHeight">
+        <input type="hidden" id="htmSsCoverShape" value="square"><input type="hidden" id="htmSsCoverFitMode" value="contain">
       </div>
 
       <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
@@ -2285,7 +2307,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:''}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain'}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2301,7 +2323,7 @@ async function loadHomeLayout(){
       id:      row.id,
       editing: false,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -2929,6 +2951,7 @@ function setSsFramePreview(url){
     zone.classList.remove('has-file');
     document.getElementById('ssAnalyseBtn').style.display = 'none';
   }
+  setTimeout(()=>ssWysRefresh(), 20);
 }
 function onSsFrameFile(input){
   const file = input.files && input.files[0];
@@ -2979,10 +3002,12 @@ function openSlideshowModal(rowId){
   document.getElementById('htmSsShowSongTitle').checked = !(cell && cell.showSongTitle === false);
   document.getElementById('htmSsShowSongNumber').checked = !(cell && cell.showSongNumber === false);
   document.getElementById('htmSsCoverAngleOffset').value = Number.isFinite(Number(cell && cell.coverAngleOffset)) ? Number(cell.coverAngleOffset) : 0;
-  document.getElementById('htmSsFitLeft').value   = (cell && cell.coverFitLeft   !== undefined) ? cell.coverFitLeft   : '';
-  document.getElementById('htmSsFitTop').value    = (cell && cell.coverFitTop    !== undefined) ? cell.coverFitTop    : '';
-  document.getElementById('htmSsFitWidth').value  = (cell && cell.coverFitWidth  !== undefined) ? cell.coverFitWidth  : '';
-  document.getElementById('htmSsFitHeight').value = (cell && cell.coverFitHeight !== undefined) ? cell.coverFitHeight : '';
+  document.getElementById('htmSsFitLeft').value   = (cell && cell.coverFitLeft   !== undefined && cell.coverFitLeft !== '') ? cell.coverFitLeft   : 0;
+  document.getElementById('htmSsFitTop').value    = (cell && cell.coverFitTop    !== undefined && cell.coverFitTop !== '') ? cell.coverFitTop    : 7;
+  document.getElementById('htmSsFitWidth').value  = (cell && cell.coverFitWidth  !== undefined && cell.coverFitWidth !== '') ? cell.coverFitWidth  : 52;
+  document.getElementById('htmSsFitHeight').value = (cell && cell.coverFitHeight !== undefined && cell.coverFitHeight !== '') ? cell.coverFitHeight : 86;
+  document.getElementById('htmSsCoverShape').value = (cell && cell.coverShape) || 'square';
+  document.getElementById('htmSsCoverFitMode').value = (cell && cell.coverFitMode) || 'contain';
   document.getElementById('ssSongSearch').value      = '';
   document.getElementById('ssAnalyseResult').style.display = 'none';
 
@@ -2995,6 +3020,7 @@ function openSlideshowModal(rowId){
   renderSsPicker();
 
   document.getElementById('homeSlideshowModal').style.display = 'flex';
+  setTimeout(()=>{ ssWysBind(); ssWysRefresh(); }, 40);
 }
 
 function closeSlideshowModal(){
@@ -3045,6 +3071,7 @@ function renderSlidesList(){
   if(!list) return;
   if(htmSlides.length===0){
     list.innerHTML = '<div style="font-size:11px;color:rgba(133,172,201,.3);padding:10px 6px">Noch keine Songs ausgewählt</div>';
+    setTimeout(()=>ssWysRefresh(),20);
     return;
   }
   list.innerHTML = '';
@@ -3183,6 +3210,82 @@ function renderSsPicker(){
     };
     container.appendChild(row);
   });
+}
+
+
+/* v167 — WYSIWYG placement editor */
+let ssWysState = {x:0,y:7,w:52,h:86,r:0,shape:'square',fit:'contain'};
+let ssWysDrag = null;
+function ssWysNum(v, fallback){ const n=parseFloat(v); return Number.isFinite(n) ? n : fallback; }
+function ssWysFirstSlideCover(){
+  const s = htmSlides && htmSlides[0];
+  if(s) return s.coverUrl || s.focusUrl || '';
+  const song = allSongs && allSongs[0];
+  return song ? (song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`) : '';
+}
+function ssWysLoadFromFields(){
+  ssWysState.x = ssWysNum(document.getElementById('htmSsFitLeft')?.value, 0);
+  ssWysState.y = ssWysNum(document.getElementById('htmSsFitTop')?.value, 7);
+  ssWysState.w = ssWysNum(document.getElementById('htmSsFitWidth')?.value, 52);
+  ssWysState.h = ssWysNum(document.getElementById('htmSsFitHeight')?.value, 86);
+  ssWysState.r = ssWysNum(document.getElementById('htmSsCoverAngleOffset')?.value, 0);
+  ssWysState.shape = document.getElementById('htmSsCoverShape')?.value || 'square';
+  ssWysState.fit = document.getElementById('htmSsCoverFitMode')?.value || 'contain';
+}
+function ssWysWriteFields(){
+  const f=(n)=>Number(n).toFixed(2).replace(/\.00$/,'');
+  document.getElementById('htmSsFitLeft').value=f(ssWysState.x);
+  document.getElementById('htmSsFitTop').value=f(ssWysState.y);
+  document.getElementById('htmSsFitWidth').value=f(ssWysState.w);
+  document.getElementById('htmSsFitHeight').value=f(ssWysState.h);
+  document.getElementById('htmSsCoverAngleOffset').value=f(ssWysState.r);
+  document.getElementById('htmSsCoverShape').value=ssWysState.shape;
+  document.getElementById('htmSsCoverFitMode').value=ssWysState.fit;
+  const cb=document.getElementById('htmSsCoverFitSquare'); if(cb) cb.checked=true;
+}
+function ssWysApply(){
+  const cover=document.getElementById('ssWysCover'), box=document.getElementById('ssWysBox'), img=document.getElementById('ssWysCoverImg'), frame=document.getElementById('ssWysFrame');
+  if(!cover||!box) return;
+  [cover,box].forEach(el=>{
+    el.style.left=ssWysState.x+'%'; el.style.top=ssWysState.y+'%'; el.style.width=ssWysState.w+'%'; el.style.height=ssWysState.h+'%'; el.style.transform='rotate('+ssWysState.r+'deg)';
+    el.classList.toggle('circle', ssWysState.shape==='circle'); el.classList.toggle('square', ssWysState.shape!=='circle');
+  });
+  cover.classList.toggle('cover', ssWysState.fit==='cover');
+  if(img && !img.src) img.src=ssWysFirstSlideCover();
+  if(frame){ const pv=document.getElementById('prevSsFrame'); frame.src = (pv && pv.src) ? pv.src : (document.getElementById('htmSsBgUrl')?.value || ''); }
+  document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
+  document.getElementById('ssShapeCircle')?.classList.toggle('active', ssWysState.shape==='circle');
+  document.getElementById('ssFitContain')?.classList.toggle('active', ssWysState.fit==='contain');
+  document.getElementById('ssFitCover')?.classList.toggle('active', ssWysState.fit==='cover');
+  ssWysWriteFields();
+}
+function ssWysRefresh(){ ssWysLoadFromFields(); ssWysApply(); }
+function ssWysSetShape(shape){ ssWysState.shape=shape; ssWysApply(); }
+function ssWysSetFit(fit){ ssWysState.fit=fit; ssWysApply(); }
+function ssWysReset(){ ssWysState={x:0,y:7,w:52,h:86,r:0,shape:'square',fit:'contain'}; ssWysApply(); }
+function ssWysNudge(dx,dy){ ssWysState.x+=dx; ssWysState.y+=dy; ssWysApply(); }
+function ssWysPoint(e){ return e.touches&&e.touches[0] ? e.touches[0] : e; }
+function ssWysBind(){
+  const stage=document.getElementById('ssWysStage'), box=document.getElementById('ssWysBox'), handle=document.getElementById('ssWysHandle'), rot=document.getElementById('ssWysRotate');
+  if(!stage||!box||stage.dataset.bound) return; stage.dataset.bound='1';
+  const start=(mode,e)=>{ const p=ssWysPoint(e); const r=stage.getBoundingClientRect(); ssWysDrag={mode,sx:p.clientX,sy:p.clientY,start:{...ssWysState},rect:r}; e.preventDefault(); };
+  box.addEventListener('pointerdown', e=>{ if(e.target===handle||e.target===rot) return; start('move',e); });
+  handle.addEventListener('pointerdown', e=>start('resize',e));
+  rot.addEventListener('pointerdown', e=>start('rotate',e));
+  window.addEventListener('pointermove', e=>{
+    if(!ssWysDrag) return; const p=ssWysPoint(e), d=ssWysDrag, r=d.rect;
+    if(d.mode==='move'){
+      ssWysState.x=d.start.x+(p.clientX-d.sx)/r.width*100; ssWysState.y=d.start.y+(p.clientY-d.sy)/r.height*100;
+    }else if(d.mode==='resize'){
+      ssWysState.w=Math.max(8,d.start.w+(p.clientX-d.sx)/r.width*100); ssWysState.h=Math.max(8,d.start.h+(p.clientY-d.sy)/r.height*100);
+    }else if(d.mode==='rotate'){
+      const cx=r.left+(d.start.x+d.start.w/2)/100*r.width, cy=r.top+(d.start.y+d.start.h/2)/100*r.height;
+      ssWysState.r=Math.atan2(p.clientY-cy,p.clientX-cx)*180/Math.PI+90;
+    }
+    ssWysState.x=Math.max(-40,Math.min(140,ssWysState.x)); ssWysState.y=Math.max(-40,Math.min(140,ssWysState.y)); ssWysState.w=Math.min(160,ssWysState.w); ssWysState.h=Math.min(160,ssWysState.h);
+    ssWysApply(); e.preventDefault();
+  }, {passive:false});
+  window.addEventListener('pointerup', ()=>{ ssWysDrag=null; });
 }
 
 async function analyseFrame(){
@@ -3335,6 +3438,8 @@ async function saveSlideshowTile(){
   cell.coverFitTop    = document.getElementById('htmSsFitTop')?.value?.trim()    || '';
   cell.coverFitWidth  = document.getElementById('htmSsFitWidth')?.value?.trim()  || '';
   cell.coverFitHeight = document.getElementById('htmSsFitHeight')?.value?.trim() || '';
+  cell.coverShape = document.getElementById('htmSsCoverShape')?.value || 'square';
+  cell.coverFitMode = document.getElementById('htmSsCoverFitMode')?.value || 'contain';
   cell.slides     = htmSlides.map(s=>({...s}));
 
   // Wichtig v166:
@@ -3366,7 +3471,7 @@ function importCurrentHome(){
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
