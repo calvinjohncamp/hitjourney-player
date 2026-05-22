@@ -459,7 +459,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .htm-slide-del:hover{background:rgba(220,80,80,.3)}
 
 
-/* v168 — Diashow WYSIWYG Cover-Platzierung */
+/* v169 — Diashow WYSIWYG Cover-Platzierung + direkte Bearbeitung auch ohne Zeilenmodus */
 .ss-wys-card{border:1px solid rgba(133,172,201,.16);border-radius:12px;background:rgba(6,20,32,.45);padding:10px;margin-top:8px}
 .ss-wys-stage{position:relative;width:100%;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#090f16;touch-action:none;user-select:none;box-shadow:0 10px 30px rgba(0,0,0,.28)}
 .ss-wys-cover{position:absolute;left:0;top:0;width:48%;height:86%;background:#111;overflow:hidden;transform-origin:50% 50%;z-index:1;box-shadow:0 8px 26px rgba(0,0,0,.35)}
@@ -473,6 +473,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-wys-rotate{position:absolute;left:50%;top:-34px;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#0B2A42;border:2px solid #85ACC9;color:#85ACC9;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 .ss-wys-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}.ss-wys-controls button{border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;border-radius:8px;padding:8px 6px;font-size:11px;font-weight:700;cursor:pointer}.ss-wys-controls button.active{background:rgba(133,172,201,.2);color:#cfe5f5;border-color:#85ACC9}
 .ss-wys-mini{margin-top:7px;font-size:10.5px;color:rgba(133,172,201,.38);line-height:1.35}
+
+/* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
+.he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none}
+.he-cell .he-cell-overlay.always-edit .he-cell-badge{opacity:.72}
+.he-cell .he-cell-overlay.always-edit .he-cell-acts{opacity:.78;pointer-events:auto}
+.he-cell:hover .he-cell-overlay.always-edit .he-cell-acts{opacity:1}
+.he-cell:not(.editing-mode){cursor:pointer}
+
 
 </style>
 </head>
@@ -2496,17 +2504,18 @@ function buildCell(row, cellIdx, extraClass, editing){
       lbl.textContent = cell.alt;
       el.appendChild(lbl);
     }
-    // Edit/remove overlay — only visible in editing mode (via CSS hover)
-    if(editing){
+    // v169: Gefüllte Motive/Diashows sind immer direkt bearbeitbar.
+    // Entfernen bleibt nur im Zeilen-Bearbeitungsmodus sichtbar, damit im Normalmodus nichts versehentlich gelöscht wird.
+    {
       const ov = document.createElement('div');
-      ov.className = 'he-cell-overlay';
+      ov.className = 'he-cell-overlay always-edit';
       const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
       const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
-          <button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>
+          ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
       el.appendChild(ov);
     }
@@ -2524,10 +2533,11 @@ function buildCell(row, cellIdx, extraClass, editing){
     el.appendChild(emp);
   }
 
-  // Click → only in editing mode
+  // v169: Gefüllte Zellen/Diashows öffnen den Editor immer direkt.
+  // Leere Zellen brauchen weiterhin den Zeilen-Bearbeitungsmodus, damit die Home-Ansicht ruhig bleibt.
   el.onclick = ()=>{
-    if(!editing) return;
     if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
+    if(!editing) return;
     toggleTypeMenu(el, row.id, cellIdx);
   };
 
