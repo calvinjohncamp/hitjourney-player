@@ -5469,11 +5469,9 @@ function buildSlideshowEl(cell){
   function edgePct(v, fallback){
     let n = parseFloat(v);
     if(!Number.isFinite(n)) n = fallback;
-    // v174: WYSIWYG darf optisch bis fast an den Rand. Alte gespeicherte Werte
-    // wie 86% lagen noch zu weit innen; nahe Kanten werden deshalb leicht nach außen interpretiert.
-    if(n >= 70) n = Math.min(98, n + 8);
-    else if(n <= 20) n = Math.max(1, n - 3);
-    return n;
+    // v175: echtes WYSIWYG. Keine automatische Rand-Verschiebung mehr,
+    // sonst bleiben kleine Korrekturen aus dem Admin optisch an der Ecke kleben.
+    return Math.max(-20, Math.min(120, n));
   }
   const titleStyle = hasTitleCustom ? `--ft-title-x:${edgePct(titleX,4)}%;--ft-title-y:${edgePct(titleY,78)}%;` : '';
   const dotsStyle  = hasDotsCustom  ? `--ft-dots-x:${edgePct(dotsX,4)}%;--ft-dots-y:${edgePct(dotsY,86)}%;` : '';
@@ -5521,14 +5519,75 @@ function buildSlideshowEl(cell){
       .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
       .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover');
   }
+  function normText(v){
+    return String(v||'')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+      .replace(/&/g,'and')
+      .replace(/[^a-z0-9]+/g,'-')
+      .replace(/^-+|-+$/g,'');
+  }
+  function titleFromArtworkUrl(url){
+    try{
+      const last = decodeURIComponent(String(url||'').split('/').pop()||'');
+      return last
+        .replace(/\.(jpg|jpeg|png|webp)$/i,'')
+        .replace(/\s*-\s*(cover|fokus|focus|preview|crop|frame)$/i,'');
+    }catch(_){ return ''; }
+  }
+  // v176: Alte Spotlight-Konfigurationen enthalten noch verkürzte/falsche Slugs
+  // (z. B. neues-licht statt neues-licht-dieselben-scheiben). Deshalb wird hier
+  // nicht mehr blind die gespeicherte Cover-URL genutzt, sondern zuerst der echte
+  // Song aus Supabase ermittelt — inklusive Alias-/Teiltreffer-Logik.
+  const SPOTLIGHT_SLUG_ALIASES = {
+    'neues-licht': 'neues-licht-dieselben-scheiben',
+    'half-past-nine': 'half-past-nine-on-main-street',
+    'half-past-nine-on-main-st': 'half-past-nine-on-main-street',
+    'pine-and-snow': 'pine-snow',
+    'the-cold-dont-lie': 'the-cold-don-t-lie',
+    'rita-forever': 'rita-4ever'
+  };
   function liveSongForSlide(s){
-    const slug = (s && s.slug ? String(s.slug).trim() : '');
-    const norm = (v)=> (typeof normalizeTeaserSlug === 'function' ? normalizeTeaserSlug(v||'') : String(v||'').toLowerCase().trim());
-    let live = slug ? SUPABASE_SONGS.find(x=>String(x.slug||'').trim()===slug) : null;
-    if(!live && slug) live = SUPABASE_SONGS.find(x=>norm(x.slug)===norm(slug));
-    if(!live && s && s.title) live = SUPABASE_SONGS.find(x=>norm(x.title)===norm(s.title) && (!s.artist || norm(x.artist)===norm(s.artist)));
-    if(!live && typeof ALL_SONGS !== 'undefined' && slug) live = ALL_SONGS.find(x=>norm(x.slug)===norm(slug));
-    return live || null;
+    const slug = (s && (s.slug || s.song_slug || s.songSlug) ? String(s.slug || s.song_slug || s.songSlug).trim() : '');
+    const title = s && (s.title || s.name || titleFromArtworkUrl(s.coverUrl || s.cover_url || s.cover || s.image || s.imageUrl || s.focusUrl));
+    const songs = [];
+    if(Array.isArray(SUPABASE_SONGS)) songs.push(...SUPABASE_SONGS);
+    if(typeof ALL_SONGS !== 'undefined' && Array.isArray(ALL_SONGS)) songs.push(...ALL_SONGS);
+    const uniq = [];
+    const seen = new Set();
+    songs.forEach(x=>{ const k=(x.slug||'')+'|'+(x.title||''); if(!seen.has(k)){seen.add(k); uniq.push(x);} });
+    if(slug){
+      const slugNorm = normText(slug);
+      const alias = SPOTLIGHT_SLUG_ALIASES[slugNorm] || '';
+      let live = uniq.find(x=>String(x.slug||'').trim()===slug);
+      if(live) return live;
+      if(alias){
+        live = uniq.find(x=>normText(x.slug)===alias);
+        if(live) return live;
+      }
+      live = uniq.find(x=>normText(x.slug)===slugNorm);
+      if(live) return live;
+      // Verkürzte alte Slugs dürfen echte längere Supabase-Slugs treffen,
+      // aber nur eindeutig genug (mind. 8 Zeichen), damit keine falschen Cover gezogen werden.
+      if(slugNorm.length >= 8){
+        live = uniq.find(x=>normText(x.slug).startsWith(slugNorm) || normText(x.slug).includes(slugNorm));
+        if(live) return live;
+      }
+    }
+    if(title){
+      let live = uniq.find(x=>normText(x.title)===normText(title));
+      if(live) return live;
+      live = uniq.find(x=>normText(x.title).includes(normText(title)) || normText(title).includes(normText(x.title)));
+      if(live) return live;
+    }
+    // Letzte Chance: aus alter Cover-Datei den Titel herauslesen und damit matchen.
+    const fileTitle = titleFromArtworkUrl(s && (s.coverUrl || s.focusUrl || s.image || s.imageUrl || s.cover_url || s.cover));
+    if(fileTitle){
+      const live = uniq.find(x=>normText(x.title)===normText(fileTitle) || normText(x.slug)===normText(fileTitle));
+      if(live) return live;
+    }
+    return null;
   }
   function focusToCoverUrl(url){
     if(!url) return '';
@@ -5538,23 +5597,36 @@ function buildSlideshowEl(cell){
       .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover')
       .replace(/focus(?=\.(jpg|jpeg|png|webp))/i, 'cover');
   }
-  function resolveSlideImg(s){
-    // v174: Immer zuerst das echte Songobjekt verwenden. Gespeicherte Fokus-/Crop-/Preview-URLs
-    // werden nur noch als letzte Notlösung benutzt, damit keine schwarzen/alten KI-Crops erscheinen.
+  function slideImgCandidates(s){
+    const out = [];
+    const add = u => { if(u && !out.includes(u)) out.push(u); };
     const live = liveSongForSlide(s || {});
-    if(live && (live.cover || live.cover_url)) return live.cover || live.cover_url;
-    if(s.cover || s.cover_url) return s.cover || s.cover_url;
-    const cu = s.coverUrl || s.image || s.imageUrl || '';
-    if(cu && !/(fokus|focus|preview|frame|crop)/i.test(cu)) return cu;
-    if(cu) return focusToCoverUrl(cu);
-    if(s.focusUrl) return focusToCoverUrl(s.focusUrl);
-    return '';
+    if(live) add(live.cover || live.cover_url);
+    add(s.cover || s.cover_url);
+    add(s.coverUrl);
+    add(s.image);
+    add(s.imageUrl);
+    add(focusToCoverUrl(s.focusUrl));
+    add(focusToCoverUrl(s.coverUrl));
+    add(s.focusUrl);
+    // v175: niemals schwarz bleiben. Wenn Supabase/Slug einmal nicht greift,
+    // wird wenigstens jede gespeicherte alte URL als Fallback versucht.
+    return out.filter(Boolean);
+  }
+  function resolveSlideImg(s){
+    return (slideImgCandidates(s || {})[0] || '');
+  }
+  function escAttr(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function slideImgTag(s,i){
+    const c = slideImgCandidates(s||{});
+    const src = c[0] || '';
+    return `<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${escAttr(src)}" data-srcs="${escAttr(c.join('||'))}" data-slide-slug="${escAttr(s.slug||s.song_slug||s.songSlug||'')}" data-slide-title="${escAttr(s.title||'')}"/>`;
   }
   wrap.innerHTML = `
     <div class="ft-circle"></div>
     <div class="ft-covers" id="ftCovers_${wrap.id}">
       <img class="ft-blank" src=""/>
-      ${slides.map((s,i)=>`<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${resolveSlideImg(s)}"/>`).join('')}
+      ${slides.map((s,i)=>slideImgTag(s,i)).join('')}
     </div>
     ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager" crossorigin="anonymous" onload="hjFitSlideshowCoverWindow(this)"/>` : ''}
     <div class="ft-text">
@@ -5706,6 +5778,20 @@ function initDynamicSlideshow(id, slides){
   const titleEl = document.getElementById('ftSongTitle_'+id);
   const numEl   = document.getElementById('ftSongNum_'+id);
 
+  // v175: schwarze/fehlende Spotlight-Cover vermeiden. Jedes Bild bekommt eine
+  // Kandidatenliste (Supabase-Cover zuerst, gespeicherte URLs danach) und versucht
+  // bei Ladefehler automatisch die nächste echte Cover-URL.
+  imgs.forEach(img=>{
+    if(img._hjCoverFallbackBound) return;
+    img._hjCoverFallbackBound = true;
+    img._hjSrcIdx = 0;
+    img.addEventListener('error', ()=>{
+      const list = String(img.dataset.srcs||'').split('||').filter(Boolean);
+      img._hjSrcIdx = (img._hjSrcIdx || 0) + 1;
+      if(list[img._hjSrcIdx]) img.src = list[img._hjSrcIdx];
+    });
+  });
+
   let cur = -1; // -1 = Startbild/Frame ohne Dia; bleibt genauso lange stehen wie jedes Dia
   let featuredCurrentMp3 = null;
   let timer = null;
@@ -5736,10 +5822,13 @@ function initDynamicSlideshow(id, slides){
     cur = idx % slides.length;
     imgs.forEach((img,i)=>{
       img.classList.toggle('active', i===cur);
-      // Lazy-fill missing cover from live song data
-      if(i===cur && !img.src){
-        const live = SUPABASE_SONGS.find(x=>x.slug===slides[i].slug);
-        if(live && live.cover) img.src = live.cover;
+      // Lazy-self-heal: falls ein altes/fehlendes Bild aktiv wird, nochmal aus Supabase nachziehen.
+      if(i===cur){
+        const bad = !img.getAttribute('src') || img.naturalWidth === 0;
+        if(bad){
+          const list = String(img.dataset.srcs||'').split('||').filter(Boolean);
+          if(list[0]) img.src = list[0];
+        }
       }
     });
     if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
@@ -5776,11 +5865,25 @@ function initDynamicSlideshow(id, slides){
     if(cur < 0) return;
     const slide = slides[cur];
     if(!slide) return;
-    // Slug → Song aus SUPABASE_SONGS (mit Trim-Fallback für Whitespace-Fehler)
-    let song = SUPABASE_SONGS.find(s=>s.slug===slide.slug);
-    if(!song) song = SUPABASE_SONGS.find(s=>s.slug===(slide.slug||'').trim());
+    // Slug → Song aus SUPABASE_SONGS, inkl. alter Spotlight-Aliase.
+    const norm = v => String(v||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const aliases = {
+      'neues-licht': 'neues-licht-dieselben-scheiben',
+      'half-past-nine': 'half-past-nine-on-main-street',
+      'half-past-nine-on-main-st': 'half-past-nine-on-main-street',
+      'pine-and-snow': 'pine-snow',
+      'the-cold-dont-lie': 'the-cold-don-t-lie',
+      'rita-forever': 'rita-4ever'
+    };
+    const wanted = norm(slide.slug);
+    const alias = aliases[wanted] || '';
+    let song = SUPABASE_SONGS.find(s=>s.slug===slide.slug)
+            || SUPABASE_SONGS.find(s=>s.slug===(slide.slug||'').trim())
+            || (alias ? SUPABASE_SONGS.find(s=>norm(s.slug)===alias) : null)
+            || SUPABASE_SONGS.find(s=>norm(s.slug)===wanted)
+            || SUPABASE_SONGS.find(s=>wanted.length>=8 && (norm(s.slug).startsWith(wanted) || norm(s.slug).includes(wanted)));
     if(!song || !song.mp3) {
-      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slug:', slide.slug, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,5).map(s=>s.slug));
+      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slug:', slide.slug, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,12).map(s=>s.slug));
       return;
     }
 
@@ -5892,12 +5995,12 @@ function getFallbackHomeHTML(){
   <div class="ft-circle"></div>
   <div class="ft-covers" id="ftCovers">
     <img class="active ft-blank" loading="eager" src=""/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg"/>
     <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg"/>
     <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg"/>
     <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg" style="object-position:-52px 34px;"/>
     <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg"/>
     <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Cover.jpg"/>
@@ -5934,22 +6037,22 @@ function initFeaturedTeaser(){
   const FEATURED_SONGS = [
     { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: schwarzer Kreis
     { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
     { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
     { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
     { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
     { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
     { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
     { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg',
@@ -6520,22 +6623,22 @@ showHome = function(){
   const FEATURED_SONGS = [
     { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: nur schwarzer Kreis
     { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%2C%20dieselben%20Scheiben%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
     { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20on%20Main%20Street%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
     { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
     { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
     { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
     { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Don%27t%20Lie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
     { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
       cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg',

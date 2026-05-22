@@ -3310,7 +3310,7 @@ function ssWysApply(){
   const titleOv=document.getElementById('ssWysText'), dotsOv=document.getElementById('ssWysDots');
   const tx=ssWysNum(document.getElementById('htmSsTitleX')?.value,4), ty=ssWysNum(document.getElementById('htmSsTitleY')?.value,78);
   const dx=ssWysNum(document.getElementById('htmSsDotsX')?.value,4), dy=ssWysNum(document.getElementById('htmSsDotsY')?.value,94);
-  function edgePreview(v){ if(v>=70) return Math.min(98,v+8); if(v<=20) return Math.max(1,v-3); return v; }
+  function edgePreview(v){ return Math.max(-20, Math.min(120, v)); } // v175: echtes WYSIWYG ohne automatische Rand-Verschiebung
   if(titleOv){ titleOv.style.left=edgePreview(tx)+'%'; titleOv.style.top=edgePreview(ty)+'%'; titleOv.style.display=((document.getElementById('htmSsShowSongTitle')?.checked||document.getElementById('htmSsShowSongNumber')?.checked)?'':'none'); }
   if(dotsOv){ dotsOv.style.left=edgePreview(dx)+'%'; dotsOv.style.top=edgePreview(dy)+'%'; dotsOv.style.display=(document.getElementById('htmSsShowProgressDots')?.checked ? 'flex' : 'none'); }
   document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
