@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v162-diashow-cover-fit-square-20260522 -->
+<!-- Version: v163-diashow-cover-fit-square-text-angle-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5402,6 +5402,9 @@ function buildSlideshowEl(cell){
   const slug    = cell.slug    || '';
   const startColor = cell.startColor || '#0A0A0A';
   const coverFitSquare = !!cell.coverFitSquare;
+  const coverFitAngleOffset = Math.max(-30, Math.min(30, Number(cell.coverFitAngleOffset || 0)));
+  const showSongTitle  = cell.showSongTitle === false ? false : true;
+  const showSongNumber = cell.showSongNumber === false ? false : true;
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5418,6 +5421,7 @@ function buildSlideshowEl(cell){
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
+  wrap.dataset.coverFitAngleOffset = String(coverFitAngleOffset);
 
   if(slides.length === 0){
     // Simple static image teaser
@@ -5451,11 +5455,11 @@ function buildSlideshowEl(cell){
         ${title.split(' ').map(w=>`<div>${w}</div>`).join('')}
       </div>
     </div>
-    <div class="ft-song-name pos-${pos}">
-      <div class="ft-song-artist" id="ftSongArtist_${wrap.id}"></div>
-      <div class="ft-song-title" id="ftSongTitle_${wrap.id}"></div>
-      <div class="ft-song-num" id="ftSongNum_${wrap.id}">01 / ${slides.length}</div>
-    </div>
+    ${(showSongTitle || showSongNumber) ? `<div class="ft-song-name pos-${pos}">
+      ${showSongTitle ? `<div class="ft-song-artist" id="ftSongArtist_${wrap.id}"></div>
+      <div class="ft-song-title" id="ftSongTitle_${wrap.id}"></div>` : ''}
+      ${showSongNumber ? `<div class="ft-song-num" id="ftSongNum_${wrap.id}">01 / ${slides.length}</div>` : ''}
+    </div>` : ''}
     <div class="ft-dots" id="ftDots_${wrap.id}"></div>`;
 
   // Init slideshow after DOM insert (passes click handler via initDynamicSlideshow)
@@ -5529,7 +5533,9 @@ function hjFitSlideshowCoverWindow(frameImg){
     if(Number.isFinite(s1) && Number.isFinite(s2)) slope = (s1+s2)/2;
     else if(Number.isFinite(s1)) slope = s1;
     else if(Number.isFinite(s2)) slope = s2;
-    const angleDeg = -Math.atan(slope) * 180 / Math.PI;
+    const autoAngleDeg = -Math.atan(slope) * 180 / Math.PI;
+    const manualOffset = Math.max(-30, Math.min(30, Number(wrap.dataset.coverFitAngleOffset || 0)));
+    const angleDeg = autoAngleDeg + manualOffset;
 
     // Nicht die Achsen-Bounding-Box verwenden, sondern die echte Quadratgröße aus der transparenten Fläche.
     // So wird das Cover nicht rechteckig verzerrt und nicht unnötig vergrößert.
