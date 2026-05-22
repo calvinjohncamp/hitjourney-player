@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v173-real-covers-upload-faster-start -->
+<!-- Version: admin-v20260522-home-row-cell-fix-v174 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -390,6 +390,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-type-btn.cancel{background:rgba(220,80,80,.08);color:rgba(220,80,80,.6);margin-top:1px}
 .he-type-btn.cancel:hover{background:rgba(220,80,80,.2)}
 .he-add-bar{display:flex;align-items:center;justify-content:center;padding:6px 0 2px}
+.he-add-bar.top{padding:0 0 10px}
+.he-add-bar.bottom{padding:10px 0 2px}
 .he-add-btn{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;background:rgba(133,172,201,.08);color:#85ACC9;transition:background .15s}
 .he-add-btn:hover{background:rgba(133,172,201,.16)}
 /* Modal shared styles */
@@ -2367,11 +2369,19 @@ function renderHomeEditor(){
   const wrap = document.getElementById('homeEditorWrap');
   if(!wrap) return;
   wrap.innerHTML = '';
+
+  // Add row bar at top — creates a new row directly at the top.
+  const topBar = document.createElement('div');
+  topBar.className = 'he-add-bar top';
+  topBar.innerHTML = '<button class="he-add-btn" onclick="addRowAtTop()">＋ Neue Zeile oben hinzufügen</button>';
+  wrap.appendChild(topBar);
+
   homeLayout.forEach((row,idx)=> wrap.appendChild(buildRowEl(row,idx)));
-  // Add row bar
+
+  // Add row bar at bottom — keeps the previous behavior.
   const bar = document.createElement('div');
-  bar.className = 'he-add-bar';
-  bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile hinzufügen</button>';
+  bar.className = 'he-add-bar bottom';
+  bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile unten hinzufügen</button>';
   wrap.appendChild(bar);
   updateHomeUndoUi();
 }
@@ -2587,32 +2597,43 @@ function applyType(rowId, cellIdx, type){
 
   markHomeAction();
 
-  // Reset all cells to empty first
-  row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-
+  // Wichtig: Eine normale 1:1-Kachel darf NICHT die ganze Zeile zurücksetzen.
+  // Genau das war der Fehler: Nach Feld 1 wurde beim Bestücken von Feld 2 die Zeile neu aufgebaut,
+  // wodurch praktisch keine 2/3/4 Medien in einer Zeile sauber möglich waren.
   if(type === '1x1'){
-    row.cells[cellIdx].type = '1x1';
-    // other 3 stay as empty (each can be their own 1:1)
-    for(let i=0;i<4;i++) if(i!==cellIdx) row.cells[i].type = 'empty';
+    const keep = {...row.cells[cellIdx]};
+    row.cells[cellIdx] = {...emptyCell(), ...keep, type:'1x1'};
 
   } else if(type === '2x1'){
-    row.cells[0].type = 'span-2';
-    // cells 1-3 stay visible as empty 1:1
+    // 2:1 ist ein Layout für den linken Zeilenbereich. Bereits vorhandene Zusatzkacheln rechts bleiben erhalten.
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'span-2'};
+    for(let i=1;i<4;i++){
+      // sichtbare rechte Felder weiter nutzbar lassen
+      row.cells[i] = {...row.cells[i], ...old[i], type:(old[i]?.type && old[i].type!=='hidden' ? old[i].type : 'empty')};
+    }
 
   } else if(type === 'trio'){
-    row.cells[0].type = 'trio-a';   // top-left 1:1
-    row.cells[1].type = 'trio-b';   // bottom-left 2:1
-    row.cells[2].type = 'trio-c';   // right tall
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'trio-a'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'trio-b'};
+    row.cells[2] = {...row.cells[2], ...old[2], type:'trio-c'};
     row.cells[3].type = 'hidden';
 
   } else if(type === '4x1'){
-    row.cells[0].type = 'span-4';
+    const old0 = {...row.cells[cellIdx]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
 
   } else if(type === 'slideshow'){
-    row.cells[0].type = 'slideshow';
+    const old0 = {...row.cells[cellIdx]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'slideshow'};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
@@ -2620,12 +2641,11 @@ function applyType(rowId, cellIdx, type){
 
   renderHomeEditor();
 
-  // If slideshow: open slideshow modal immediately
   if(type === 'slideshow'){
     setTimeout(()=>openSlideshowModal(rowId), 80);
   } else {
-    // Open fill modal for the primary cell
-    setTimeout(()=>openCellEdit(rowId, 0), 80);
+    const targetIdx = (type === '1x1') ? cellIdx : 0;
+    setTimeout(()=>openCellEdit(rowId, targetIdx), 80);
   }
 }
 
@@ -2638,6 +2658,16 @@ function addRow(){
   setTimeout(()=>{
     const w = document.getElementById('homeEditorWrap');
     if(w) w.scrollTop = w.scrollHeight;
+  },60);
+}
+
+function addRowAtTop(){
+  markHomeAction();
+  homeLayout.unshift(makeRow());
+  renderHomeEditor();
+  setTimeout(()=>{
+    const w = document.getElementById('homeEditorWrap');
+    if(w) w.scrollTop = 0;
   },60);
 }
 
