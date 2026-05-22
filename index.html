@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v179-home-lyrics-no-strip-centered-cover-20260522 -->
+<!-- Version: v180-home-lyrics-cover-aligned-lyrics21-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1411,7 +1411,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
-/* v179 — Home-Cover im Klickzyklus mittig zeigen; Lyrics bleiben im bisherigen Sheet-Layout */
+/* v180 — Home-Cover UND Home-Lyrics im Klickzyklus exakt identisch mittig zeigen */
 #screenNowPlaying.home-cover-open:not(.lyrics-open) .np-cover-wrap{
   flex:1;
   align-items:center;
@@ -1438,6 +1438,39 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     padding:0 16px;
   }
   #screenNowPlaying.home-cover-open:not(.lyrics-open) .np-cover{
+    width:min(86vw, calc(100dvh - env(safe-area-inset-top, 0px) - 36px));
+    height:min(86vw, calc(100dvh - env(safe-area-inset-top, 0px) - 36px));
+    max-width:86vw;
+  }
+}
+
+/* Home-Klickzyklus: Lyrics-Sheet nutzt dieselbe Bühne wie das Cover, inkl. dezentem HITJOURNEY-Label. */
+#screenNowPlaying.home-cover-open.lyrics-open .np-album-label{
+  opacity:1;
+  pointer-events:none;
+}
+#screenNowPlaying.home-cover-open.lyrics-open .np-cover-wrap{
+  flex:1;
+  align-items:center;
+  justify-content:center;
+  padding:0 20px;
+  overflow:hidden;
+}
+#screenNowPlaying.home-cover-open.lyrics-open .np-cover{
+  width:min(78vh, 82vw);
+  height:min(78vh, 82vw);
+  max-width:82vw;
+  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 24px);
+  aspect-ratio:1/1;
+  object-fit:contain;
+  border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.70);
+}
+@media(max-width:599px){
+  #screenNowPlaying.home-cover-open.lyrics-open .np-cover-wrap{
+    padding:0 16px;
+  }
+  #screenNowPlaying.home-cover-open.lyrics-open .np-cover{
     width:min(86vw, calc(100dvh - env(safe-area-inset-top, 0px) - 36px));
     height:min(86vw, calc(100dvh - env(safe-area-inset-top, 0px) - 36px));
     max-width:86vw;
@@ -4811,7 +4844,7 @@ function openLyrics() {
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
-  screenNP.classList.remove('home-cover-open');
+  if(!window._hjHomeLyricsSong) screenNP.classList.remove('home-cover-open');
   resetImageFrameTransform();
   languageCoverFrameOpen = false;
   lyricsOpen = true;
