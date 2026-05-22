@@ -5276,17 +5276,16 @@ function buildSlideshowEl(cell){
     </div>
     <div class="ft-dots" id="ftDots_${wrap.id}"></div>`;
 
-  wrap.addEventListener('click', ()=>{ playSongOrAlbum(cell); });
-
-  // Init slideshow after DOM insert
+  // Init slideshow after DOM insert (passes click handler via initDynamicSlideshow)
   requestAnimationFrame(()=> initDynamicSlideshow(wrap.id, slides));
   return wrap;
 }
 
-/* ── Init a dynamic slideshow (same logic as existing featuredTeaser) ── */
+/* ── Init a dynamic slideshow — mirrors original featuredTeaser logic exactly ── */
 function initDynamicSlideshow(id, slides){
   const wrap    = document.getElementById(id);
   if(!wrap || !slides.length) return;
+
   const covers  = wrap.querySelector('.ft-covers');
   const imgs    = covers ? Array.from(covers.querySelectorAll('img:not(.ft-blank)')) : [];
   const dotsEl  = document.getElementById('ftDots_'+id);
@@ -5295,6 +5294,9 @@ function initDynamicSlideshow(id, slides){
   const numEl   = document.getElementById('ftSongNum_'+id);
 
   let cur = 0;
+  let featuredCurrentMp3 = null;
+  let timer = null;
+
   // Build dots
   if(dotsEl){
     dotsEl.innerHTML = '';
@@ -5316,8 +5318,57 @@ function initDynamicSlideshow(id, slides){
     if(numEl)    numEl.textContent    = String(cur+1).padStart(2,'0')+' / '+slides.length;
   }
 
+  function startRotation(){ timer = setInterval(()=>goTo(cur+1), 4000); }
+  function stopRotation(){ clearInterval(timer); }
+
   goTo(0);
-  const timer = setInterval(()=>goTo(cur+1), 4000);
+  startRotation();
+
+  // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
+  wrap.addEventListener('click', ()=>{
+    const slide = slides[cur];
+    if(!slide) return;
+    // Slug → Song aus SUPABASE_SONGS
+    const song = SUPABASE_SONGS.find(s=>s.slug===slide.slug);
+    if(!song || !song.mp3) return;
+
+    // Toggle: gleicher Song → pause/play
+    if(featuredCurrentMp3 === song.mp3){
+      if(audio.paused) audio.play().catch(()=>{});
+      else audio.pause();
+      return;
+    }
+
+    // Neuer Song → featured-Modus starten
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'spotlight' } }));
+    featuredMode = true;
+    featuredCurrentMp3 = song.mp3;
+    playerBar.classList.remove('visible');
+    audio.src = song.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+  });
+
+  // Wenn anderer Audio-Source übernimmt → reset
+  window.addEventListener('hj:teaser-audio-switch', (e)=>{
+    if(e.detail && e.detail.source !== 'spotlight') featuredCurrentMp3 = null;
+  });
+  audio.addEventListener('play', ()=>{
+    if(featuredMode && audio.src !== featuredCurrentMp3){
+      featuredMode = false; featuredCurrentMp3 = null;
+    }
+  });
+
+  // Swipe links/rechts
+  let touchX = null;
+  wrap.addEventListener('touchstart', e=>{ touchX=e.touches[0].clientX; stopRotation(); },{passive:true});
+  wrap.addEventListener('touchend',   e=>{
+    if(touchX===null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx)>30) goTo(cur + (dx<0?1:-1));
+    touchX=null; startRotation();
+  },{passive:true});
+
   wrap._slideshowTimer = timer;
 }
 
