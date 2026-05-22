@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v164-diashow-text-toggle-angle-active-20260522 -->
+<!-- Version: v165-diashow-save-fit-fields-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5410,6 +5410,10 @@ function buildSlideshowEl(cell){
   const showSongTitle = cell.showSongTitle !== false;
   const showSongNumber = cell.showSongNumber !== false;
   const coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cell.coverAngleOffset || 0) || 0));
+  const coverFitLeft = cell.coverFitLeft ?? '';
+  const coverFitTop = cell.coverFitTop ?? '';
+  const coverFitWidth = cell.coverFitWidth ?? '';
+  const coverFitHeight = cell.coverFitHeight ?? '';
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5425,6 +5429,10 @@ function buildSlideshowEl(cell){
   wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.dataset.coverAngleOffset = String(coverAngleOffset);
+  wrap.dataset.coverFitLeft = String(coverFitLeft);
+  wrap.dataset.coverFitTop = String(coverFitTop);
+  wrap.dataset.coverFitWidth = String(coverFitWidth);
+  wrap.dataset.coverFitHeight = String(coverFitHeight);
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
 
@@ -5542,15 +5550,20 @@ function hjFitSlideshowCoverWindow(frameImg){
     const coverAngleOffset = parseFloat(wrap.dataset.coverAngleOffset || '0') || 0;
     angleDeg += Math.max(-25, Math.min(25, coverAngleOffset));
 
-    // Nicht die Achsen-Bounding-Box verwenden, sondern die echte Quadratgröße aus der transparenten Fläche.
-    // So wird das Cover nicht rechteckig verzerrt und nicht unnötig vergrößert.
-    const sidePx = Math.sqrt(count);
-    const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
-    const left = (cx - sidePx/2) / w * 100;
-    const top = (cy - sidePx/2) / h * 100;
-    const width = sidePx / w * 100;
-    const height = sidePx / h * 100;
+    // Standard: Bounding-Box des transparenten Fensters nutzen.
+    // Dadurch reagiert die Live-Seite direkt auf die im Admin gespeicherten Prozentwerte.
+    const autoLeft = minX / w * 100;
+    const autoTop = minY / h * 100;
+    const autoWidth = (maxX - minX + 1) / w * 100;
+    const autoHeight = (maxY - minY + 1) / h * 100;
+    function pctOr(value, fallback){
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? Math.max(-50, Math.min(150, n)) : fallback;
+    }
+    const left = pctOr(wrap.dataset.coverFitLeft, autoLeft);
+    const top = pctOr(wrap.dataset.coverFitTop, autoTop);
+    const width = pctOr(wrap.dataset.coverFitWidth, autoWidth);
+    const height = pctOr(wrap.dataset.coverFitHeight, autoHeight);
 
     covers.style.left = left + '%';
     covers.style.top = top + '%';
@@ -5562,6 +5575,15 @@ function hjFitSlideshowCoverWindow(frameImg){
     covers.style.transform = 'rotate(' + angleDeg.toFixed(2) + 'deg)';
     covers.dataset.fitAngle = angleDeg.toFixed(2);
   }catch(e){
+    // Fallback: Wenn im Admin Prozentwerte hinterlegt sind, trotzdem anwenden.
+    const lf=parseFloat(wrap.dataset.coverFitLeft), tp=parseFloat(wrap.dataset.coverFitTop), wd=parseFloat(wrap.dataset.coverFitWidth), ht=parseFloat(wrap.dataset.coverFitHeight);
+    if([lf,tp,wd,ht].every(Number.isFinite)){
+      const coverAngleOffset = parseFloat(wrap.dataset.coverAngleOffset || '0') || 0;
+      covers.style.left = lf + '%'; covers.style.top = tp + '%'; covers.style.width = wd + '%'; covers.style.height = ht + '%';
+      covers.style.aspectRatio = '1 / 1'; covers.style.borderRadius = '0'; covers.style.transformOrigin = '50% 50%';
+      covers.style.transform = 'rotate(' + coverAngleOffset.toFixed(2) + 'deg)';
+      return;
+    }
     console.warn('[hitjourney] Cover 1:1 einpassen: transparente Frame-Fläche konnte nicht analysiert werden', e);
   }
 }
