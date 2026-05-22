@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v170-real-cover-slides -->
+<!-- Version: admin-v20260522-diashow-v171-real-covers-free-overlays -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -473,6 +473,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-wys-rotate{position:absolute;left:50%;top:-34px;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#0B2A42;border:2px solid #85ACC9;color:#85ACC9;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 .ss-wys-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}.ss-wys-controls button{border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:#85ACC9;border-radius:8px;padding:8px 6px;font-size:11px;font-weight:700;cursor:pointer}.ss-wys-controls button.active{background:rgba(133,172,201,.2);color:#cfe5f5;border-color:#85ACC9}
 .ss-wys-mini{margin-top:7px;font-size:10.5px;color:rgba(133,172,201,.38);line-height:1.35}
+.ss-wys-overlay{position:absolute;z-index:6;touch-action:none;user-select:none;cursor:move;border:1px dashed rgba(133,172,201,.65);border-radius:7px;background:rgba(6,20,32,.28);box-shadow:0 4px 14px rgba(0,0,0,.28);padding:5px 7px;color:#f1ecdf;font-family:'Special Elite','Courier New',monospace;text-shadow:0 1px 4px rgba(0,0,0,.95);font-size:13px;line-height:1.1}
+.ss-wys-overlay.dots{display:flex;gap:5px;align-items:center;padding:7px}
+.ss-wys-overlay .dot{width:6px;height:6px;border-radius:50%;background:#f1ecdf;opacity:.35}.ss-wys-overlay .dot.active{opacity:1}
+.ss-wys-overlay .small{font-size:9px;opacity:.75;letter-spacing:.14em;margin-top:3px}
 
 /* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
 .he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none}
@@ -996,6 +1000,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
               <div class="ss-wys-rotate" id="ssWysRotate">↻</div>
               <div class="ss-wys-handle" id="ssWysHandle"></div>
             </div>
+            <div class="ss-wys-overlay dots" id="ssWysDots" title="Fortschrittspunkte ziehen"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <div class="ss-wys-overlay text" id="ssWysText" title="Songtitel/Nummer ziehen"><div>Songtitel</div><div class="small">01 / 10</div></div>
           </div>
           <div class="ss-wys-controls">
             <button type="button" id="ssShapeSquare" onclick="ssWysSetShape('square')">Quadrat</button>
@@ -1005,11 +1011,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <button type="button" onclick="ssWysReset()">Reset</button>
             <button type="button" onclick="ssWysNudge(-1,0)">←</button>
           </div>
-          <div class="ss-wys-mini">Quadrat/Kreis direkt ziehen. Unten rechts wird proportional skaliert – Kreis bleibt rund, Quadrat bleibt quadratisch. Die Startfarbe ist das erste sichtbare Frame vor dem ersten Song.</div>
+          <div class="ss-wys-mini">Quadrat/Kreis, Fortschrittspunkte und Songtitel/Nummer direkt im Teaser ziehen. Unten rechts wird proportional skaliert – Kreis bleibt rund, Quadrat bleibt quadratisch.</div>
         </div>
         <input type="hidden" id="htmSsCoverAngleOffset" value="0">
         <input type="hidden" id="htmSsFitLeft"><input type="hidden" id="htmSsFitTop"><input type="hidden" id="htmSsFitWidth"><input type="hidden" id="htmSsFitHeight">
         <input type="hidden" id="htmSsCoverShape" value="square"><input type="hidden" id="htmSsCoverFitMode" value="contain">
+        <input type="hidden" id="htmSsTitleX" value="4"><input type="hidden" id="htmSsTitleY" value="78">
+        <input type="hidden" id="htmSsDotsX" value="4"><input type="hidden" id="htmSsDotsY" value="86">
       </div>
 
       <!-- Overlay-Position (manuell wählbar / wird von KI vorbelegt) -->
@@ -2303,7 +2311,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain'}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -2319,7 +2327,7 @@ async function loadHomeLayout(){
       id:      row.id,
       editing: false,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -2988,7 +2996,7 @@ function openSlideshowModal(rowId){
     const row  = rowById(rowId);
     const cell = row && row.cells ? row.cells[0] : null;
 
-    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>ssNormalizeSlideToRealCover(s)) : [];
+    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
     ssOverlayPos = (cell && cell.overlayPos) || 'bottom-left';
     ssFrameFile  = null;
 
@@ -3010,6 +3018,10 @@ function openSlideshowModal(rowId){
     hjSetVal('htmSsFitHeight', (cell && cell.coverFitHeight !== undefined && cell.coverFitHeight !== '') ? cell.coverFitHeight : 86);
     hjSetVal('htmSsCoverShape', (cell && cell.coverShape) || 'square');
     hjSetVal('htmSsCoverFitMode', (cell && cell.coverFitMode) || 'contain');
+    hjSetVal('htmSsTitleX', (cell && cell.titleX !== undefined && cell.titleX !== '') ? cell.titleX : 4);
+    hjSetVal('htmSsTitleY', (cell && cell.titleY !== undefined && cell.titleY !== '') ? cell.titleY : 78);
+    hjSetVal('htmSsDotsX',  (cell && cell.dotsX  !== undefined && cell.dotsX  !== '') ? cell.dotsX  : 4);
+    hjSetVal('htmSsDotsY',  (cell && cell.dotsY  !== undefined && cell.dotsY  !== '') ? cell.dotsY  : 86);
     hjSetVal('ssSongSearch', '');
     hjSetDisplay('ssAnalyseResult', 'none');
 
@@ -3074,25 +3086,6 @@ function ssMarkPos(pos){
   document.querySelectorAll('.ss-pos-btn').forEach(b=>b.classList.toggle('active', b.dataset.pos===pos));
 }
 
-
-function ssIsFocusLikeUrl(url){
-  return /(?:fokus|focus|cover-2-1|lyrics21)/i.test(String(url || ''));
-}
-function ssRealCoverForSlug(slug, fallback){
-  const song = (allSongs || []).find(x => x.slug === slug || x.slug === String(slug || '').trim());
-  const real = song && song.cover_url ? song.cover_url : '';
-  if(real) return real;
-  if(fallback && !ssIsFocusLikeUrl(fallback)) return fallback;
-  return fallback || '';
-}
-function ssNormalizeSlideToRealCover(slide){
-  const s = {...(slide || {})};
-  const current = s.coverUrl || s.cover_url || '';
-  const focus = s.focusUrl || s.focus_url || (ssIsFocusLikeUrl(current) ? current : '');
-  s.coverUrl = ssRealCoverForSlug(s.slug, current);
-  if(focus && focus !== s.coverUrl) s.focusUrl = focus;
-  return s;
-}
 function renderSlidesList(){
   const list = document.getElementById('htmSlidesList');
   if(!list) return;
@@ -3109,7 +3102,7 @@ function renderSlidesList(){
     div.setAttribute('draggable','true');
     div.innerHTML = `
       <div class="htm-slide-grip" title="Greifen und verschieben">⋮⋮</div>
-      <img class="htm-slide-thumb" src="${ssRealCoverForSlug(s.slug, s.coverUrl||s.focusUrl||'')}" onerror="this.style.opacity='.2'"/>
+      <img class="htm-slide-thumb" src="${s.coverUrl||''}" onerror="this.style.opacity='.2'"/>
       <div class="htm-slide-info">
         <div class="htm-slide-title">${esc(s.title||s.slug)}</div>
         <div class="htm-slide-artist">${esc(s.artist||'')}</div>
@@ -3231,7 +3224,7 @@ function renderSsPicker(){
         htmSlides = htmSlides.filter(s=>s.slug!==song.slug);
       } else {
         htmSlides.push({ slug:song.slug, title:song.title||song.slug, artist:song.artist||'',
-          coverUrl: ssRealCoverForSlug(song.slug, coverUrl), focusUrl: song.focus_url||song.cover21_url||coverUrl });
+          coverUrl, focusUrl: coverUrl });
       }
       renderSlidesList();
     };
@@ -3246,7 +3239,7 @@ let ssWysDrag = null;
 function ssWysNum(v, fallback){ const n=parseFloat(v); return Number.isFinite(n) ? n : fallback; }
 function ssWysFirstSlideCover(){
   const s = htmSlides && htmSlides[0];
-  if(s) return ssRealCoverForSlug(s.slug, s.coverUrl || s.focusUrl || '');
+  if(s) return s.coverUrl || ''; // bewusst kein Fokus-Crop im WYSIWYG
   const song = allSongs && allSongs[0];
   return song ? (song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`) : '';
 }
@@ -3306,6 +3299,11 @@ function ssWysApply(){
     const pv=document.getElementById('prevSsFrame');
     frame.src = (pv && pv.src) ? pv.src : (document.getElementById('htmSsBgUrl')?.value || '');
   }
+  const titleOv=document.getElementById('ssWysText'), dotsOv=document.getElementById('ssWysDots');
+  const tx=ssWysNum(document.getElementById('htmSsTitleX')?.value,4), ty=ssWysNum(document.getElementById('htmSsTitleY')?.value,78);
+  const dx=ssWysNum(document.getElementById('htmSsDotsX')?.value,4), dy=ssWysNum(document.getElementById('htmSsDotsY')?.value,86);
+  if(titleOv){ titleOv.style.left=tx+'%'; titleOv.style.top=ty+'%'; titleOv.style.display=((document.getElementById('htmSsShowSongTitle')?.checked||document.getElementById('htmSsShowSongNumber')?.checked)?'':'none'); }
+  if(dotsOv){ dotsOv.style.left=dx+'%'; dotsOv.style.top=dy+'%'; }
   document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
   document.getElementById('ssShapeCircle')?.classList.toggle('active', ssWysState.shape==='circle');
   document.getElementById('ssFitContain')?.classList.toggle('active', ssWysState.fit==='contain');
@@ -3319,15 +3317,36 @@ function ssWysSetFit(fit){ ssWysState.fit=fit; ssWysApply(); }
 function ssWysReset(){ ssWysState={x:0,y:6,w:44,h:88,r:0,shape:'square',fit:'contain'}; ssWysApply(); }
 function ssWysNudge(dx,dy){ ssWysState.x+=dx; ssWysState.y+=dy; ssWysApply(); }
 function ssWysPoint(e){ return e.touches&&e.touches[0] ? e.touches[0] : e; }
+let ssOverlayDrag=null;
+function ssOverlayStart(kind,e){
+  const stage=document.getElementById('ssWysStage'); if(!stage) return;
+  const p=ssWysPoint(e), r=stage.getBoundingClientRect();
+  const xId=kind==='title'?'htmSsTitleX':'htmSsDotsX', yId=kind==='title'?'htmSsTitleY':'htmSsDotsY';
+  ssOverlayDrag={kind,xId,yId,sx:p.clientX,sy:p.clientY,rect:r,startX:ssWysNum(document.getElementById(xId)?.value, kind==='title'?4:4),startY:ssWysNum(document.getElementById(yId)?.value, kind==='title'?78:86)};
+  e.preventDefault(); e.stopPropagation();
+}
+function ssOverlayMove(e){
+  if(!ssOverlayDrag) return;
+  const p=ssWysPoint(e), d=ssOverlayDrag, r=d.rect;
+  const nx=Math.max(-20,Math.min(120,d.startX+(p.clientX-d.sx)/r.width*100));
+  const ny=Math.max(-20,Math.min(120,d.startY+(p.clientY-d.sy)/r.height*100));
+  hjSetVal(d.xId, Number(nx).toFixed(2).replace(/\.00$/,''));
+  hjSetVal(d.yId, Number(ny).toFixed(2).replace(/\.00$/,''));
+  ssWysApply(); e.preventDefault();
+}
+function ssOverlayEnd(){ ssOverlayDrag=null; }
 function ssWysBind(){
   const stage=document.getElementById('ssWysStage'), box=document.getElementById('ssWysBox'), handle=document.getElementById('ssWysHandle'), rot=document.getElementById('ssWysRotate');
   if(!stage || !box || !handle || !rot || stage.dataset.bound) return;
   stage.dataset.bound='1';
+  const dotsOv=document.getElementById('ssWysDots'), textOv=document.getElementById('ssWysText');
+  if(dotsOv) dotsOv.addEventListener('pointerdown', e=>ssOverlayStart('dots',e));
+  if(textOv) textOv.addEventListener('pointerdown', e=>ssOverlayStart('title',e));
   const start=(mode,e)=>{ const p=ssWysPoint(e); const r=stage.getBoundingClientRect(); ssWysDrag={mode,sx:p.clientX,sy:p.clientY,start:{...ssWysState},rect:r}; e.preventDefault(); };
   box.addEventListener('pointerdown', e=>{ if(e.target===handle||e.target===rot) return; start('move',e); });
   handle.addEventListener('pointerdown', e=>start('resize',e));
   rot.addEventListener('pointerdown', e=>start('rotate',e));
-  window.addEventListener('pointermove', e=>{
+  window.addEventListener('pointermove', e=>{ ssOverlayMove(e);
     if(!ssWysDrag) return; const p=ssWysPoint(e), d=ssWysDrag, r=d.rect;
     if(d.mode==='move'){
       ssWysState.x=d.start.x+(p.clientX-d.sx)/r.width*100; ssWysState.y=d.start.y+(p.clientY-d.sy)/r.height*100;
@@ -3346,7 +3365,7 @@ function ssWysBind(){
     ssWysState.x=Math.max(-40,Math.min(140,ssWysState.x)); ssWysState.y=Math.max(-40,Math.min(140,ssWysState.y)); ssWysState.w=Math.min(160,ssWysState.w); ssWysState.h=Math.min(160,ssWysState.h);
     ssWysApply(); e.preventDefault();
   }, {passive:false});
-  window.addEventListener('pointerup', ()=>{ ssWysDrag=null; });
+  window.addEventListener('pointerup', ()=>{ ssWysDrag=null; ssOverlayEnd(); });
 }
 
 
@@ -3502,7 +3521,11 @@ async function saveSlideshowTile(){
   cell.coverFitHeight = document.getElementById('htmSsFitHeight')?.value?.trim() || '';
   cell.coverShape = document.getElementById('htmSsCoverShape')?.value || 'square';
   cell.coverFitMode = document.getElementById('htmSsCoverFitMode')?.value || 'contain';
-  cell.slides     = htmSlides.map(s=>ssNormalizeSlideToRealCover(s));
+  cell.titleX = document.getElementById('htmSsTitleX')?.value?.trim() || '4';
+  cell.titleY = document.getElementById('htmSsTitleY')?.value?.trim() || '78';
+  cell.dotsX  = document.getElementById('htmSsDotsX')?.value?.trim() || '4';
+  cell.dotsY  = document.getElementById('htmSsDotsY')?.value?.trim() || '86';
+  cell.slides     = htmSlides.map(s=>({...s, coverUrl:s.coverUrl, focusUrl:s.coverUrl}));
 
   // Wichtig v166:
   // „Übernehmen“ im Diashow-Modal speichert jetzt sofort in Supabase.
@@ -3533,7 +3556,7 @@ function importCurrentHome(){
 
   function makeCell(overrides){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
-             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', playlistSlug:'', ...overrides };
+             bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:86, playlistSlug:'', ...overrides };
   }
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
@@ -3563,21 +3586,21 @@ function importCurrentHome(){
       makeCell({
         type:'slideshow', fn:'play', slug:'spotlight',
         alt:'IN THE SPOTLIGHT',
-        bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
-        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
+        bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
+        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
         overlayPos:'bottom-left',
         startColor:'#0A0A0A',
         slides:[
-          { slug:'neues-licht',           title:'Neues Licht',              artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,                   focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg` },
-          { slug:'half-past-nine',         title:'Half Past Nine On Main St',artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg` },
-          { slug:'problematisch',          title:'Problematisch',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Problematisch%20-%20Fokus.jpg`,                   focusUrl:`${S3}/artwork/Problematisch%20-%20Fokus.jpg` },
-          { slug:'pine-and-snow',          title:'Pine and Snow',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Fokus.jpg`,               focusUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Fokus.jpg` },
-          { slug:'nur-noch-augen-fuer-sie',title:'Nur noch Augen für sie',  artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg`, focusUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg` },
-          { slug:'the-cold-dont-lie',      title:'The Cold Don\'t Lie',      artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg`,         focusUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg` },
-          { slug:'unscharf',               title:'Unscharf',                 artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Unscharf%20-%20Fokus.jpg`,                       focusUrl:`${S3}/artwork/Unscharf%20-%20Fokus.jpg` },
-          { slug:'keys-on-the-floor',      title:'Keys On The Floor',        artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg`,         focusUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg` },
-          { slug:'rita-forever',           title:'Rita Forever',             artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Rita%20Forever%20-%20Fokus.jpg`,                  focusUrl:`${S3}/artwork/Rita%20Forever%20-%20Fokus.jpg` },
-          { slug:'my-piece-of-heaven',     title:'My Piece of Heaven',       artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg`,        focusUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg` },
+          { slug:'neues-licht',           title:'Neues Licht',              artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,                   focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg` },
+          { slug:'half-past-nine',         title:'Half Past Nine On Main St',artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg` },
+          { slug:'problematisch',          title:'Problematisch',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg`,                   focusUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg` },
+          { slug:'pine-and-snow',          title:'Pine and Snow',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg`,               focusUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg` },
+          { slug:'nur-noch-augen-fuer-sie',title:'Nur noch Augen für sie',  artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg`, focusUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg` },
+          { slug:'the-cold-dont-lie',      title:'The Cold Don\'t Lie',      artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg`,         focusUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg` },
+          { slug:'unscharf',               title:'Unscharf',                 artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg`,                       focusUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg` },
+          { slug:'keys-on-the-floor',      title:'Keys On The Floor',        artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg`,         focusUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg` },
+          { slug:'rita-forever',           title:'Rita Forever',             artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg`,                  focusUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg` },
+          { slug:'my-piece-of-heaven',     title:'My Piece of Heaven',       artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg`,        focusUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg` },
         ]
       }),
       makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})

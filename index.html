@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v170-real-cover-slides-20260522 -->
+<!-- Version: v171-real-covers-free-overlays-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1090,6 +1090,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   pointer-events: none;
   max-width: 62%;
 }
+.ft-song-name.custom-pos{
+  left:var(--ft-title-x,4%);
+  top:var(--ft-title-y,78%);
+  right:auto;
+  bottom:auto;
+  transform:none;
+  text-align:var(--ft-title-align,left);
+}
 .ft-song-name.pos-top-left{left:4%;right:auto;top:8%;bottom:auto;text-align:left;transform:none}
 .ft-song-name.pos-top-center{left:50%;right:auto;top:8%;bottom:auto;text-align:center;transform:translateX(-50%)}
 .ft-song-name.pos-top-right{right:3%;left:auto;top:8%;bottom:auto;text-align:right;transform:none}
@@ -1136,6 +1144,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display: flex;
   gap: 6px;
   mix-blend-mode: difference;
+}
+.ft-dots.custom-pos{
+  left:var(--ft-dots-x,4%);
+  top:var(--ft-dots-y,86%);
+  right:auto;
+  bottom:auto;
+  transform:none;
 }
 .ft-dot {
   width: 6px;
@@ -5419,10 +5434,6 @@ if(!window._hjStandaloneHomeTeaserListeners){
 }
 
 /* ── Build a slideshow (featured-teaser style) ── */
-
-function hjIsFocusLikeUrl(url){
-  return /(?:fokus|focus|cover-2-1|lyrics21)/i.test(String(url || ''));
-}
 function buildSlideshowEl(cell){
   const slides  = cell.slides  || [];
   const bgUrl   = cell.bgUrl   || cell.imageUrl || '';
@@ -5447,6 +5458,14 @@ function buildSlideshowEl(cell){
   const coverFitHeight = cell.coverFitHeight ?? cell.fitHeight ?? '';
   const coverShape = (cell.coverShape || 'square').toLowerCase();
   const coverFitMode = (cell.coverFitMode || 'contain').toLowerCase();
+  const titleX = cell.titleX ?? cell.textX ?? cell.songTextX ?? '';
+  const titleY = cell.titleY ?? cell.textY ?? cell.songTextY ?? '';
+  const dotsX  = cell.dotsX  ?? cell.progressX ?? '';
+  const dotsY  = cell.dotsY  ?? cell.progressY ?? '';
+  const hasTitleCustom = titleX !== '' && titleY !== '' && titleX !== undefined && titleY !== undefined;
+  const hasDotsCustom  = dotsX !== '' && dotsY !== '' && dotsX !== undefined && dotsY !== undefined;
+  const titleStyle = hasTitleCustom ? `--ft-title-x:${parseFloat(titleX)||0}%;--ft-title-y:${parseFloat(titleY)||0}%;` : '';
+  const dotsStyle  = hasDotsCustom  ? `--ft-dots-x:${parseFloat(dotsX)||0}%;--ft-dots-y:${parseFloat(dotsY)||0}%;` : '';
 
   // Map overlayPos → CSS alignment
   const posMap = {
@@ -5481,17 +5500,23 @@ function buildSlideshowEl(cell){
   }
 
   // Full slideshow — reuse existing featured-teaser CSS
-  // Resolve cover URL: prefer stored coverUrl/focusUrl, fall back to SUPABASE_SONGS live data
+  // Resolve cover URL: always prefer the real uploaded 1:1 song cover.
+  // Older slideshow data sometimes stored a generated *Fokus.jpg* crop as coverUrl/focusUrl;
+  // this mode must not use those crops.
+  function focusToCoverUrl(url){
+    if(!url) return '';
+    return String(url)
+      .replace(/%20-%20Fokus(?=\.(jpg|jpeg|png|webp))/i, '%20-%20Cover')
+      .replace(/ - Fokus(?=\.(jpg|jpeg|png|webp))/i, ' - Cover')
+      .replace(/-fokus(?=\.(jpg|jpeg|png|webp))/i, '-cover');
+  }
   function resolveSlideImg(s){
-    const live = SUPABASE_SONGS.find(x=>x.slug===s.slug || x.slug===(s.slug||'').trim());
-    const liveCover = (live && live.cover) ? live.cover : '';
-    const storedCover = s.coverUrl || s.cover_url || '';
-    const storedFocus = s.focusUrl || s.focus_url || '';
-    // v170: In Diashows immer zuerst das echte 1:1-Cover verwenden.
-    // Alte Spotlight-Daten enthielten teilweise „Fokus“-Ausschnitte; diese bleiben nur Fallback.
-    if(liveCover) return liveCover;
-    if(storedCover && !hjIsFocusLikeUrl(storedCover)) return storedCover;
-    return storedCover || storedFocus || '';
+    const live = SUPABASE_SONGS.find(x=>x.slug===(s.slug||'').trim());
+    if(live && live.cover) return live.cover;
+    if(s.coverUrl && !/fokus/i.test(s.coverUrl)) return s.coverUrl;
+    if(s.coverUrl) return focusToCoverUrl(s.coverUrl);
+    if(s.focusUrl) return focusToCoverUrl(s.focusUrl);
+    return '';
   }
   wrap.innerHTML = `
     <div class="ft-circle"></div>
@@ -5506,12 +5531,12 @@ function buildSlideshowEl(cell){
         ${title.split(' ').map(w=>`<div>${w}</div>`).join('')}
       </div>
     </div>
-    <div class="ft-song-name pos-${pos}">
+    <div class="ft-song-name ${hasTitleCustom ? 'custom-pos' : 'pos-'+pos}" style="${titleStyle}">
       <div class="ft-song-artist" id="ftSongArtist_${wrap.id}" style="${!showSongTitle ? 'display:none!important' : ''}"></div>
       <div class="ft-song-title" id="ftSongTitle_${wrap.id}" style="${!showSongTitle ? 'display:none!important' : ''}"></div>
       <div class="ft-song-num" id="ftSongNum_${wrap.id}" style="${!showSongNumber ? 'display:none!important' : ''}">01 / ${slides.length}</div>
     </div>
-    <div class="ft-dots" id="ftDots_${wrap.id}"></div>`;
+    <div class="ft-dots ${hasDotsCustom ? 'custom-pos' : ''}" id="ftDots_${wrap.id}" style="${dotsStyle}"></div>`;
 
   // Init slideshow after DOM insert (passes click handler via initDynamicSlideshow)
   requestAnimationFrame(()=> initDynamicSlideshow(wrap.id, slides));
@@ -5818,16 +5843,16 @@ function getFallbackHomeHTML(){
   <div class="ft-circle"></div>
   <div class="ft-covers" id="ftCovers">
     <img class="active ft-blank" loading="eager" src=""/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg" style="object-position:-52px 34px;"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg"/>
-    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg" style="object-position:-52px 34px;"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Cover.jpg"/>
+    <img loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg"/>
   </div>
   <div class="ft-text">
     <div class="ft-label">10 Songs im Fokus</div>
@@ -5860,34 +5885,34 @@ function initFeaturedTeaser(){
   const FEATURED_SONGS = [
     { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: schwarzer Kreis
     { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
     { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
     { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
     { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
     { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
     { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
     { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3' },
     { title: 'Keys on the Floor', display: 'Keys On The Floor', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3' },
     { title: 'Rita 4ever', display: 'Rita 4 Ever', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
     { title: 'My piece of heaven', display: 'My Piece Of Heaven', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
   ];
 
@@ -6446,34 +6471,34 @@ showHome = function(){
   const FEATURED_SONGS = [
     { title: null, display: '', artist: '', cover: '', mp3: null }, // Intro: nur schwarzer Kreis
     { title: 'Neues Licht, dieselben Scheiben', display: 'Neues Licht<br>Dieselben Scheiben', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/neues-licht-dieselben-scheiben.mp3' },
     { title: 'Half Past Nine on Main Street', display: 'Half Past Nine<br>On Main Street', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/half-past-nine-on-main-street.mp3' },
     { title: 'Problematisch', display: 'Problematisch', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Problematisch%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/problematisch.mp3' },
     { title: 'Pine & Snow', display: 'Pine & Snow', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20and%20Snow%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/pine-snow.mp3' },
     { title: 'Nur noch Augen für sie', display: 'Nur Noch Augen Für Sie', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/nur-noch-augen-fuer-sie.mp3' },
     { title: "The Cold Don't Lie", display: "The Cold Don't Lie", artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/the-cold-don-t-lie.mp3' },
     { title: 'Unscharf', display: 'Unscharf', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Unscharf%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/unscharf.mp3' },
     { title: 'Keys on the Floor', display: 'Keys On The Floor', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/keys-on-the-floor.mp3' },
     { title: 'Rita 4ever', display: 'Rita 4 Ever', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Rita%20Forever%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/rita-forever.mp3' },
     { title: 'My piece of heaven', display: 'My Piece Of Heaven', artist: 'Jörn Kämper',
-      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Fokus.jpg',
+      cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg',
       mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/my-piece-of-heaven.mp3' },
   ];
   const teaser   = document.getElementById('featuredTeaser');
