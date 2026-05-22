@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v165-diashow-save-fit-fields-20260522 -->
+<!-- Version: v166-diashow-admin-open-and-home-play-fix-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5465,7 +5465,7 @@ function buildSlideshowEl(cell){
   function resolveSlideImg(s){
     if(s.coverUrl) return s.coverUrl;
     if(s.focusUrl) return s.focusUrl;
-    const live = SUPABASE_SONGS.find(x=>x.slug===s.slug);
+    const live = resolveDynamicSlideSong(s);
     return (live && live.cover) ? live.cover : '';
   }
   wrap.innerHTML = `
@@ -5612,6 +5612,68 @@ function hjFitSlideshowCoverWindow(frameImg){
   }
 }
 
+/* v166 — robustes Auflösen von Diashow-Slides zu Songs.
+   Hintergrund: Einige ältere Spotlight-Slides speichern kurze/alte Slugs
+   (z. B. "neues-licht", "half-past-nine", "pine-and-snow"), während
+   die Supabase-Songs längere finale Slugs/MP3-Dateinamen haben. Dadurch
+   war die Diashow sichtbar, aber Klick → Play fand keinen Song. */
+function hjNormSlug(v){
+  return String(v||'').toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/&/g,'and')
+    .replace(/['’]/g,'')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'');
+}
+function hjFileNameFromUrl(url){
+  try{ return decodeURIComponent(String(url||'').split('?')[0].split('/').pop()||''); }
+  catch(_){ return String(url||'').split('?')[0].split('/').pop()||''; }
+}
+function resolveDynamicSlideSong(slide){
+  if(!slide) return null;
+  const songs = SUPABASE_SONGS || [];
+  const rawSlug = String(slide.slug||'').trim();
+  const nSlug = hjNormSlug(rawSlug);
+  const nTitle = hjNormSlug(slide.title||slide.display||'');
+  const storedMp3 = slide.mp3Url || slide.mp3_url || slide.mp3 || '';
+
+  let song = null;
+  if(storedMp3){
+    song = songs.find(s=>sameAudioUrl(s.mp3, storedMp3));
+    if(!song){
+      // Auch direkt gespeicherte MP3s abspielbar machen, falls der Song noch nicht in Supabase_SONGS steckt.
+      return {
+        slug: rawSlug || nTitle || hjNormSlug(hjFileNameFromUrl(storedMp3).replace(/\.mp3$/i,'')),
+        title: slide.title || rawSlug || 'Song',
+        artist: slide.artist || '',
+        mp3: storedMp3,
+        cover: slide.coverUrl || slide.focusUrl || slide.cover || ''
+      };
+    }
+  }
+  if(!song && rawSlug) song = songs.find(s=>s.slug===rawSlug || String(s.slug||'').trim()===rawSlug);
+  if(!song && nSlug) song = songs.find(s=>hjNormSlug(s.slug)===nSlug);
+  if(!song && nTitle) song = songs.find(s=>hjNormSlug(s.title)===nTitle);
+  if(!song && nSlug) song = songs.find(s=>hjNormSlug(s.slug).includes(nSlug) || nSlug.includes(hjNormSlug(s.slug)));
+  if(!song && nTitle) song = songs.find(s=>hjNormSlug(s.title).includes(nTitle) || nTitle.includes(hjNormSlug(s.title)));
+
+  // Legacy-Spotlight-Korrekturen für ältere gespeicherte Defaults
+  const legacy = {
+    'neues-licht':'neues-licht-dieselben-scheiben',
+    'half-past-nine':'half-past-nine-on-main-street',
+    'half-past-nine-on-main-st':'half-past-nine-on-main-street',
+    'pine-and-snow':'pine-snow',
+    'the-cold-dont-lie':'the-cold-don-t-lie',
+    'the-cold-don-t-lie':'the-cold-don-t-lie',
+    'rita-forever':'rita-forever',
+    'my-piece-of-heaven':'my-piece-of-heaven'
+  };
+  const legacyKey = legacy[nSlug] || legacy[nTitle];
+  if(!song && legacyKey) song = songs.find(s=>hjNormSlug(s.slug)===legacyKey);
+
+  return song || null;
+}
+
 /* ── Init a dynamic slideshow — mirrors original featuredTeaser logic exactly ── */
 function initDynamicSlideshow(id, slides){
   const wrap    = document.getElementById(id);
@@ -5655,7 +5717,7 @@ function initDynamicSlideshow(id, slides){
       img.classList.toggle('active', i===cur);
       // Lazy-fill missing cover from live song data
       if(i===cur && !img.src){
-        const live = SUPABASE_SONGS.find(x=>x.slug===slides[i].slug);
+        const live = resolveDynamicSlideSong(slides[i]);
         if(live && live.cover) img.src = live.cover;
       }
     });
@@ -5674,14 +5736,12 @@ function initDynamicSlideshow(id, slides){
 
   // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
   wrap.addEventListener('click', ()=>{
-    if(cur < 0) return;
+    if(cur < 0) goTo(0); // Klick auf Startbild startet den ersten Slide statt ins Leere zu laufen
     const slide = slides[cur];
     if(!slide) return;
-    // Slug → Song aus SUPABASE_SONGS (mit Trim-Fallback für Whitespace-Fehler)
-    let song = SUPABASE_SONGS.find(s=>s.slug===slide.slug);
-    if(!song) song = SUPABASE_SONGS.find(s=>s.slug===(slide.slug||'').trim());
+    const song = resolveDynamicSlideSong(slide);
     if(!song || !song.mp3) {
-      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slug:', slide.slug, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,5).map(s=>s.slug));
+      console.warn('[hitjourney] Diashow: Song nicht gefunden für Slide:', slide, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,12).map(s=>s.slug));
       return;
     }
 
@@ -5707,7 +5767,7 @@ function initDynamicSlideshow(id, slides){
     if(e.detail && e.detail.source !== 'spotlight') featuredCurrentMp3 = null;
   });
   audio.addEventListener('play', ()=>{
-    if(featuredMode && audio.src !== featuredCurrentMp3){
+    if(featuredMode && !sameAudioUrl(audio.currentSrc || audio.src, featuredCurrentMp3)){
       featuredMode = false; featuredCurrentMp3 = null;
     }
   });

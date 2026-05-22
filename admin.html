@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-v165-save-fit-fields -->
+<!-- Version: admin-v20260522-diashow-v166-open-modal-and-home-play-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -475,7 +475,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-wys-mini{margin-top:7px;font-size:10.5px;color:rgba(133,172,201,.38);line-height:1.35}
 
 /* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
-.he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none}
+.he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none;z-index:5}
+.he-cell .he-cell-overlay.always-edit .he-cell-acts,.he-cell .he-cell-overlay.always-edit .he-cell-act{pointer-events:auto;position:relative;z-index:7}
 .he-cell .he-cell-overlay.always-edit .he-cell-badge{opacity:.72}
 .he-cell .he-cell-overlay.always-edit .he-cell-acts{opacity:.78;pointer-events:auto}
 .he-cell:hover .he-cell-overlay.always-edit .he-cell-acts{opacity:1}
@@ -2372,7 +2373,45 @@ function renderHomeEditor(){
   bar.className = 'he-add-bar';
   bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile hinzufügen</button>';
   wrap.appendChild(bar);
+  bindHomeCellEditButtons();
   updateHomeUndoUi();
+}
+
+/* v166 — robuster Direktzugang zum Home-/Diashow-Editor.
+   Fix: In einigen Browsern wurde der Klick auf das Motiv bzw. den Pencil nicht zuverlässig
+   bis openCellEdit/openSlideshowModal durchgereicht. Deshalb bekommen alle gefüllten
+   Home-Zellen und alle Pencil-Buttons nach jedem Render zusätzlich echte Listener. */
+function bindHomeCellEditButtons(){
+  const wrap = document.getElementById('homeEditorWrap');
+  if(!wrap) return;
+  wrap.querySelectorAll('.he-cell').forEach(cellEl=>{
+    if(cellEl.dataset.boundOpen === '1') return;
+    cellEl.dataset.boundOpen = '1';
+    cellEl.addEventListener('click', (ev)=>{
+      if(ev.target && ev.target.closest && ev.target.closest('.he-cell-act,.he-type-menu')) return;
+      const rowId = cellEl.dataset.rowId;
+      const cellIdx = Number(cellEl.dataset.cellIdx);
+      const row = rowById(rowId);
+      const cell = row && row.cells && row.cells[cellIdx];
+      const isFilled = cell && (cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0));
+      if(cell && (isFilled || cell.type==='slideshow')){
+        ev.preventDefault();
+        ev.stopPropagation();
+        openCellEdit(rowId, cellIdx);
+      }
+    }, true);
+  });
+  wrap.querySelectorAll('.he-cell-act.edt').forEach(btn=>{
+    if(btn.dataset.boundOpen === '1') return;
+    btn.dataset.boundOpen = '1';
+    btn.addEventListener('click', (ev)=>{
+      const cellEl = btn.closest('.he-cell');
+      if(!cellEl) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      openCellEdit(cellEl.dataset.rowId, Number(cellEl.dataset.cellIdx));
+    }, true);
+  });
 }
 
 /* ── Row element ── */
@@ -2668,13 +2707,19 @@ function finishRow(id){
 
 /* ── Cell edit: route to tile modal or slideshow modal ── */
 function openCellEdit(rowId, cellIdx){
-  const row  = rowById(rowId);
-  if(!row) return;
-  const cell = row.cells[cellIdx];
-  if(cell.type === 'slideshow'){
-    openSlideshowModal(rowId);
-  } else {
-    openHomeTileModal(rowId, cellIdx);
+  try{
+    const row  = rowById(rowId);
+    if(!row) return;
+    const cell = row.cells[cellIdx];
+    if(!cell) return;
+    if(cell.type === 'slideshow'){
+      openSlideshowModal(rowId);
+    } else {
+      openHomeTileModal(rowId, cellIdx);
+    }
+  }catch(e){
+    console.error('Home-Editor konnte nicht geöffnet werden', e);
+    toast('Editor konnte nicht geöffnet werden: '+(e.message||e),'err');
   }
 }
 
@@ -2943,11 +2988,11 @@ function setSsFramePreview(url){
   if(url){
     img.src = url;
     zone.classList.add('has-file');
-    document.getElementById('ssAnalyseBtn').style.display = '';
+    { const b=document.getElementById('ssAnalyseBtn'); if(b) b.style.display = ''; }
   } else {
     img.src = '';
     zone.classList.remove('has-file');
-    document.getElementById('ssAnalyseBtn').style.display = 'none';
+    { const b=document.getElementById('ssAnalyseBtn'); if(b) b.style.display = 'none'; }
   }
   setTimeout(()=>ssWysRefresh(), 20);
 }
@@ -2987,6 +3032,20 @@ function openSlideshowModal(rowId){
   const cell = row && row.cells[0];
 
   htmSlides      = (cell && cell.slides) ? cell.slides.map(s=>({...s})) : [];
+  // v166: ältere Diashow-Slides nachträglich mit MP3-URL/Cover aus Supabase anreichern.
+  // Dadurch bleiben alte gespeicherte Home-Layouts abspielbar, auch wenn nur der Slug gespeichert war.
+  htmSlides = htmSlides.map(sl => {
+    const song = allSongs.find(x => x.slug === sl.slug) || allSongs.find(x => String(x.slug||'').trim() === String(sl.slug||'').trim());
+    if(!song) return sl;
+    return {
+      ...sl,
+      title: sl.title || song.title || sl.slug,
+      artist: sl.artist || song.artist || '',
+      mp3Url: sl.mp3Url || sl.mp3_url || song.mp3_url || '',
+      coverUrl: sl.coverUrl || song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`,
+      focusUrl: sl.focusUrl || song.focus_url || song.cover21_url || sl.coverUrl || song.cover_url || `${S3}/artwork/${encodeURIComponent(song.slug)}-cover.jpg`
+    };
+  });
   ssOverlayPos   = (cell && cell.overlayPos) || 'bottom-left';
 
   document.getElementById('htmSlideshowTitle').value = (cell && cell.alt)   || '';
@@ -3202,7 +3261,7 @@ function renderSsPicker(){
         htmSlides = htmSlides.filter(s=>s.slug!==song.slug);
       } else {
         htmSlides.push({ slug:song.slug, title:song.title||song.slug, artist:song.artist||'',
-          coverUrl, focusUrl: song.focus_url||song.cover21_url||coverUrl });
+          mp3Url: song.mp3_url || '', coverUrl, focusUrl: song.focus_url||song.cover21_url||coverUrl });
       }
       renderSlidesList();
     };
