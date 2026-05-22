@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v160-diashow-admin-startcolor-20260522 -->
+<!-- Version: v161-diashow-frame-fill-no-start-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
@@ -957,6 +957,31 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border-radius: 50%;
 }
 .ft-covers img.active { opacity: 1; }
+
+/* Dynamic Admin frames: the slide image fills the full teaser behind the PNG.
+   The opaque pixels of the frame cover everything else; only the transparent
+   window shows the current slide. This separates every frame layout cleanly. */
+.featured-teaser.frame-fill{
+  background:var(--ft-start-color, #0a0a0a);
+}
+.featured-teaser.frame-fill .ft-circle{
+  display:none;
+}
+.featured-teaser.frame-fill .ft-covers{
+  inset:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  aspect-ratio:auto;
+  transform:none;
+  border-radius:0;
+  z-index:1;
+}
+.featured-teaser.frame-fill .ft-covers img{
+  border-radius:0;
+  object-fit:cover;
+}
 .ft-frame {
   position:absolute;
   inset:0;
@@ -5267,7 +5292,7 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
@@ -5351,7 +5376,7 @@ function initDynamicSlideshow(id, slides){
       if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach(d=>d.classList.remove('active'));
       if(artistEl) artistEl.textContent = '';
       if(titleEl)  titleEl.textContent  = '';
-      if(numEl)    numEl.textContent    = 'START';
+      if(numEl)    numEl.textContent    = '';
       return;
     }
     cur = idx % slides.length;
