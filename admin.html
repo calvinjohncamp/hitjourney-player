@@ -346,9 +346,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
-/* span-4: full width, 4:1 ratio on desktop, 2:1 on mobile */
+/* span-4: full width, immer 2:1 (wie live — "The Archive", Lyricssheets) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
-@media(min-width:600px){.he-cell.span-4{grid-column:span 4;aspect-ratio:4/1}}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
@@ -2302,12 +2301,15 @@ function buildCell(row, cellIdx, extraClass, editing){
   el.dataset.rowId = row.id;
   el.dataset.cellIdx = cellIdx;
 
-  const isFilled = cell.imageUrl || cell.bgUrl;
+  const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0);
   const isSlide  = cell.type === 'slideshow';
 
   if(isFilled || isSlide){
     // Filled — always show image
-    const imgSrc = isSlide ? (cell.bgUrl||cell.imageUrl) : cell.imageUrl;
+    // For slideshow: prefer bgUrl, fall back to first slide cover
+    let imgSrc = isSlide
+      ? (cell.bgUrl || cell.imageUrl || (cell.slides && cell.slides[0] && (cell.slides[0].focusUrl || cell.slides[0].coverUrl)) || '')
+      : cell.imageUrl;
     if(imgSrc){
       const img = document.createElement('img');
       img.className = 'he-cell-img';
@@ -2339,8 +2341,8 @@ function buildCell(row, cellIdx, extraClass, editing){
     }
     if(isSlide){
       const lbl2 = document.createElement('div');
-      lbl2.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.7);pointer-events:none';
-      lbl2.textContent = (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
+      lbl2.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.85);pointer-events:none;background:rgba(6,20,32,.5);padding:3px 7px;border-radius:4px';
+      lbl2.textContent = '◈ ' + (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
       el.appendChild(lbl2);
     }
   } else if(editing){
@@ -2922,12 +2924,12 @@ function importCurrentHome(){
   function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
 
   homeLayout = [
-    // Z1: Tante Paula — 2:1 teaser (span-2, Play)
+    // Z1: Tante Paula — Lyricssheet volle Breite (span-4, 2:1)
     row([
-      makeCell({ type:'span-2', fn:'play', slug:'tante-paula-lara-wolff',
+      makeCell({ type:'span-4', fn:'play', slug:'tante-paula-lara-wolff',
         imageUrl:`${S3}/artwork/tante-paula-lara-wolff-cover-2-1.jpg`,
         alt:'Tante Paula · Lara Wolff', artist:'Lara Wolff' }),
-      makeCell({ type:'empty' }), makeCell({ type:'empty' }), makeCell({ type:'empty' })
+      makeCell({ type:'hidden' }), makeCell({ type:'hidden' }), makeCell({ type:'hidden' })
     ]),
 
     // Z2: Top 50 · 30° Grad · 30 Stories · Top 100 — vier 1:1
@@ -2942,12 +2944,14 @@ function importCurrentHome(){
         imageUrl:`${S3}/artwork/top100-cover.jpg`, alt:'Top 100' }),
     ]),
 
-    // Z3: In The Spotlight — Diashow
+    // Z3: In The Spotlight — Diashow (bgUrl = erstes Slide-Cover als Vorschau)
     row([
       makeCell({
         type:'slideshow', fn:'play', slug:'spotlight',
         alt:'IN THE SPOTLIGHT',
-        bgUrl:'', imageUrl:'', overlayPos:'bottom-left',
+        bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
+        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,
+        overlayPos:'bottom-left',
         slides:[
           { slug:'neues-licht',           title:'Neues Licht',              artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,                   focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg` },
           { slug:'half-past-nine',         title:'Half Past Nine On Main St',artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg` },
@@ -2975,19 +2979,19 @@ function importCurrentHome(){
       makeCell({ type:'hidden' }),
     ]),
 
-    // Z5: The Archive — 4:1
+    // Z5: The Archive — volle Breite 2:1 (span-4 mit 2:1 ratio wie live)
     row([
       makeCell({ type:'span-4', fn:'link', url:'#archive',
         imageUrl:`${S3}/artwork/archive.jpg`, alt:'The Archive' }),
       makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
     ]),
 
-    // Z6: Just This Dance — 2:1 teaser
+    // Z6: Just This Dance — Lyricssheet volle Breite (span-4, 2:1)
     row([
-      makeCell({ type:'span-2', fn:'play', slug:'just-this-dance-lara-wolff',
+      makeCell({ type:'span-4', fn:'play', slug:'just-this-dance-lara-wolff',
         imageUrl:`${S3}/artwork/just-this-dance-lara-wolff-cover-2-1.jpg`,
         alt:'Just This Dance · Lara Wolff', artist:'Lara Wolff' }),
-      makeCell({ type:'empty' }), makeCell({ type:'empty' }), makeCell({ type:'empty' })
+      makeCell({ type:'hidden' }), makeCell({ type:'hidden' }), makeCell({ type:'hidden' })
     ]),
   ];
 
