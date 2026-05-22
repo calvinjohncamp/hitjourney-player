@@ -5139,6 +5139,16 @@ function renderHomeLayout(){
 
   grid.innerHTML = '';
 
+  // Just This Dance ist als finaler Home-Teaser fest am Ende gesetzt.
+  // Falls er zusätzlich noch aus dem dynamischen Home-Layout/Supabase kommt,
+  // wird er hier unterdrückt, damit er auf Home nicht doppelt erscheint.
+  function isFinalJustThisDanceCell(cell){
+    if(!cell) return false;
+    const hay = [cell.slug, cell.alt, cell.title, cell.imageUrl, cell.url, cell.mp3]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes('just-this-dance') || hay.includes('just this dance');
+  }
+
   rows.forEach(row => {
     const cells = row.cells || [];
     if(!cells.length) return;
@@ -5156,6 +5166,7 @@ function renderHomeLayout(){
     // ── 4:1 volle Breite ──────────────────────────────────────────
     if(t0 === 'span-4' || t0 === '4x1'){
       const cell = cells[0];
+      if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
       const el = buildHomeCard(cell, 'wide');
       grid.appendChild(el);
@@ -5165,6 +5176,7 @@ function renderHomeLayout(){
     // ── 2:1 ───────────────────────────────────────────────────────
     if(t0 === 'span-2' || t0 === '2x1'){
       const cell = cells[0];
+      if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
       const el = buildHomeCard(cell, 'wide');
       grid.appendChild(el);
@@ -5180,9 +5192,9 @@ function renderHomeLayout(){
       const trio = document.createElement('div');
       trio.className = 'home-trio wide';
       // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
-      if(cellA.imageUrl) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(cellB.imageUrl) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(cellC.imageUrl) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+      if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+      if(cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
       grid.appendChild(trio);
       return;
     }
@@ -5190,7 +5202,7 @@ function renderHomeLayout(){
     // ── 1:1 (vier nebeneinander) ───────────────────────────────────
     if(t0 === '1x1' || t0 === 'empty'){
       cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden') return;
+        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
         const el = buildHomeCard(cell, 'square');
         grid.appendChild(el);
       });
@@ -5199,7 +5211,7 @@ function renderHomeLayout(){
 
     // ── default: alle nicht-hidden cells als 1:1 ───────────────────
     cells.forEach(cell => {
-      if(!cell || !cell.imageUrl || cell.type === 'hidden') return;
+      if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
       grid.appendChild(buildHomeCard(cell, 'square'));
     });
   });
