@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v184-language-elegant-artwork-frame-20260522 -->
+<!-- Version: v185-home-album-teaser-4x1-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -144,6 +144,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.wide{grid-column:1/-1}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
+.home-card.wide-4x1{grid-column:1/-1}
+.home-card.wide-4x1 img{aspect-ratio:4/1;object-fit:cover}
 .home-card.square img{aspect-ratio:1/1}
 .home-bottom-pad{height:210px}
 
@@ -5498,8 +5500,18 @@ function renderHomeLayout(){
       return;
     }
 
-    // ── 4:1 volle Breite ──────────────────────────────────────────
-    if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
+    // ── echter 4:1-Teaser volle Breite ─────────────────────────────
+    if(t0 === '4x1'){
+      const cell = cells[0];
+      if(isFinalJustThisDanceCell(cell)) return;
+      if(!cell.imageUrl) return;
+      const el = buildHomeCard(cell, 'wide-4x1');
+      grid.appendChild(el);
+      return;
+    }
+
+    // ── 2:1 volle Breite / Lyrics-Sheet 21 ─────────────────────────
+    if(t0 === 'span-4' || t0 === 'lyrics21'){
       const cell = cells[0];
       if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;

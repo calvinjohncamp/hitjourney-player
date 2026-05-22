@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-lyrics-cycle-v178-lyrics21-custom-motif -->
+<!-- Version: admin-v20260522-home-album-teaser-4x1-v179 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -123,6 +123,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Square zones for images */
 .upload-zone.sq{aspect-ratio:1/1}
 .upload-zone.wide{aspect-ratio:2/1}
+.upload-zone.wide4{aspect-ratio:4/1}
+.upload-zone.cover-fit .zone-preview{object-fit:contain;background:rgba(6,20,32,.55)}
 .upload-zone.mp3-zone{height:72px}
 .upload-zone-icon{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .upload-zone-icon svg{width:22px;height:22px;stroke:rgba(133,172,201,.4);stroke-width:1.5;fill:none}
@@ -349,8 +351,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
-/* span-4 / Lyrics-Sheet 21: full width, immer 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
+/* span-4 / Lyrics-Sheet 21: full width, 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
+/* echter schmaler Album-/Home-Teaser: 4:1 */
+.he-cell.span-4x1{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
@@ -701,8 +705,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
     </div>
 
-    <div class="section-label">Cover</div>
-    <div class="upload-zone sq" id="zAlbumCover" style="max-width:160px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
+    <div class="section-label">Cover / schmaler Album-Teaser</div>
+    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Akzeptiert 1:1-Cover und schmale 4:1-Teaser. 4:1 wird beim Hochladen nicht zugeschnitten.</div>
+    <div class="upload-zone wide4 cover-fit" id="zAlbumCover" style="width:100%;max-width:420px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
       <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileAlbum(this)"/>
       <div class="upload-zone-icon">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -2475,7 +2480,10 @@ function buildCells(row, grid){
   if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
-  } else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
+  } else if(t0 === '4x1'){
+    grid.appendChild(buildCell(row, 0, 'span-4x1', editing));
+
+  } else if(t0 === 'span-4' || t0 === 'lyrics21'){
     grid.appendChild(buildCell(row, 0, 'span-4', editing));
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
@@ -2649,7 +2657,8 @@ function applyType(rowId, cellIdx, type){
   } else if(type === '4x1'){
     const old0 = {...row.cells[cellIdx]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
+    // echter 4:1-Teaser bleibt als 4x1 gespeichert, damit die Live-App ihn nicht als 2:1 rendert
+    row.cells[0] = {...row.cells[0], ...old0, type:'4x1'};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
