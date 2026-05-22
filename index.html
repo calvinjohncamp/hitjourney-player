@@ -957,6 +957,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   border-radius: 50%;
 }
 .ft-covers img.active { opacity: 1; }
+.ft-covers img.ft-blank{display:none!important}
 
 
 .featured-teaser.hide-song-title .ft-song-title,
@@ -5414,7 +5415,8 @@ function buildSlideshowEl(cell){
     if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
     return true;
   };
-  const coverFitSquare = boolVal(cell.coverFitSquare, false);
+  const hasManualWys = ['coverFitLeft','coverFitTop','coverFitWidth','coverFitHeight','coverShape','coverFitMode'].some(k => cell[k] !== undefined && cell[k] !== null && cell[k] !== '');
+  const coverFitSquare = boolVal(cell.coverFitSquare, hasManualWys);
   // Robust gegen ältere/abweichende Feldnamen und stringifizierte Werte aus Supabase/JSON.
   const showSongTitle = boolVal(cell.showSongTitle ?? cell.showTitle ?? cell.titleVisible, true);
   const showSongNumber = boolVal(cell.showSongNumber ?? cell.showNumber ?? cell.numberVisible, true);
@@ -5469,7 +5471,7 @@ function buildSlideshowEl(cell){
   wrap.innerHTML = `
     <div class="ft-circle"></div>
     <div class="ft-covers" id="ftCovers_${wrap.id}">
-      <img class="active ft-blank" src=""/>
+      <img class="ft-blank" src=""/>
       ${slides.map(s=>`<img loading="lazy" src="${resolveSlideImg(s)}"/>`).join('')}
     </div>
     ${bgUrl ? `<img class="ft-frame" src="${bgUrl}" alt="${title}" loading="eager" crossorigin="anonymous" onload="hjFitSlideshowCoverWindow(this)"/>` : ''}
@@ -5507,6 +5509,8 @@ function hjFitSlideshowCoverWindow(frameImg){
     const ang = parseFloat(wrap.dataset.coverAngleOffset || '0') || 0;
     covers.style.left = lf + '%'; covers.style.top = tp + '%'; covers.style.width = wd + '%'; covers.style.height = ht + '%';
     covers.style.aspectRatio = 'auto'; covers.style.transformOrigin = '50% 50%'; covers.style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
+    covers.style.background = getComputedStyle(wrap).getPropertyValue('--ft-start-color') || '#0a0a0a';
+    covers.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0';
     return;
   }
   try{
