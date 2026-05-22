@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v177-spotlight-real-supabase-covers-20260522 -->
+<!-- Version: v178-home-cover-lyrics-cycle-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -4404,6 +4404,94 @@ function shuffleLanguage(lang){
   updateLanguageHighlight();
 }
 let languageCoverClickState = { key:null, idx:-1, phase:0 };
+let homeCoverClickState = { slug:null, phase:0, el:null };
+
+function findHomeSongByCell(cell){
+  if(!cell || !cell.slug) return null;
+  const wanted = normalizeTeaserSlug(cell.slug);
+  let song = SUPABASE_SONGS.find(s => normalizeTeaserSlug(s.slug) === wanted);
+  if(!song){
+    song = SUPABASE_SONGS.find(s => normalizeTeaserSlug(s.title||'') === wanted);
+  }
+  return song || null;
+}
+
+function openHomeCoverFrame(song){
+  curAlbum = '__homeLyricsCycle';
+  ALBUMS.__homeLyricsCycle = { title:'hitjourney', songs:[song] };
+  queue = [0];
+  queueIdx = 0;
+  prevScreen = 'home';
+  window._hjHomeLyricsSong = song;
+  showNowPlaying();
+  npCoverImg.classList.add('lyrics-active');
+  npCoverWrap.classList.add('lyrics-mode');
+  screenNP.classList.add('lyrics-open');
+  resetImageFrameTransform();
+  lyricsOpen = false;
+  languageCoverFrameOpen = false;
+}
+
+function closeHomeImageFrame(returnHome){
+  if(lyricsOpen){
+    closeLyrics();
+  } else {
+    npCoverImg.classList.remove('lyrics-active');
+    npCoverWrap.classList.remove('lyrics-mode');
+    screenNP.classList.remove('lyrics-open');
+    resetImageFrameTransform();
+  }
+  if(returnHome && screenNP.classList.contains('active')) hideNowPlaying();
+}
+
+function playHomeLyricsCycle(cell, el){
+  const song = findHomeSongByCell(cell);
+  if(!song || !song.mp3) return false;
+  const same = homeCoverClickState.slug === song.slug;
+
+  if(!same || homeCoverClickState.phase === 0){
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', {detail:{source:'home-lyrics-cycle'}}));
+    featuredMode = false;
+    arcQueue=[]; arcQueueIdx=-1;
+    if(lyricsOpen) closeLyrics();
+    audio.src = song.mp3;
+    audio.load();
+    audio.play().catch(()=>{});
+    setImgSrcWithFallback(nowCover, getImgUrls(song,'cover'));
+    nowTitle.textContent = song.title || '';
+    nowArtist.textContent = song.artist || '';
+    nowNum.textContent = '';
+    showNowStrip();
+    homeCoverClickState = { slug:song.slug, phase:1, el };
+    openHomeCoverFrame(song);
+    return true;
+  }
+
+  if(homeCoverClickState.phase === 3){
+    if(!audio.paused) audio.pause();
+    homeCoverClickState.phase = 0;
+    return true;
+  }
+
+  return true;
+}
+
+function advanceHomeImageCycle(e){
+  if(!homeCoverClickState.slug || !screenNP.classList.contains('active')) return false;
+  if(e && e.target && e.target.closest && e.target.closest('.np-btn,.np-down-btn,.np-prog-wrap,.np-time')) return false;
+  if(homeCoverClickState.phase === 1){
+    if(audio.paused) audio.play().catch(()=>{});
+    openLyrics();
+    homeCoverClickState.phase = 2;
+    return true;
+  }
+  if(homeCoverClickState.phase === 2){
+    closeHomeImageFrame(true);
+    homeCoverClickState.phase = 3;
+    return true;
+  }
+  return false;
+}
 
 function playLanguageSong(lang, idx){
   const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
@@ -4669,6 +4757,8 @@ function openLyrics() {
     song = arcQueue[arcQueueIdx];
   } else if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0){
     song = KNW_SONGS[knwActiveSongIdx];
+  } else if(window._hjHomeLyricsSong){
+    song = window._hjHomeLyricsSong;
   } else if(curAlbum && queueIdx >= 0){
     song = ALBUMS[curAlbum].songs[queue[queueIdx]];
   } else if(curAlbum && ALBUMS[curAlbum]){
@@ -4699,7 +4789,7 @@ function closeLyrics() {
 
 npCoverImg.addEventListener('click',e=>{
   if(Date.now() - languageCycleTouchTime < 350) return;
-  if(advanceLanguageImageCycle(e)){
+  if(advanceLanguageImageCycle(e) || advanceHomeImageCycle(e)){
     e.preventDefault();
     e.stopPropagation();
   }
@@ -4707,7 +4797,7 @@ npCoverImg.addEventListener('click',e=>{
 
 screenNP.addEventListener('click',e=>{
   if(Date.now() - languageCycleTouchTime < 350) return;
-  if(advanceLanguageImageCycle(e)){
+  if(advanceLanguageImageCycle(e) || advanceHomeImageCycle(e)){
     e.preventDefault();
     e.stopPropagation();
   }
@@ -4762,7 +4852,7 @@ npCoverWrap.addEventListener('touchend',e=>{
   const dy=e.changedTouches[0].clientY-swipeStartY;
   const absDx=Math.abs(dx), absDy=Math.abs(dy);
   if(absDx<12&&absDy<12){ // TAP
-    if(advanceLanguageImageCycle(e)){
+    if(advanceLanguageImageCycle(e) || advanceHomeImageCycle(e)){
       languageCycleTouchTime = Date.now();
       return;
     }
@@ -5336,6 +5426,9 @@ function buildHomeCard(cell, extraClass){
 
   // Click action
   el.addEventListener('click', () => {
+    if(cell.fn === 'play' && cell.lyricsCycle){
+      if(playHomeLyricsCycle(cell, el)) return;
+    }
     if(cell.fn === 'link'){
       if(cell.url === '#archive'){ showArchive(); return; }
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }

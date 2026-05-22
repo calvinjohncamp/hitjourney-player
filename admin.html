@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-home-row-cell-fix-v174 -->
+<!-- Version: admin-v20260522-home-lyrics-cycle-v175 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -919,6 +919,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <button onclick="htmClearSong()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">×</button>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:rgba(133,172,201,.06);border:1px solid rgba(133,172,201,.14);border-radius:9px;margin-bottom:12px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="htmLyricsCycle" style="accent-color:#85ACC9;width:14px;height:14px"/>
+        <span style="font-size:12px;color:#cfe5f5;font-weight:600">Lyrics-Klickfolge aktivieren</span>
+        <span style="font-size:10px;color:rgba(133,172,201,.45);margin-left:auto">Play → Lyrics → Schließen → Pause</span>
+      </label>
+
     </div>
 
     <!-- LINK: URL -->
@@ -2322,7 +2328,7 @@ async function loadHomeLayout(){
       id:      row.id,
       editing: false,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -2330,6 +2336,7 @@ async function loadHomeLayout(){
           return true;
         };
         cc.coverFitSquare = bv(cc.coverFitSquare, false);
+        cc.lyricsCycle = bv(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
         cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
         cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
         cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
@@ -2761,6 +2768,8 @@ function openHomeTileModal(rowId, cellIdx){
   }
 
   document.getElementById('htmLinkUrl').value = cell ? (cell.url||'') : '';
+  const cyc = document.getElementById('htmLyricsCycle');
+  if(cyc) cyc.checked = !!(cell && cell.lyricsCycle);
   document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.fn===fn));
   htmSetFn(fn, null);
 
@@ -2930,8 +2939,10 @@ function saveHomeTile(){
     cell.alt          = htmSelectedSong.title;
     cell.artist       = htmSelectedSong.artist;
     cell.url          = '';
+    cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
   } else {
     cell.url          = document.getElementById('htmLinkUrl').value.trim();
+    cell.lyricsCycle  = false;
     cell.slug         = '';
     cell.imageUrl     = '';
     cell.alt          = '';
