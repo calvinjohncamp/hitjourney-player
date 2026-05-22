@@ -14,7 +14,7 @@
 <!-- Version: v161-diashow-frame-fill-no-start-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -1043,17 +1043,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   pointer-events: none;
   max-width: 62%;
 }
-.ft-song-name.pos-top-left{left:3%;right:auto;top:8%;bottom:auto;text-align:left}
-.ft-song-name.pos-top-right{right:3%;left:auto;top:8%;bottom:auto;text-align:right}
-.ft-song-name.pos-center-left{left:3%;right:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:left}
-.ft-song-name.pos-center-right{right:3%;left:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:right}
-.ft-song-name.pos-bottom-left{left:3%;right:auto;bottom:18%;top:auto;text-align:left}
-.ft-song-name.pos-bottom-right{right:3%;left:auto;bottom:18%;top:auto;text-align:right}
+.ft-song-name.pos-top-left{left:4%;right:auto;top:8%;bottom:auto;text-align:left;transform:none}
+.ft-song-name.pos-top-center{left:50%;right:auto;top:8%;bottom:auto;text-align:center;transform:translateX(-50%)}
+.ft-song-name.pos-top-right{right:3%;left:auto;top:8%;bottom:auto;text-align:right;transform:none}
+.ft-song-name.pos-half-left,.ft-song-name.pos-center-left{left:4%;right:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:left}
+.ft-song-name.pos-half-center{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);text-align:center}
+.ft-song-name.pos-half-right,.ft-song-name.pos-center-right{right:3%;left:auto;top:50%;bottom:auto;transform:translateY(-50%);text-align:right}
+.ft-song-name.pos-twothirds-left{left:4%;right:auto;top:66.666%;bottom:auto;transform:translateY(-50%);text-align:left}
+.ft-song-name.pos-twothirds-center{left:50%;right:auto;top:66.666%;bottom:auto;transform:translate(-50%,-50%);text-align:center}
+.ft-song-name.pos-twothirds-right{right:3%;left:auto;top:66.666%;bottom:auto;transform:translateY(-50%);text-align:right}
+.ft-song-name.pos-bottom-left{left:4%;right:auto;bottom:18%;top:auto;text-align:left;transform:none}
+.ft-song-name.pos-bottom-center{left:50%;right:auto;bottom:18%;top:auto;text-align:center;transform:translateX(-50%)}
+.ft-song-name.pos-bottom-right{right:3%;left:auto;bottom:18%;top:auto;text-align:right;transform:none}
 .ft-song-title {
-  font-family: 'Anton', sans-serif;
-  font-size: clamp(17px, 3.6vw, 38px);
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  font-family: 'Special Elite','Courier New',monospace;
+  font-size: clamp(18px, 4.2vw, 42px);
+  letter-spacing: .02em;
+  text-transform: none;
   color: #f1ecdf;
   text-shadow:
     0 1px 4px rgba(0,0,0,.95),
@@ -1066,7 +1072,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .ft-song-artist { display: none; }
 .ft-song-num {
-  font-family: 'Anton', sans-serif;
+  font-family: 'Special Elite','Courier New',monospace;
   font-size: clamp(10px, 1.5vw, 16px);
   letter-spacing: .15em;
   color: rgba(241,236,223,.65);
@@ -2474,6 +2480,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .about-wrap{padding-left:32px;padding-right:32px;}
 }
 
+
+/* v162 – Diashow Title/Number Typography + precise alignment */
+.slideshow-overlay-title,
+.slideshow-overlay-number,
+.tp-teaser-title,
+.tp-teaser-number{
+  font-family:'Special Elite', cursive !important;
+  letter-spacing:.02em;
+}
+
+.tp-teaser.left-align .tp-teaser-title,
+.tp-teaser.left-align .tp-teaser-number,
+.slideshow-overlay.left-align .slideshow-overlay-title,
+.slideshow-overlay.left-align .slideshow-overlay-number{
+  left:32px !important;
+  text-align:left !important;
+  transform:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -2484,7 +2509,26 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </svg>
   <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
 </div>
-<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}
+/* v162 – Diashow Title/Number Typography + precise alignment */
+.slideshow-overlay-title,
+.slideshow-overlay-number,
+.tp-teaser-title,
+.tp-teaser-number{
+  font-family:'Special Elite', cursive !important;
+  letter-spacing:.02em;
+}
+
+.tp-teaser.left-align .tp-teaser-title,
+.tp-teaser.left-align .tp-teaser-number,
+.slideshow-overlay.left-align .slideshow-overlay-title,
+.slideshow-overlay.left-align .slideshow-overlay-number{
+  left:32px !important;
+  text-align:left !important;
+  transform:none !important;
+}
+
+</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
@@ -5376,12 +5420,11 @@ function buildSlideshowEl(cell){
 
   // Map overlayPos → CSS alignment
   const posMap = {
-    'top-left':     'flex-start flex-start',
-    'top-right':    'flex-start flex-end',
-    'center-left':  'center flex-start',
-    'center-right': 'center flex-end',
-    'bottom-left':  'flex-end flex-start',
-    'bottom-right': 'flex-end flex-end',
+    'top-left': 'flex-start flex-start', 'top-center': 'flex-start center', 'top-right': 'flex-start flex-end',
+    'half-left': 'center flex-start', 'half-center': 'center center', 'half-right': 'center flex-end',
+    'center-left': 'center flex-start', 'center-right': 'center flex-end',
+    'twothirds-left': 'center flex-start', 'twothirds-center': 'center center', 'twothirds-right': 'center flex-end',
+    'bottom-left': 'flex-end flex-start', 'bottom-center': 'flex-end center', 'bottom-right': 'flex-end flex-end',
   };
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
