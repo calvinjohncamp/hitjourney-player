@@ -2258,7 +2258,7 @@ function updateAlbumDropdown(){
     cells: [                // always 4 logical cells
       {
         id: string,
-        type: 'empty'|'1x1'|'2x1'|'trio-a'|'trio-b'|'trio-c'|'4x1'|'slideshow'|'hidden',
+        type: 'empty'|'1x1'|'2x1'|'trio-a'|'trio-b'|'trio-c'|'4x1'|'lyrics21'|'slideshow'|'hidden',
         fn: 'play'|'link',
         slug: string, url: string, imageUrl: string, alt: string,
         // slideshow extras:
@@ -2271,7 +2271,7 @@ function updateAlbumDropdown(){
     1×1           → cell[0]=1x1, cell[1..3]=hidden (1 visible 1:1 kachel)
     2×1           → cell[0]=span-2, cell[1..3]=hidden (1 wide kachel)
     3er Block     → cell[0]=trio-a (1:1 top-left), cell[1]=trio-b (2:1 bottom-left), cell[2]=trio-c (tall right), cell[3]=hidden
-    4×1           → cell[0]=span-4, cell[1..3]=hidden
+    4×1/Lyrics 21 → cell[0]=span-4, cell[1..3]=hidden
     Diashow       → cell[0]=slideshow (span-4, 2:1), cell[1..3]=hidden
     (default)     → all 4 cells visible as 1:1, user clicks to merge
 */
@@ -2459,7 +2459,7 @@ function buildCells(row, grid){
   if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
-  } else if(t0 === 'span-4' || t0 === '4x1'){
+  } else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
     grid.appendChild(buildCell(row, 0, 'span-4', editing));
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
@@ -2578,6 +2578,7 @@ function toggleTypeMenu(cellEl, rowId, cellIdx){
     {key:'2x1',      label:'2:1 · Quer (×2)'},
     {key:'trio',     label:'3er Block'},
     {key:'4x1',      label:'4:1 · Volle Breite'},
+    {key:'lyrics21', label:'Lyrics-Sheet 2:1'},
     {key:'slideshow',label:'◈ Diashow'},
   ];
 
@@ -2633,6 +2634,15 @@ function applyType(rowId, cellIdx, type){
     const old0 = {...row.cells[cellIdx]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
+    row.cells[1].type = 'hidden';
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === 'lyrics21'){
+    // Lyrics-Sheet 2:1: volle Breite, nimmt automatisch das 2:1-Lyricssheet/Cover21 des Songs.
+    const old0 = {...row.cells[cellIdx]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'lyrics21', useCover21:true};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
@@ -2763,7 +2773,7 @@ function openHomeTileModal(rowId, cellIdx){
       title:      cell.alt  || cell.slug,
       artist:     cell.artist || '',
       coverUrl:   cell.imageUrl,
-      cover21Url: cell.imageUrl
+      cover21Url: cell.cover21Url || cell.imageUrl
     };
   }
 
@@ -2903,7 +2913,9 @@ function htmRenderSelectedSong(){
   const box = document.getElementById('htmSelectedSong');
   if(!htmSelectedSong){ box.style.display='none'; return; }
   box.style.display = 'flex';
-  document.getElementById('htmSelectedCover').src   = htmSelectedSong.coverUrl;
+  const targetRow = htmEditTarget && rowById(htmEditTarget.rowId);
+  const targetCell = targetRow && targetRow.cells && targetRow.cells[htmEditTarget.cellIdx];
+  document.getElementById('htmSelectedCover').src   = (targetCell && (targetCell.type === 'lyrics21' || targetCell.useCover21)) ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl;
   document.getElementById('htmSelectedTitle').textContent  = htmSelectedSong.title;
   document.getElementById('htmSelectedArtist').textContent = htmSelectedSong.artist;
 }
@@ -2934,8 +2946,9 @@ function saveHomeTile(){
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
     cell.slug         = htmSelectedSong.slug;
     cell.playlistSlug = htmSelectedSong.playlistSlug || '';
-    cell.imageUrl     = htmSelectedSong.coverUrl;
     cell.cover21Url   = htmSelectedSong.cover21Url;
+    cell.useCover21   = (cell.type === 'lyrics21') || !!cell.useCover21;
+    cell.imageUrl     = cell.useCover21 ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl;
     cell.alt          = htmSelectedSong.title;
     cell.artist       = htmSelectedSong.artist;
     cell.url          = '';

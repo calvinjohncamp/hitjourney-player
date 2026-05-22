@@ -5395,7 +5395,7 @@ function renderHomeLayout(){
     }
 
     // ── 4:1 volle Breite ──────────────────────────────────────────
-    if(t0 === 'span-4' || t0 === '4x1'){
+    if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
       const cell = cells[0];
       if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
@@ -5462,7 +5462,7 @@ function buildHomeCard(cell, extraClass){
   const img = document.createElement('img');
   img.alt = cell.alt || '';
   img.loading = 'lazy';
-  img.src = cell.imageUrl;
+  img.src = (cell.type === 'lyrics21' || cell.useCover21) ? (cell.cover21Url || cell.imageUrl) : cell.imageUrl;
   el.appendChild(img);
 
   // Click action
