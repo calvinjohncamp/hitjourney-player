@@ -7,10 +7,10 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-diashow-position-drag-v3 -->
+<!-- Version: admin-v20260522-diashow-position-finetune-drag-v4 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
 <style>
 /* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -446,10 +446,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-song-toggle.remove:hover{background:rgba(220,80,80,.2);color:#f08080}
 
 /* Pool entry (in selected list) */
-.htm-slide-row{display:flex;align-items:center;gap:6px;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.1);border-radius:7px;padding:6px 8px;margin-bottom:5px;transition:background .12s,border-color .12s,opacity .12s}
+.htm-slide-row{display:flex;align-items:center;gap:8px;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.1);border-radius:7px;padding:6px 8px;margin-bottom:5px;transition:background .12s,border-color .12s,opacity .12s}
 .htm-slide-row.dragging{opacity:.42}
 .htm-slide-row.drag-over{background:rgba(133,172,201,.14);border-color:#85ACC9}
-.htm-slide-grip{width:22px;height:44px;display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.48);font-size:18px;line-height:1;cursor:grab;user-select:none;flex-shrink:0}
+.htm-slide-grip{width:34px;height:44px;display:flex;align-items:center;justify-content:center;color:#85ACC9;background:rgba(133,172,201,.13);border:1px solid rgba(133,172,201,.22);border-radius:8px;font-size:19px;font-weight:800;line-height:1;cursor:grab;user-select:none;touch-action:none;flex-shrink:0;letter-spacing:-3px}
 .htm-slide-grip:active{cursor:grabbing;color:#85ACC9}
 .htm-slide-thumb{width:44px;height:44px;object-fit:cover;border-radius:5px;background:#0a1a27;flex-shrink:0}
 .htm-slide-info{flex:1;min-width:0}
@@ -950,12 +950,18 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div class="htm-field">
         <span class="htm-label">Text-Position im Frame</span>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px" id="ssPosGrid">
-          <button class="ss-pos-btn" data-pos="top-left"     onclick="ssSetPos(this)">↖ Oben links</button>
-          <button class="ss-pos-btn" data-pos="top-right"    onclick="ssSetPos(this)">↗ Oben rechts</button>
-          <button class="ss-pos-btn" data-pos="center-left"  onclick="ssSetPos(this)">◀ Mitte links</button>
-          <button class="ss-pos-btn" data-pos="center-right" onclick="ssSetPos(this)">▶ Mitte rechts</button>
-          <button class="ss-pos-btn" data-pos="bottom-left"  onclick="ssSetPos(this)">↙ Unten links</button>
-          <button class="ss-pos-btn" data-pos="bottom-right" onclick="ssSetPos(this)">↘ Unten rechts</button>
+          <button class="ss-pos-btn" data-pos="top-left" onclick="ssSetPos(this)">Oben links</button>
+          <button class="ss-pos-btn" data-pos="top-center" onclick="ssSetPos(this)">Oben Mitte</button>
+          <button class="ss-pos-btn" data-pos="top-right" onclick="ssSetPos(this)">Oben rechts</button>
+          <button class="ss-pos-btn" data-pos="half-left" onclick="ssSetPos(this)">1/2 links</button>
+          <button class="ss-pos-btn" data-pos="half-center" onclick="ssSetPos(this)">1/2 Mitte</button>
+          <button class="ss-pos-btn" data-pos="half-right" onclick="ssSetPos(this)">1/2 rechts</button>
+          <button class="ss-pos-btn" data-pos="twothirds-left" onclick="ssSetPos(this)">2/3 links</button>
+          <button class="ss-pos-btn" data-pos="twothirds-center" onclick="ssSetPos(this)">2/3 Mitte</button>
+          <button class="ss-pos-btn" data-pos="twothirds-right" onclick="ssSetPos(this)">2/3 rechts</button>
+          <button class="ss-pos-btn" data-pos="bottom-left" onclick="ssSetPos(this)">Unten links</button>
+          <button class="ss-pos-btn" data-pos="bottom-center" onclick="ssSetPos(this)">Unten Mitte</button>
+          <button class="ss-pos-btn" data-pos="bottom-right" onclick="ssSetPos(this)">Unten rechts</button>
         </div>
       </div>
 
@@ -2979,7 +2985,7 @@ function renderSlidesList(){
     div.dataset.slideIdx = i;
     div.setAttribute('draggable','true');
     div.innerHTML = `
-      <div class="htm-slide-grip" title="Greifen und verschieben">☰</div>
+      <div class="htm-slide-grip" title="Greifen und verschieben">⋮⋮</div>
       <img class="htm-slide-thumb" src="${s.coverUrl||''}" onerror="this.style.opacity='.2'"/>
       <div class="htm-slide-info">
         <div class="htm-slide-title">${esc(s.title||s.slug)}</div>
@@ -2991,6 +2997,13 @@ function renderSlidesList(){
     div.addEventListener('dragleave', ssSlideDragLeave);
     div.addEventListener('drop', ssSlideDrop);
     div.addEventListener('dragend', ssSlideDragEnd);
+    const grip = div.querySelector('.htm-slide-grip');
+    if(grip){
+      grip.addEventListener('pointerdown', ssSlidePointerStart);
+      grip.addEventListener('pointermove', ssSlidePointerMove);
+      grip.addEventListener('pointerup', ssSlidePointerEnd);
+      grip.addEventListener('pointercancel', ssSlidePointerEnd);
+    }
     list.appendChild(div);
   });
   renderSsPicker();
@@ -3027,6 +3040,36 @@ function ssSlideDrop(e){
 function ssSlideDragEnd(){
   ssDragIndex = null;
   document.querySelectorAll('.htm-slide-row').forEach(r=>r.classList.remove('drag-over','dragging'));
+}
+
+let ssPointerDrag = null;
+function ssSlidePointerStart(e){
+  const row = e.currentTarget.closest('.htm-slide-row');
+  if(!row) return;
+  ssPointerDrag = {from:Number(row.dataset.slideIdx)};
+  row.classList.add('dragging');
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){ }
+  e.preventDefault();
+}
+function ssSlidePointerMove(e){
+  if(!ssPointerDrag) return;
+  const row = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.htm-slide-row');
+  document.querySelectorAll('.htm-slide-row').forEach(r=>r.classList.remove('drag-over'));
+  if(row) row.classList.add('drag-over');
+  e.preventDefault();
+}
+function ssSlidePointerEnd(e){
+  if(!ssPointerDrag) return;
+  const target = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.htm-slide-row');
+  const from = ssPointerDrag.from;
+  const to = target ? Number(target.dataset.slideIdx) : from;
+  ssPointerDrag = null;
+  document.querySelectorAll('.htm-slide-row').forEach(r=>r.classList.remove('drag-over','dragging'));
+  if(!Number.isNaN(from) && !Number.isNaN(to) && from !== to){
+    const moved = htmSlides.splice(from,1)[0];
+    htmSlides.splice(to,0,moved);
+    renderSlidesList();
+  }
 }
 
 function removeSlide(idx){
@@ -3096,7 +3139,7 @@ async function analyseFrame(){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:300,
-        system:`Antworte NUR in diesem JSON-Format ohne Markdown: {"position":"top-left|top-right|center-left|center-right|bottom-left|bottom-right","reason":"max 15 Wörter","textColor":"light|dark"}`,
+        system:`Antworte NUR in diesem JSON-Format ohne Markdown: {"position":"top-left|top-center|top-right|half-left|half-center|half-right|twothirds-left|twothirds-center|twothirds-right|bottom-left|bottom-center|bottom-right","reason":"max 15 Wörter","textColor":"light|dark"}`,
         messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:mime,data:b64}},
           {type:'text',text:'Wo ist der dunkelste/kontrastreichste Bereich für ein Text-Overlay mit Song-Cover und Titel?'}
