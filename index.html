@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-v187 -->
+<!-- Version: index-v20260523-v188-wysiwyg-repair -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5508,32 +5508,44 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
+  // v188 WYSIWYG-Repair:
+  // Die drei alten Startblöcke (Kurs Nordwest/Songwriter's Favorites/Streams,
+  // German+English und Just This Dance) lagen hardcoded VOR dem Admin-HomeGrid.
+  // Dadurch war Live niemals identisch mit dem Admin. Sobald Supabase-Zeilen existieren,
+  // zeigt Live jetzt ausschließlich die Admin-Zeilen. Die alten Blöcke bleiben nur als
+  // Notfall-Fallback sichtbar, falls Supabase leer ist.
+  const fixedBlocks = [
+    document.getElementById('edSection'),
+    document.querySelector('.home-language-grid'),
+    document.querySelector('.home-final-grid')
+  ];
+
   // v187: Die Reihenfolge wird hier nochmals numerisch stabilisiert.
   // Wichtig: Die Live-Seite darf niemals nach Typ/Format sortieren.
   const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>{
     const ao = Number.isFinite(Number(a.row_order)) ? Number(a.row_order) : 999999;
     const bo = Number.isFinite(Number(b.row_order)) ? Number(b.row_order) : 999999;
-    return ao - bo;
+    if(ao !== bo) return ao - bo;
+    return String(a.id||'').localeCompare(String(b.id||''));
   });
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
+    fixedBlocks.forEach(el=>{ if(el) el.style.display = ''; });
     grid.innerHTML = getFallbackHomeHTML();
     wireHomeGrid(grid);
     return;
   }
 
+  // Ab hier gilt: What you see in Admin is what you get live.
+  fixedBlocks.forEach(el=>{ if(el) el.style.display = 'none'; });
   grid.innerHTML = '';
 
-  // Just This Dance ist als finaler Home-Teaser fest am Ende gesetzt.
-  // Falls er zusätzlich noch aus dem dynamischen Home-Layout/Supabase kommt,
-  // wird er hier unterdrückt, damit er auf Home nicht doppelt erscheint.
-  function isFinalJustThisDanceCell(cell){
-    if(!cell) return false;
-    const hay = [cell.slug, cell.alt, cell.title, cell.imageUrl, cell.url, cell.mp3]
-      .filter(Boolean).join(' ').toLowerCase();
-    return hay.includes('just-this-dance') || hay.includes('just this dance');
-  }
+  // v188: Keine dynamische Admin-Zeile mehr unterdrücken.
+  // Früher wurde Just This Dance ausgefiltert, weil es zusätzlich hardcoded am Ende stand.
+  // Die hardcoded Blöcke sind bei Supabase-Layout jetzt ausgeblendet, also muss jede
+  // Admin-Zeile exakt live erscheinen.
+  function isFinalJustThisDanceCell(cell){ return false; }
 
   rows.forEach(row => {
     const cells = row.cells || [];
