@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-3step-tile-modal -->
+<!-- Version: admin-v20260523b-import-banner -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -915,9 +915,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   <div class="home-toolbar">
     <span class="home-toolbar-title">Home-Editor</span>
     <div style="display:flex;gap:6px">
-      <button class="home-toolbar-btn" onclick="importCurrentHome()" id="importHomeBtn" title="Aktuelle hardcoded Startseite als Startpunkt laden">
-        ↓ Aktuelle Seite importieren
-      </button>
       <button class="home-toolbar-btn undo" id="homeUndoBtn" onclick="undoHomeAction()" title="Letzte Änderung rückgängig machen" disabled>
         ↶ Rückgängig
       </button>
@@ -929,6 +926,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         Speichern
       </button>
     </div>
+  </div>
+  <!-- Import banner — immer sichtbar, damit fehlende Streifen wiederhergestellt werden können -->
+  <div id="importHomeBanner" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(133,172,201,.06);border-bottom:1px solid rgba(133,172,201,.1);gap:10px;flex-shrink:0">
+    <span style="font-size:11px;color:rgba(133,172,201,.5)">Fehlende Zeilen (Editorial, Language Teaser)? → Seite neu importieren</span>
+    <button id="importHomeBtn" onclick="importCurrentHome()" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(133,172,201,.3);background:rgba(133,172,201,.1);color:#85ACC9;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+      ↓ Seite importieren
+    </button>
   </div>
   <div class="home-editor-wrap" id="homeEditorWrap">
     <!-- rows rendered by JS -->
