@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v187-album-cover-teaser-separation-home-order-20260522 -->
+<!-- Version: v185-album-teaser-cover-20260523 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -144,8 +144,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.wide{grid-column:1/-1}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
-.home-card.wide-4x1{grid-column:1/-1}
-.home-card.wide-4x1 img{aspect-ratio:4/1;object-fit:cover}
 .home-card.square img{aspect-ratio:1/1}
 .home-bottom-pad{height:210px}
 
@@ -3734,65 +3732,57 @@ async function loadFromSupabase() {
     SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
-  // 2. Playlists + Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
-  const [playlistsRes, tracksRes] = await Promise.all([
-    fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title.asc', { headers }),
-    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
-  ]);
-  const playlistsRaw = playlistsRes.ok ? await playlistsRes.json() : [];
+  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
+  const tracksRes = await fetch(
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
+    { headers }
+  );
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
 
+  // 2b. Playlist-/Album-Metadaten laden (dynamische Alben aus Admin inkl. 1:1 Cover)
+  let playlistsRaw = [];
+  try {
+    const plRes = await fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title', { headers });
+    if(plRes.ok) playlistsRaw = await plRes.json();
+  } catch(_) { playlistsRaw = []; }
+  const playlistMeta = {};
+  playlistsRaw.forEach(pl => { playlistMeta[pl.slug] = pl; });
+
   // 3. ALBUMS aufbauen
-  // Wichtig: Neben den fest gemappten Standard-Alben werden jetzt auch neu im Admin
-  // angelegte Playlists/Alben automatisch als spielbare Alben registriert.
   ALBUMS = {};
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
-  const dynamicPlaylistInfo = {};
-  function albumCoverForPlaylist(pl, fallback){
-    // Albumseite nutzt immer das eigentliche quadratische Cover, falls vorhanden.
-    // Teaser-Motive für Home bleiben reine Home-Kacheln und werden nicht mehr als Albumcover missbraucht.
-    return (pl && (pl.album_cover_url || pl.square_cover_url || pl.cover_url)) || fallback || '';
-  }
-
-  playlistsRaw.forEach(pl => {
-    if(!pl || !pl.slug) return;
-    const mapped = PLAYLIST_MAP[pl.slug];
-    dynamicPlaylistInfo[pl.slug] = mapped || {
-      key: pl.slug,
-      title: pl.title || pl.slug,
-      meta: '',
-      cover: albumCoverForPlaylist(pl, '')
-    };
-  });
-
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const info = dynamicPlaylistInfo[playlistSlug] || PLAYLIST_MAP[playlistSlug];
-    if (!info) return;
+    const mapped = PLAYLIST_MAP[playlistSlug];
+    const meta = playlistMeta[playlistSlug] || {};
+    const info = mapped || {
+      key: playlistSlug,
+      title: meta.title || playlistSlug,
+      meta: '',
+      cover: meta.cover_url || ''
+    };
     const song = songMap[row.song_slug];
     if (!song) return;
 
     if (!ALBUMS[info.key]) {
       ALBUMS[info.key] = {
-        title: info.title || playlistSlug,
+        slug: playlistSlug,
+        title: meta.title || info.title || playlistSlug,
         meta:  info.meta || '',
-        cover: info.cover || song.cover || '',
+        cover: meta.cover_url || info.cover || '',
         songs: []
       };
     }
     ALBUMS[info.key].songs.push(song);
   });
 
-  // Meta bei dynamischen Alben sauber aus tatsächlicher Songzahl bilden
+  // Metatext für dynamische Alben setzen und Null-Einträge entfernen
   Object.keys(ALBUMS).forEach(k => {
-    const a = ALBUMS[k];
-    if(a && (!a.meta || /^\d+ Songs?$/.test(String(a.meta)))) a.meta = a.songs.length + ' Songs';
+    if (!ALBUMS[k]) { delete ALBUMS[k]; return; }
+    if(!ALBUMS[k].meta) ALBUMS[k].meta = ALBUMS[k].songs.length + ' Songs';
   });
-
-  // Null-Einträge entfernen
-  Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
 
   // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
   if(ALBUMS.buriedDiamonds && ALBUMS.buriedDiamonds.songs) {
@@ -4353,8 +4343,10 @@ function showHome(){
 function showAlbum(key){
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
-  const alb=ALBUMS[key]; if(!alb) return; curAlbum=key;
-  setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
+  const alb=ALBUMS[key];
+  if(!alb || !alb.songs || !alb.songs.length) return;
+  curAlbum=key;
+  setImgSrcWithFallback(tlCover, [alb.cover, alb.songs[0] && alb.songs[0].cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
     const row=document.createElement('div');
@@ -5492,7 +5484,11 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>((a.row_order ?? 0) - (b.row_order ?? 0)));
+  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>{
+    const ao = Number.isFinite(+a.row_order) ? +a.row_order : 0;
+    const bo = Number.isFinite(+b.row_order) ? +b.row_order : 0;
+    return ao - bo;
+  });
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -5527,18 +5523,8 @@ function renderHomeLayout(){
       return;
     }
 
-    // ── echter 4:1-Teaser volle Breite ─────────────────────────────
-    if(t0 === '4x1'){
-      const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
-      if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, 'wide-4x1');
-      grid.appendChild(el);
-      return;
-    }
-
-    // ── 2:1 volle Breite / Lyrics-Sheet 21 ─────────────────────────
-    if(t0 === 'span-4' || t0 === 'lyrics21'){
+    // ── 4:1 volle Breite ──────────────────────────────────────────
+    if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
       const cell = cells[0];
       if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
@@ -5598,8 +5584,9 @@ function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
   el.className = 'home-card ' + (extraClass||'');
 
-  // album key from PLAYLIST_MAP or direct slug
-  const albumKey = resolveAlbumKey(cell.albumSlug || cell.playlistSlug || cell.slug);
+  // album key from PLAYLIST_MAP or direct slug. Nur explizite Album-Teaser öffnen Albumseiten.
+  const isAlbumTeaser = cell && (cell.actionType === 'album' || cell.playMode === 'album');
+  const albumKey = isAlbumTeaser ? resolveAlbumKey(cell.slug) : null;
   if(albumKey) el.dataset.album = albumKey;
 
   const img = document.createElement('img');
@@ -5614,7 +5601,6 @@ function buildHomeCard(cell, extraClass){
 
   // Click action
   el.addEventListener('click', () => {
-    if(cell.fn === 'album' && albumKey){ showAlbum(albumKey); return; }
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
     if(cell.fn === 'play' && (cell.lyricsCycle || cell.type === 'lyrics21' || cell.useCover21)){
@@ -5633,8 +5619,8 @@ function buildHomeCard(cell, extraClass){
       return;
     }
 
-    if(albumKey) showAlbum(albumKey);
-    else if(cell.slug) playSongBySlug(cell.slug);
+    if(isAlbumTeaser && albumKey){ showAlbum(albumKey); return; }
+    if(cell.slug) playSongBySlug(cell.slug);
   });
   return el;
 }
@@ -6216,8 +6202,9 @@ function playSongOrAlbum(cell){
     if(cell.url === '#archive'){ showArchive(); return; }
     if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
   }
-  const albumKey = resolveAlbumKey(cell.slug);
-  if(albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
+  const isAlbumTeaser = cell && (cell.actionType === 'album' || cell.playMode === 'album');
+  const albumKey = isAlbumTeaser ? resolveAlbumKey(cell.slug) : null;
+  if(isAlbumTeaser && albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
   if(cell.slug) playSongBySlug(cell.slug);
 }
 

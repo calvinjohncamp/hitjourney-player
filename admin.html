@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260522-album-cover-teaser-separation-v183 -->
+<!-- Version: admin-v20260523-album-teaser-cover-v185 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -123,8 +123,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Square zones for images */
 .upload-zone.sq{aspect-ratio:1/1}
 .upload-zone.wide{aspect-ratio:2/1}
-.upload-zone.wide4{aspect-ratio:4/1}
-.upload-zone.cover-fit .zone-preview{object-fit:contain;background:rgba(6,20,32,.55)}
 .upload-zone.mp3-zone{height:72px}
 .upload-zone-icon{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .upload-zone-icon svg{width:22px;height:22px;stroke:rgba(133,172,201,.4);stroke-width:1.5;fill:none}
@@ -351,10 +349,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
-/* span-4 / Lyrics-Sheet 21: full width, 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
+/* span-4 / Lyrics-Sheet 21: full width, immer 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
-/* echter schmaler Album-/Home-Teaser: 4:1 */
-.he-cell.span-4x1{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
@@ -401,6 +397,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Modal shared styles */
 .htm-title{font-size:15px;font-weight:700;color:#cfe5f5;margin-bottom:14px}
 .htm-field{margin-bottom:12px}
+.htm-subseg{display:flex;gap:6px;margin:0 0 12px}
+.htm-subseg-btn{flex:1;text-align:center;border:1px solid rgba(133,172,201,.16);background:rgba(133,172,201,.07);color:rgba(207,229,245,.72);border-radius:9px;padding:9px 8px;font-size:12px;font-weight:800;cursor:pointer;user-select:none}
+.htm-subseg-btn.active{background:rgba(133,172,201,.20);border-color:#85ACC9;color:#cfe5f5}
 .htm-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(133,172,201,.45);margin-bottom:6px;display:block}
 .htm-input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(133,172,201,.2);background:#06141F;color:#f1ecdf;font-size:13px;outline:none}
 .htm-input:focus{border-color:rgba(133,172,201,.45)}
@@ -705,37 +704,15 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
     </div>
 
-    <div class="section-label">Album-Cover für Albumseite</div>
-    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Dieses Motiv erscheint auf der Albumseite und in der Trackliste. Empfehlung: 1:1 quadratisch.</div>
-    <div class="upload-zone sq cover-fit" id="zAlbumCover" style="width:180px;max-width:42vw" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
-      <input type="file" accept="image/png,image/webp,image/jpeg,image/jpg,.png,.webp,.jpg,.jpeg" onchange="onFileAlbum(this)"/>
+    <div class="section-label">Cover</div>
+    <div class="upload-zone sq" id="zAlbumCover" style="max-width:160px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbum(event)">
+      <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileAlbum(this)"/>
       <div class="upload-zone-icon">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>Cover 1:1</span>
+        <span>Cover</span>
       </div>
       <img class="zone-preview" id="prevAlbumCover" alt=""/>
       <button class="zone-clear" onclick="clearAlbumCover(event)" title="Entfernen">×</button>
-    </div>
-
-    <div class="section-label">Optionaler Home-Teaser</div>
-    <div class="album-format-help" style="font-size:11px;color:rgba(133,172,201,.45);margin:-4px 0 8px;line-height:1.35">Nur für Home/Teaser-Kacheln. Das Album selbst verwendet trotzdem das Cover oben.</div>
-    <div class="field" style="margin-bottom:8px;max-width:220px">
-      <div class="field-label">Teaser-Format</div>
-      <select class="ai" id="naTeaserFormat" onchange="updateNewAlbumTeaserZone()">
-        <option value="1x1">1:1</option>
-        <option value="2x1">2:1</option>
-        <option value="4x1" selected>4:1</option>
-      </select>
-    </div>
-    <div class="upload-zone wide4 cover-fit" id="zAlbumTeaser" style="width:100%;max-width:420px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbumTeaser(event)">
-      <input type="file" accept="image/png,image/webp,image/jpeg,image/jpg,.png,.webp,.jpg,.jpeg" onchange="onFileAlbumTeaser(this)"/>
-      <div class="upload-zone-icon">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>Teaser</span>
-        <small>für HOME</small>
-      </div>
-      <img class="zone-preview" id="prevAlbumTeaser" alt=""/>
-      <button class="zone-clear" onclick="clearAlbumTeaser(event)" title="Entfernen">×</button>
     </div>
 
     <div class="form-msg" id="naMsg" style="margin-top:12px"></div>
@@ -919,31 +896,60 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div class="htm-seg">
         <div class="htm-seg-btn active" data-fn="play" onclick="htmSetFn('play',this)">▶ Play</div>
         <div class="htm-seg-btn" data-fn="link" onclick="htmSetFn('link',this)">🔗 Link</div>
-        <div class="htm-seg-btn" data-fn="album" onclick="htmSetFn('album',this)">▣ Album</div>
       </div>
     </div>
 
-    <div id="htmAlbumField" style="display:none">
-      <div class="htm-field">
-        <span class="htm-label">Album wählen</span>
-        <select class="htm-input" id="htmAlbumSelect" onchange="htmOnAlbumSelect()">
-          <option value="">— Album wählen —</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- PLAY: Playlist wählen + Song-Liste -->
+    <!-- PLAY: Song oder Album wählen -->
     <div id="htmPlayField">
       <div class="htm-field">
-        <span class="htm-label">Playlist wählen</span>
-        <select class="htm-input" id="htmPlaylistSelect" onchange="htmLoadPlaylistSongs()">
-          <option value="">— Playlist wählen —</option>
-        </select>
+        <span class="htm-label">Klick-Aktion</span>
+        <div class="htm-subseg">
+          <div class="htm-subseg-btn active" data-mode="song" onclick="htmSetPlayMode('song',this)">▶ Einzel-Song</div>
+          <div class="htm-subseg-btn" data-mode="album" onclick="htmSetPlayMode('album',this)">▦ Album öffnen</div>
+        </div>
       </div>
-      <div class="htm-field">
-        <span class="htm-label">Song aus Playlist wählen</span>
-        <div id="htmSongList" style="max-height:200px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F">
-          <div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist wählen</div>
+      <div id="htmSongPickWrap">
+        <div class="htm-field">
+          <span class="htm-label">Playlist wählen</span>
+          <select class="htm-input" id="htmPlaylistSelect" onchange="htmLoadPlaylistSongs()">
+            <option value="">— Playlist wählen —</option>
+          </select>
+        </div>
+        <div class="htm-field">
+          <span class="htm-label">Song aus Playlist wählen</span>
+          <div id="htmSongList" style="max-height:200px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F">
+            <div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist wählen</div>
+          </div>
+        </div>
+      </div>
+      <div id="htmAlbumPickWrap" style="display:none">
+        <div class="htm-field">
+          <span class="htm-label">Album wählen</span>
+          <select class="htm-input" id="htmAlbumSelect" onchange="htmSelectAlbumFromDropdown()">
+            <option value="">— Album wählen —</option>
+          </select>
+        </div>
+        <div id="htmSelectedAlbum" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(50,180,100,.07);border:1px solid rgba(50,180,100,.2);border-radius:9px;margin-bottom:12px">
+          <img id="htmSelectedAlbumCover" src="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#0a1a27;flex-shrink:0"/>
+          <div style="min-width:0;flex:1">
+            <div id="htmSelectedAlbumTitle" style="font-size:13px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="htmSelectedAlbumMeta" style="font-size:11px;color:rgba(133,172,201,.5)"></div>
+          </div>
+        </div>
+        <div class="htm-field">
+          <span class="htm-label">Album-Cover 1:1 optional ersetzen</span>
+          <div class="upload-zone sq" id="zHtmAlbumCover" style="max-width:150px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
+            <input id="htmAlbumCoverFileInput" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp" onchange="onHtmAlbumCoverFile(this)"/>
+            <div class="upload-zone-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>1:1 Cover</span>
+              <small>nur nötig bei Teaser-Motiven</small>
+            </div>
+            <img class="zone-preview" id="prevHtmAlbumCover" alt=""/>
+            <div class="upload-progress" id="progHtmAlbumCover"></div>
+            <button class="zone-clear" onclick="clearHtmAlbumCover(event)" title="Entfernen">×</button>
+          </div>
+          <div class="s3-hint" id="hintHtmAlbumCover"></div>
         </div>
       </div>
       <!-- Selected song preview -->
@@ -961,23 +967,22 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <span style="font-size:10px;color:rgba(133,172,201,.45);margin-left:auto">Play → Lyrics → Schließen → Pause</span>
       </label>
 
-
-    </div>
-
-    <div class="htm-field" id="htmCustomMotifField">
-      <span class="htm-label">Motiv-Upload für diese Home-Kachel / Lyrics-Sheet 21</span>
-      <div class="upload-zone wide" id="zHtmMotif" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmMotifDrop(event)">
-        <input id="htmMotifFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmMotifFile(this)"/>
-        <div class="upload-zone-icon">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Motiv hochladen</span>
-          <small>PNG/JPG/WebP · 2:1 oder volle Breite</small>
+      <div class="htm-field" id="htmCustomMotifField">
+        <span class="htm-label">Motiv-Upload für diese Home-Kachel / Lyrics-Sheet 21</span>
+        <div class="upload-zone wide" id="zHtmMotif" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmMotifDrop(event)">
+          <input id="htmMotifFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmMotifFile(this)"/>
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Motiv hochladen</span>
+            <small>PNG/JPG/WebP · 2:1 oder volle Breite</small>
+          </div>
+          <img class="zone-preview" id="prevHtmMotif" alt=""/>
+          <div class="upload-progress" id="progHtmMotif"></div>
+          <button class="zone-clear" onclick="clearHtmMotif(event)" title="Entfernen">×</button>
         </div>
-        <img class="zone-preview" id="prevHtmMotif" alt=""/>
-        <div class="upload-progress" id="progHtmMotif"></div>
-        <button class="zone-clear" onclick="clearHtmMotif(event)" title="Entfernen">×</button>
+        <div class="s3-hint" id="hintHtmMotif"></div>
       </div>
-      <div class="s3-hint" id="hintHtmMotif"></div>
+
     </div>
 
     <!-- LINK: URL -->
@@ -1913,8 +1918,7 @@ function showMsg(el,text,type){ el.textContent=text; el.className='form-msg '+ty
 
 /* ══ ALBEN ══ */
 let albumsData = [];      // [{slug, title, cover_url, tracks:[{song_slug, position}]}]
-let albumFileNew = null;
-let albumTeaserFileNew = null;  // file for new album cover upload
+let albumFileNew = null;  // file for new album cover upload
 
 async function loadPlaylists(){
   const list = document.getElementById('albumList');
@@ -2216,16 +2220,10 @@ async function saveOrder(albumSlug){
 /* ── NEW ALBUM ── */
 function openNewAlbum(){
   albumFileNew = null;
-  albumTeaserFileNew = null;
   document.getElementById('naName').value='';
   document.getElementById('naSlug').value='';
-  document.getElementById('naSlug').dataset.m='';
   document.getElementById('prevAlbumCover').src='';
   document.getElementById('zAlbumCover').classList.remove('has-file');
-  const tf=document.getElementById('naTeaserFormat'); if(tf) tf.value='4x1';
-  const pt=document.getElementById('prevAlbumTeaser'); if(pt) pt.src='';
-  const zt=document.getElementById('zAlbumTeaser'); if(zt) zt.classList.remove('has-file');
-  updateNewAlbumTeaserZone();
   document.getElementById('naMsg').className='form-msg';
   document.getElementById('newAlbumOverlay').classList.add('open');
 }
@@ -2242,20 +2240,6 @@ function onFileAlbum(input){ if(input.files[0]){ albumFileNew=input.files[0]; do
 function onDropAlbum(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumCover')); const f=e.dataTransfer.files[0]; if(f){ albumFileNew=f; document.getElementById('prevAlbumCover').src=URL.createObjectURL(f); document.getElementById('zAlbumCover').classList.add('has-file'); } }
 function clearAlbumCover(e){ e.preventDefault(); e.stopPropagation(); albumFileNew=null; document.getElementById('prevAlbumCover').src=''; document.getElementById('zAlbumCover').classList.remove('has-file'); }
 
-function updateNewAlbumTeaserZone(){
-  const fmt=document.getElementById('naTeaserFormat')?.value || '4x1';
-  const z=document.getElementById('zAlbumTeaser');
-  if(!z) return;
-  z.classList.toggle('sq', fmt==='1x1');
-  z.classList.toggle('wide', fmt==='2x1');
-  z.classList.toggle('wide4', fmt==='4x1');
-  const sm=z.querySelector('small');
-  if(sm) sm.textContent = fmt + ' für HOME';
-}
-function onFileAlbumTeaser(input){ if(input.files[0]){ albumTeaserFileNew=input.files[0]; document.getElementById('prevAlbumTeaser').src=URL.createObjectURL(albumTeaserFileNew); document.getElementById('zAlbumTeaser').classList.add('has-file'); } }
-function onDropAlbumTeaser(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumTeaser')); const f=e.dataTransfer.files[0]; if(f){ albumTeaserFileNew=f; document.getElementById('prevAlbumTeaser').src=URL.createObjectURL(f); document.getElementById('zAlbumTeaser').classList.add('has-file'); } }
-function clearAlbumTeaser(e){ e.preventDefault(); e.stopPropagation(); albumTeaserFileNew=null; document.getElementById('prevAlbumTeaser').src=''; document.getElementById('zAlbumTeaser').classList.remove('has-file'); }
-
 async function saveNewAlbum(){
   const name = document.getElementById('naName').value.trim();
   const slug = document.getElementById('naSlug').value.trim()||makeSlug(name);
@@ -2265,35 +2249,19 @@ async function saveNewAlbum(){
   btn.disabled=true; btn.textContent='Speichern …';
 
   let coverUrl = null;
-  let teaserUrl = null;
-  const imgExt = (f)=> {
-    const n=String(f&&f.name||'').toLowerCase();
-    if(n.endsWith('.png')) return '.png';
-    if(n.endsWith('.webp')) return '.webp';
-    return '.jpg';
-  };
   if(albumFileNew){
     try{
       btn.textContent='Cover hochladen …';
-      coverUrl = await uploadToS3(albumFileNew, `artwork/${name} - Album Cover${imgExt(albumFileNew)}`, null);
-    } catch(e){ showMsg(msgEl,'Upload-Fehler Cover: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
-  }
-  if(albumTeaserFileNew){
-    try{
-      btn.textContent='Teaser hochladen …';
-      const fmt = document.getElementById('naTeaserFormat')?.value || '4x1';
-      teaserUrl = await uploadToS3(albumTeaserFileNew, `artwork/${name} - Home Teaser ${fmt}${imgExt(albumTeaserFileNew)}`, null);
-    } catch(e){ showMsg(msgEl,'Upload-Fehler Teaser: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
+      coverUrl = await uploadToS3(albumFileNew, `artwork/${name} - Cover.jpg`, null);
+    } catch(e){ showMsg(msgEl,'Upload-Fehler: '+e.message,'err'); btn.disabled=false; btn.textContent='Album anlegen'; return; }
   }
 
   try{
-    // Datenbank bleibt kompatibel: cover_url ist ausschließlich das Album-Cover.
-    // Der optionale Teaser wird hochgeladen und im Admin für die direkte Home-Auswahl in dieser Sitzung mitgeführt.
     const body={slug,title:name,cover_url:coverUrl};
     const r=await fetch(sbUrl('/rest/v1/playlists'),{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
     if(!r.ok) throw new Error(await r.text());
     const saved=await r.json();
-    const newAl = {...(saved[0]||{slug,title:name,cover_url:coverUrl}), teaser_url:teaserUrl, teaser_format:(document.getElementById('naTeaserFormat')?.value||'4x1'), tracks:[]};
+    const newAl = {...(saved[0]||{slug,title:name,cover_url:coverUrl}), tracks:[]};
     albumsData.push(newAl);
     albumsData.sort((a,b)=>(a.title||a.slug).localeCompare(b.title||b.slug));
     renderAlbums();
@@ -2549,10 +2517,7 @@ function buildCells(row, grid){
   if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
-  } else if(t0 === '4x1'){
-    grid.appendChild(buildCell(row, 0, 'span-4x1', editing));
-
-  } else if(t0 === 'span-4' || t0 === 'lyrics21'){
+  } else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
     grid.appendChild(buildCell(row, 0, 'span-4', editing));
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
@@ -2620,8 +2585,8 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='album' ? 'badge-play' : cell.fn==='play' ? 'badge-play' : 'badge-link';
-      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='album' ? '▣ Album' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
+      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
@@ -2726,8 +2691,7 @@ function applyType(rowId, cellIdx, type){
   } else if(type === '4x1'){
     const old0 = {...row.cells[cellIdx]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    // echter 4:1-Teaser bleibt als 4x1 gespeichert, damit die Live-App ihn nicht als 2:1 rendert
-    row.cells[0] = {...row.cells[0], ...old0, type:'4x1'};
+    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
@@ -2847,6 +2811,9 @@ let htmEditTarget  = null;  // { rowId, cellIdx }
 let htmSelectedSong = null; // { slug, title, artist, coverUrl, cover21Url }
 let htmMotifFile = null;
 let htmMotifUrl  = ''; // bereits hochgeladenes Custom-Motiv für diese Home-Kachel
+let htmPlayMode = 'song';
+let htmSelectedAlbum = null;
+let htmAlbumCoverFile = null;
 
 /* Virtual playlists for language filter */
 const VIRTUAL_PLAYLISTS = [
@@ -2854,50 +2821,95 @@ const VIRTUAL_PLAYLISTS = [
   { slug: '__lang_en', title: 'English' },
 ];
 
-let htmSelectedAlbum = null; // { slug, title, coverUrl }
 
-function htmIs4x1Target(){
-  const row = htmEditTarget && rowById(htmEditTarget.rowId);
-  const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
-  return !!(cell && cell.type === '4x1');
+
+function htmAlbumCoverExt(file){
+  const name=(file&&file.name||'').toLowerCase();
+  if(name.endsWith('.png')) return '.png';
+  if(name.endsWith('.webp')) return '.webp';
+  if(name.endsWith('.jpeg')) return '.jpg';
+  return '.jpg';
 }
-function htmUpdateMotifZoneForTarget(){
-  const zone=document.getElementById('zHtmMotif');
-  const label=document.querySelector('#htmCustomMotifField .htm-label');
-  const small=document.querySelector('#zHtmMotif small');
-  if(!zone) return;
-  const is4=htmIs4x1Target();
-  zone.classList.toggle('wide4', is4);
-  zone.classList.toggle('wide', !is4);
-  const fn = document.querySelector('#homeTileModal .htm-seg-btn.active')?.dataset?.fn || 'play';
-  const isAlbum = fn === 'album';
-  if(label) label.textContent = isAlbum ? 'Album-Motiv / 4:1-Teaser übernehmen oder hochladen' : (is4 ? 'Motiv-Upload für 4:1-Album-Teaser' : 'Motiv-Upload für diese Home-Kachel / Lyrics-Sheet 21');
-  if(small) small.textContent = isAlbum ? 'Albumcover wird automatisch übernommen · optional eigenes 4:1-Motiv hochladen' : (is4 ? 'PNG/JPG/WebP · 4:1 wird nicht zugeschnitten' : 'PNG/JPG/WebP · 2:1 oder volle Breite');
+function htmAlbumCoverS3Key(file){
+  const base = (htmSelectedAlbum && (htmSelectedAlbum.slug || htmSelectedAlbum.title)) || 'album-cover-'+Date.now();
+  return `artwork/${makeSlug(base)||base}-cover${htmAlbumCoverExt(file)}`;
 }
-function htmFillAlbumSelect(selected){
+function htmSetAlbumCoverPreview(url){
+  const zone=document.getElementById('zHtmAlbumCover');
+  const img=document.getElementById('prevHtmAlbumCover');
+  if(img) img.src = url || '';
+  if(zone) zone.classList.toggle('has-file', !!url);
+}
+function updateHtmAlbumCoverHint(){
+  const hint=document.getElementById('hintHtmAlbumCover');
+  if(!hint) return;
+  if(htmAlbumCoverFile) hint.textContent = '→ ' + htmAlbumCoverS3Key(htmAlbumCoverFile);
+  else hint.textContent = '';
+}
+function onHtmAlbumCoverFile(input){
+  const file=input.files && input.files[0];
+  if(!file) return;
+  htmAlbumCoverFile = file;
+  htmSetAlbumCoverPreview(URL.createObjectURL(file));
+  updateHtmAlbumCoverHint();
+}
+function onHtmAlbumCoverDrop(e){
+  e.preventDefault();
+  offDrag(document.getElementById('zHtmAlbumCover'));
+  const file=e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  htmAlbumCoverFile = file;
+  htmSetAlbumCoverPreview(URL.createObjectURL(file));
+  updateHtmAlbumCoverHint();
+}
+function clearHtmAlbumCover(e){
+  if(e && e.preventDefault){ e.preventDefault(); e.stopPropagation(); }
+  htmAlbumCoverFile = null;
+  const input=document.getElementById('htmAlbumCoverFileInput');
+  if(input) input.value='';
+  const prog=document.getElementById('progHtmAlbumCover');
+  if(prog) prog.style.width='0%';
+  htmSetAlbumCoverPreview('');
+  updateHtmAlbumCoverHint();
+}
+function htmPopulateAlbums(selectedSlug){
   const sel=document.getElementById('htmAlbumSelect');
   if(!sel) return;
-  const opts = (albumsData||[]).slice().sort((a,b)=>String(a.title||a.slug).localeCompare(String(b.title||b.slug),'de'));
-  sel.innerHTML = '<option value="">— Album wählen —</option>' + opts.map(a=>`<option value="${esc(a.slug)}">${esc(a.title||a.slug)}</option>`).join('');
-  if(selected) sel.value = selected;
-  htmSelectedAlbum = albumsData.find(a=>a.slug===sel.value) || null;
-  const activeFn = document.querySelector('#homeTileModal .htm-seg-btn.active')?.dataset?.fn || '';
-  if(activeFn === 'album' && htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && (htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url)){
-    htmMotifUrl = htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url;
-    htmSetMotifPreview(htmMotifUrl);
-    updateHtmMotifHint();
-  }
+  const playlists=(typeof albumsData !== 'undefined' ? albumsData : []);
+  sel.innerHTML='<option value="">— Album wählen —</option>' + playlists.map(a=>`<option value="${esc(a.slug)}">${esc(a.title||a.slug)}</option>`).join('');
+  if(selectedSlug) sel.value=selectedSlug;
 }
-function htmOnAlbumSelect(){
+function htmFindAlbum(slug){
+  const playlists=(typeof albumsData !== 'undefined' ? albumsData : []);
+  return playlists.find(a=>a.slug===slug) || null;
+}
+function htmRenderSelectedAlbum(){
+  const box=document.getElementById('htmSelectedAlbum');
+  if(!box) return;
+  if(!htmSelectedAlbum){ box.style.display='none'; return; }
+  box.style.display='flex';
+  document.getElementById('htmSelectedAlbumCover').src = htmSelectedAlbum.cover_url || '';
+  document.getElementById('htmSelectedAlbumTitle').textContent = htmSelectedAlbum.title || htmSelectedAlbum.slug;
+  document.getElementById('htmSelectedAlbumMeta').textContent = ((htmSelectedAlbum.tracks&&htmSelectedAlbum.tracks.length)||0) + ' Songs';
+}
+function htmSelectAlbumFromDropdown(){
   const slug=document.getElementById('htmAlbumSelect')?.value || '';
-  htmSelectedAlbum = albumsData.find(a=>a.slug===slug) || null;
-  if(htmSelectedAlbum && !htmMotifUrl && !htmMotifFile && (htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url)){
-    htmMotifUrl = htmSelectedAlbum.teaser_url || htmSelectedAlbum.cover_url;
-    htmSetMotifPreview(htmMotifUrl);
-    updateHtmMotifHint();
-  }
+  htmSelectedAlbum = slug ? htmFindAlbum(slug) : null;
+  htmRenderSelectedAlbum();
 }
-
+function htmSetPlayMode(mode, el){
+  htmPlayMode = mode === 'album' ? 'album' : 'song';
+  if(el){
+    document.querySelectorAll('#homeTileModal .htm-subseg-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    document.querySelectorAll('#homeTileModal .htm-subseg-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===htmPlayMode));
+  }
+  const songWrap=document.getElementById('htmSongPickWrap');
+  const albumWrap=document.getElementById('htmAlbumPickWrap');
+  if(songWrap) songWrap.style.display = htmPlayMode==='song' ? '' : 'none';
+  if(albumWrap) albumWrap.style.display = htmPlayMode==='album' ? '' : 'none';
+}
 
 function htmMotifExt(file){
   const name=(file&&file.name||'').toLowerCase();
@@ -2909,8 +2921,8 @@ function htmMotifExt(file){
 function htmMotifS3Key(file){
   const row = htmEditTarget && rowById(htmEditTarget.rowId);
   const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
-  const base = (htmSelectedAlbum && htmSelectedAlbum.slug) || (htmSelectedSong && htmSelectedSong.slug) || (cell && (cell.albumSlug || cell.slug)) || ('home-motiv-'+Date.now());
-  const kind = (cell && cell.type === '4x1') ? 'album-teaser-4x1' : ((cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile');
+  const base = (htmSelectedSong && htmSelectedSong.slug) || (cell && cell.slug) || ('home-motiv-'+Date.now());
+  const kind = (cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile';
   return `artwork/${makeSlug(base)||base}-${kind}${htmMotifExt(file)}`;
 }
 function htmSetMotifPreview(url){
@@ -2958,32 +2970,33 @@ function openHomeTileModal(rowId, cellIdx){
   htmEditTarget   = { rowId, cellIdx };
   htmSelectedSong = null;
   htmSelectedAlbum = null;
+  htmAlbumCoverFile = null;
+  htmPlayMode = 'song';
   htmMotifFile = null;
   htmMotifUrl  = '';
-  const motifInput = document.getElementById('htmMotifFileInput');
-  if(motifInput) motifInput.value = '';
 
   const row  = rowById(rowId);
   const cell = row && row.cells[cellIdx];
   const fn   = cell ? cell.fn : 'play';
+  htmPlayMode = (cell && (cell.actionType === 'album' || cell.playMode === 'album')) ? 'album' : 'song';
 
   // Restore previously saved custom motif if any
   htmMotifUrl = (cell && (cell.customImageUrl || cell.customMotifUrl)) || '';
   htmSetMotifPreview(htmMotifUrl);
+  htmSetAlbumCoverPreview('');
+  updateHtmAlbumCoverHint();
   updateHtmMotifHint();
-  htmUpdateMotifZoneForTarget();
-  const albumPreset = cell && (cell.albumSlug || (cell.fn==='album' ? (cell.playlistSlug || cell.slug) : ''));
-  if(!albumsData.length){ loadPlaylists().then(()=>htmFillAlbumSelect(albumPreset)); }
-  else htmFillAlbumSelect(albumPreset);
 
-  // Restore previously saved song if any
-  if(cell && cell.slug && cell.imageUrl){
+  // Restore previously saved song/album if any
+  if(cell && cell.slug && htmPlayMode === 'album'){
+    htmSelectedAlbum = htmFindAlbum(cell.slug) || {slug:cell.slug,title:cell.albumTitle||cell.alt||cell.slug,cover_url:cell.albumCoverUrl||''};
+  } else if(cell && cell.slug && cell.imageUrl){
     htmSelectedSong = {
       slug:       cell.slug,
       title:      cell.alt  || cell.slug,
       artist:     cell.artist || '',
-      coverUrl:   cell.imageUrl,
-      cover21Url: cell.cover21Url || cell.imageUrl
+      coverUrl:   cell.songCoverUrl || cell.coverUrl || cell.imageUrl,
+      cover21Url: cell.cover21Url || cell.songCoverUrl || cell.imageUrl
     };
   }
 
@@ -2993,9 +3006,22 @@ function openHomeTileModal(rowId, cellIdx){
   document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.fn===fn));
   htmSetFn(fn, null);
 
-  // Populate playlist dropdown
-  htmPopulatePlaylists(cell ? cell.playlistSlug : '');
-  htmRenderSelectedSong();
+  // Populate song + album dropdowns
+  const finishPopulate = ()=>{
+    htmPopulatePlaylists(cell ? cell.playlistSlug : '');
+    htmPopulateAlbums(cell && htmPlayMode==='album' ? cell.slug : '');
+    if(cell && cell.slug && htmPlayMode === 'album' && !htmSelectedAlbum){
+      htmSelectedAlbum = htmFindAlbum(cell.slug) || {slug:cell.slug,title:cell.albumTitle||cell.alt||cell.slug,cover_url:cell.albumCoverUrl||''};
+    }
+    htmSetPlayMode(htmPlayMode, null);
+    htmRenderSelectedSong();
+    htmRenderSelectedAlbum();
+  };
+  if(typeof albumsData !== 'undefined' && !albumsData.length){
+    loadPlaylists().then(finishPopulate).catch(finishPopulate);
+  } else {
+    finishPopulate();
+  }
 
   document.getElementById('homeTileModal').classList.add('open');
 }
@@ -3004,6 +3030,9 @@ function closeHomeTileModal(){
   document.getElementById('homeTileModal').classList.remove('open');
   htmEditTarget   = null;
   htmSelectedSong = null;
+  htmSelectedAlbum = null;
+  htmAlbumCoverFile = null;
+  htmPlayMode = 'song';
   htmMotifFile = null;
   htmMotifUrl = '';
 }
@@ -3013,16 +3042,9 @@ function htmSetFn(fn, el){
     document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.remove('active'));
     el.classList.add('active');
   }
-  const playField  = document.getElementById('htmPlayField');
-  const albumField = document.getElementById('htmAlbumField');
-  const linkField  = document.getElementById('htmLinkField');
-  const motifField = document.getElementById('htmCustomMotifField');
-  if(playField)  playField.style.display  = fn === 'play'  ? '' : 'none';
-  if(albumField) albumField.style.display = fn === 'album' ? '' : 'none';
-  if(linkField)  linkField.style.display  = fn === 'link'  ? '' : 'none';
-  // Motiv-Upload bleibt für Play und Album sichtbar, bei Link aber ausgeblendet.
-  if(motifField) motifField.style.display = (fn === 'play' || fn === 'album') ? '' : 'none';
-  htmUpdateMotifZoneForTarget();
+  document.getElementById('htmPlayField').style.display = fn==='play' ? '' : 'none';
+  document.getElementById('htmLinkField').style.display = fn==='link' ? '' : 'none';
+  if(fn==='play') htmSetPlayMode(htmPlayMode, null);
 }
 
 /* ── Playlist dropdown ── */
@@ -3163,52 +3185,65 @@ async function saveHomeTile(){
   markHomeAction();
   cell.fn = fn;
   if(fn === 'play'){
-    if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
     let customUrl = htmMotifUrl || '';
     if(htmMotifFile){
       try{
-        toast('Motiv wird hochgeladen …','ok');
+        toast('Teaser-Motiv wird hochgeladen …','ok');
         customUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
       }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
     }
-    cell.slug         = htmSelectedSong.slug;
-    cell.playlistSlug = htmSelectedSong.playlistSlug || '';
-    cell.cover21Url   = htmSelectedSong.cover21Url;
-    cell.useCover21   = (cell.type === 'lyrics21') || !!cell.useCover21;
-    cell.customImageUrl = customUrl || '';
-    cell.imageUrl     = customUrl || (cell.useCover21 ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl);
-    cell.alt          = htmSelectedSong.title;
-    cell.artist       = htmSelectedSong.artist;
-    cell.url          = '';
-    cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
-  } else if(fn === 'album'){
-    const albumSlug = document.getElementById('htmAlbumSelect')?.value || '';
-    const album = albumsData.find(a=>a.slug===albumSlug);
-    if(!album){ toast('Bitte ein Album auswählen','err'); return; }
-    let customUrl = htmMotifUrl || album.teaser_url || album.cover_url || '';
-    if(htmMotifFile){
-      try{
-        toast('4:1-Teaser wird hochgeladen …','ok');
-        customUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
-      }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
+
+    if(htmPlayMode === 'album'){
+      if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
+      let albumCoverUrl = htmSelectedAlbum.cover_url || '';
+      if(htmAlbumCoverFile){
+        try{
+          toast('Album-Cover wird hochgeladen …','ok');
+          albumCoverUrl = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
+          const patch = await fetch(sbUrl('/rest/v1/playlists?slug=eq.'+encodeURIComponent(htmSelectedAlbum.slug)),{
+            method:'PATCH', headers:{...hdrs(),'Prefer':'return=representation'}, body:JSON.stringify({cover_url:albumCoverUrl})
+          });
+          if(!patch.ok) throw new Error(await patch.text());
+          htmSelectedAlbum.cover_url = albumCoverUrl;
+          const idx = albumsData.findIndex(a=>a.slug===htmSelectedAlbum.slug);
+          if(idx>=0) albumsData[idx].cover_url = albumCoverUrl;
+          renderAlbums();
+        }catch(e){ toast('Album-Cover Fehler: '+e.message,'err'); return; }
+      }
+      cell.actionType   = 'album';
+      cell.playMode     = 'album';
+      cell.slug         = htmSelectedAlbum.slug;
+      cell.playlistSlug = htmSelectedAlbum.slug;
+      cell.albumTitle   = htmSelectedAlbum.title || htmSelectedAlbum.slug;
+      cell.albumCoverUrl= albumCoverUrl;
+      cell.customImageUrl = customUrl || '';
+      cell.imageUrl     = customUrl || albumCoverUrl;
+      cell.alt          = htmSelectedAlbum.title || htmSelectedAlbum.slug;
+      cell.artist       = '';
+      cell.url          = '';
+      cell.lyricsCycle  = false;
+    } else {
+      if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
+      cell.actionType   = 'song';
+      cell.playMode     = 'song';
+      cell.slug         = htmSelectedSong.slug;
+      cell.playlistSlug = htmSelectedSong.playlistSlug || '';
+      cell.cover21Url   = htmSelectedSong.cover21Url;
+      cell.songCoverUrl = htmSelectedSong.coverUrl;
+      cell.useCover21   = (cell.type === 'lyrics21') || !!cell.useCover21;
+      cell.customImageUrl = customUrl || '';
+      cell.imageUrl     = customUrl || (cell.useCover21 ? (htmSelectedSong.cover21Url || htmSelectedSong.coverUrl) : htmSelectedSong.coverUrl);
+      cell.alt          = htmSelectedSong.title;
+      cell.artist       = htmSelectedSong.artist;
+      cell.url          = '';
+      cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
     }
-    cell.fn = 'album';
-    cell.albumSlug = album.slug;
-    cell.playlistSlug = album.slug;
-    cell.slug = album.slug;
-    cell.imageUrl = customUrl || album.teaser_url || album.cover_url || '';
-    cell.customImageUrl = customUrl || '';
-    cell.cover21Url = '';
-    cell.useCover21 = false;
-    cell.alt = album.title || album.slug;
-    cell.artist = '';
-    cell.url = '';
-    cell.lyricsCycle = false;
   } else {
     cell.url          = document.getElementById('htmLinkUrl').value.trim();
     cell.lyricsCycle  = false;
+    cell.actionType   = 'link';
+    cell.playMode     = '';
     cell.slug         = '';
-    cell.albumSlug    = '';
     cell.imageUrl     = '';
     cell.customImageUrl = '';
     cell.alt          = '';
