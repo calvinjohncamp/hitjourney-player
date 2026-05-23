@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v190 -->
+<!-- Version: admin-v20260523-v191 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2447,17 +2447,16 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v190: Reihenfolge hart synchronisieren.
-    // Kein teilweises UPSERT mehr: Bei neu eingefügten Zeilen konnte row_order auf der Live-Seite
-    // gegen alte Werte laufen. Deshalb wird die Home-Struktur in genau der Editor-Reihenfolge
-    // neu geschrieben.
+    // v191: Home-Layout wird als komplette Reihenfolge gespeichert.
+    // Kein Upsert mehr: alte/verwaiste Zeilen können sonst mit alten row_order-Werten
+    // im Live-Renderer stehen bleiben und neue Zeilen scheinbar „drei Zeilen zu hoch“ schieben.
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
 
-    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
+    const del = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
       method:'DELETE',
       headers:hdrsMin()
     });
-    if(!delRes.ok) throw new Error(await delRes.text());
+    if(!del.ok) throw new Error(await del.text());
 
     if(payload.length > 0){
       const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
@@ -2471,7 +2470,7 @@ async function saveHomeLayout(){
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert ✓','ok');
+    toast('Home gespeichert ✓ Reihenfolge live neu geschrieben','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
@@ -2649,13 +2648,14 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
-      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+      const actionKind = isSlide ? 'slideshow' : (cell.teaserAction || (cell.fn==='link' ? 'link' : (cell.contentMode==='album' || cell.albumSlug ? 'album' : 'play')));
+      const badgeCls = actionKind==='slideshow' ? 'badge-slide' : actionKind==='link' ? 'badge-link' : actionKind==='album' ? 'badge-album' : 'badge-play';
+      const badgeTxt = actionKind==='slideshow' ? '◈ Diashow' : actionKind==='link' ? '🔗 Link' : actionKind==='album' ? '▣ Album' : '▶ Play';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'teaser')" title="Teaser bearbeiten">✎</button>
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'action')" title="Klick-Aktion" style="background:rgba(50,180,100,.2);color:#6fda9a">▶</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'action')" title="Klick-Aktion ändern" style="background:rgba(50,180,100,.2);color:#6fda9a">⚙</button>
           ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
       el.appendChild(ov);
@@ -3200,6 +3200,7 @@ async function saveHomeTile(){
 
   if(htmCurrentAction === 'link'){
     cell.fn  = 'link';
+    cell.teaserAction = 'link';
     cell.url = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     cell.slug = ''; cell.lyricsCycle = false; cell.albumCoverUrl = '';
 
@@ -3207,6 +3208,7 @@ async function saveHomeTile(){
     if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
     cell.fn           = 'play';
     cell.url          = '';
+    cell.teaserAction = 'album';
     cell.contentMode  = 'album';
     cell.albumSlug    = htmSelectedAlbum.slug;
     cell.playlistSlug = htmSelectedAlbum.slug;
@@ -3224,6 +3226,7 @@ async function saveHomeTile(){
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
     cell.fn           = 'play';
     cell.url          = '';
+    cell.teaserAction = 'play';
     cell.contentMode  = 'song';
     cell.albumSlug    = '';
     cell.slug         = htmSelectedSong.slug;
@@ -3348,10 +3351,8 @@ function htmOnAlbumSelect(){
     tracks:   al.tracks || []
   };
 
-  // Album-Cover automatisch vorbelegen (überschreibbar per Upload).
-  // v190: Ein bereits gespeichertes, manuell hochgeladenes Albumcover beim erneuten Öffnen
-  // NICHT durch das Standard-Cover des Albums überschreiben.
-  if(coverUrl && !htmAlbumCoverFile && !htmAlbumCoverUrl){
+  // Album-Cover automatisch vorbelegen (überschreibbar per Upload)
+  if(coverUrl && !htmAlbumCoverFile){
     htmAlbumCoverUrl = coverUrl;
     htmSetAlbumCoverPreview(coverUrl);
     updateHtmAlbumCoverHint();

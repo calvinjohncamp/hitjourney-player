@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-v185 -->
+<!-- Version: index-v20260523-v191 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -3740,57 +3740,46 @@ async function loadFromSupabase() {
     SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
-  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
-  const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
-    { headers }
-  );
+  // 2. Playlists + Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
+  const [playlistsRes, tracksRes] = await Promise.all([
+    fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title', { headers }),
+    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
+  ]);
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
+  const playlistsRaw = playlistsRes.ok ? await playlistsRes.json() : [];
+  const playlistDb = {};
+  playlistsRaw.forEach(pl => { playlistDb[pl.slug] = pl; });
 
   // 3. ALBUMS aufbauen
-  // v185: Nicht nur die fest verdrahteten PLAYLIST_MAP-Alben, sondern alle Supabase-Alben laden.
-  // Dadurch funktionieren neu angelegte Alben wie "Sleep Well" sofort als klickbares Home-Ziel.
-  let playlistsRaw = [];
-  try {
-    const playlistsRes = await fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title.asc', { headers });
-    if (playlistsRes.ok) playlistsRaw = await playlistsRes.json();
-  } catch(e) { playlistsRaw = []; }
-  const playlistMeta = {};
-  playlistsRaw.forEach(pl => { playlistMeta[pl.slug] = pl; });
-
+  // v191: nicht nur PLAYLIST_MAP-Alben bauen. Neue Admin-Alben wie „Sleep Well“
+  // müssen live ebenfalls als Album existieren, sonst ist der Home-Teaser nicht anklickbar.
   ALBUMS = {};
-  ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const fixedInfo = PLAYLIST_MAP[playlistSlug];
-    const plMeta = playlistMeta[playlistSlug] || {};
-    const info = fixedInfo || {
-      key: playlistSlug,
-      title: plMeta.title || playlistSlug,
-      meta: '',
-      cover: plMeta.cover_url || ''
-    };
-    const song = songMap[row.song_slug];
-    if (!song) return;
+    const mapped = PLAYLIST_MAP[playlistSlug];
+    const dbPl   = playlistDb[playlistSlug] || {};
+    const key    = mapped ? mapped.key : playlistSlug;
+    const song   = songMap[row.song_slug];
+    if (!song || !playlistSlug) return;
 
-    if (!ALBUMS[info.key]) {
-      ALBUMS[info.key] = {
-        title: info.title,
-        meta:  info.meta || '',
-        cover: info.cover || song.cover || '',
-        songs: []
+    if (!ALBUMS[key]) {
+      ALBUMS[key] = {
+        title: (mapped && mapped.title) || dbPl.title || playlistSlug,
+        meta:  (mapped && mapped.meta)  || '',
+        cover: (mapped && mapped.cover) || dbPl.cover_url || song.cover || '',
+        songs: [],
+        playlistSlug
       };
     }
-    ALBUMS[info.key].songs.push(song);
+    ALBUMS[key].songs.push(song);
   });
 
-  // Null-Einträge entfernen und Metadaten für dynamische Alben finalisieren
   Object.keys(ALBUMS).forEach(k => {
-    if (!ALBUMS[k]) { delete ALBUMS[k]; return; }
-    if(!ALBUMS[k].meta) ALBUMS[k].meta = ALBUMS[k].songs.length + ' Songs';
-    if(!ALBUMS[k].cover && ALBUMS[k].songs[0]) ALBUMS[k].cover = ALBUMS[k].songs[0].cover || '';
+    const a = ALBUMS[k];
+    if(!a || !a.songs || !a.songs.length){ delete ALBUMS[k]; return; }
+    if(!a.meta) a.meta = a.songs.length + ' Songs';
   });
 
   // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
@@ -5651,8 +5640,8 @@ function buildHomeCard(cell, extraClass){
     }
 
     // v184: Album-Modus — Album direkt öffnen
-    if(cell.contentMode === 'album' && cell.albumSlug){
-      const ak = resolveAlbumKey(cell.albumSlug);
+    if((cell.teaserAction === 'album' || cell.contentMode === 'album') && (cell.albumSlug || cell.slug)){
+      const ak = resolveAlbumKey(cell.albumSlug || cell.slug);
       if(ak && window.ALBUMS && window.ALBUMS[ak]){ showAlbum(ak); return; }
     }
 
@@ -6231,15 +6220,17 @@ function initDynamicSlideshow(id, slides){
 /* ── Resolve playlist slug → ALBUMS key ── */
 function resolveAlbumKey(slug){
   if(!slug) return null;
-  // Direct key match — includes dynamic Supabase playlists (v185)
-  if(ALBUMS[slug]) return slug;
-  // Via PLAYLIST_MAP for legacy/fixed albums
-  const info = PLAYLIST_MAP[slug];
-  if(info) return info.key;
-  // Defensive fallback for slug/key normalization
-  const normalized = String(slug).toLowerCase();
-  const found = Object.keys(ALBUMS).find(k => String(k).toLowerCase() === normalized);
-  return found || null;
+  const raw = String(slug);
+  // Direct key / dynamic playlist slug match
+  if(ALBUMS[raw]) return raw;
+  // Via hardcoded legacy map
+  const info = PLAYLIST_MAP[raw];
+  if(info && ALBUMS[info.key]) return info.key;
+  // Fallback: normalized slug lookup for new Admin albums
+  const norm = raw.toLowerCase().trim().replace(/_/g,'-').replace(/\s+/g,'-');
+  if(ALBUMS[norm]) return norm;
+  const hit = Object.keys(ALBUMS).find(k => String(k).toLowerCase() === norm || String(ALBUMS[k].playlistSlug||'').toLowerCase() === norm);
+  return hit || null;
 }
 
 /* ── Play song or album based on cell config ── */
