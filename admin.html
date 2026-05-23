@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v192 -->
+<!-- Version: admin-v20260523-v193 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2414,7 +2414,7 @@ function makeRow(){
 /* ── Load / Save Supabase ── */
 async function loadHomeLayout(){
   try {
-    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs()});
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs(), cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
     homeLayout = rows.map(row=>({
@@ -2447,39 +2447,53 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v183 fix: UPSERT statt DELETE+INSERT – verhindert Race-Condition beim Neuanlegen.
-    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
-    const currentIds = new Set(payload.map(r=>r.id));
+    // v193: Home-Reihenfolge hart neu schreiben.
+    // Grund: UPSERT kann bei nicht sauberer Conflict-/Alt-Datenlage alte row_order-Zustände
+    // oder Dubletten stehen lassen. Deshalb wird die Tabelle beim Home-Speichern vollständig
+    // durch den sichtbaren Admin-Stand ersetzt: Z1 Admin = row_order 0, Z7 Admin = row_order 6.
+    const normalized = homeLayout.map((r,i)=>({
+      id: r.id || uid(),
+      editing: false,
+      cells: (r.cells && r.cells.length===4 ? r.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()])
+    }));
+    const payload = normalized.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
 
-    // 1. Bestehende IDs aus Supabase holen
-    const existRes = await fetch(sbUrl('/rest/v1/home_layout?select=id'), {headers:hdrs()});
-    let toDelete = [];
-    if(existRes.ok){
-      const existing = await existRes.json();
-      toDelete = existing.map(r=>r.id).filter(id=>!currentIds.has(id));
-    }
+    // 1. Alles Alte entfernen — inklusive verwaister/duplizierter Zeilen aus früheren Saves.
+    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
+      method:'DELETE',
+      headers:{...hdrsMin(), 'Prefer':'return=minimal'},
+      cache:'no-store'
+    });
+    if(!delRes.ok) throw new Error('Alte Home-Zeilen konnten nicht gelöscht werden: '+await delRes.text());
 
-    // 2. Veraltete Zeilen löschen
-    if(toDelete.length > 0){
-      const inList = '('+toDelete.map(id=>'"'+id+'"').join(',')+')'
-      await fetch(SB_URL+'/rest/v1/home_layout?id=in.'+inList+'&apikey='+SB_KEY,
-        {method:'DELETE', headers:hdrsMin()});
-    }
-
-    // 3. Aktuelle Zeilen via UPSERT schreiben (row_order korrekt)
+    // 2. Sichtbare Admin-Reihenfolge exakt neu einfügen.
     if(payload.length > 0){
-      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
+      const insRes = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
         method:'POST',
-        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
-        body: JSON.stringify(payload)
+        headers:{...hdrs(), 'Prefer':'return=representation'},
+        body: JSON.stringify(payload),
+        cache:'no-store'
       });
-      if(!res.ok) throw new Error(await res.text());
+      if(!insRes.ok) throw new Error('Neue Home-Reihenfolge konnte nicht gespeichert werden: '+await insRes.text());
+    }
+
+    // 3. Direkt vom Server zurücklesen und damit den Admin synchronisieren.
+    const verifyRes = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'), {headers:hdrs(), cache:'no-store'});
+    if(verifyRes.ok){
+      const rows = await verifyRes.json();
+      homeLayout = rows.map(row=>({
+        id: row.id,
+        editing: false,
+        cells: ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()])
+      }));
+    } else {
+      homeLayout = normalized;
     }
 
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert ✓','ok');
+    toast('Home-Reihenfolge gespeichert ✓','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
