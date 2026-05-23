@@ -2832,7 +2832,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </button>
 <div class="knw-play-info">
 <div class="knw-play-name">Mary-Anne</div>
-<div class="knw-play-artist" id="knwArtist0">BRO · Jörn Kämper</div>
+<div class="knw-play-artist" id="knwArtist0"></div>
 </div>
 </div>
 </div>
@@ -2850,7 +2850,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </button>
 <div class="knw-play-info">
 <div class="knw-play-name">Six Hours South of Lighthouse Nine</div>
-<div class="knw-play-artist" id="knwArtist1">BRO · Jörn Kämper</div>
+<div class="knw-play-artist" id="knwArtist1"></div>
 </div>
 </div>
 </div>
@@ -3610,7 +3610,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 <div class="np-info">
 <div class="np-title" id="npTitle"></div>
-<div class="np-artist">BRO · Jörn Kämper</div>
+<div class="np-artist" id="npArtist"></div>
 </div>
 <div class="np-spacer"></div>
 <div class="np-bottom">
@@ -3654,7 +3654,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <img alt="" class="hj-now-cover" id="nowCover" src="" style="visibility:hidden"/>
 <div class="hj-now-info" id="nowInfo" style="visibility:hidden">
 <div class="hj-now-title" id="nowTitle"></div>
-<div class="hj-now-artist" id="nowArtist">Jörn Kämper</div>
+<div class="hj-now-artist" id="nowArtist"></div>
 </div>
 <!-- Controls direkt in der Now-Zeile -->
 <div class="hj-controls">
@@ -4220,6 +4220,7 @@ function knwPlaySong(idx){
   // NP-Screen vorbereiten
   setImgSrcWithFallback(npCover, [s.cover]);
   npTitle.textContent = s.title;
+  const npArtistEl=document.getElementById('npArtist'); if(npArtistEl) npArtistEl.textContent=s.artist||'';
   npAlbumLabel.textContent = 'Kurs Nordwest';
   prevScreen = 'kursNordwest';
   queueIdx = -1;
@@ -4735,6 +4736,7 @@ function updateNPScreen(){
   }
   setImgSrcWithFallback(npCover, getImgUrls(s,'cover'));
   npTitle.textContent=s.title;
+  const _npA=document.getElementById('npArtist'); if(_npA) _npA.textContent=s.artist||'';
   npBtnPlay.classList.toggle('playing',!audio.paused);
   npBtnShuffle.classList.toggle('active',shuffleOn);
   syncRepeatBtn(npBtnRepeat);
@@ -5320,7 +5322,7 @@ function updateMS(i){
   if(!('mediaSession' in navigator)||!curAlbum)return;
   const s=ALBUMS[curAlbum].songs[i];
   navigator.mediaSession.metadata=new MediaMetadata({
-    title:s.title,artist:'BRO · Jörn Kämper',
+    title:s.title,artist:s.artist||'BRO',
     album:ALBUMS[curAlbum].title,
     artwork:[{src:s.cover,sizes:'400x400',type:'image/jpeg'}]
   });
@@ -6457,7 +6459,7 @@ function playArchiveSong(idx, songList){
 function updateMS_archive(s){
   if(!('mediaSession' in navigator))return;
   navigator.mediaSession.metadata=new MediaMetadata({
-    title:s.title,artist:'BRO · Jörn Kämper',album:'the archive',
+    title:s.title,artist:s.artist||'BRO',album:'the archive',
     artwork:[{src:s.cover,sizes:'400x400',type:'image/jpeg'}]
   });
   navigator.mediaSession.setActionHandler('play',()=>audio.play());
