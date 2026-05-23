@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184g -->
+<!-- Version: admin-v20260523-v184h -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2901,6 +2901,7 @@ let htmEditTarget  = null;  // { rowId, cellIdx }
 let htmSelectedSong = null; // { slug, title, artist, coverUrl, cover21Url }
 let htmMotifFile = null;
 let htmMotifUrl  = ''; // bereits hochgeladenes Custom-Motiv für diese Home-Kachel
+let htmMotifWasCleared = false; // unterscheidet: bewusst gelöscht vs. unverändert lassen
 
 /* Virtual playlists for language filter */
 const VIRTUAL_PLAYLISTS = [
@@ -2943,6 +2944,7 @@ function onHtmMotifFile(input){
   const file=input.files && input.files[0];
   if(!file) return;
   htmMotifFile = file;
+  htmMotifWasCleared = false;
   htmSetMotifPreview(URL.createObjectURL(file));
   updateHtmMotifHint();
 }
@@ -2952,6 +2954,7 @@ function onHtmMotifDrop(e){
   const file=e.dataTransfer.files && e.dataTransfer.files[0];
   if(!file) return;
   htmMotifFile = file;
+  htmMotifWasCleared = false;
   htmSetMotifPreview(URL.createObjectURL(file));
   updateHtmMotifHint();
 }
@@ -2959,6 +2962,7 @@ function clearHtmMotif(e){
   if(e && e.preventDefault){ e.preventDefault(); e.stopPropagation(); }
   htmMotifFile = null;
   htmMotifUrl = '';
+  htmMotifWasCleared = true;
   const input=document.getElementById('htmMotifFileInput');
   if(input) input.value='';
   const prog=document.getElementById('progHtmMotif');
@@ -2972,6 +2976,7 @@ function openHomeTileModal(rowId, cellIdx){
   htmSelectedSong = null;
   htmMotifFile    = null;
   htmMotifUrl     = '';
+  htmMotifWasCleared = false;
   htmAlbumCoverFile = null;
   htmAlbumCoverUrl  = '';
 
@@ -2984,16 +2989,25 @@ function openHomeTileModal(rowId, cellIdx){
   if(s1) s1.style.display = '';
   if(s2) s2.style.display = 'none';
 
-  // Restore teaser motif — ONLY teaserMotifUrl, never albumCoverUrl
-  // Guard: if teaserMotifUrl was accidentally set to albumCoverUrl (old bug), treat as empty
-  const _tm = (cell && cell.teaserMotifUrl) || '';
+  // Restore teaser aspect first: it decides how strict we must separate teaser and album cover
+  htmCurrentAspect = (cell && cell.teaserAspect) || '1x1';
+
+  // Restore teaser motif — teaser source is Home-only artwork.
+  // For non-1:1 teasers NEVER use albumCoverUrl as preview/source, because that cover belongs only to the album page.
   const _ac = (cell && cell.albumCoverUrl) || '';
-  htmMotifUrl = (_tm && _tm !== _ac) ? _tm : '';
+  const _candidates = [
+    (cell && cell.teaserMotifUrl) || '',
+    (cell && cell.customImageUrl) || '',
+    (cell && cell.imageUrl) || ''
+  ].filter(Boolean);
+  htmMotifUrl = '';
+  for(const u of _candidates){
+    if(htmCurrentAspect === '1x1' || u !== _ac){ htmMotifUrl = u; break; }
+  }
   htmSetMotifPreview(htmMotifUrl);
   updateHtmMotifHint();
 
-  // Restore teaser aspect
-  htmCurrentAspect = (cell && cell.teaserAspect) || '1x1';
+  // Restore teaser aspect buttons
   document.querySelectorAll('#htmAspectSeg .htm-seg-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.aspect === htmCurrentAspect);
   });
@@ -3064,6 +3078,7 @@ function closeHomeTileModal(){
   htmContentMode    = 'song';
   htmMotifFile      = null;
   htmMotifUrl       = '';
+  htmMotifWasCleared = false;
   htmAlbumCoverFile = null;
   htmAlbumCoverUrl  = '';
   // Reset album dropdown so it gets re-populated fresh next time
@@ -3465,15 +3480,20 @@ async function saveHomeTile(){
   cell.teaserAction = htmCurrentAction || 'album';
   cell.alt          = document.getElementById('htmAltText')?.value?.trim() || cell.alt || '';
 
-  // Upload Teaser-Motiv
-  let teaserUrl = htmMotifUrl || '';
+  // Upload Teaser-Motiv.
+  // Wichtig: Teaser und Album-Cover sind zwei getrennte Felder.
+  // Ein neu hochgeladenes 1:1-Album-Cover darf niemals automatisch das Home-Teaser-Motiv ersetzen.
+  const existingTeaserUrl = cell.teaserMotifUrl || cell.customImageUrl || cell.imageUrl || '';
+  let teaserUrl = htmMotifWasCleared ? '' : (htmMotifUrl || existingTeaserUrl || '');
   if(htmMotifFile){
     try{
       toast('Teaser-Motiv wird hochgeladen …','ok');
       teaserUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
     }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
   }
-  cell.teaserMotifUrl = teaserUrl;
+  if(htmMotifFile || htmMotifWasCleared || teaserUrl){
+    cell.teaserMotifUrl = teaserUrl;
+  }
 
   if(htmCurrentAction === 'link'){
     cell.fn          = 'link';
@@ -3519,9 +3539,13 @@ async function saveHomeTile(){
       // albumCoverUrl = NUR für die Albumansicht (linkes 1:1-Cover)
       cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
 
-      // imageUrl = Teaser-Motiv (Startseite) — nur überschreiben wenn ein neuer Upload vorliegt
-      // Wenn kein neuer Teaser hochgeladen: bestehenden imageUrl-Wert ERHALTEN
-      if(teaserUrl){
+      // imageUrl = Teaser-Motiv (Startseite).
+      // Album-Cover bleibt ausschließlich cell.albumCoverUrl und darf den Teaser nicht ersetzen.
+      if(htmMotifWasCleared){
+        cell.imageUrl = '';
+        cell.customImageUrl = '';
+        cell.teaserMotifUrl = '';
+      } else if(teaserUrl){
         cell.imageUrl       = teaserUrl;
         cell.customImageUrl = teaserUrl;
         cell.teaserMotifUrl = teaserUrl;
@@ -3552,8 +3576,12 @@ async function saveHomeTile(){
         cell.customImageUrl = cell.albumCoverUrl;
         cell.teaserMotifUrl = cell.albumCoverUrl;
       } else {
-        // Separates Teaser-Motiv: nur überschreiben wenn neuer Upload
-        if(teaserUrl){
+        // Separates Teaser-Motiv: Album-Cover darf auch hier nie den Home-Teaser ersetzen
+        if(htmMotifWasCleared){
+          cell.imageUrl = '';
+          cell.customImageUrl = '';
+          cell.teaserMotifUrl = '';
+        } else if(teaserUrl){
           cell.imageUrl       = teaserUrl;
           cell.customImageUrl = teaserUrl;
           cell.teaserMotifUrl = teaserUrl;
