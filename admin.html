@@ -546,7 +546,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4"></path></svg>
       Restore
     </button>
-    <button class="snapshot-btn" onclick="makeSnapshot()" title="Sicherheitskopie erstellen" disabled="">⏳ Lädt…</button>
+    <button class="snapshot-btn" onclick="makeSnapshot()" title="Sicherheitskopie erstellen" disabled="">⏳ Initialisiert…</button>
+    <button class="snapshot-restore-btn" onclick="testRLS()" title="Supabase RLS & Schreibrechte testen" style="background:rgba(255,100,80,.08);color:#f08070;border-color:rgba(255,100,80,.25)">🔍 RLS-Test</button>
     <div class="hj-header-badge">Admin</div>
   </div>
 </div>
@@ -7794,6 +7795,43 @@ function hdrs(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Conte
 function sbUrl(path){ return SB_URL+path+(path.includes('?')?'&':'?')+'apikey='+SB_KEY; }
 function hdrsMin(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}; }
 
+/* ── RLS-DIAGNOSE ── */
+async function testRLS(){
+  const lines = [];
+  const check = async (label, url, opts) => {
+    try {
+      const r = await fetch(url, opts);
+      const txt = await r.text();
+      lines.push(`${r.ok ? '✅' : '❌'} ${label}: HTTP ${r.status} — ${txt.slice(0,120)}`);
+    } catch(e) {
+      lines.push(`💥 ${label}: ${e.message}`);
+    }
+  };
+  // READ-Tests
+  await check('READ songs', sbUrl('/rest/v1/songs?select=id&limit=1'), {headers:hdrs()});
+  await check('READ home_layout', sbUrl('/rest/v1/home_layout?select=id&limit=1'), {headers:hdrs()});
+  // WRITE-Test: temporäre Zeile einfügen und sofort löschen
+  const testSlug = '__rls_test_'+Date.now();
+  const insRes = await fetch(sbUrl('/rest/v1/songs'), {method:'POST', headers:hdrs(),
+    body: JSON.stringify({slug:testSlug, title:'__RLS_TEST__', artist:'test'})});
+  const insTxt = await insRes.text();
+  lines.push(`${insRes.ok ? '✅' : '❌'} WRITE songs INSERT: HTTP ${insRes.status} — ${insTxt.slice(0,120)}`);
+  if(insRes.ok){
+    const delRes = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+testSlug+'&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
+    lines.push(`${delRes.ok ? '✅' : '❌'} WRITE songs DELETE: HTTP ${delRes.status}`);
+  }
+  // home_layout WRITE-Test
+  const hlRes = await fetch(sbUrl('/rest/v1/home_layout'), {method:'POST', headers:hdrs(),
+    body: JSON.stringify({row_order:9999, cells:[]})});
+  const hlTxt = await hlRes.text();
+  lines.push(`${hlRes.ok ? '✅' : '❌'} WRITE home_layout INSERT: HTTP ${hlRes.status} — ${hlTxt.slice(0,120)}`);
+  if(hlRes.ok){
+    const hlDel = await fetch(SB_URL+'/rest/v1/home_layout?row_order=eq.9999&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
+    lines.push(`${hlDel.ok ? '✅' : '❌'} WRITE home_layout DELETE: HTTP ${hlDel.status}`);
+  }
+  alert('── RLS-Diagnose ──\n\n' + lines.join('\n'));
+}
+
 /* ── STATE ── */
 let allSongs = [];
 let sortKey = 'title';
@@ -7963,6 +8001,9 @@ async function loadSongs(){
     allSongs = await r.json();
     populateArtistList();
     renderTable();
+    // Snapshot-Button freischalten (war beim Laden disabled)
+    const snapBtn = document.querySelector('.snapshot-btn');
+    if(snapBtn){ snapBtn.disabled = false; snapBtn.innerHTML = '📦 Snapshot'; }
   } catch(e){
     const msg = e.name==='AbortError' ? 'Timeout — Supabase antwortet nicht' : 'Ladefehler: '+e.message;
     const body = document.getElementById('songsBody');
@@ -10722,13 +10763,29 @@ async function makeSnapshot(){
   try {
     const h = hdrs();
 
-    // Alle 4 Tabellen parallel laden
-    const [songsRes, playlistsRes, tracksRes, layoutRes] = await Promise.all([
-      fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'), {headers:h}),
-      fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'),        {headers:h}),
-      fetch(sbUrl('/rest/v1/playlist_tracks?select=*&order=playlist_slug,position'), {headers:h}),
-      fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),  {headers:h}),
-    ]);
+    // Timeout-Wrapper: bricht nach 20s ab
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 20000);
+
+    let songsRes, playlistsRes, tracksRes, layoutRes;
+    try {
+      [songsRes, playlistsRes, tracksRes, layoutRes] = await Promise.all([
+        fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'), {headers:h, signal:ctrl.signal}),
+        fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'),        {headers:h, signal:ctrl.signal}),
+        fetch(sbUrl('/rest/v1/playlist_tracks?select=*&order=playlist_slug,position'), {headers:h, signal:ctrl.signal}),
+        fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),  {headers:h, signal:ctrl.signal}),
+      ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    // HTTP-Fehler prüfen (z.B. RLS blockiert)
+    for(const [name, res] of [['songs',songsRes],['playlists',playlistsRes],['tracks',tracksRes],['layout',layoutRes]]){
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error(`Laden von "${name}" fehlgeschlagen (HTTP ${res.status}): ${txt.slice(0,200)}`);
+      }
+    }
 
     const songs          = await songsRes.json();
     const playlists      = await playlistsRes.json();
@@ -10864,7 +10921,7 @@ async function restoreSnapshot(){
       await fetch(SB_URL+'/rest/v1/playlist_tracks?id=gte.0&apikey='+SB_KEY, {method:'DELETE',headers:h});
       await fetch(SB_URL+'/rest/v1/songs?slug=neq.__dummy__&apikey='+SB_KEY, {method:'DELETE',headers:h});
       await fetch(SB_URL+'/rest/v1/playlists?slug=neq.__dummy__&apikey='+SB_KEY, {method:'DELETE',headers:h});
-      await fetch(SB_URL+'/rest/v1/home_layout?id=neq.00000000-0000-0000-0000-000000000000&apikey='+SB_KEY, {method:'DELETE',headers:h});
+      await fetch(SB_URL+'/rest/v1/home_layout?row_order=gte.0&apikey='+SB_KEY, {method:'DELETE',headers:h});
 
       // Neu einspielen
       if(playlists?.length)       await fetch(sbUrl('/rest/v1/playlists'),       {method:'POST',headers:h,body:JSON.stringify(playlists)});
