@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184h -->
+<!-- Version: admin-v20260523-v185 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -897,6 +897,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="htm-seg" id="htmAspectSeg">
           <div class="htm-seg-btn active" data-aspect="1x1" onclick="htmSetAspect('1x1',this)">1:1</div>
           <div class="htm-seg-btn" data-aspect="2x1" onclick="htmSetAspect('2x1',this)">2:1</div>
+          <div class="htm-seg-btn" data-aspect="4x1" onclick="htmSetAspect('4x1',this)">4:1 voll</div>
           <div class="htm-seg-btn" data-aspect="half" onclick="htmSetAspect('half',this)">1:2 halb</div>
           <div class="htm-seg-btn" data-aspect="full" onclick="htmSetAspect('full',this)">1:4 ganz</div>
         </div>
@@ -2992,8 +2993,16 @@ function openHomeTileModal(rowId, cellIdx){
   htmSetMotifPreview(htmMotifUrl);
   updateHtmMotifHint();
 
-  // Restore teaser aspect
-  htmCurrentAspect = (cell && cell.teaserAspect) || '1x1';
+  // Restore teaser aspect — map cell.type → aspect key
+  // span-4/4x1 → '4x1', span-half-l → 'half', span-full → 'full',
+  // span-2/2x1 → '2x1', else → saved teaserAspect or '1x1'
+  const _typeToAspect = {
+    'span-4': '4x1', '4x1': '4x1',
+    'span-half-l': 'half',
+    'span-full': 'full',
+    'span-2': '2x1', '2x1': '2x1',
+  };
+  htmCurrentAspect = _typeToAspect[cell && cell.type] || (cell && cell.teaserAspect) || '1x1';
   document.querySelectorAll('#htmAspectSeg .htm-seg-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.aspect === htmCurrentAspect);
   });
@@ -3576,6 +3585,36 @@ async function saveHomeTile(){
   }  // end saveHomeTile
 
   closeHomeTileModal();
+
+  // ── Zell-Typ & Layout anhand des gewählten Aspekts setzen ──
+  // Dies MUSS nach dem Befüllen der cell-Properties passieren.
+  const _aspectToType = {
+    '1x1':  '1x1',
+    '2x1':  'span-2',
+    '4x1':  'span-4',
+    'half': 'span-half-l',
+    'full': 'span-full',
+  };
+  const newCellType = _aspectToType[cell.teaserAspect] || '1x1';
+  cell.type = newCellType;
+  cell.teaserAspect = cell.teaserAspect || '1x1';
+
+  // Geschwisterzellen entsprechend ausblenden / freigeben
+  if(newCellType === 'span-4' || newCellType === 'span-full'){
+    // Volle Breite: alle anderen Zellen der Zeile verstecken
+    for(let i = 1; i < row.cells.length; i++) row.cells[i].type = 'hidden';
+  } else if(newCellType === 'span-half-l'){
+    // Halbe Breite links: rechte Hälfte als Platzhalter
+    if(row.cells[1]) row.cells[1].type = 'span-half-r';
+    for(let i = 2; i < row.cells.length; i++) row.cells[i].type = 'hidden';
+  } else if(newCellType === 'span-2'){
+    // 2:1 quer: linke zwei Spalten belegt, rechte zwei bleiben wie sie sind
+    for(let i = 1; i < row.cells.length; i++){
+      if(row.cells[i].type === 'hidden' || !row.cells[i].type) row.cells[i].type = 'empty';
+    }
+  }
+  // 1x1: keine Geschwister-Änderung nötig
+
   renderHomeEditor();
 }
 
