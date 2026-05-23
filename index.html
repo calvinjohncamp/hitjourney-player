@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-album-picker-v184 -->
+<!-- Version: index-v20260523-v184d -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5597,20 +5597,18 @@ function buildHomeCard(cell, extraClass){
   img.loading = 'lazy';
   // v182: Bei Lyrics-Sheet-21-Kacheln hat ein im Admin hochgeladenes eigenes Motiv immer Vorrang.
   // Vorher wurde wegen cover21Url wieder das Song-2:1-Asset genommen — dadurch blieb die neue Kachel blau/leer.
-  // v183: Teaser zeigt teaserMotifUrl (oder imageUrl); Album-Cover (1:1) nur in Albumansicht via albumCoverUrl
-  img.src = (cell.type === 'lyrics21' || cell.useCover21)
-    ? (cell.customImageUrl || cell.imageUrl || cell.cover21Url)
-    : (cell.teaserMotifUrl || cell.imageUrl || cell.customImageUrl);
+  // Teaser-Bild = teaserMotifUrl oder imageUrl (niemals albumCoverUrl)
+  img.src = cell.teaserMotifUrl || cell.imageUrl || cell.customImageUrl || '';
   el.appendChild(img);
 
-  // v183: If cell has albumCoverUrl (separate 1:1 for album view), inject into ALBUMS if slug exists
-  if(cell.albumCoverUrl && cell.slug){
-    const albKey = resolveAlbumKey(cell.slug);
+  // v184: albumCoverUrl ist NUR für die Albumansicht (tlCover).
+  // Es ersetzt NICHT das Teaser-Motiv auf der Startseite.
+  // Wenn ein 1:1-Cover für die Albumansicht definiert ist, in ALBUMS.cover eintragen.
+  if(cell.albumCoverUrl){
+    const albKey = resolveAlbumKey(cell.albumSlug || cell.slug);
     if(albKey && window.ALBUMS && window.ALBUMS[albKey]){
-      window.ALBUMS[albKey]._teaserCover = cell.albumCoverUrl;
-      if(!window.ALBUMS[albKey].cover || window.ALBUMS[albKey].cover === window.ALBUMS[albKey]._defaultCover){
-        window.ALBUMS[albKey].cover = cell.albumCoverUrl;
-      }
+      // Immer überschreiben — Admin hat explizit ein Cover gesetzt
+      window.ALBUMS[albKey].cover = cell.albumCoverUrl;
     }
   }
 

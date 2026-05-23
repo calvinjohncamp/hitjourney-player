@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184c -->
+<!-- Version: admin-v20260523-v184d -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -3496,25 +3496,22 @@ async function saveHomeTile(){
       if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
 
       cell.albumSlug    = htmSelectedAlbum.slug;
-      cell.playlistSlug = htmSelectedAlbum.slug;   // playlist_slug = album slug (same table)
-      cell.slug         = htmSelectedAlbum.slug;   // slug = album slug (öffnet Album-Ansicht)
+      cell.playlistSlug = htmSelectedAlbum.slug;
+      cell.slug         = htmSelectedAlbum.slug;
       cell.artist       = '';
       cell.lyricsCycle  = false;
       cell.cover21Url   = '';
       cell.useCover21   = false;
-
-      // Cover: manuell hochgeladen hat Vorrang, sonst Album-Cover
-      const coverSrc = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
-      cell.albumCoverUrl  = coverSrc;
       cell.alt = document.getElementById('htmAltText')?.value?.trim() || htmSelectedAlbum.title || '';
 
-      if(htmCurrentAspect === '1x1'){
-        cell.customImageUrl = coverSrc;
-        cell.imageUrl       = coverSrc;
-      } else {
-        cell.customImageUrl = teaserUrl || '';
-        cell.imageUrl       = teaserUrl || coverSrc;
-      }
+      // albumCoverUrl = NUR für die Albumansicht (linkes 1:1-Cover)
+      // Vorrang: manuell hochgeladen → sonst vorhandenes Album-Cover aus der App
+      cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
+
+      // imageUrl / customImageUrl = NUR das Teaser-Motiv (Seite 1, unverändert)
+      // Niemals albumCoverUrl als Teaser verwenden!
+      cell.customImageUrl = teaserUrl || '';
+      cell.imageUrl       = teaserUrl || '';
 
     } else {
       // ── Einzelsong-Modus ──
@@ -3524,20 +3521,24 @@ async function saveHomeTile(){
       cell.slug         = htmSelectedSong.slug;
       cell.playlistSlug = htmSelectedSong.playlistSlug || '';
       cell.cover21Url   = htmSelectedSong.cover21Url;
-      cell.useCover21   = (cell.type === 'lyrics21') || !!cell.useCover21;
+      cell.useCover21   = false;
       cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
       cell.artist       = htmSelectedSong.artist;
+      if(!cell.alt && htmSelectedSong.title) cell.alt = htmSelectedSong.title;
 
-      const coverSrc = albumCoverFinal || htmSelectedSong.coverUrl || '';
-      cell.albumCoverUrl = coverSrc;
+      // albumCoverUrl = NUR für die Albumansicht (1:1), nicht der Teaser
+      // Bei 1:1-Teaser: kein separates Album-Cover nötig → Song-Cover wird direkt genutzt
+      cell.albumCoverUrl = albumCoverFinal || htmSelectedSong.coverUrl || '';
 
+      // imageUrl / customImageUrl = Teaser (Startseite)
+      // Bei 1:1: kein eigenes Teaser-Motiv → Song-Cover als Teaser
       if(htmCurrentAspect === '1x1'){
-        cell.customImageUrl = coverSrc;
-        cell.imageUrl       = coverSrc;
-        if(!cell.alt && htmSelectedSong.title) cell.alt = htmSelectedSong.title;
+        cell.customImageUrl = cell.albumCoverUrl;
+        cell.imageUrl       = cell.albumCoverUrl;
       } else {
+        // Separates Teaser-Motiv hochgeladen → nur das als Teaser
         cell.customImageUrl = teaserUrl || '';
-        cell.imageUrl       = teaserUrl || coverSrc;
+        cell.imageUrl       = teaserUrl || '';
       }
     }
 
