@@ -5476,11 +5476,24 @@ function initApp() {
 
 // ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
 
+function isHomeAlbumCellLive(cell){
+  if(!cell) return false;
+  if(cell.fn === 'link' || cell.teaserAction === 'link') return false;
+  const slug = cell.albumSlug || cell.playlistSlug || cell.slug;
+  const ak = resolveAlbumKey(slug);
+  if(cell.contentMode === 'album' || cell.teaserAction === 'album') return !!ak;
+  return !!(ak && window.ALBUMS && window.ALBUMS[ak] && !cell.mp3 && !cell.mp3_url);
+}
+
+
 function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = window._homeLayoutRows || [];
+  const rows = (window._homeLayoutRows || [])
+    .slice()
+    .sort((a,b)=>(Number(a.row_order)||0)-(Number(b.row_order)||0))
+    .filter((r,i,arr)=> r && r.id && arr.findIndex(x=>x.id===r.id)===i);
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -5604,9 +5617,9 @@ function buildHomeCard(cell, extraClass){
 
   // v192: Album-Modus: albumSlug hat Vorrang — auch für ältere Home-Zellen,
   // bei denen teaserAction versehentlich noch 'play' war.
-  const keySource = (cell.albumSlug && cell.contentMode !== 'song') ? cell.albumSlug : cell.slug;
+  const keySource = isHomeAlbumCellLive(cell) ? (cell.albumSlug || cell.playlistSlug || cell.slug) : cell.slug;
   const albumKey  = resolveAlbumKey(keySource);
-  if(albumKey) el.dataset.album = albumKey;
+  if(albumKey && isHomeAlbumCellLive(cell)) el.dataset.album = albumKey;
 
   const img = document.createElement('img');
   img.alt = cell.alt || '';
@@ -5643,8 +5656,8 @@ function buildHomeCard(cell, extraClass){
     // v192: Album-Modus — Album direkt öffnen.
     // Wichtig: ältere Zeilen können noch teaserAction='play' tragen, obwohl albumSlug gesetzt ist.
     // Dann entscheidet albumSlug/contentMode trotzdem für Album, nicht für Einzelsong-Play.
-    if((cell.teaserAction === 'album' || cell.contentMode === 'album' || (cell.albumSlug && cell.contentMode !== 'song')) && (cell.albumSlug || cell.slug)){
-      const ak = resolveAlbumKey(cell.albumSlug || cell.slug);
+    if(isHomeAlbumCellLive(cell) && (cell.albumSlug || cell.playlistSlug || cell.slug)){
+      const ak = resolveAlbumKey(cell.albumSlug || cell.playlistSlug || cell.slug);
       if(ak && window.ALBUMS && window.ALBUMS[ak]){ showAlbum(ak); return; }
     }
 

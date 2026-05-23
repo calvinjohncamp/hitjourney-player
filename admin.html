@@ -2441,6 +2441,7 @@ async function loadHomeLayout(){
     homeLayout = [];
   }
   if(homeLayout.length===0) homeLayout = [makeRow()];
+  normalizeLegacyHomeAlbumCells();
   homeLayoutBase = cloneHomeLayout(homeLayout);
   homeUndoStack = [];
   renderHomeEditor();
@@ -2448,30 +2449,35 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v191: Home-Layout wird als komplette Reihenfolge gespeichert.
-    // Kein Upsert mehr: alte/verwaiste Zeilen können sonst mit alten row_order-Werten
-    // im Live-Renderer stehen bleiben und neue Zeilen scheinbar „drei Zeilen zu hoch“ schieben.
+    normalizeLegacyHomeAlbumCells();
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
+    const ids = payload.map(p=>p.id).filter(Boolean);
 
-    const del = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
-      method:'DELETE',
-      headers:hdrsMin()
-    });
-    if(!del.ok) throw new Error(await del.text());
-
+    // 1) Aktuelle Zeilen per Upsert schreiben. Dadurch wird row_order auch dann aktualisiert,
+    //    wenn ein vorheriges Komplett-DELETE durch RLS/Cache nicht sauber gegriffen hat.
     if(payload.length > 0){
-      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
+      const up = await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
         method:'POST',
-        headers:{...hdrs(), 'Prefer':'return=minimal'},
+        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
         body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error(await res.text());
+      if(!up.ok) throw new Error(await up.text());
+    }
+
+    // 2) Verwaiste Alt-Zeilen entfernen. Wenn diese DELETE-Regel in Supabase blockiert sein sollte,
+    //    ist die Reihenfolge trotzdem korrekt, weil der Live-Renderer unten zusätzlich dedupliziert.
+    if(ids.length){
+      const quoted = ids.map(id=>'"'+String(id).replace(/"/g,'')+'"').join(',');
+      await fetch(SB_URL+'/rest/v1/home_layout?id=not.in.('+quoted+')&apikey='+SB_KEY, {
+        method:'DELETE',
+        headers:hdrsMin()
+      }).catch(()=>{});
     }
 
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert ✓ Reihenfolge live neu geschrieben','ok');
+    toast('Home gespeichert ✓ Reihenfolge und Album-Zuordnung geschrieben','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
@@ -2609,6 +2615,40 @@ function buildCells(row, grid){
   }
 }
 
+
+function homeAlbumSlugSet(){
+  try{ return new Set((typeof albumsData !== 'undefined' ? albumsData : []).map(a=>String(a.slug||''))); }
+  catch(_){ return new Set(); }
+}
+function isHomeAlbumCell(cell){
+  if(!cell) return false;
+  const albums = homeAlbumSlugSet();
+  const aSlug = String(cell.albumSlug || cell.playlistSlug || '').trim();
+  const slug  = String(cell.slug || '').trim();
+  if(cell.fn === 'link' || cell.teaserAction === 'link') return false;
+  if(cell.contentMode === 'album' || cell.teaserAction === 'album') return true;
+  if(aSlug && albums.has(aSlug)) return true;
+  if(slug && albums.has(slug) && !cell.mp3_url && !cell.mp3) return true;
+  return false;
+}
+function normalizeLegacyHomeAlbumCells(){
+  const albums = homeAlbumSlugSet();
+  if(!albums.size) return;
+  (homeLayout||[]).forEach(row=>{
+    (row.cells||[]).forEach(cell=>{
+      if(!cell || cell.type==='hidden') return;
+      const slug = String(cell.albumSlug || cell.playlistSlug || cell.slug || '').trim();
+      if(slug && albums.has(slug) && cell.fn !== 'link'){
+        cell.contentMode = 'album';
+        cell.teaserAction = 'album';
+        cell.albumSlug = slug;
+        cell.playlistSlug = slug;
+        cell.slug = slug;
+      }
+    });
+  });
+}
+
 /* ── Single cell ── */
 function buildCell(row, cellIdx, extraClass, editing){
   const cell = row.cells[cellIdx];
@@ -2649,7 +2689,7 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const actionKind = isSlide ? 'slideshow' : (cell.fn==='link' ? 'link' : ((cell.contentMode==='album' || (cell.albumSlug && cell.contentMode!=='song')) ? 'album' : (cell.teaserAction || 'play')));
+      const actionKind = isSlide ? 'slideshow' : (cell.fn==='link' ? 'link' : (isHomeAlbumCell(cell) ? 'album' : (cell.teaserAction || 'play')));
       const badgeCls = actionKind==='slideshow' ? 'badge-slide' : actionKind==='link' ? 'badge-link' : actionKind==='album' ? 'badge-album' : 'badge-play';
       const badgeTxt = actionKind==='slideshow' ? '◈ Diashow' : actionKind==='link' ? '🔗 Link' : actionKind==='album' ? '▣ Album' : '▶ Play';
       ov.innerHTML = `
@@ -3006,6 +3046,8 @@ function openHomeTileModal(rowId, cellIdx, mode){
   htmModalMode    = mode || 'teaser';
   htmMotifFile    = null;
   htmAlbumCoverFile = null;
+  const acInput0 = document.getElementById('htmAlbumCoverInput');
+  if(acInput0) acInput0.value = '';
 
   const row  = rowById(rowId);
   const cell = row && row.cells[cellIdx];
@@ -3182,23 +3224,38 @@ async function saveTeaserOnly(){
 
 async function htmPersistAlbumCoverIfNeeded(albumSlug, coverUrl){
   if(!albumSlug || !coverUrl) return;
-  try{
-    const r = await fetch(sbUrl('/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)), {
-      method:'PATCH',
-      headers:hdrs(),
-      body:JSON.stringify({cover_url:coverUrl})
+  const r = await fetch(sbUrl('/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)), {
+    method:'PATCH',
+    headers:{...hdrs(), 'Prefer':'return=representation'},
+    body:JSON.stringify({cover_url:coverUrl})
+  });
+  if(!r.ok) throw new Error(await r.text());
+  let saved=[];
+  try{ saved = await r.json(); }catch(_){ saved=[]; }
+  const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===albumSlug);
+  if(al) al.cover_url = coverUrl;
+  if(htmSelectedAlbum && htmSelectedAlbum.slug===albumSlug) htmSelectedAlbum.coverUrl = coverUrl;
+
+  // Alle Home-Kacheln dieses Albums bekommen das neue 1:1-Cover als Albumcover.
+  // Das Teaser-Motiv bleibt dabei unangetastet.
+  (homeLayout||[]).forEach(row=>{
+    (row.cells||[]).forEach(c=>{
+      if(!c) return;
+      const slug = c.albumSlug || c.playlistSlug || c.slug;
+      if(slug === albumSlug && c.fn !== 'link'){
+        c.albumCoverUrl = coverUrl;
+        c.contentMode = 'album';
+        c.teaserAction = 'album';
+        c.albumSlug = albumSlug;
+        c.playlistSlug = albumSlug;
+        c.slug = albumSlug;
+      }
     });
-    if(!r.ok) throw new Error(await r.text());
-    const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===albumSlug);
-    if(al) al.cover_url = coverUrl;
-    if(htmSelectedAlbum && htmSelectedAlbum.slug===albumSlug) htmSelectedAlbum.coverUrl = coverUrl;
-    if(typeof updateAlbumDropdown === 'function') updateAlbumDropdown();
-  }catch(e){
-    console.warn('Album-Cover konnte nicht in playlists gespeichert werden:', e);
-    toast('Cover hochgeladen, aber Playlist-Cover nicht gespeichert: '+e.message,'err');
-    throw e;
-  }
+  });
+  if(typeof updateAlbumDropdown === 'function') updateAlbumDropdown();
+  return saved;
 }
+
 
 async function saveHomeTile(){
   if(!htmEditTarget) return;
@@ -3237,7 +3294,14 @@ async function saveHomeTile(){
     cell.slug = ''; cell.lyricsCycle = false; cell.albumCoverUrl = '';
 
   } else if(htmContentMode === 'album'){
-    if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
+    if(!htmSelectedAlbum){
+      const sel = document.getElementById('htmAlbumSelect');
+      if(sel && sel.value){
+        const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===sel.value);
+        if(al) htmSelectedAlbum = {slug:al.slug,title:al.title||al.slug,coverUrl:al.cover_url||'',tracks:al.tracks||[]};
+      }
+    }
+    if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); if(saveBtn){saveBtn.disabled=false;saveBtn.textContent=oldBtnText||'✓ Übernehmen';} return; }
     cell.fn           = 'play';
     cell.url          = '';
     cell.teaserAction = 'album';
@@ -3255,6 +3319,8 @@ async function saveHomeTile(){
       try{
         if(saveBtn) saveBtn.textContent='Album-Cover speichern …';
         await htmPersistAlbumCoverIfNeeded(htmSelectedAlbum.slug, cell.albumCoverUrl);
+        htmAlbumCoverUrl = cell.albumCoverUrl;
+        toast('✓ Album-Cover gespeichert und altes Cover überschrieben','ok');
       }catch(e){
         if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
         return;
