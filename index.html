@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v185-album-teaser-cover-20260523 -->
+<!-- Version: v184-language-elegant-artwork-frame-20260522 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -145,6 +145,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
+/* v183: halbe Seite (1:2) und ganze Seite (1:4) Teaser */
+.home-card.half-l img,.home-card.half-r img{aspect-ratio:1/2}
+.home-card.tall img{grid-column:1/-1;aspect-ratio:1/4}
+/* halbe Seite: 2-Spalten-Wrapper */
+.home-half-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .home-bottom-pad{height:210px}
 
 /* Trio-Container: volle Breite */
@@ -3740,49 +3745,30 @@ async function loadFromSupabase() {
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
 
-  // 2b. Playlist-/Album-Metadaten laden (dynamische Alben aus Admin inkl. 1:1 Cover)
-  let playlistsRaw = [];
-  try {
-    const plRes = await fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title', { headers });
-    if(plRes.ok) playlistsRaw = await plRes.json();
-  } catch(_) { playlistsRaw = []; }
-  const playlistMeta = {};
-  playlistsRaw.forEach(pl => { playlistMeta[pl.slug] = pl; });
-
   // 3. ALBUMS aufbauen
   ALBUMS = {};
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const mapped = PLAYLIST_MAP[playlistSlug];
-    const meta = playlistMeta[playlistSlug] || {};
-    const info = mapped || {
-      key: playlistSlug,
-      title: meta.title || playlistSlug,
-      meta: '',
-      cover: meta.cover_url || ''
-    };
+    const info = PLAYLIST_MAP[playlistSlug];
+    if (!info) return;
     const song = songMap[row.song_slug];
     if (!song) return;
 
     if (!ALBUMS[info.key]) {
       ALBUMS[info.key] = {
-        slug: playlistSlug,
-        title: meta.title || info.title || playlistSlug,
-        meta:  info.meta || '',
-        cover: meta.cover_url || info.cover || '',
+        title: info.title,
+        meta:  info.meta,
+        cover: info.cover,
         songs: []
       };
     }
     ALBUMS[info.key].songs.push(song);
   });
 
-  // Metatext für dynamische Alben setzen und Null-Einträge entfernen
-  Object.keys(ALBUMS).forEach(k => {
-    if (!ALBUMS[k]) { delete ALBUMS[k]; return; }
-    if(!ALBUMS[k].meta) ALBUMS[k].meta = ALBUMS[k].songs.length + ' Songs';
-  });
+  // Null-Einträge entfernen
+  Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
 
   // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
   if(ALBUMS.buriedDiamonds && ALBUMS.buriedDiamonds.songs) {
@@ -4343,10 +4329,8 @@ function showHome(){
 function showAlbum(key){
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
-  const alb=ALBUMS[key];
-  if(!alb || !alb.songs || !alb.songs.length) return;
-  curAlbum=key;
-  setImgSrcWithFallback(tlCover, [alb.cover, alb.songs[0] && alb.songs[0].cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
+  const alb=ALBUMS[key]; curAlbum=key;
+  setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
     const row=document.createElement('div');
@@ -5484,11 +5468,7 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>{
-    const ao = Number.isFinite(+a.row_order) ? +a.row_order : 0;
-    const bo = Number.isFinite(+b.row_order) ? +b.row_order : 0;
-    return ao - bo;
-  });
+  const rows = window._homeLayoutRows || [];
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -5519,6 +5499,29 @@ function renderHomeLayout(){
     if(t0 === 'slideshow'){
       const cell = cells[0];
       const el = buildSlideshowEl(cell);
+      grid.appendChild(el);
+      return;
+    }
+
+    // ── 1:2 halbe Seite ─────────────────────────────────────────────────────────
+    if(t0 === 'span-half-l'){
+      const cellA = cells[0];
+      const cellB = cells[1];
+      if(!cellA.imageUrl && !(cellB && cellB.imageUrl)) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'home-half-row';
+      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) wrapper.appendChild(buildHomeCard(cellA, 'half-l'));
+      if(cellB && cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) wrapper.appendChild(buildHomeCard(cellB, 'half-r'));
+      grid.appendChild(wrapper);
+      return;
+    }
+
+    // ── 1:4 ganze Seite ─────────────────────────────────────────────────────────
+    if(t0 === 'span-full'){
+      const cell = cells[0];
+      if(!cell.imageUrl || isFinalJustThisDanceCell(cell)) return;
+      const el = buildHomeCard(cell, 'tall');
+      el.style.gridColumn = '1/-1';
       grid.appendChild(el);
       return;
     }
@@ -5584,9 +5587,8 @@ function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
   el.className = 'home-card ' + (extraClass||'');
 
-  // album key from PLAYLIST_MAP or direct slug. Nur explizite Album-Teaser öffnen Albumseiten.
-  const isAlbumTeaser = cell && (cell.actionType === 'album' || cell.playMode === 'album');
-  const albumKey = isAlbumTeaser ? resolveAlbumKey(cell.slug) : null;
+  // album key from PLAYLIST_MAP or direct slug
+  const albumKey = resolveAlbumKey(cell.slug);
   if(albumKey) el.dataset.album = albumKey;
 
   const img = document.createElement('img');
@@ -5594,10 +5596,22 @@ function buildHomeCard(cell, extraClass){
   img.loading = 'lazy';
   // v182: Bei Lyrics-Sheet-21-Kacheln hat ein im Admin hochgeladenes eigenes Motiv immer Vorrang.
   // Vorher wurde wegen cover21Url wieder das Song-2:1-Asset genommen — dadurch blieb die neue Kachel blau/leer.
+  // v183: Teaser zeigt teaserMotifUrl (oder imageUrl); Album-Cover (1:1) nur in Albumansicht via albumCoverUrl
   img.src = (cell.type === 'lyrics21' || cell.useCover21)
     ? (cell.customImageUrl || cell.imageUrl || cell.cover21Url)
-    : (cell.imageUrl || cell.customImageUrl);
+    : (cell.teaserMotifUrl || cell.imageUrl || cell.customImageUrl);
   el.appendChild(img);
+
+  // v183: If cell has albumCoverUrl (separate 1:1 for album view), inject into ALBUMS if slug exists
+  if(cell.albumCoverUrl && cell.slug){
+    const albKey = resolveAlbumKey(cell.slug);
+    if(albKey && window.ALBUMS && window.ALBUMS[albKey]){
+      window.ALBUMS[albKey]._teaserCover = cell.albumCoverUrl;
+      if(!window.ALBUMS[albKey].cover || window.ALBUMS[albKey].cover === window.ALBUMS[albKey]._defaultCover){
+        window.ALBUMS[albKey].cover = cell.albumCoverUrl;
+      }
+    }
+  }
 
   // Click action
   el.addEventListener('click', () => {
@@ -5619,8 +5633,8 @@ function buildHomeCard(cell, extraClass){
       return;
     }
 
-    if(isAlbumTeaser && albumKey){ showAlbum(albumKey); return; }
-    if(cell.slug) playSongBySlug(cell.slug);
+    if(albumKey) showAlbum(albumKey);
+    else if(cell.slug) playSongBySlug(cell.slug);
   });
   return el;
 }
@@ -6202,9 +6216,8 @@ function playSongOrAlbum(cell){
     if(cell.url === '#archive'){ showArchive(); return; }
     if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
   }
-  const isAlbumTeaser = cell && (cell.actionType === 'album' || cell.playMode === 'album');
-  const albumKey = isAlbumTeaser ? resolveAlbumKey(cell.slug) : null;
-  if(isAlbumTeaser && albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
+  const albumKey = resolveAlbumKey(cell.slug);
+  if(albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
   if(cell.slug) playSongBySlug(cell.slug);
 }
 
