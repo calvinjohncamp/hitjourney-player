@@ -2416,7 +2416,17 @@ async function loadHomeLayout(){
   try {
     const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs(), cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const rows = await r.json();
+    let rows = await r.json();
+
+    // v194: Wenn ein veröffentlichter Snapshot existiert, ist NUR dieser maßgeblich.
+    // Alte/verwaiste Supabase-Zeilen dürfen den Admin und die Live-Seite nicht mehr durcheinanderbringen.
+    const snap = (rows || []).find(x => x && x.id === '__home_published_snapshot__');
+    if(snap && snap.cells && snap.cells[0] && Array.isArray(snap.cells[0].publishedRows)){
+      rows = snap.cells[0].publishedRows;
+    } else {
+      rows = (rows || []).filter(x => x && x.id !== '__home_published_snapshot__');
+    }
+
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
@@ -2447,53 +2457,51 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v193: Home-Reihenfolge hart neu schreiben.
-    // Grund: UPSERT kann bei nicht sauberer Conflict-/Alt-Datenlage alte row_order-Zustände
-    // oder Dubletten stehen lassen. Deshalb wird die Tabelle beim Home-Speichern vollständig
-    // durch den sichtbaren Admin-Stand ersetzt: Z1 Admin = row_order 0, Z7 Admin = row_order 6.
+    // v194: Veröffentlicht wird ein kompletter Snapshot der sichtbaren Admin-Reihenfolge.
+    // Dadurch ist die Live-Seite unabhängig von alten/verwaisten Einzelzeilen in Supabase.
     const normalized = homeLayout.map((r,i)=>({
       id: r.id || uid(),
+      row_order: i,
       editing: false,
       cells: (r.cells && r.cells.length===4 ? r.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()])
     }));
-    const payload = normalized.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
 
-    // 1. Alles Alte entfernen — inklusive verwaister/duplizierter Zeilen aus früheren Saves.
-    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
-      method:'DELETE',
-      headers:{...hdrsMin(), 'Prefer':'return=minimal'},
+    const snapshotRow = {
+      id: '__home_published_snapshot__',
+      row_order: -1,
+      cells: [{
+        type: '__published_home_snapshot__',
+        version: 'v194',
+        savedAt: new Date().toISOString(),
+        publishedRows: normalized.map((r,i)=>({id:r.id,row_order:i,cells:r.cells}))
+      }, emptyCell(), emptyCell(), emptyCell()]
+    };
+
+    const snapRes = await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
+      method:'POST',
+      headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=representation'},
+      body: JSON.stringify([snapshotRow]),
       cache:'no-store'
     });
-    if(!delRes.ok) throw new Error('Alte Home-Zeilen konnten nicht gelöscht werden: '+await delRes.text());
+    if(!snapRes.ok) throw new Error('Home-Snapshot konnte nicht gespeichert werden: '+await snapRes.text());
 
-    // 2. Sichtbare Admin-Reihenfolge exakt neu einfügen.
-    if(payload.length > 0){
-      const insRes = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
+    // Zusätzlich die sichtbaren Einzelzeilen aktualisieren, damit ältere Index-Versionen nicht völlig leer laufen.
+    // Die neue Live-Seite ignoriert diese Altzeilen, sobald der Snapshot vorhanden ist.
+    const rowPayload = normalized.map((r,i)=>({id:r.id,row_order:i,cells:r.cells}));
+    if(rowPayload.length){
+      await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
         method:'POST',
-        headers:{...hdrs(), 'Prefer':'return=representation'},
-        body: JSON.stringify(payload),
+        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body: JSON.stringify(rowPayload),
         cache:'no-store'
       });
-      if(!insRes.ok) throw new Error('Neue Home-Reihenfolge konnte nicht gespeichert werden: '+await insRes.text());
     }
 
-    // 3. Direkt vom Server zurücklesen und damit den Admin synchronisieren.
-    const verifyRes = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'), {headers:hdrs(), cache:'no-store'});
-    if(verifyRes.ok){
-      const rows = await verifyRes.json();
-      homeLayout = rows.map(row=>({
-        id: row.id,
-        editing: false,
-        cells: ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()])
-      }));
-    } else {
-      homeLayout = normalized;
-    }
-
+    homeLayout = normalized.map(r=>({id:r.id, editing:false, cells:r.cells}));
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home-Reihenfolge gespeichert ✓','ok');
+    toast('Home gespeichert: Live-Reihenfolge exakt aus Admin übernommen ✓','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
