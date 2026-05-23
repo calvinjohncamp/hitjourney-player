@@ -348,7 +348,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell{position:relative;border-radius:8px;overflow:hidden;background:#0B1E2D;border:1px solid rgba(133,172,201,.1);aspect-ratio:1/1;transition:border-color .15s,background .15s}
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
-@media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
+@media(min-width:600px){.he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}}
 /* span-4: volle Breite, 4:1 Panorama (= Höhe einer Zeile mit 4 Albumcovern) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
@@ -379,6 +379,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
 .badge-play{background:rgba(50,180,100,.8)}
 .badge-link{background:rgba(88,132,164,.8)}
+.badge-album{background:rgba(133,172,201,.85);color:#06141F}
 .badge-slide{background:rgba(120,90,200,.8)}
 .he-cell-acts{display:flex;gap:2px}
 .he-cell-act{width:18px;height:18px;border-radius:3px;border:none;cursor:pointer;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
@@ -2648,7 +2649,7 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const actionKind = isSlide ? 'slideshow' : (cell.teaserAction || (cell.fn==='link' ? 'link' : (cell.contentMode==='album' || cell.albumSlug ? 'album' : 'play')));
+      const actionKind = isSlide ? 'slideshow' : (cell.fn==='link' ? 'link' : ((cell.contentMode==='album' || (cell.albumSlug && cell.contentMode!=='song')) ? 'album' : (cell.teaserAction || 'play')));
       const badgeCls = actionKind==='slideshow' ? 'badge-slide' : actionKind==='link' ? 'badge-link' : actionKind==='album' ? 'badge-album' : 'badge-play';
       const badgeTxt = actionKind==='slideshow' ? '◈ Diashow' : actionKind==='link' ? '🔗 Link' : actionKind==='album' ? '▣ Album' : '▶ Play';
       ov.innerHTML = `
@@ -3058,7 +3059,7 @@ function openHomeTileModal(rowId, cellIdx, mode){
     }
 
     // Klick-Aktion wiederherstellen
-    htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : 'album');
+    htmCurrentAction = (cell && cell.fn === 'link') ? 'link' : ((cell && (cell.contentMode === 'album' || (cell.albumSlug && cell.contentMode !== 'song'))) ? 'album' : ((cell && cell.teaserAction) || 'album'));
     document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.action === htmCurrentAction);
     });
@@ -3178,12 +3179,36 @@ async function saveTeaserOnly(){
   if(rowObj) rowObj.editing = false;
   renderHomeEditor();
 }
+
+async function htmPersistAlbumCoverIfNeeded(albumSlug, coverUrl){
+  if(!albumSlug || !coverUrl) return;
+  try{
+    const r = await fetch(sbUrl('/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)), {
+      method:'PATCH',
+      headers:hdrs(),
+      body:JSON.stringify({cover_url:coverUrl})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===albumSlug);
+    if(al) al.cover_url = coverUrl;
+    if(htmSelectedAlbum && htmSelectedAlbum.slug===albumSlug) htmSelectedAlbum.coverUrl = coverUrl;
+    if(typeof updateAlbumDropdown === 'function') updateAlbumDropdown();
+  }catch(e){
+    console.warn('Album-Cover konnte nicht in playlists gespeichert werden:', e);
+    toast('Cover hochgeladen, aber Playlist-Cover nicht gespeichert: '+e.message,'err');
+    throw e;
+  }
+}
+
 async function saveHomeTile(){
   if(!htmEditTarget) return;
   const { rowId, cellIdx } = htmEditTarget;
   const row  = rowById(rowId);
   if(!row) return;
   const cell = row.cells[cellIdx];
+  const saveBtn = document.querySelector('#homeTileModal .htm-save[onclick*="saveHomeTile"]') || document.querySelector('#homeTileModal .htm-save');
+  const oldBtnText = saveBtn ? saveBtn.textContent : '';
+  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Speichere …'; }
 
   markHomeAction();
 
@@ -3191,11 +3216,18 @@ async function saveHomeTile(){
 
   // Upload Album-Cover falls neu gewählt
   let albumCoverFinal = htmAlbumCoverUrl || '';
+  let uploadedNewAlbumCover = false;
   if(htmAlbumCoverFile){
     try{
+      if(saveBtn) saveBtn.textContent='Cover hochladen …';
       toast('Cover wird hochgeladen …','ok');
       albumCoverFinal = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
-    }catch(e){ toast('Upload Fehler Cover: '+e.message,'err'); return; }
+      uploadedNewAlbumCover = true;
+    }catch(e){
+      toast('Upload Fehler Cover: '+e.message,'err');
+      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
+      return;
+    }
   }
 
   if(htmCurrentAction === 'link'){
@@ -3219,6 +3251,15 @@ async function saveHomeTile(){
     cell.useCover21   = false;
     if(!cell.alt) cell.alt = htmSelectedAlbum.title || '';
     cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
+    if(uploadedNewAlbumCover && cell.albumCoverUrl){
+      try{
+        if(saveBtn) saveBtn.textContent='Album-Cover speichern …';
+        await htmPersistAlbumCoverIfNeeded(htmSelectedAlbum.slug, cell.albumCoverUrl);
+      }catch(e){
+        if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
+        return;
+      }
+    }
     // Teaser-Motiv bleibt unberührt — imageUrl / teaserMotifUrl werden hier NICHT angefasst
 
   } else {
@@ -3250,6 +3291,8 @@ async function saveHomeTile(){
   const rowObj2 = rowById(rowId);
   if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
+  toast(uploadedNewAlbumCover ? '✓ Aktion und Album-Cover gespeichert' : '✓ Aktion gespeichert','ok');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
 }
 
 /* v187: Aktion-UI je nach gewählter Aktion anzeigen */

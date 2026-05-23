@@ -5602,8 +5602,9 @@ function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
   el.className = 'home-card ' + (extraClass||'');
 
-  // v184: Album-Modus: albumSlug hat Vorrang, sonst Song-Slug
-  const keySource = (cell.contentMode === 'album' && cell.albumSlug) ? cell.albumSlug : cell.slug;
+  // v192: Album-Modus: albumSlug hat Vorrang — auch für ältere Home-Zellen,
+  // bei denen teaserAction versehentlich noch 'play' war.
+  const keySource = (cell.albumSlug && cell.contentMode !== 'song') ? cell.albumSlug : cell.slug;
   const albumKey  = resolveAlbumKey(keySource);
   if(albumKey) el.dataset.album = albumKey;
 
@@ -5639,8 +5640,10 @@ function buildHomeCard(cell, extraClass){
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
 
-    // v184: Album-Modus — Album direkt öffnen
-    if((cell.teaserAction === 'album' || cell.contentMode === 'album') && (cell.albumSlug || cell.slug)){
+    // v192: Album-Modus — Album direkt öffnen.
+    // Wichtig: ältere Zeilen können noch teaserAction='play' tragen, obwohl albumSlug gesetzt ist.
+    // Dann entscheidet albumSlug/contentMode trotzdem für Album, nicht für Einzelsong-Play.
+    if((cell.teaserAction === 'album' || cell.contentMode === 'album' || (cell.albumSlug && cell.contentMode !== 'song')) && (cell.albumSlug || cell.slug)){
       const ak = resolveAlbumKey(cell.albumSlug || cell.slug);
       if(ak && window.ALBUMS && window.ALBUMS[ak]){ showAlbum(ak); return; }
     }
