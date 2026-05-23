@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523e-fix-duplicate-vars -->
+<!-- Version: admin-v20260523f-restore-startup-load -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -4190,6 +4190,8 @@ function importCurrentHome(){
 })();
 
 let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
+// Songs beim Start laden (Songs-Tab ist default aktiv)
+songsLoaded = true; loadSongs();
 
 /* ══════════════════════════════════════════════════════════════════════════
    SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)
