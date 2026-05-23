@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-v188 -->
+<!-- Version: index-v20260523-v187 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -3829,7 +3829,7 @@ async function loadFromSupabase() {
 
   // 4. Home-Layout laden
   try {
-    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc,id.asc&_ts=' + Date.now(), { headers, cache:'no-store' });
+    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc,id.asc', { headers });
     if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
@@ -5508,14 +5508,9 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  // v194/v189: Snapshot hat Vorrang. Damit kann keine alte/verwaiste Supabase-Zeile
-  // mehr die Live-Reihenfolge stören. Maßgeblich ist exakt die gespeicherte Admin-Reihenfolge.
-  const rawHomeRows = (window._homeLayoutRows || []);
-  const snap = rawHomeRows.find(x => x && x.id === '__home_published_snapshot__');
-  const sourceRows = (snap && snap.cells && snap.cells[0] && Array.isArray(snap.cells[0].publishedRows))
-    ? snap.cells[0].publishedRows
-    : rawHomeRows.filter(x => x && x.id !== '__home_published_snapshot__');
-  const rows = sourceRows.slice().sort((a,b)=>{
+  // v187: Die Reihenfolge wird hier nochmals numerisch stabilisiert.
+  // Wichtig: Die Live-Seite darf niemals nach Typ/Format sortieren.
+  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>{
     const ao = Number.isFinite(Number(a.row_order)) ? Number(a.row_order) : 999999;
     const bo = Number.isFinite(Number(b.row_order)) ? Number(b.row_order) : 999999;
     return ao - bo;

@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v193 -->
+<!-- Version: admin-v20260523-v192 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2414,19 +2414,9 @@ function makeRow(){
 /* ── Load / Save Supabase ── */
 async function loadHomeLayout(){
   try {
-    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs(), cache:'no-store'});
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs()});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    let rows = await r.json();
-
-    // v194: Wenn ein veröffentlichter Snapshot existiert, ist NUR dieser maßgeblich.
-    // Alte/verwaiste Supabase-Zeilen dürfen den Admin und die Live-Seite nicht mehr durcheinanderbringen.
-    const snap = (rows || []).find(x => x && x.id === '__home_published_snapshot__');
-    if(snap && snap.cells && snap.cells[0] && Array.isArray(snap.cells[0].publishedRows)){
-      rows = snap.cells[0].publishedRows;
-    } else {
-      rows = (rows || []).filter(x => x && x.id !== '__home_published_snapshot__');
-    }
-
+    const rows = await r.json();
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
@@ -2457,51 +2447,39 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v194: Veröffentlicht wird ein kompletter Snapshot der sichtbaren Admin-Reihenfolge.
-    // Dadurch ist die Live-Seite unabhängig von alten/verwaisten Einzelzeilen in Supabase.
-    const normalized = homeLayout.map((r,i)=>({
-      id: r.id || uid(),
-      row_order: i,
-      editing: false,
-      cells: (r.cells && r.cells.length===4 ? r.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()])
-    }));
+    // v183 fix: UPSERT statt DELETE+INSERT – verhindert Race-Condition beim Neuanlegen.
+    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
+    const currentIds = new Set(payload.map(r=>r.id));
 
-    const snapshotRow = {
-      id: '__home_published_snapshot__',
-      row_order: -1,
-      cells: [{
-        type: '__published_home_snapshot__',
-        version: 'v194',
-        savedAt: new Date().toISOString(),
-        publishedRows: normalized.map((r,i)=>({id:r.id,row_order:i,cells:r.cells}))
-      }, emptyCell(), emptyCell(), emptyCell()]
-    };
-
-    const snapRes = await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
-      method:'POST',
-      headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=representation'},
-      body: JSON.stringify([snapshotRow]),
-      cache:'no-store'
-    });
-    if(!snapRes.ok) throw new Error('Home-Snapshot konnte nicht gespeichert werden: '+await snapRes.text());
-
-    // Zusätzlich die sichtbaren Einzelzeilen aktualisieren, damit ältere Index-Versionen nicht völlig leer laufen.
-    // Die neue Live-Seite ignoriert diese Altzeilen, sobald der Snapshot vorhanden ist.
-    const rowPayload = normalized.map((r,i)=>({id:r.id,row_order:i,cells:r.cells}));
-    if(rowPayload.length){
-      await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
-        method:'POST',
-        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
-        body: JSON.stringify(rowPayload),
-        cache:'no-store'
-      });
+    // 1. Bestehende IDs aus Supabase holen
+    const existRes = await fetch(sbUrl('/rest/v1/home_layout?select=id'), {headers:hdrs()});
+    let toDelete = [];
+    if(existRes.ok){
+      const existing = await existRes.json();
+      toDelete = existing.map(r=>r.id).filter(id=>!currentIds.has(id));
     }
 
-    homeLayout = normalized.map(r=>({id:r.id, editing:false, cells:r.cells}));
+    // 2. Veraltete Zeilen löschen
+    if(toDelete.length > 0){
+      const inList = '('+toDelete.map(id=>'"'+id+'"').join(',')+')'
+      await fetch(SB_URL+'/rest/v1/home_layout?id=in.'+inList+'&apikey='+SB_KEY,
+        {method:'DELETE', headers:hdrsMin()});
+    }
+
+    // 3. Aktuelle Zeilen via UPSERT schreiben (row_order korrekt)
+    if(payload.length > 0){
+      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
+        method:'POST',
+        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error(await res.text());
+    }
+
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert: Live-Reihenfolge exakt aus Admin übernommen ✓','ok');
+    toast('Home gespeichert ✓','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
