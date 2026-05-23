@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184e -->
+<!-- Version: admin-v20260523-v184f -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2984,8 +2984,11 @@ function openHomeTileModal(rowId, cellIdx){
   if(s1) s1.style.display = '';
   if(s2) s2.style.display = 'none';
 
-  // Restore teaser motif — ONLY teaserMotifUrl, never albumCoverUrl/customImageUrl
-  htmMotifUrl = (cell && cell.teaserMotifUrl) || '';
+  // Restore teaser motif — ONLY teaserMotifUrl, never albumCoverUrl
+  // Guard: if teaserMotifUrl was accidentally set to albumCoverUrl (old bug), treat as empty
+  const _tm = (cell && cell.teaserMotifUrl) || '';
+  const _ac = (cell && cell.albumCoverUrl) || '';
+  htmMotifUrl = (_tm && _tm !== _ac) ? _tm : '';
   htmSetMotifPreview(htmMotifUrl);
   updateHtmMotifHint();
 
@@ -3548,8 +3551,7 @@ async function saveHomeTile(){
       }
     }
 
-    if(!cell.teaserMotifUrl) cell.teaserMotifUrl = cell.imageUrl;
-  }
+  }  // end saveHomeTile
 
   closeHomeTileModal();
   renderHomeEditor();
