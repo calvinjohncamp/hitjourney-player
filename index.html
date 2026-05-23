@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-v191 -->
+<!-- Version: index-v20260523-v185-home-wysiwyg-albumcover -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -153,6 +153,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* halbe Seite: 2-Spalten-Wrapper */
 .home-half-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .home-bottom-pad{height:210px}
+
+/* v185: Dynamische Admin-Home-Zeilen werden als echte Zeilen gerendert.
+   Dadurch kann CSS Grid keine später angelegte Panorama-Zeile mehr in frühere Lücken hochziehen. */
+.home-layout-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.home-layout-row > .home-card.wide,
+.home-layout-row > .home-card.panorama,
+.home-layout-row > .featured-teaser,
+.home-layout-row > .home-half-row,
+.home-layout-row > .home-trio{grid-column:1/-1}
+@media(min-width:900px){.home-layout-row{grid-template-columns:repeat(4,1fr);gap:12px}}
+
 
 /* Trio-Container: volle Breite */
 .home-trio{
@@ -3740,47 +3751,38 @@ async function loadFromSupabase() {
     SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
-  // 2. Playlists + Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
-  const [playlistsRes, tracksRes] = await Promise.all([
-    fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title', { headers }),
-    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
-  ]);
+  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
+  const tracksRes = await fetch(
+    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
+    { headers }
+  );
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const tracksRaw = await tracksRes.json();
-  const playlistsRaw = playlistsRes.ok ? await playlistsRes.json() : [];
-  const playlistDb = {};
-  playlistsRaw.forEach(pl => { playlistDb[pl.slug] = pl; });
 
   // 3. ALBUMS aufbauen
-  // v191: nicht nur PLAYLIST_MAP-Alben bauen. Neue Admin-Alben wie „Sleep Well“
-  // müssen live ebenfalls als Album existieren, sonst ist der Home-Teaser nicht anklickbar.
   ALBUMS = {};
+  ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const mapped = PLAYLIST_MAP[playlistSlug];
-    const dbPl   = playlistDb[playlistSlug] || {};
-    const key    = mapped ? mapped.key : playlistSlug;
-    const song   = songMap[row.song_slug];
-    if (!song || !playlistSlug) return;
+    const info = PLAYLIST_MAP[playlistSlug];
+    if (!info) return;
+    const song = songMap[row.song_slug];
+    if (!song) return;
 
-    if (!ALBUMS[key]) {
-      ALBUMS[key] = {
-        title: (mapped && mapped.title) || dbPl.title || playlistSlug,
-        meta:  (mapped && mapped.meta)  || '',
-        cover: (mapped && mapped.cover) || dbPl.cover_url || song.cover || '',
-        songs: [],
-        playlistSlug
+    if (!ALBUMS[info.key]) {
+      ALBUMS[info.key] = {
+        title: info.title,
+        meta:  info.meta,
+        cover: info.cover,
+        songs: []
       };
     }
-    ALBUMS[key].songs.push(song);
+    ALBUMS[info.key].songs.push(song);
   });
 
-  Object.keys(ALBUMS).forEach(k => {
-    const a = ALBUMS[k];
-    if(!a || !a.songs || !a.songs.length){ delete ALBUMS[k]; return; }
-    if(!a.meta) a.meta = a.songs.length + ' Songs';
-  });
+  // Null-Einträge entfernen
+  Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
 
   // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
   if(ALBUMS.buriedDiamonds && ALBUMS.buriedDiamonds.songs) {
@@ -5476,24 +5478,11 @@ function initApp() {
 
 // ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
 
-function isHomeAlbumCellLive(cell){
-  if(!cell) return false;
-  if(cell.fn === 'link' || cell.teaserAction === 'link') return false;
-  const slug = cell.albumSlug || cell.playlistSlug || cell.slug;
-  const ak = resolveAlbumKey(slug);
-  if(cell.contentMode === 'album' || cell.teaserAction === 'album') return !!ak;
-  return !!(ak && window.ALBUMS && window.ALBUMS[ak] && !cell.mp3 && !cell.mp3_url);
-}
-
-
 function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = (window._homeLayoutRows || [])
-    .slice()
-    .sort((a,b)=>(Number(a.row_order)||0)-(Number(b.row_order)||0))
-    .filter((r,i,arr)=> r && r.id && arr.findIndex(x=>x.id===r.id)===i);
+  const rows = window._homeLayoutRows || [];
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -5514,97 +5503,98 @@ function renderHomeLayout(){
     return hay.includes('just-this-dance') || hay.includes('just this dance');
   }
 
+  function cellImg(cell){ return cell && (cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl); }
+  function appendRowChild(rowEl, child){ if(child) rowEl.appendChild(child); }
+  function appendRow(rowEl){ if(rowEl && rowEl.children.length) grid.appendChild(rowEl); }
+
   rows.forEach(row => {
     const cells = row.cells || [];
     if(!cells.length) return;
     const t0 = cells[0] && cells[0].type;
     if(!t0 || t0 === 'empty') return;
 
+    // v185: Jede Admin-Zeile wird live als eigener Full-Width-Grid-Block ausgegeben.
+    // Das garantiert WYSIWYG-Reihenfolge: Zeile 8 bleibt Zeile 8 und rutscht nicht in Grid-Lücken.
+    const rowEl = document.createElement('div');
+    rowEl.className = 'home-layout-row';
+    rowEl.dataset.rowId = row.id || '';
+
     // ── Slideshow ──────────────────────────────────────────────────
     if(t0 === 'slideshow'){
-      const cell = cells[0];
-      const el = buildSlideshowEl(cell);
-      grid.appendChild(el);
+      appendRowChild(rowEl, buildSlideshowEl(cells[0]));
+      appendRow(rowEl);
       return;
     }
 
-    // ── 1:2 halbe Seite ─────────────────────────────────────────────────────────
+    // ── 1:2 halbe Seite ────────────────────────────────────────────
     if(t0 === 'span-half-l'){
       const cellA = cells[0];
       const cellB = cells[1];
-      if(!cellA.imageUrl && !(cellB && cellB.imageUrl)) return;
+      const imgA = cellImg(cellA);
+      const imgB = cellImg(cellB);
+      if(!imgA && !imgB) return;
       const wrapper = document.createElement('div');
       wrapper.className = 'home-half-row';
-      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) wrapper.appendChild(buildHomeCard(cellA, 'half-l'));
-      if(cellB && cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) wrapper.appendChild(buildHomeCard(cellB, 'half-r'));
-      grid.appendChild(wrapper);
+      if(imgA && !isFinalJustThisDanceCell(cellA)) wrapper.appendChild(buildHomeCard(cellA, 'half-l'));
+      if(imgB && !isFinalJustThisDanceCell(cellB)) wrapper.appendChild(buildHomeCard(cellB, 'half-r'));
+      appendRowChild(rowEl, wrapper);
+      appendRow(rowEl);
       return;
     }
 
-    // ── 1:4 ganze Seite ─────────────────────────────────────────────────────────
+    // ── 1:4 ganze Seite ────────────────────────────────────────────
     if(t0 === 'span-full'){
       const cell = cells[0];
-      if(!cell.imageUrl || isFinalJustThisDanceCell(cell)) return;
-      const el = buildHomeCard(cell, 'tall');
-      el.style.gridColumn = '1/-1';
-      grid.appendChild(el);
+      if(!cellImg(cell) || isFinalJustThisDanceCell(cell)) return;
+      appendRowChild(rowEl, buildHomeCard(cell, 'tall'));
+      appendRow(rowEl);
       return;
     }
 
-    // ── 4:1 volle Breite Panorama ─────────────────────────────────
+    // ── 4:1 volle Breite Panorama / 2:1 Legacy span-4 ──────────────
     if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
       const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
-      if(!cell.imageUrl) return;
-      // lyrics21 und bestehende Kacheln (Tante Paula, Just This Dance, The Archive) behalten wide (2:1)
-      // Neue 4:1-Kacheln (teaserAspect='4x1') bekommen panorama
+      if(!cellImg(cell) || isFinalJustThisDanceCell(cell)) return;
       const cardClass = (cell.teaserAspect === '4x1' || cell.type === '4x1') ? 'panorama' : 'wide';
-      const el = buildHomeCard(cell, cardClass);
-      grid.appendChild(el);
+      appendRowChild(rowEl, buildHomeCard(cell, cardClass));
+      appendRow(rowEl);
       return;
     }
 
     // ── 2:1 ───────────────────────────────────────────────────────
     if(t0 === 'span-2' || t0 === '2x1'){
       const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
-      if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, 'wide');
-      grid.appendChild(el);
+      if(!cellImg(cell) || isFinalJustThisDanceCell(cell)) return;
+      appendRowChild(rowEl, buildHomeCard(cell, 'wide'));
+      appendRow(rowEl);
       return;
     }
 
     // ── 3er Trio ──────────────────────────────────────────────────
     if(t0 === 'trio-a'){
-      const cellA = cells[0]; // 1:1 top-left
-      const cellB = cells[1]; // 2:1 bottom-left
-      const cellC = cells[2]; // tall right
-      if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
+      const cellA = cells[0];
+      const cellB = cells[1];
+      const cellC = cells[2];
+      const imgA = cellImg(cellA);
+      const imgB = cellImg(cellB);
+      const imgC = cellImg(cellC);
+      if(!imgA && !imgB && !imgC) return;
       const trio = document.createElement('div');
       trio.className = 'home-trio wide';
-      // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
-      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
-      grid.appendChild(trio);
+      if(imgA && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+      if(imgB && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+      if(imgC && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      appendRowChild(rowEl, trio);
+      appendRow(rowEl);
       return;
     }
 
-    // ── 1:1 (vier nebeneinander) ───────────────────────────────────
-    if(t0 === '1x1' || t0 === 'empty'){
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        const el = buildHomeCard(cell, 'square');
-        grid.appendChild(el);
-      });
-      return;
-    }
-
-    // ── default: alle nicht-hidden cells als 1:1 ───────────────────
+    // ── Default / 1:1-Zellen ───────────────────────────────────────
     cells.forEach(cell => {
-      if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-      grid.appendChild(buildHomeCard(cell, 'square'));
+      if(!cellImg(cell) || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+      appendRowChild(rowEl, buildHomeCard(cell, 'square'));
     });
+    appendRow(rowEl);
   });
 
   wireHomeGrid(grid);
@@ -5615,11 +5605,10 @@ function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
   el.className = 'home-card ' + (extraClass||'');
 
-  // v192: Album-Modus: albumSlug hat Vorrang — auch für ältere Home-Zellen,
-  // bei denen teaserAction versehentlich noch 'play' war.
-  const keySource = isHomeAlbumCellLive(cell) ? (cell.albumSlug || cell.playlistSlug || cell.slug) : cell.slug;
+  // v184: Album-Modus: albumSlug hat Vorrang, sonst Song-Slug
+  const keySource = (cell.contentMode === 'album' && cell.albumSlug) ? cell.albumSlug : cell.slug;
   const albumKey  = resolveAlbumKey(keySource);
-  if(albumKey && isHomeAlbumCellLive(cell)) el.dataset.album = albumKey;
+  if(albumKey) el.dataset.album = albumKey;
 
   const img = document.createElement('img');
   img.alt = cell.alt || '';
@@ -5653,12 +5642,17 @@ function buildHomeCard(cell, extraClass){
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
 
-    // v192: Album-Modus — Album direkt öffnen.
-    // Wichtig: ältere Zeilen können noch teaserAction='play' tragen, obwohl albumSlug gesetzt ist.
-    // Dann entscheidet albumSlug/contentMode trotzdem für Album, nicht für Einzelsong-Play.
-    if(isHomeAlbumCellLive(cell) && (cell.albumSlug || cell.playlistSlug || cell.slug)){
-      const ak = resolveAlbumKey(cell.albumSlug || cell.playlistSlug || cell.slug);
+    // v185: Explizite Admin-Aktion strikt beachten.
+    // Album öffnet Album, Song spielt Song, Link öffnet Link.
+    const action = cell.teaserAction || (cell.contentMode === 'album' ? 'album' : (cell.contentMode === 'song' ? 'play' : ''));
+    if(action === 'album'){
+      const effectiveAlbumSlug = cell.albumSlug || cell.playlistSlug || cell.slug || '';
+      const ak = resolveAlbumKey(effectiveAlbumSlug);
       if(ak && window.ALBUMS && window.ALBUMS[ak]){ showAlbum(ak); return; }
+    }
+    if(action === 'play' && cell.slug){
+      playSongBySlug(cell.slug);
+      return;
     }
 
     // Home-Sonderfall: einzelne Audio-Teaser
@@ -6236,17 +6230,12 @@ function initDynamicSlideshow(id, slides){
 /* ── Resolve playlist slug → ALBUMS key ── */
 function resolveAlbumKey(slug){
   if(!slug) return null;
-  const raw = String(slug);
-  // Direct key / dynamic playlist slug match
-  if(ALBUMS[raw]) return raw;
-  // Via hardcoded legacy map
-  const info = PLAYLIST_MAP[raw];
-  if(info && ALBUMS[info.key]) return info.key;
-  // Fallback: normalized slug lookup for new Admin albums
-  const norm = raw.toLowerCase().trim().replace(/_/g,'-').replace(/\s+/g,'-');
-  if(ALBUMS[norm]) return norm;
-  const hit = Object.keys(ALBUMS).find(k => String(k).toLowerCase() === norm || String(ALBUMS[k].playlistSlug||'').toLowerCase() === norm);
-  return hit || null;
+  // Direct key match
+  if(ALBUMS[slug]) return slug;
+  // Via PLAYLIST_MAP
+  const info = PLAYLIST_MAP[slug];
+  if(info) return info.key;
+  return null;
 }
 
 /* ── Play song or album based on cell config ── */

@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v191 -->
+<!-- Version: admin-v20260523-v190-home-wysiwyg-albumcover -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -348,7 +348,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell{position:relative;border-radius:8px;overflow:hidden;background:#0B1E2D;border:1px solid rgba(133,172,201,.1);aspect-ratio:1/1;transition:border-color .15s,background .15s}
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
-@media(min-width:600px){.he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}}
+@media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
 /* span-4: volle Breite, 4:1 Panorama (= Höhe einer Zeile mit 4 Albumcovern) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
@@ -379,7 +379,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
 .badge-play{background:rgba(50,180,100,.8)}
 .badge-link{background:rgba(88,132,164,.8)}
-.badge-album{background:rgba(133,172,201,.85);color:#06141F}
 .badge-slide{background:rgba(120,90,200,.8)}
 .he-cell-acts{display:flex;gap:2px}
 .he-cell-act{width:18px;height:18px;border-radius:3px;border:none;cursor:pointer;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
@@ -2441,7 +2440,6 @@ async function loadHomeLayout(){
     homeLayout = [];
   }
   if(homeLayout.length===0) homeLayout = [makeRow()];
-  normalizeLegacyHomeAlbumCells();
   homeLayoutBase = cloneHomeLayout(homeLayout);
   homeUndoStack = [];
   renderHomeEditor();
@@ -2449,35 +2447,39 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    normalizeLegacyHomeAlbumCells();
+    // v183 fix: UPSERT statt DELETE+INSERT – verhindert Race-Condition beim Neuanlegen.
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
-    const ids = payload.map(p=>p.id).filter(Boolean);
+    const currentIds = new Set(payload.map(r=>r.id));
 
-    // 1) Aktuelle Zeilen per Upsert schreiben. Dadurch wird row_order auch dann aktualisiert,
-    //    wenn ein vorheriges Komplett-DELETE durch RLS/Cache nicht sauber gegriffen hat.
+    // 1. Bestehende IDs aus Supabase holen
+    const existRes = await fetch(sbUrl('/rest/v1/home_layout?select=id'), {headers:hdrs()});
+    let toDelete = [];
+    if(existRes.ok){
+      const existing = await existRes.json();
+      toDelete = existing.map(r=>r.id).filter(id=>!currentIds.has(id));
+    }
+
+    // 2. Veraltete Zeilen löschen
+    if(toDelete.length > 0){
+      const inList = '('+toDelete.map(id=>'"'+id+'"').join(',')+')'
+      await fetch(SB_URL+'/rest/v1/home_layout?id=in.'+inList+'&apikey='+SB_KEY,
+        {method:'DELETE', headers:hdrsMin()});
+    }
+
+    // 3. Aktuelle Zeilen via UPSERT schreiben (row_order korrekt)
     if(payload.length > 0){
-      const up = await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY, {
+      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
         method:'POST',
         headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
         body: JSON.stringify(payload)
       });
-      if(!up.ok) throw new Error(await up.text());
-    }
-
-    // 2) Verwaiste Alt-Zeilen entfernen. Wenn diese DELETE-Regel in Supabase blockiert sein sollte,
-    //    ist die Reihenfolge trotzdem korrekt, weil der Live-Renderer unten zusätzlich dedupliziert.
-    if(ids.length){
-      const quoted = ids.map(id=>'"'+String(id).replace(/"/g,'')+'"').join(',');
-      await fetch(SB_URL+'/rest/v1/home_layout?id=not.in.('+quoted+')&apikey='+SB_KEY, {
-        method:'DELETE',
-        headers:hdrsMin()
-      }).catch(()=>{});
+      if(!res.ok) throw new Error(await res.text());
     }
 
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert ✓ Reihenfolge und Album-Zuordnung geschrieben','ok');
+    toast('Home gespeichert ✓','ok');
   } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
 }
 
@@ -2615,40 +2617,6 @@ function buildCells(row, grid){
   }
 }
 
-
-function homeAlbumSlugSet(){
-  try{ return new Set((typeof albumsData !== 'undefined' ? albumsData : []).map(a=>String(a.slug||''))); }
-  catch(_){ return new Set(); }
-}
-function isHomeAlbumCell(cell){
-  if(!cell) return false;
-  const albums = homeAlbumSlugSet();
-  const aSlug = String(cell.albumSlug || cell.playlistSlug || '').trim();
-  const slug  = String(cell.slug || '').trim();
-  if(cell.fn === 'link' || cell.teaserAction === 'link') return false;
-  if(cell.contentMode === 'album' || cell.teaserAction === 'album') return true;
-  if(aSlug && albums.has(aSlug)) return true;
-  if(slug && albums.has(slug) && !cell.mp3_url && !cell.mp3) return true;
-  return false;
-}
-function normalizeLegacyHomeAlbumCells(){
-  const albums = homeAlbumSlugSet();
-  if(!albums.size) return;
-  (homeLayout||[]).forEach(row=>{
-    (row.cells||[]).forEach(cell=>{
-      if(!cell || cell.type==='hidden') return;
-      const slug = String(cell.albumSlug || cell.playlistSlug || cell.slug || '').trim();
-      if(slug && albums.has(slug) && cell.fn !== 'link'){
-        cell.contentMode = 'album';
-        cell.teaserAction = 'album';
-        cell.albumSlug = slug;
-        cell.playlistSlug = slug;
-        cell.slug = slug;
-      }
-    });
-  });
-}
-
 /* ── Single cell ── */
 function buildCell(row, cellIdx, extraClass, editing){
   const cell = row.cells[cellIdx];
@@ -2689,14 +2657,13 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const actionKind = isSlide ? 'slideshow' : (cell.fn==='link' ? 'link' : (isHomeAlbumCell(cell) ? 'album' : (cell.teaserAction || 'play')));
-      const badgeCls = actionKind==='slideshow' ? 'badge-slide' : actionKind==='link' ? 'badge-link' : actionKind==='album' ? 'badge-album' : 'badge-play';
-      const badgeTxt = actionKind==='slideshow' ? '◈ Diashow' : actionKind==='link' ? '🔗 Link' : actionKind==='album' ? '▣ Album' : '▶ Play';
+      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
+      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'teaser')" title="Teaser bearbeiten">✎</button>
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'action')" title="Klick-Aktion ändern" style="background:rgba(50,180,100,.2);color:#6fda9a">⚙</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'action')" title="Klick-Aktion" style="background:rgba(50,180,100,.2);color:#6fda9a">▶</button>
           ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
       el.appendChild(ov);
@@ -3046,8 +3013,6 @@ function openHomeTileModal(rowId, cellIdx, mode){
   htmModalMode    = mode || 'teaser';
   htmMotifFile    = null;
   htmAlbumCoverFile = null;
-  const acInput0 = document.getElementById('htmAlbumCoverInput');
-  if(acInput0) acInput0.value = '';
 
   const row  = rowById(rowId);
   const cell = row && row.cells[cellIdx];
@@ -3101,7 +3066,7 @@ function openHomeTileModal(rowId, cellIdx, mode){
     }
 
     // Klick-Aktion wiederherstellen
-    htmCurrentAction = (cell && cell.fn === 'link') ? 'link' : ((cell && (cell.contentMode === 'album' || (cell.albumSlug && cell.contentMode !== 'song'))) ? 'album' : ((cell && cell.teaserAction) || 'album'));
+    htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : (cell && cell.contentMode === 'song' ? 'play' : 'album')); // v190
     document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.action === htmCurrentAction);
     });
@@ -3220,42 +3185,29 @@ async function saveTeaserOnly(){
   const rowObj = rowById(rowId);
   if(rowObj) rowObj.editing = false;
   renderHomeEditor();
+  // Auto-save: Teaser-Änderungen sofort in Supabase sichern (Position + Inhalt)
+  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 
-async function htmPersistAlbumCoverIfNeeded(albumSlug, coverUrl){
+async function persistAlbumCoverIfNeeded(albumSlug, coverUrl){
   if(!albumSlug || !coverUrl) return;
-  const r = await fetch(sbUrl('/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)), {
-    method:'PATCH',
-    headers:{...hdrs(), 'Prefer':'return=representation'},
-    body:JSON.stringify({cover_url:coverUrl})
-  });
-  if(!r.ok) throw new Error(await r.text());
-  let saved=[];
-  try{ saved = await r.json(); }catch(_){ saved=[]; }
-  const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===albumSlug);
-  if(al) al.cover_url = coverUrl;
-  if(htmSelectedAlbum && htmSelectedAlbum.slug===albumSlug) htmSelectedAlbum.coverUrl = coverUrl;
-
-  // Alle Home-Kacheln dieses Albums bekommen das neue 1:1-Cover als Albumcover.
-  // Das Teaser-Motiv bleibt dabei unangetastet.
-  (homeLayout||[]).forEach(row=>{
-    (row.cells||[]).forEach(c=>{
-      if(!c) return;
-      const slug = c.albumSlug || c.playlistSlug || c.slug;
-      if(slug === albumSlug && c.fn !== 'link'){
-        c.albumCoverUrl = coverUrl;
-        c.contentMode = 'album';
-        c.teaserAction = 'album';
-        c.albumSlug = albumSlug;
-        c.playlistSlug = albumSlug;
-        c.slug = albumSlug;
-      }
+  try{
+    const res = await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)+'&apikey='+SB_KEY, {
+      method:'PATCH',
+      headers:{...hdrs(), 'Prefer':'return=minimal'},
+      body: JSON.stringify({ cover_url: coverUrl })
     });
-  });
-  if(typeof updateAlbumDropdown === 'function') updateAlbumDropdown();
-  return saved;
+    if(!res.ok) throw new Error(await res.text());
+    if(typeof albumsData !== 'undefined'){
+      const al = albumsData.find(a=>a.slug===albumSlug);
+      if(al) al.cover_url = coverUrl;
+    }
+    toast('Albumcover dauerhaft gespeichert ✓','ok');
+  }catch(e){
+    toast('Albumcover konnte nicht dauerhaft am Album gespeichert werden: '+e.message,'err');
+    throw e;
+  }
 }
-
 
 async function saveHomeTile(){
   if(!htmEditTarget) return;
@@ -3263,9 +3215,6 @@ async function saveHomeTile(){
   const row  = rowById(rowId);
   if(!row) return;
   const cell = row.cells[cellIdx];
-  const saveBtn = document.querySelector('#homeTileModal .htm-save[onclick*="saveHomeTile"]') || document.querySelector('#homeTileModal .htm-save');
-  const oldBtnText = saveBtn ? saveBtn.textContent : '';
-  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Speichere …'; }
 
   markHomeAction();
 
@@ -3273,38 +3222,33 @@ async function saveHomeTile(){
 
   // Upload Album-Cover falls neu gewählt
   let albumCoverFinal = htmAlbumCoverUrl || '';
-  let uploadedNewAlbumCover = false;
+  const hadNewAlbumCover = !!htmAlbumCoverFile;
+  const saveBtn = document.getElementById('htmSaveActionBtn');
   if(htmAlbumCoverFile){
     try{
-      if(saveBtn) saveBtn.textContent='Cover hochladen …';
-      toast('Cover wird hochgeladen …','ok');
+      if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Cover lädt hoch …'; }
+      toast('Albumcover wird hochgeladen …','ok');
       albumCoverFinal = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
-      uploadedNewAlbumCover = true;
+      htmAlbumCoverUrl = albumCoverFinal;
+      htmSetAlbumCoverPreview(albumCoverFinal);
+      updateHtmAlbumCoverHint();
+      toast('Albumcover hochgeladen ✓','ok');
     }catch(e){
-      toast('Upload Fehler Cover: '+e.message,'err');
-      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
-      return;
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = '✓ Aktion speichern'; }
+      toast('Upload Fehler Cover: '+e.message,'err'); return;
     }
   }
 
   if(htmCurrentAction === 'link'){
     cell.fn  = 'link';
-    cell.teaserAction = 'link';
     cell.url = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     cell.slug = ''; cell.lyricsCycle = false; cell.albumCoverUrl = '';
 
-  } else if(htmContentMode === 'album'){
-    if(!htmSelectedAlbum){
-      const sel = document.getElementById('htmAlbumSelect');
-      if(sel && sel.value){
-        const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===sel.value);
-        if(al) htmSelectedAlbum = {slug:al.slug,title:al.title||al.slug,coverUrl:al.cover_url||'',tracks:al.tracks||[]};
-      }
-    }
-    if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); if(saveBtn){saveBtn.disabled=false;saveBtn.textContent=oldBtnText||'✓ Übernehmen';} return; }
+  } else if(htmCurrentAction === 'album'){
+    htmContentMode = 'album';
+    if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
     cell.fn           = 'play';
     cell.url          = '';
-    cell.teaserAction = 'album';
     cell.contentMode  = 'album';
     cell.albumSlug    = htmSelectedAlbum.slug;
     cell.playlistSlug = htmSelectedAlbum.slug;
@@ -3315,25 +3259,19 @@ async function saveHomeTile(){
     cell.useCover21   = false;
     if(!cell.alt) cell.alt = htmSelectedAlbum.title || '';
     cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
-    if(uploadedNewAlbumCover && cell.albumCoverUrl){
-      try{
-        if(saveBtn) saveBtn.textContent='Album-Cover speichern …';
-        await htmPersistAlbumCoverIfNeeded(htmSelectedAlbum.slug, cell.albumCoverUrl);
-        htmAlbumCoverUrl = cell.albumCoverUrl;
-        toast('✓ Album-Cover gespeichert und altes Cover überschrieben','ok');
-      }catch(e){
-        if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
-        return;
-      }
+    // v190: neues Albumcover wirklich am Album/Playlist-Datensatz speichern.
+    // Damit ist es nicht nur an diese Home-Kachel gebunden, sondern künftig das Albumcover.
+    if(albumCoverFinal && (hadNewAlbumCover || albumCoverFinal !== (htmSelectedAlbum.coverUrl||''))){
+      await persistAlbumCoverIfNeeded(htmSelectedAlbum.slug, albumCoverFinal);
     }
     // Teaser-Motiv bleibt unberührt — imageUrl / teaserMotifUrl werden hier NICHT angefasst
 
-  } else {
+  } else if(htmCurrentAction === 'play'){
+    htmContentMode = 'song';
     // Einzelsong
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
     cell.fn           = 'play';
     cell.url          = '';
-    cell.teaserAction = 'play';
     cell.contentMode  = 'song';
     cell.albumSlug    = '';
     cell.slug         = htmSelectedSong.slug;
@@ -3357,8 +3295,8 @@ async function saveHomeTile(){
   const rowObj2 = rowById(rowId);
   if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
-  toast(uploadedNewAlbumCover ? '✓ Aktion und Album-Cover gespeichert' : '✓ Aktion gespeichert','ok');
-  if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=oldBtnText || '✓ Aktion speichern'; }
+  // Auto-save: Aktions-Änderungen (Album-Cover, Slug, Aktion) sofort in Supabase sichern
+  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 
 /* v187: Aktion-UI je nach gewählter Aktion anzeigen */
@@ -3387,10 +3325,17 @@ function htmSetAspect(aspect, el){
 
 function htmSetAction(action, el){
   htmCurrentAction = action;
+  // v190: Aktion und Content-Modus strikt koppeln.
+  // Vorher konnte "Song" gewählt sein, während htmContentMode noch "album" blieb.
+  // Das führte dazu, dass die falsche Speicherlogik ausgeführt wurde.
+  if(action === 'album') htmContentMode = 'album';
+  else if(action === 'play') htmContentMode = 'song';
+  else if(action === 'link') htmContentMode = 'link';
+
   document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
   htmApplyActionUI(action, null);
-  // Bei Album-Modus: Dropdown befüllen
+
   if(action === 'album') htmPopulateAlbumDropdown().catch(()=>{});
   else if(action === 'play'){
     const sel = document.getElementById('htmPlaylistSelect');
