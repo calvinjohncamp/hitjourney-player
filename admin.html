@@ -4063,7 +4063,7 @@ async function saveSlideshowTile(){
 /* ── Import current hardcoded home as starting point ── */
 function importCurrentHome(){
   if(homeLayout.some(r => r.cells.some(c => c.imageUrl || c.bgUrl))){
-    if(!confirm('Import überschreibt alle aktuellen Zeilen mit dem korrekten Stand (Z1–Z6). Fortfahren?')) return;
+    if(!confirm('Import überschreibt alle aktuellen Zeilen mit dem korrekten Stand (Z1–Z13). Fortfahren?')) return;
   }
 
   markHomeAction();
@@ -4074,18 +4074,66 @@ function importCurrentHome(){
     return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'',
              bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, playlistSlug:'', ...overrides };
   }
-  function row(cells){ return { id:uid(), editing:false, cells }; }  // WYSIWYG: start in view mode
+  function row(cells){ return { id:uid(), editing:false, cells }; }
 
   homeLayout = [
-    // Z1: Tante Paula — Lyricssheet 21 volle Breite (span-4, 2:1)
+    // Z1: 4× Quadrat — What If Tonight · Real · Half of Everything · Berlin
+    row([
+      makeCell({ type:'1x1', fn:'play', slug:'what-if-tonight',
+        imageUrl:`${S3}/artwork/What%20If%20Tonight%20-%20Cover.jpg`, alt:'What If Tonight' }),
+      makeCell({ type:'1x1', fn:'play', slug:'real',
+        imageUrl:`${S3}/artwork/Real%20-%20Cover.jpg`, alt:'Real' }),
+      makeCell({ type:'1x1', fn:'play', slug:'half-of-everything',
+        imageUrl:`${S3}/artwork/Half%20of%20Everything%20-%20Cover.jpg`, alt:'Half of Everything' }),
+      makeCell({ type:'1x1', fn:'play', slug:'berlin',
+        imageUrl:`${S3}/artwork/Berlin%20-%20Cover.jpg`, alt:'Berlin' }),
+    ]),
+
+    // Z2: Tante Paula — Lyricssheet 21 volle Breite
     row([
       makeCell({ type:'span-4', fn:'play', slug:'tante-paula-lara-wolff',
         imageUrl:`${S3}/artwork/tante-paula-lara-wolff-cover-2-1.jpg`,
-        alt:'Tante Paula · Lara Wolff', artist:'Lara Wolff' }),
+        alt:'Tante Paula · Lara Wolff', artist:'Lara Wolff', lyricsCycle:true }),
       makeCell({ type:'hidden' }), makeCell({ type:'hidden' }), makeCell({ type:'hidden' })
     ]),
 
-    // Z2: Top 50 · 30° Grad · 30 Stories · Top 100 — vier 1:1
+    // Z3: 4× Quadrat — Zu sehr · Klartext Baby · Sehnsucht · Lara Wolff
+    row([
+      makeCell({ type:'1x1', fn:'play', slug:'zu-sehr',
+        imageUrl:`${S3}/artwork/Zu%20Sehr%20-%20Cover.jpg`, alt:'Zu Sehr' }),
+      makeCell({ type:'1x1', fn:'play', slug:'klartext-baby',
+        imageUrl:`${S3}/artwork/Klartext%20Baby%20-%20Cover.jpg`, alt:'Klartext Baby' }),
+      makeCell({ type:'1x1', fn:'play', slug:'sehnsucht',
+        imageUrl:`${S3}/artwork/Sehnsucht%20-%20Cover.jpg`, alt:'Sehnsucht' }),
+      makeCell({ type:'1x1', fn:'play', slug:'lara-wolff',
+        imageUrl:`${S3}/artwork/Lara%20Wolff%20-%20Cover.jpg`, alt:'Lara Wolff' }),
+    ]),
+
+    // Z4: Diashow — In The Spotlight
+    row([
+      makeCell({
+        type:'slideshow', fn:'play', slug:'spotlight',
+        alt:'IN THE SPOTLIGHT',
+        bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
+        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
+        overlayPos:'bottom-left', startColor:'#0A0A0A',
+        slides:[
+          { slug:'neues-licht',            title:'Neues Licht',               artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,                    focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg` },
+          { slug:'half-past-nine',          title:'Half Past Nine On Main St', artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg` },
+          { slug:'problematisch',           title:'Problematisch',             artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg`,                    focusUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg` },
+          { slug:'pine-and-snow',           title:'Pine and Snow',             artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg`,                focusUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg` },
+          { slug:'nur-noch-augen-fuer-sie', title:'Nur noch Augen für sie',   artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg`,  focusUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg` },
+          { slug:'the-cold-dont-lie',       title:"The Cold Don't Lie",        artist:'Jörn Kämper', coverUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg`,          focusUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg` },
+          { slug:'unscharf',                title:'Unscharf',                  artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg`,                        focusUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg` },
+          { slug:'keys-on-the-floor',       title:'Keys On The Floor',         artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg`,          focusUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg` },
+          { slug:'rita-forever',            title:'Rita Forever',              artist:'Jörn Kämper', coverUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg`,                   focusUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg` },
+          { slug:'my-piece-of-heaven',      title:'My Piece of Heaven',        artist:'Jörn Kämper', coverUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg`,         focusUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg` },
+        ]
+      }),
+      makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
+    ]),
+
+    // Z5: 4× Quadrat — Top 50 · 30° Grad · 30 Stories · Top 100
     row([
       makeCell({ type:'1x1', fn:'play', slug:'songwriters-picks',
         imageUrl:`${S3}/artwork/top50-cover.jpg`, alt:'Top 50' }),
@@ -4097,32 +4145,15 @@ function importCurrentHome(){
         imageUrl:`${S3}/artwork/top100-cover.jpg`, alt:'Top 100' }),
     ]),
 
-    // Z3: In The Spotlight — Diashow (bgUrl = erstes Slide-Cover als Vorschau)
+    // Z6: Johnny / BRO — Lyricssheet 21 volle Breite
     row([
-      makeCell({
-        type:'slideshow', fn:'play', slug:'spotlight',
-        alt:'IN THE SPOTLIGHT',
-        bgUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
-        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,
-        overlayPos:'bottom-left',
-        startColor:'#0A0A0A',
-        slides:[
-          { slug:'neues-licht',           title:'Neues Licht',              artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg`,                   focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Cover.jpg` },
-          { slug:'half-past-nine',         title:'Half Past Nine On Main St',artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg`, focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Cover.jpg` },
-          { slug:'problematisch',          title:'Problematisch',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg`,                   focusUrl:`${S3}/artwork/Problematisch%20-%20Cover.jpg` },
-          { slug:'pine-and-snow',          title:'Pine and Snow',            artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg`,               focusUrl:`${S3}/artwork/Pine%20and%20Snow%20-%20Cover.jpg` },
-          { slug:'nur-noch-augen-fuer-sie',title:'Nur noch Augen für sie',  artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg`, focusUrl:`${S3}/artwork/Nur%20noch%20Augen%20fuer%20sie%20-%20Cover.jpg` },
-          { slug:'the-cold-dont-lie',      title:'The Cold Don\'t Lie',      artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg`,         focusUrl:`${S3}/artwork/The%20Cold%20Dont%20Lie%20-%20Cover.jpg` },
-          { slug:'unscharf',               title:'Unscharf',                 artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg`,                       focusUrl:`${S3}/artwork/Unscharf%20-%20Cover.jpg` },
-          { slug:'keys-on-the-floor',      title:'Keys On The Floor',        artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg`,         focusUrl:`${S3}/artwork/Keys%20On%20The%20Floor%20-%20Cover.jpg` },
-          { slug:'rita-forever',           title:'Rita Forever',             artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg`,                  focusUrl:`${S3}/artwork/Rita%20Forever%20-%20Cover.jpg` },
-          { slug:'my-piece-of-heaven',     title:'My Piece of Heaven',       artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg`,        focusUrl:`${S3}/artwork/My%20piece%20of%20heaven%20-%20Cover.jpg` },
-        ]
-      }),
-      makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
+      makeCell({ type:'span-4', fn:'play', slug:'johnny',
+        imageUrl:`${S3}/artwork/Johnny%20-%20Cover%202-1.jpg`,
+        alt:'Johnny · BRO', artist:'BRO', lyricsCycle:true }),
+      makeCell({ type:'hidden' }), makeCell({ type:'hidden' }), makeCell({ type:'hidden' })
     ]),
 
-    // Z4: Trio — Grosse Liebe · Buried Diamonds · Poesie
+    // Z7: Trio — Grosse Liebe · Buried Diamonds · Poesie
     row([
       makeCell({ type:'trio-a', fn:'play', slug:'grosse-liebe',
         imageUrl:`${S3}/artwork/grosse-liebe-cover.jpg`, alt:'Grosse Liebe' }),
@@ -4133,43 +4164,71 @@ function importCurrentHome(){
       makeCell({ type:'hidden' }),
     ]),
 
-    // Z5: Editorial Trio — Kurs Nordwest · Songwriter's Favorites · One Million Streams
+    // Z8: Diashow — Gleich Zurück · Velvet Radio
     row([
-      makeCell({ type:'trio-a', fn:'play', slug:'kurs-nordwest',
-        imageUrl:`${S3}/artwork/Kurs%20Nordwest%20sw.jpg`, alt:'Kurs Nordwest',
-        _badge:'Album', _label:'Kurs\nNordwest' }),
-      makeCell({ type:'trio-b', fn:'play', slug:'songwriters-picks',
-        imageUrl:`${S3}/artwork/Songwriters%20Favorites.jpg`, alt:"Songwriter's Favorites",
-        _badge:'Album', _label:"SONG\nWRITER'S\nFAVORITES" }),
-      makeCell({ type:'trio-c', fn:'link', url:'https://soundcloud.com/joern-kaemper',
-        imageUrl:`${S3}/artwork/1%20Million%20Streams.jpg`, alt:'One Million Streams Ahead',
-        _badge:'Link', _label:'One Million\nStreams Ahead' }),
-      makeCell({ type:'hidden' }),
-    ]),
-
-    // Z6: Language Teaser — DE / EN Split
-    row([
-      makeCell({ type:'language', fn:'language',
-        imageUrl:`${S3}/artwork/german%20%2B%20english.jpg`,
-        alt:'German & English Songs', _badge:'Unterseite' }),
+      makeCell({
+        type:'slideshow', fn:'play', slug:'gleich-zurueck',
+        alt:'Gleich Zurück · Velvet Radio',
+        bgUrl:`${S3}/artwork/Gleich%20Zurueck%20-%20Cover.jpg`,
+        imageUrl:`${S3}/artwork/Gleich%20Zurueck%20-%20Cover.jpg`,
+        overlayPos:'bottom-left', startColor:'#0A0A0A',
+        slides:[
+          { slug:'gleich-zurueck',  title:'Gleich Zurück',  artist:'Lara Wolff',   coverUrl:`${S3}/artwork/Gleich%20Zurueck%20-%20Cover.jpg`,  focusUrl:`${S3}/artwork/Gleich%20Zurueck%20-%20Cover.jpg` },
+          { slug:'velvet-radio',    title:'Velvet Radio',   artist:'Jörn Kämper',  coverUrl:`${S3}/artwork/Velvet%20Radio%20-%20Cover.jpg`,     focusUrl:`${S3}/artwork/Velvet%20Radio%20-%20Cover.jpg` },
+        ]
+      }),
       makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
     ]),
 
-    // Z7: Just This Dance — Lyricssheet 21 volle Breite (span-4, 2:1)
+    // Z9: 4× Quadrat — This World Is Wide · Anywhere You Were · Broken Pieces · Stories
+    row([
+      makeCell({ type:'1x1', fn:'play', slug:'this-world-is-wide',
+        imageUrl:`${S3}/artwork/This%20World%20Is%20Wide%20-%20Cover.jpg`, alt:'This World Is Wide' }),
+      makeCell({ type:'1x1', fn:'play', slug:'anywhere-you-were-with-me',
+        imageUrl:`${S3}/artwork/Anywhere%20You%20Were%20With%20Me%20-%20Cover.jpg`, alt:'Anywhere You Were With Me' }),
+      makeCell({ type:'1x1', fn:'play', slug:'broken-pieces',
+        imageUrl:`${S3}/artwork/Broken%20Pieces%20-%20Cover.jpg`, alt:'Broken Pieces' }),
+      makeCell({ type:'1x1', fn:'play', slug:'stories',
+        imageUrl:`${S3}/artwork/Stories%20-%20Cover.jpg`, alt:'Stories' }),
+    ]),
+
+    // Z10: Brave New Songs / The Archive — volle Breite 2:1
+    row([
+      makeCell({ type:'span-4', fn:'link', url:'#archive',
+        imageUrl:`${S3}/artwork/archive.jpg`, alt:'Brave New Songs · The Archive' }),
+      makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
+    ]),
+
+    // Z11: Editorial Trio — Kurs Nordwest · Songwriter's Favorites · One Million Streams
+    row([
+      makeCell({ type:'trio-a', fn:'play', slug:'kurs-nordwest',
+        imageUrl:`${S3}/artwork/Kurs%20Nordwest%20sw.jpg`, alt:'Kurs Nordwest' }),
+      makeCell({ type:'trio-b', fn:'play', slug:'songwriters-picks',
+        imageUrl:`${S3}/artwork/Songwriters%20Favorites.jpg`, alt:"Songwriter's Favorites" }),
+      makeCell({ type:'trio-c', fn:'link', url:'https://soundcloud.com/joern-kaemper',
+        imageUrl:`${S3}/artwork/1%20Million%20Streams.jpg`, alt:'One Million Streams Ahead' }),
+      makeCell({ type:'hidden' }),
+    ]),
+
+    // Z12: Language Teaser — DE / EN Split
+    row([
+      makeCell({ type:'language', fn:'language',
+        imageUrl:`${S3}/artwork/german%20%2B%20english.jpg`,
+        alt:'German & English Songs' }),
+      makeCell({type:'hidden'}), makeCell({type:'hidden'}), makeCell({type:'hidden'})
+    ]),
+
+    // Z13: Just This Dance — Lyricssheet 21 volle Breite
     row([
       makeCell({ type:'span-4', fn:'play', slug:'just-this-dance-lara-wolff',
         imageUrl:`${S3}/artwork/just-this-dance-lara-wolff-cover-2-1.jpg`,
-        alt:'Just This Dance · Lara Wolff', artist:'Lara Wolff' }),
+        alt:'Just This Dance · Lara Wolff', artist:'Lara Wolff', lyricsCycle:true }),
       makeCell({ type:'hidden' }), makeCell({ type:'hidden' }), makeCell({ type:'hidden' })
     ]),
   ];
 
   renderHomeEditor();
-  toast('Aktuelle Startseite importiert — jetzt bearbeiten und speichern ✓', 'ok');
-
-  // Import-Button bleibt sichtbar für spätere Nutzung
-  // const btn = document.getElementById('importHomeBtn');
-  // if(btn) btn.style.display = 'none';
+  toast('Startseite importiert (Z1–Z13) — jetzt Speichern klicken ✓', 'ok');
 }
 
 /* ══ END HOME EDITOR ══════════════════════════════════════════════════════ */
