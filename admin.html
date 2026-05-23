@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-album-picker-fix-v184b -->
+<!-- Version: admin-v20260523-v184c -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -982,7 +982,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div id="htmAlbumCoverField">
         <div class="htm-field">
           <span class="htm-label">1:1 Cover (Albumansicht)</span>
-          <div class="upload-zone" style="height:88px" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
+          <div class="upload-zone" style="width:96px;height:96px;margin:0 auto;flex-shrink:0" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
             <input id="htmAlbumCoverInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmAlbumCoverFile(this)"/>
             <div class="upload-zone-icon">
               <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2706,10 +2706,9 @@ function toggleTypeMenu(cellEl, rowId, cellIdx){
     {key:'1x1',      label:'1:1 · Quadrat-Teaser'},
     {key:'half',     label:'1:2 · Halbe Seite (Hoch)'},
     {key:'full',     label:'1:4 · Ganze Seite (Hoch)'},
-    {key:'2x1',      label:'2:1 · Quer (×2)'},
+    {key:'2x1',      label:'2:1 · Quer (halbe Breite)'},
     {key:'trio',     label:'3er Block'},
-    {key:'4x1',      label:'4:1 · Volle Breite'},
-    {key:'lyrics21', label:'Lyrics-Sheet 21 · volle Breite'},
+    {key:'4x1',      label:'4:1 · Volle Breite (2:1)'},
     {key:'slideshow',label:'◈ Diashow'},
   ];
 
