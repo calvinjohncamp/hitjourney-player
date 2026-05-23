@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184f -->
+<!-- Version: admin-v20260523-v184g -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -3480,8 +3480,11 @@ async function saveHomeTile(){
     cell.url         = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     cell.slug        = '';
     cell.lyricsCycle = false;
-    cell.imageUrl    = teaserUrl || cell.imageUrl || '';
-    cell.customImageUrl = teaserUrl || '';
+    if(teaserUrl){
+      cell.imageUrl       = teaserUrl;
+      cell.customImageUrl = teaserUrl;
+      cell.teaserMotifUrl = teaserUrl;
+    }
     cell.albumCoverUrl  = '';
 
   } else {
@@ -3514,13 +3517,16 @@ async function saveHomeTile(){
       cell.alt = document.getElementById('htmAltText')?.value?.trim() || htmSelectedAlbum.title || '';
 
       // albumCoverUrl = NUR für die Albumansicht (linkes 1:1-Cover)
-      // Vorrang: manuell hochgeladen → sonst vorhandenes Album-Cover aus der App
       cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
 
-      // imageUrl / customImageUrl = NUR das Teaser-Motiv (Seite 1, unverändert)
-      // Niemals albumCoverUrl als Teaser verwenden!
-      cell.customImageUrl = teaserUrl || '';
-      cell.imageUrl       = teaserUrl || '';
+      // imageUrl = Teaser-Motiv (Startseite) — nur überschreiben wenn ein neuer Upload vorliegt
+      // Wenn kein neuer Teaser hochgeladen: bestehenden imageUrl-Wert ERHALTEN
+      if(teaserUrl){
+        cell.imageUrl       = teaserUrl;
+        cell.customImageUrl = teaserUrl;
+        cell.teaserMotifUrl = teaserUrl;
+      }
+      // teaserMotifUrl niemals mit albumCoverUrl überschreiben
 
     } else {
       // ── Einzelsong-Modus ──
@@ -3539,15 +3545,20 @@ async function saveHomeTile(){
       // Bei 1:1-Teaser: kein separates Album-Cover nötig → Song-Cover wird direkt genutzt
       cell.albumCoverUrl = albumCoverFinal || htmSelectedSong.coverUrl || '';
 
-      // imageUrl / customImageUrl = Teaser (Startseite)
-      // Bei 1:1: kein eigenes Teaser-Motiv → Song-Cover als Teaser
+      // imageUrl = Teaser (Startseite)
       if(htmCurrentAspect === '1x1'){
-        cell.customImageUrl = cell.albumCoverUrl;
+        // 1:1: Teaser = Album-Cover (kein separates Motiv)
         cell.imageUrl       = cell.albumCoverUrl;
+        cell.customImageUrl = cell.albumCoverUrl;
+        cell.teaserMotifUrl = cell.albumCoverUrl;
       } else {
-        // Separates Teaser-Motiv hochgeladen → nur das als Teaser
-        cell.customImageUrl = teaserUrl || '';
-        cell.imageUrl       = teaserUrl || '';
+        // Separates Teaser-Motiv: nur überschreiben wenn neuer Upload
+        if(teaserUrl){
+          cell.imageUrl       = teaserUrl;
+          cell.customImageUrl = teaserUrl;
+          cell.teaserMotifUrl = teaserUrl;
+        }
+        // Kein neuer Upload → bestehenden imageUrl ERHALTEN
       }
     }
 
