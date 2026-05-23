@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-album-picker-v184 -->
+<!-- Version: admin-v20260523-album-picker-fix-v184b -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -959,25 +959,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
       </div>
 
-      <!-- Album-Cover (1:1, nur wenn Teaser != 1x1) -->
-      <div id="htmAlbumCoverField">
-        <div class="htm-field">
-          <span class="htm-label">1:1 Cover (Albumansicht)</span>
-          <div class="upload-zone sq" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
-            <input id="htmAlbumCoverInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmAlbumCoverFile(this)"/>
-            <div class="upload-zone-icon">
-              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Cover hochladen</span>
-              <small>1:1 f&uuml;r Albumansicht</small>
-            </div>
-            <img class="zone-preview" id="prevHtmAlbumCover" alt=""/>
-            <div class="upload-progress" id="progHtmAlbumCover"></div>
-            <button class="zone-clear" onclick="clearHtmAlbumCover(event)" title="Entfernen">&times;</button>
-          </div>
-          <div class="s3-hint" id="hintHtmAlbumCover"></div>
-        </div>
-      </div>
-
       <!-- MODUS: Album-Dropdown -->
       <div id="htmAlbumPickField" style="display:none">
         <div class="htm-field">
@@ -994,6 +975,25 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
             <div id="htmSelectedAlbumCount" style="font-size:11px;color:rgba(133,172,201,.5)"></div>
           </div>
           <button onclick="htmClearAlbum()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">&times;</button>
+        </div>
+      </div>
+
+      <!-- Album-Cover (1:1, nur wenn Teaser != 1x1) -->
+      <div id="htmAlbumCoverField">
+        <div class="htm-field">
+          <span class="htm-label">1:1 Cover (Albumansicht)</span>
+          <div class="upload-zone" style="height:88px" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
+            <input id="htmAlbumCoverInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmAlbumCoverFile(this)"/>
+            <div class="upload-zone-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Cover hochladen</span>
+              <small>1:1 f&uuml;r Albumansicht</small>
+            </div>
+            <img class="zone-preview" id="prevHtmAlbumCover" alt=""/>
+            <div class="upload-progress" id="progHtmAlbumCover"></div>
+            <button class="zone-clear" onclick="clearHtmAlbumCover(event)" title="Entfernen">&times;</button>
+          </div>
+          <div class="s3-hint" id="hintHtmAlbumCover"></div>
         </div>
       </div>
 
@@ -3146,13 +3146,18 @@ function htmGoStep2(){
     const sel = document.getElementById('htmPlaylistSelect');
     if(sel && sel.options.length <= 1) htmPopulatePlaylists(cell ? cell.playlistSlug : '');
   } else {
-    htmPopulateAlbumDropdown();
-    // Restore saved album selection
-    if(htmSelectedAlbum && htmSelectedAlbum.slug){
-      const sel = document.getElementById('htmAlbumSelect');
-      if(sel) sel.value = htmSelectedAlbum.slug;
-      htmOnAlbumSelect();
-    }
+    // Cover-Feld initial verstecken im Album-Modus, bis Album gewählt wird
+    const acfAlb = document.getElementById('htmAlbumCoverField');
+    if(acfAlb && !htmSelectedAlbum) acfAlb.style.display = 'none';
+
+    htmPopulateAlbumDropdown().then(()=>{
+      // Restore saved album selection after dropdown is filled
+      if(htmSelectedAlbum && htmSelectedAlbum.slug){
+        const sel = document.getElementById('htmAlbumSelect');
+        if(sel) sel.value = htmSelectedAlbum.slug;
+        htmOnAlbumSelect(); // zeigt Cover-Feld + Preview
+      }
+    }).catch(()=>{});
   }
 }
 
@@ -3175,16 +3180,36 @@ function htmSetContentMode(mode, el){
   if(albumField) albumField.style.display = mode === 'album' ? '' : 'none';
 
   // Album-Modus: befülle Dropdown wenn noch nicht geschehen
-  if(mode === 'album') htmPopulateAlbumDropdown();
+  if(mode === 'album') htmPopulateAlbumDropdown().catch(()=>{});
 }
 
-function htmPopulateAlbumDropdown(){
+async function htmPopulateAlbumDropdown(){
   const sel = document.getElementById('htmAlbumSelect');
   if(!sel) return;
-  // Nur einmal befüllen (prüfen ob bereits Optionen > 1)
-  if(sel.options.length > 1) return;
 
-  const albums = typeof albumsData !== 'undefined' ? albumsData : [];
+  // Bereits befüllt?
+  if(sel.options.length > 1) {
+    if(htmSelectedAlbum && htmSelectedAlbum.slug) sel.value = htmSelectedAlbum.slug;
+    return;
+  }
+
+  // Falls albumsData noch leer (Alben-Tab noch nicht geöffnet): direkt laden
+  let albums = typeof albumsData !== 'undefined' ? albumsData : [];
+  if(albums.length === 0){
+    try{
+      const [plR, trR] = await Promise.all([
+        fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'), {headers:hdrs()}),
+        fetch(sbUrl('/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position'), {headers:hdrs()}),
+      ]);
+      const playlists = await plR.json();
+      const tracks    = await trR.json();
+      const byPl = {};
+      tracks.forEach(t=>{ (byPl[t.playlist_slug]||(byPl[t.playlist_slug]=[])).push(t); });
+      albums = playlists.map(pl=>({...pl, tracks: byPl[pl.slug]||[]}));
+      if(typeof albumsData !== 'undefined') albumsData = albums; // sync global
+    } catch(e){ console.warn('Album-Dropdown Ladefehler:', e); }
+  }
+
   albums.forEach(al=>{
     const opt = document.createElement('option');
     opt.value       = al.slug;
@@ -3192,7 +3217,6 @@ function htmPopulateAlbumDropdown(){
     sel.appendChild(opt);
   });
 
-  // Vorauswahl wenn bereits ein Album gespeichert ist
   if(htmSelectedAlbum && htmSelectedAlbum.slug){
     sel.value = htmSelectedAlbum.slug;
   }
@@ -3203,7 +3227,9 @@ function htmOnAlbumSelect(){
   const slug  = sel ? sel.value : '';
   if(!slug){ htmClearAlbum(); return; }
 
-  const al = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===slug);
+  // Try albumsData first; if not loaded yet search by slug in the dropdown text
+  let albums = typeof albumsData !== 'undefined' ? albumsData : [];
+  const al = albums.find(a=>a.slug===slug);
   if(!al){ htmClearAlbum(); return; }
 
   const coverUrl = al.cover_url || '';
@@ -3214,8 +3240,7 @@ function htmOnAlbumSelect(){
     tracks:   al.tracks || []
   };
 
-  // Album-Cover automatisch in die Upload-Zone eintragen (überschreibbar)
-  // Nur wenn noch kein manuell hochgeladenes Cover vorhanden ist
+  // Album-Cover automatisch vorbelegen (überschreibbar per Upload)
   if(coverUrl && !htmAlbumCoverFile){
     htmAlbumCoverUrl = coverUrl;
     htmSetAlbumCoverPreview(coverUrl);
@@ -3231,6 +3256,10 @@ function htmOnAlbumSelect(){
   if(coverImg)  coverImg.src = coverUrl;
   if(titleEl)   titleEl.textContent = al.title || al.slug;
   if(countEl)   countEl.textContent = (al.tracks||[]).length + ' Songs';
+
+  // Cover-Upload-Zone einblenden (mit aktuell gesetztem Cover als Vorschau)
+  const acf = document.getElementById('htmAlbumCoverField');
+  if(acf) acf.style.display = '';
 }
 
 function htmClearAlbum(){
