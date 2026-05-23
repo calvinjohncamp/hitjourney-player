@@ -144,6 +144,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.wide{grid-column:1/-1}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
+.home-card.panorama{grid-column:1/-1}
+.home-card.panorama img{aspect-ratio:4/1;object-fit:cover}
 .home-card.square img{aspect-ratio:1/1}
 /* v183: halbe Seite (1:2) und ganze Seite (1:4) Teaser */
 .home-card.half-l img,.home-card.half-r img{aspect-ratio:1/2}
@@ -2401,6 +2403,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     margin:0 auto;
   }
   .home-card.wide{grid-column:1/-1}
+  .home-card.panorama{grid-column:1/-1}
   /* Trio Desktop: Große Liebe · BD 2:1 · Poesie — gleiche Zeilenhöhe */
   .home-trio{
     gap:12px;
@@ -5526,12 +5529,15 @@ function renderHomeLayout(){
       return;
     }
 
-    // ── 4:1 volle Breite ──────────────────────────────────────────
+    // ── 4:1 volle Breite Panorama ─────────────────────────────────
     if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
       const cell = cells[0];
       if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, 'wide');
+      // lyrics21 und bestehende Kacheln (Tante Paula, Just This Dance, The Archive) behalten wide (2:1)
+      // Neue 4:1-Kacheln (teaserAspect='4x1') bekommen panorama
+      const cardClass = (cell.teaserAspect === '4x1' || cell.type === '4x1') ? 'panorama' : 'wide';
+      const el = buildHomeCard(cell, cardClass);
       grid.appendChild(el);
       return;
     }

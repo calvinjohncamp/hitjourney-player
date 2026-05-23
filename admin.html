@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v187 -->
+<!-- Version: admin-v20260523-v188 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -349,8 +349,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
-/* span-4 / Lyrics-Sheet 21: full width, immer 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
-.he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
+/* span-4: volle Breite, 4:1 Panorama (= Höhe einer Zeile mit 4 Albumcovern) */
+.he-cell.span-4{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* v183: halbe Seite 1:2, ganze Seite 1:4 */
@@ -2739,7 +2739,7 @@ function toggleTypeMenu(cellEl, rowId, cellIdx){
     {key:'full',     label:'1:4 · Ganze Seite (Hoch)'},
     {key:'2x1',      label:'2:1 · Quer (halbe Breite)'},
     {key:'trio',     label:'3er Block'},
-    {key:'4x1',      label:'4:1 · Volle Breite (2:1)'},
+    {key:'4x1',      label:'4:1 · Volle Breite Panorama'},
     {key:'slideshow',label:'◈ Diashow'},
   ];
 
