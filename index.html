@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v187-snapshot-exact-20260523 -->
+<!-- Version: v186-hardcode-restored-20260523 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -2673,6 +2673,51 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <div class="home-grid" id="homeGrid">
 <!-- dynamisch befüllt durch renderHomeLayout() -->
 </div>
+<!-- ══ EDITORIAL CARDS ══ -->
+<div class="ed-section" id="edSection">
+<div class="ed-row">
+<div class="ed-card" id="edCardKnw" onclick="showKursNordwest()">
+<img alt="Kurs Nordwest" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+<span>Kurs Nordwest</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label">Kurs<br/>Nordwest</div>
+</div>
+</div>
+<div class="ed-card" id="edCardSwf" onclick="showSongwritersFavorites()">
+<img alt="Songwriter's Favorites" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+<span>Favorites</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label ed-knw-label-swf"><span>SONG</span><span>WRITER'S</span><span>FAVORITES</span></div>
+</div>
+</div>
+<div class="ed-card" id="edCardStreams" onclick="window.open('https://soundcloud.com/joern-kaemper', '_blank', 'noopener');">
+<img alt="One Million Streams Ahead" class="ed-img-real" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg"/>
+<div class="ed-img-placeholder" style="display:none">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M5 18V9"></path><path d="M10 18V5"></path><path d="M15 18V12"></path><path d="M20 18V7"></path></svg>
+<span>Streams</span>
+</div>
+<div class="ed-body ed-body-knw">
+<div class="ed-knw-label">One Million<br/>Streams Ahead</div>
+</div>
+</div>
+</div>
+</div>
+<!-- German / English Split Teaser -->
+<div class="home-grid home-language-grid">
+  <div class="language-teaser" id="languageTeaser" aria-label="German and English Songs">
+    <img alt="German and English Songs" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg"/>
+    <button class="language-teaser-half left" type="button" onclick="showLanguage('de')" aria-label="German Songs"></button>
+    <button class="language-teaser-half right" type="button" onclick="showLanguage('en')" aria-label="English Songs"></button>
+    <div class="language-teaser-split" aria-hidden="true"></div>
+  </div>
+</div>
+
 <div class="home-grid home-final-grid">
 <div class="tp-teaser home-final-teaser" id="jtdTeaser" aria-label="Just This Dance von Lara Wolff abspielen oder pausieren">
 <img alt="Just This Dance · Lara Wolff" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just-this-dance-lara-wolff-cover-2-1.jpg"/>
