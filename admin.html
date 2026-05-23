@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v191 -->
+<!-- Version: admin-v20260523-v192 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2414,7 +2414,7 @@ function makeRow(){
 /* ── Load / Save Supabase ── */
 async function loadHomeLayout(){
   try {
-    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs()});
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc,id.asc'),{headers:hdrs()});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
     homeLayout = rows.map(row=>({

@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: index-v20260523-v186 -->
+<!-- Version: index-v20260523-v187 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -83,6 +83,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ══ HOME ══ */
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;padding-top:0}
+/* v187: Live-Home rendert jede Admin-Zeile als eigenen Zeilenblock.
+   Dadurch gilt strikt: Z1 Admin = Z1 Live, Z7 Admin = Z7 Live. */
+.home-live-row{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  width:100%;
+}
+.home-live-row > .home-card.wide,
+.home-live-row > .home-card.panorama,
+.home-live-row > .home-card.tall,
+.home-live-row > .home-half-row,
+.home-live-row > .home-trio,
+.home-live-row > .featured-teaser{grid-column:1/-1}
 
 
 /* ══ FULL-WIDTH HOME AUDIO TEASER ══ */
@@ -2402,6 +2417,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     max-width:1400px;
     margin:0 auto;
   }
+  .home-live-row{grid-template-columns:repeat(4,1fr);gap:12px}
   .home-card.wide{grid-column:1/-1}
   .home-card.panorama{grid-column:1/-1}
   /* Trio Desktop: Große Liebe · BD 2:1 · Poesie — gleiche Zeilenhöhe */
@@ -3813,7 +3829,7 @@ async function loadFromSupabase() {
 
   // 4. Home-Layout laden
   try {
-    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers });
+    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc,id.asc', { headers });
     if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
@@ -5492,7 +5508,13 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = window._homeLayoutRows || [];
+  // v187: Die Reihenfolge wird hier nochmals numerisch stabilisiert.
+  // Wichtig: Die Live-Seite darf niemals nach Typ/Format sortieren.
+  const rows = (window._homeLayoutRows || []).slice().sort((a,b)=>{
+    const ao = Number.isFinite(Number(a.row_order)) ? Number(a.row_order) : 999999;
+    const bo = Number.isFinite(Number(b.row_order)) ? Number(b.row_order) : 999999;
+    return ao - bo;
+  });
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -5519,101 +5541,101 @@ function renderHomeLayout(){
     const t0 = cells[0] && cells[0].type;
     if(!t0 || t0 === 'empty') return;
 
+    // v187: Jede Admin-Zeile wird zu genau einem Live-Zeilenblock.
+    // So kann CSS Grid keine späteren Kacheln in frühere Lücken zurückfüllen.
+    const rowWrap = document.createElement('div');
+    rowWrap.className = 'home-live-row';
+    if(row.id) rowWrap.dataset.rowId = row.id;
+    if(row.row_order !== undefined && row.row_order !== null) rowWrap.dataset.rowOrder = row.row_order;
+    const add = el => { if(el) rowWrap.appendChild(el); };
+
     // ── Slideshow ──────────────────────────────────────────────────
     if(t0 === 'slideshow'){
-      const cell = cells[0];
-      const el = buildSlideshowEl(cell);
-      grid.appendChild(el);
-      return;
+      add(buildSlideshowEl(cells[0]));
     }
 
     // ── 1:2 halbe Seite ─────────────────────────────────────────────────────────
-    if(t0 === 'span-half-l'){
+    else if(t0 === 'span-half-l'){
       const cellA = cells[0];
       const cellB = cells[1];
-      const imgA = cellA.imageUrl || cellA.teaserMotifUrl || cellA.customImageUrl;
+      const imgA = cellA && (cellA.imageUrl || cellA.teaserMotifUrl || cellA.customImageUrl);
       const imgB = cellB && (cellB.imageUrl || cellB.teaserMotifUrl || cellB.customImageUrl);
-      if(!imgA && !imgB) return;
-      const wrapper = document.createElement('div');
-      wrapper.className = 'home-half-row';
-      if(imgA && !isFinalJustThisDanceCell(cellA)) wrapper.appendChild(buildHomeCard(cellA, 'half-l'));
-      if(imgB && !isFinalJustThisDanceCell(cellB)) wrapper.appendChild(buildHomeCard(cellB, 'half-r'));
-      grid.appendChild(wrapper);
-      return;
+      if(imgA || imgB){
+        const wrapper = document.createElement('div');
+        wrapper.className = 'home-half-row';
+        if(imgA && !isFinalJustThisDanceCell(cellA)) wrapper.appendChild(buildHomeCard(cellA, 'half-l'));
+        if(imgB && !isFinalJustThisDanceCell(cellB)) wrapper.appendChild(buildHomeCard(cellB, 'half-r'));
+        add(wrapper);
+      }
     }
 
     // ── 1:4 ganze Seite ─────────────────────────────────────────────────────────
-    if(t0 === 'span-full'){
+    else if(t0 === 'span-full'){
       const cell = cells[0];
       const cellImg = cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl;
-      if(!cellImg || isFinalJustThisDanceCell(cell)) return;
-      const el = buildHomeCard(cell, 'tall');
-      el.style.gridColumn = '1/-1';
-      grid.appendChild(el);
-      return;
+      if(cellImg && !isFinalJustThisDanceCell(cell)){
+        const el = buildHomeCard(cell, 'tall');
+        el.style.gridColumn = '1/-1';
+        add(el);
+      }
     }
 
     // ── 4:1 volle Breite Panorama ─────────────────────────────────
-    if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
+    else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
       const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
       const cellImg = cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl;
-      if(!cellImg) return;
-      // lyrics21 und bestehende Kacheln (Tante Paula, Just This Dance, The Archive) behalten wide (2:1)
-      // Neue 4:1-Kacheln (teaserAspect='4x1') bekommen panorama
-      const cardClass = (cell.teaserAspect === '4x1' || cell.type === '4x1') ? 'panorama' : 'wide';
-      const el = buildHomeCard(cell, cardClass);
-      grid.appendChild(el);
-      return;
+      if(cellImg && !isFinalJustThisDanceCell(cell)){
+        // lyrics21 und bestehende Kacheln (Tante Paula, Just This Dance, The Archive) behalten wide (2:1)
+        // Neue 4:1-Kacheln (teaserAspect='4x1') bekommen panorama
+        const cardClass = (cell.teaserAspect === '4x1' || cell.type === '4x1') ? 'panorama' : 'wide';
+        add(buildHomeCard(cell, cardClass));
+      }
     }
 
     // ── 2:1 ───────────────────────────────────────────────────────
-    if(t0 === 'span-2' || t0 === '2x1'){
+    else if(t0 === 'span-2' || t0 === '2x1'){
       const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
       const cellImg = cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl;
-      if(!cellImg) return;
-      const el = buildHomeCard(cell, 'wide');
-      grid.appendChild(el);
-      return;
+      if(cellImg && !isFinalJustThisDanceCell(cell)) add(buildHomeCard(cell, 'wide'));
     }
 
     // ── 3er Trio ──────────────────────────────────────────────────
-    if(t0 === 'trio-a'){
+    else if(t0 === 'trio-a'){
       const cellA = cells[0]; // 1:1 top-left
       const cellB = cells[1]; // 2:1 bottom-left
       const cellC = cells[2]; // tall right
       const imgA = cellA && (cellA.imageUrl || cellA.teaserMotifUrl || cellA.customImageUrl);
       const imgB = cellB && (cellB.imageUrl || cellB.teaserMotifUrl || cellB.customImageUrl);
       const imgC = cellC && (cellC.imageUrl || cellC.teaserMotifUrl || cellC.customImageUrl);
-      if(!imgA && !imgB && !imgC) return;
-      const trio = document.createElement('div');
-      trio.className = 'home-trio wide';
-      // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
-      if(imgA && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(imgB && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(imgC && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
-      grid.appendChild(trio);
-      return;
+      if(imgA || imgB || imgC){
+        const trio = document.createElement('div');
+        trio.className = 'home-trio wide';
+        if(imgA && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+        if(imgB && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+        if(imgC && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+        add(trio);
+      }
     }
 
     // ── 1:1 (vier nebeneinander) ───────────────────────────────────
-    if(t0 === '1x1' || t0 === 'empty'){
+    else if(t0 === '1x1' || t0 === 'empty'){
       cells.forEach(cell => {
         const cellImg = cell && (cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl);
         if(!cellImg || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        const el = buildHomeCard(cell, 'square');
-        grid.appendChild(el);
+        add(buildHomeCard(cell, 'square'));
       });
-      return;
     }
 
     // ── default: alle nicht-hidden cells als 1:1 ───────────────────
-    cells.forEach(cell => {
-      const cellImg = cell && (cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl);
-      if(!cellImg || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-      grid.appendChild(buildHomeCard(cell, 'square'));
-    });
+    else {
+      cells.forEach(cell => {
+        const cellImg = cell && (cell.imageUrl || cell.teaserMotifUrl || cell.customImageUrl);
+        if(!cellImg || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+        add(buildHomeCard(cell, 'square'));
+      });
+    }
+
+    if(rowWrap.children.length) grid.appendChild(rowWrap);
   });
 
   wireHomeGrid(grid);
