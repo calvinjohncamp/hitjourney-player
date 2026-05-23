@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523b-import-banner -->
+<!-- Version: admin-v20260523c-timeout-hash-nav -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -1456,13 +1456,21 @@ async function uploadToS3(file, s3Key, progressElId){
 /* ── LOAD SONGS ── */
 async function loadSongs(){
   try{
-    const r = await fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'),{headers:hdrs()});
+    const ctrl = new AbortController();
+    const timeout = setTimeout(()=>ctrl.abort(), 10000); // 10s Timeout
+    const r = await fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'),{headers:hdrs(), signal:ctrl.signal});
+    clearTimeout(timeout);
+    if(!r.ok) throw new Error('HTTP '+r.status);
     allSongs = await r.json();
     populateArtistList();
     renderTable();
   } catch(e){
-    document.getElementById('songsBody').innerHTML =
-      `<tr><td colspan="6"><div class="state-msg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>Ladefehler: ${e.message}</div></td></tr>`;
+    const msg = e.name==='AbortError' ? 'Timeout — Supabase antwortet nicht' : 'Ladefehler: '+e.message;
+    const body = document.getElementById('songsBody');
+    if(body) body.innerHTML =
+      `<tr><td colspan="6"><div class="state-msg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>${msg}<br><small style="font-size:10px;opacity:.5">Andere Tabs (z.B. Home) sind weiterhin nutzbar</small></div></td></tr>`;
+    const meta = document.getElementById('songsMeta');
+    if(meta) meta.textContent = 'Fehler beim Laden';
   }
 }
 
@@ -4172,6 +4180,19 @@ function importCurrentHome(){
 
 
 /* ── INIT ── */
+// Tab-Navigation per URL-Hash: admin.html#home springt direkt zum Home-Tab
+(function(){
+  const hash = location.hash.replace('#','');
+  const validTabs = ['songs','hinzufuegen','alben','home'];
+  if(hash && validTabs.includes(hash)){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===hash));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const screen = document.getElementById('tab'+hash.charAt(0).toUpperCase()+hash.slice(1));
+    if(screen) screen.classList.add('active');
+    if(hash==='home') initHomeEditor();
+  }
+})();
+
 loadSongs();
 
 /* ══════════════════════════════════════════════════════════════════════════
