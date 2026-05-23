@@ -9042,18 +9042,32 @@ async function loadHomeLayout(){
 async function saveHomeLayout(){
   try {
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
-    await fetch(SB_URL+'/rest/v1/home_layout?id=neq.XXXXXXX'+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
+
+    // DELETE all existing rows
+    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=neq.XXXXXXX'+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
+    if(!delRes.ok){
+      const txt = await delRes.text();
+      throw new Error('DELETE ' + delRes.status + ': ' + txt.slice(0,200));
+    }
+
     if(payload.length>0){
       const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{
         method:'POST', headers:{...hdrs(),'Prefer':'return=minimal'}, body:JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error(await res.text());
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error('POST ' + res.status + ': ' + txt.slice(0,200));
+      }
     }
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
     toast('Home gespeichert ✓','ok');
-  } catch(e){ toast('Fehler: '+e.message,'err'); throw e; }
+  } catch(e){
+    toast('Speichern fehlgeschlagen: '+e.message,'err');
+    alert('Speichern fehlgeschlagen:\n\n' + e.message);
+    throw e;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
