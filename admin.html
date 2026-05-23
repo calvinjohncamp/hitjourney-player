@@ -3185,6 +3185,8 @@ async function saveTeaserOnly(){
   const rowObj = rowById(rowId);
   if(rowObj) rowObj.editing = false;
   renderHomeEditor();
+  // Auto-save: Teaser-Änderungen sofort in Supabase sichern (Position + Inhalt)
+  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 async function saveHomeTile(){
   if(!htmEditTarget) return;
@@ -3255,6 +3257,8 @@ async function saveHomeTile(){
   const rowObj2 = rowById(rowId);
   if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
+  // Auto-save: Aktions-Änderungen (Album-Cover, Slug, Aktion) sofort in Supabase sichern
+  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 
 /* v187: Aktion-UI je nach gewählter Aktion anzeigen */
