@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v188 -->
+<!-- Version: admin-v20260523-v189 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -3181,10 +3181,11 @@ async function saveTeaserOnly(){
   }
 
   closeHomeTileModal();
+  // Zeile aus Editing-Modus entlassen — leere Geschwisterzellen verschwinden
+  const rowObj = rowById(rowId);
+  if(rowObj) rowObj.editing = false;
   renderHomeEditor();
 }
-
-/* v187: Aktion-Phase speichern */
 async function saveHomeTile(){
   if(!htmEditTarget) return;
   const { rowId, cellIdx } = htmEditTarget;
@@ -3251,6 +3252,8 @@ async function saveHomeTile(){
   }
 
   closeHomeTileModal();
+  const rowObj2 = rowById(rowId);
+  if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
 }
 
@@ -3558,164 +3561,6 @@ function htmClearSong(){
   });
 }
 
-/* ── Save ── */
-async function saveHomeTile(){
-  if(!htmEditTarget) return;
-  const { rowId, cellIdx } = htmEditTarget;
-  const row  = rowById(rowId);
-  if(!row) return;
-  const cell = row.cells[cellIdx];
-
-  markHomeAction();
-
-  // Step 1 data
-  cell.teaserAspect = htmCurrentAspect || '1x1';
-  cell.teaserAction = htmCurrentAction || 'album';
-  cell.alt          = document.getElementById('htmAltText')?.value?.trim() || cell.alt || '';
-
-  // Upload Teaser-Motiv
-  let teaserUrl = htmMotifUrl || '';
-  if(htmMotifFile){
-    try{
-      toast('Teaser-Motiv wird hochgeladen …','ok');
-      teaserUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
-    }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
-  }
-  cell.teaserMotifUrl = teaserUrl;
-
-  if(htmCurrentAction === 'link'){
-    cell.fn          = 'link';
-    cell.url         = document.getElementById('htmLinkUrl')?.value?.trim() || '';
-    cell.slug        = '';
-    cell.lyricsCycle = false;
-    if(teaserUrl){
-      cell.imageUrl       = teaserUrl;
-      cell.customImageUrl = teaserUrl;
-      cell.teaserMotifUrl = teaserUrl;
-    }
-    cell.albumCoverUrl  = '';
-
-  } else {
-    // album or play: Einzelsong oder Album-Modus
-
-    // Upload Album-Cover (1:1) falls vorhanden
-    let albumCoverFinal = htmAlbumCoverUrl || '';
-    if(htmAlbumCoverFile){
-      try{
-        toast('Cover wird hochgeladen …','ok');
-        albumCoverFinal = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
-      }catch(e){ toast('Upload Fehler Cover: '+e.message,'err'); return; }
-    }
-
-    cell.fn          = 'play';
-    cell.url         = '';
-    cell.contentMode = htmContentMode || 'song';
-
-    if(htmContentMode === 'album'){
-      // ── Album-Modus ──
-      if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
-
-      cell.albumSlug    = htmSelectedAlbum.slug;
-      cell.playlistSlug = htmSelectedAlbum.slug;
-      cell.slug         = htmSelectedAlbum.slug;
-      cell.artist       = '';
-      cell.lyricsCycle  = false;
-      cell.cover21Url   = '';
-      cell.useCover21   = false;
-      cell.alt = document.getElementById('htmAltText')?.value?.trim() || htmSelectedAlbum.title || '';
-
-      // albumCoverUrl = NUR für die Albumansicht (linkes 1:1-Cover)
-      cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
-
-      // imageUrl = Teaser-Motiv (Startseite) — nur überschreiben wenn ein neuer Upload vorliegt
-      // Wenn kein neuer Teaser hochgeladen: bestehenden imageUrl-Wert ERHALTEN
-      if(teaserUrl){
-        cell.imageUrl       = teaserUrl;
-        cell.customImageUrl = teaserUrl;
-        cell.teaserMotifUrl = teaserUrl;
-      }
-      // teaserMotifUrl niemals mit albumCoverUrl überschreiben
-
-    } else {
-      // ── Einzelsong-Modus ──
-      if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
-
-      cell.albumSlug    = '';
-      cell.slug         = htmSelectedSong.slug;
-      cell.playlistSlug = htmSelectedSong.playlistSlug || '';
-      cell.cover21Url   = htmSelectedSong.cover21Url;
-      cell.useCover21   = false;
-      cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
-      cell.artist       = htmSelectedSong.artist;
-      if(!cell.alt && htmSelectedSong.title) cell.alt = htmSelectedSong.title;
-
-      // albumCoverUrl = NUR für die Albumansicht (1:1), nicht der Teaser
-      // Bei 1:1-Teaser: kein separates Album-Cover nötig → Song-Cover wird direkt genutzt
-      cell.albumCoverUrl = albumCoverFinal || htmSelectedSong.coverUrl || '';
-
-      // imageUrl = Teaser (Startseite)
-      if(htmCurrentAspect === '1x1'){
-        // 1:1: Teaser-Motiv = Album-Cover, ABER nur wenn noch kein eigener Teaser gesetzt ist.
-        // Beim Bearbeiten einer bestehenden Kachel (teaserMotifUrl vorhanden) bleibt der
-        // vorhandene Teaser erhalten — albumCoverUrl darf ihn NIE überschreiben.
-        if(teaserUrl){
-          // Neuer Teaser-Upload hat Vorrang
-          cell.imageUrl       = teaserUrl;
-          cell.customImageUrl = teaserUrl;
-          cell.teaserMotifUrl = teaserUrl;
-        } else if(!cell.teaserMotifUrl && !cell.imageUrl){
-          // Erstanlage ohne eigenes Motiv: Song-Cover als Fallback verwenden
-          cell.imageUrl       = cell.albumCoverUrl;
-          cell.customImageUrl = cell.albumCoverUrl;
-          cell.teaserMotifUrl = cell.albumCoverUrl;
-        }
-        // Sonst: bestehenden imageUrl / teaserMotifUrl ERHALTEN (kein Überschreiben!)
-      } else {
-        // Separates Teaser-Motiv: nur überschreiben wenn neuer Upload
-        if(teaserUrl){
-          cell.imageUrl       = teaserUrl;
-          cell.customImageUrl = teaserUrl;
-          cell.teaserMotifUrl = teaserUrl;
-        }
-        // Kein neuer Upload → bestehenden imageUrl ERHALTEN
-      }
-    }
-
-  }  // end saveHomeTile
-
-  closeHomeTileModal();
-
-  // ── Zell-Typ & Layout anhand des gewählten Aspekts setzen ──
-  // Dies MUSS nach dem Befüllen der cell-Properties passieren.
-  const _aspectToType = {
-    '1x1':  '1x1',
-    '2x1':  'span-2',
-    '4x1':  'span-4',
-    'half': 'span-half-l',
-    'full': 'span-full',
-  };
-  const newCellType = _aspectToType[cell.teaserAspect] || '1x1';
-  cell.type = newCellType;
-  cell.teaserAspect = cell.teaserAspect || '1x1';
-
-  // Geschwisterzellen entsprechend ausblenden / freigeben
-  if(newCellType === 'span-4' || newCellType === 'span-full'){
-    // Volle Breite: alle anderen Zellen der Zeile verstecken
-    for(let i = 1; i < row.cells.length; i++) row.cells[i].type = 'hidden';
-  } else if(newCellType === 'span-half-l'){
-    // Halbe Breite links: rechte Hälfte als Platzhalter
-    if(row.cells[1]) row.cells[1].type = 'span-half-r';
-    for(let i = 2; i < row.cells.length; i++) row.cells[i].type = 'hidden';
-  } else if(newCellType === 'span-2'){
-    // 2:1 quer: linke zwei Spalten belegt, rechte zwei bleiben wie sie sind
-    for(let i = 1; i < row.cells.length; i++){
-      if(row.cells[i].type === 'hidden' || !row.cells[i].type) row.cells[i].type = 'empty';
-    }
-  }
-  // 1x1: keine Geschwister-Änderung nötig
-
-  renderHomeEditor();
-}
 
 function hjSetVal(id, value){ const el=document.getElementById(id); if(el) el.value=value; return el; }
 function hjSetChecked(id, value){ const el=document.getElementById(id); if(el) el.checked=!!value; return el; }
