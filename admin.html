@@ -9043,20 +9043,20 @@ async function saveHomeLayout(){
   try {
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
 
-    // DELETE all existing rows
-    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=neq.XXXXXXX'+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
+    // DELETE alle vorhandenen Zeilen — row_order >= 0 trifft immer zu
+    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?row_order=gte.0'+'&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
     if(!delRes.ok){
       const txt = await delRes.text();
-      throw new Error('DELETE ' + delRes.status + ': ' + txt.slice(0,200));
+      throw new Error('DELETE ' + delRes.status + ': ' + txt.slice(0,300));
     }
 
-    if(payload.length>0){
-      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{
+    if(payload.length > 0){
+      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
         method:'POST', headers:{...hdrs(),'Prefer':'return=minimal'}, body:JSON.stringify(payload)
       });
       if(!res.ok){
         const txt = await res.text();
-        throw new Error('POST ' + res.status + ': ' + txt.slice(0,200));
+        throw new Error('POST ' + res.status + ': ' + txt.slice(0,300));
       }
     }
     homeLayoutBase = cloneHomeLayout(homeLayout);
@@ -10605,8 +10605,8 @@ function importCurrentHome(){
     // Z3: Diashow In The Spotlight
     row([
       makeCell({ type:'slideshow', fn:'play', slug:'spotlight', alt:'IN THE SPOTLIGHT',
-        imageUrl:'', bgUrl:'',
-        overlayPos:'bottom-left', startColor:'#0A0A0A', showSongTitle:false, showSongNumber:false, showProgressDots:true,
+        imageUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`, bgUrl:'',
+        overlayPos:'bottom-left', startColor:'#0A0A0A', showSongTitle:false, showSongNumber:false, showProgressDots:true, coverFitSquare:false, coverFitMode:'cover',
         slides:[
           { slug:'neues-licht',            title:'Neues Licht',               artist:'Jörn Kämper', cover:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`, coverUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg`,                            focusUrl:`${S3}/artwork/Neues%20Licht%20-%20Fokus.jpg` },
           { slug:'half-past-nine',          title:'Half Past Nine On Main St', artist:'Jörn Kämper', cover:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg`, coverUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg`,  focusUrl:`${S3}/artwork/Half%20Past%20Nine%20On%20Main%20Street%20-%20Fokus.jpg` },
@@ -10646,8 +10646,8 @@ function importCurrentHome(){
     // Z7: Diashow Deutsche Songs
     row([
       makeCell({ type:'slideshow', fn:'play', slug:'', alt:'',
-        imageUrl:'', bgUrl:'',
-        overlayPos:'bottom-left', startColor:'#0A0A0A', showSongTitle:false, showSongNumber:false, showProgressDots:true,
+        imageUrl:`${S3}/artwork/Herbstlaub%20-%20Cover.jpg`, bgUrl:'',
+        overlayPos:'bottom-left', startColor:'#0A0A0A', showSongTitle:false, showSongNumber:false, showProgressDots:true, coverFitSquare:false, coverFitMode:'cover',
         slides:[
           { slug:'herbstlaub',                 title:'Herbstlaub',                 artist:'Jörn Kämper', cover:`${S3}/artwork/Herbstlaub%20-%20Cover.jpg`, coverUrl:`${S3}/artwork/Herbstlaub%20-%20Cover.jpg`,                    focusUrl:`${S3}/artwork/Herbstlaub%20-%20Cover.jpg` },
           { slug:'an-der-haltestelle',          title:'An der Haltestelle',         artist:'Jörn Kämper', cover:`${S3}/artwork/An%20der%20Haltestelle%20-%20Cover.jpg`, coverUrl:`${S3}/artwork/An%20der%20Haltestelle%20-%20Cover.jpg`,        focusUrl:`${S3}/artwork/An%20der%20Haltestelle%20-%20Cover.jpg` },
