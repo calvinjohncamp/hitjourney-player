@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v186 -->
+<!-- Version: admin-v20260523-v187 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -885,15 +885,18 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
-<!-- ══ HOME TILE MODAL (v183) ══ -->
+<!-- ══ HOME TILE MODAL (v187) ══ -->
+<!-- Modus A: Teaser (Format + Motiv + Alt-Text) -->
+<!-- Modus B: Aktion (Song / Album / Link) — erst nach Klick auf befüllte Kachel -->
 <div id="homeTileModal">
   <div class="htm-inner">
-    <div class="htm-title" id="htmTitle">Kachel bearbeiten</div>
+    <div class="htm-title" id="htmTitle">Teaser-Motiv</div>
 
-    <!-- SCHRITT 1: Teaser-Motiv -->
-    <div id="htmStep1">
+    <!-- ── MODUS A: Teaser ── -->
+    <div id="htmPanelTeaser">
+
       <div class="htm-field">
-        <span class="htm-label">Teaser-Motiv Format</span>
+        <span class="htm-label">Format</span>
         <div class="htm-seg" id="htmAspectSeg">
           <div class="htm-seg-btn active" data-aspect="1x1" onclick="htmSetAspect('1x1',this)">1:1</div>
           <div class="htm-seg-btn" data-aspect="2x1" onclick="htmSetAspect('2x1',this)">2:1</div>
@@ -904,13 +907,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
 
       <div class="htm-field">
-        <span class="htm-label">Teaser-Motiv (Bild für Home-Ansicht)</span>
+        <span class="htm-label">Teaser-Motiv</span>
         <div class="upload-zone" id="zHtmMotif" style="height:100px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmMotifDrop(event)">
           <input id="htmMotifFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmMotifFile(this)"/>
           <div class="upload-zone-icon">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span>Teaser-Motiv hochladen</span>
-            <small>PNG/JPG/WebP</small>
+            <span>Bild hochladen</span>
+            <small>PNG / JPG / WebP</small>
           </div>
           <img class="zone-preview" id="prevHtmMotif" alt=""/>
           <div class="upload-progress" id="progHtmMotif"></div>
@@ -920,11 +923,34 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
 
       <div class="htm-field">
+        <span class="htm-label">Beschriftung</span>
+        <input class="htm-input" id="htmAltText" placeholder="z. B. Buried Diamonds"/>
+      </div>
+
+      <div class="htm-actions">
+        <button class="htm-cancel" onclick="closeHomeTileModal()">Abbrechen</button>
+        <button class="htm-save" id="htmSaveTeaserBtn" onclick="saveTeaserOnly()">&#10003; Teaser &uuml;bernehmen</button>
+      </div>
+    </div>
+
+    <!-- ── MODUS B: Aktion ── -->
+    <div id="htmPanelAction" style="display:none">
+
+      <!-- Mini-Vorschau des Teasers (read-only) -->
+      <div id="htmActionTeaserThumb" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.12);border-radius:9px;margin-bottom:14px">
+        <img id="htmActionThumbImg" src="" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0"/>
+        <div style="min-width:0">
+          <div style="font-size:11px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="htmActionThumbLabel"></div>
+          <div style="font-size:10px;color:rgba(133,172,201,.4);margin-top:2px">Teaser — wird nicht ver&auml;ndert</div>
+        </div>
+      </div>
+
+      <div class="htm-field">
         <span class="htm-label">Klick-Aktion</span>
         <div class="htm-seg" id="htmActionSeg">
-          <div class="htm-seg-btn active" data-action="album" onclick="htmSetAction('album',this)">Album öffnen</div>
-          <div class="htm-seg-btn" data-action="play" onclick="htmSetAction('play',this)">&#9654; Song abspielen</div>
-          <div class="htm-seg-btn" data-action="link" onclick="htmSetAction('link',this)">Link</div>
+          <div class="htm-seg-btn active" data-action="album" onclick="htmSetAction('album',this)">&#128191; Album</div>
+          <div class="htm-seg-btn" data-action="play" onclick="htmSetAction('play',this)">&#9654; Song</div>
+          <div class="htm-seg-btn" data-action="link" onclick="htmSetAction('link',this)">&#128279; Link</div>
         </div>
       </div>
 
@@ -933,42 +959,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <input class="htm-input" id="htmLinkUrl" placeholder="https://&hellip;"/>
       </div>
 
-      <div class="htm-field">
-        <span class="htm-label">Beschriftung / Alt-Text</span>
-        <input class="htm-input" id="htmAltText" placeholder="z. B. Buried Diamonds"/>
-      </div>
-
-      <div class="htm-actions">
-        <button class="htm-cancel" onclick="closeHomeTileModal()">Abbrechen</button>
-        <button class="htm-save" onclick="htmGoStep2()">&rarr; Weiter</button>
-      </div>
-    </div>
-
-    <!-- SCHRITT 2: Inhalt / Cover (v184) -->
-    <div id="htmStep2" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <button onclick="htmGoStep1()" style="background:rgba(133,172,201,.1);border:1px solid rgba(133,172,201,.2);border-radius:7px;color:#85ACC9;font-size:12px;font-weight:700;padding:5px 10px;cursor:pointer">&larr; Zur&uuml;ck</button>
-        <span class="htm-label" style="margin:0;font-size:11px" id="htmStep2Label">Schritt 2: Inhalt</span>
-      </div>
-
-      <!-- Modus: Einzelsong oder Album -->
-      <div class="htm-field" id="htmContentModeField">
-        <span class="htm-label">Inhaltstyp</span>
-        <div class="htm-seg" id="htmContentModeSeg">
-          <div class="htm-seg-btn active" data-mode="song" onclick="htmSetContentMode('song',this)">&#9834; Einzelsong</div>
-          <div class="htm-seg-btn" data-mode="album" onclick="htmSetContentMode('album',this)">&#128191; Album</div>
-        </div>
-      </div>
-
-      <!-- MODUS: Album-Dropdown -->
+      <!-- Album-Picker -->
       <div id="htmAlbumPickField" style="display:none">
         <div class="htm-field">
-          <span class="htm-label">Album aus der App w&auml;hlen</span>
+          <span class="htm-label">Album</span>
           <select class="htm-input" id="htmAlbumSelect" onchange="htmOnAlbumSelect()">
             <option value="">&#8212; Album w&auml;hlen &#8212;</option>
           </select>
         </div>
-        <!-- Gew&auml;hltes Album Preview -->
         <div id="htmSelectedAlbum" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(50,180,100,.07);border:1px solid rgba(50,180,100,.2);border-radius:9px;margin-bottom:12px">
           <img id="htmSelectedAlbumCover" src="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#0a1a27;flex-shrink:0"/>
           <div style="min-width:0;flex:1">
@@ -977,37 +975,34 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           </div>
           <button onclick="htmClearAlbum()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">&times;</button>
         </div>
-      </div>
-
-      <!-- Album-Cover (1:1, nur wenn Teaser != 1x1) -->
-      <div id="htmAlbumCoverField">
-        <div class="htm-field">
-          <span class="htm-label">1:1 Cover (Albumansicht)</span>
-          <div class="upload-zone" style="width:96px;height:96px;margin:0 auto;flex-shrink:0" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
-            <input id="htmAlbumCoverInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmAlbumCoverFile(this)"/>
-            <div class="upload-zone-icon">
-              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Cover hochladen</span>
-              <small>1:1 f&uuml;r Albumansicht</small>
+        <div id="htmAlbumCoverField" style="display:none">
+          <div class="htm-field">
+            <span class="htm-label">Album-Cover &uuml;berschreiben <span style="font-weight:400;opacity:.6">(optional — ersetzt nur Albumansicht, nie den Teaser)</span></span>
+            <div class="upload-zone" style="width:88px;height:88px;margin:0" id="zHtmAlbumCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onHtmAlbumCoverDrop(event)">
+              <input id="htmAlbumCoverInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp" onchange="onHtmAlbumCoverFile(this)"/>
+              <div class="upload-zone-icon">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span style="font-size:8px">Ersetzen</span>
+              </div>
+              <img class="zone-preview" id="prevHtmAlbumCover" alt=""/>
+              <div class="upload-progress" id="progHtmAlbumCover"></div>
+              <button class="zone-clear" onclick="clearHtmAlbumCover(event)" title="Entfernen">&times;</button>
             </div>
-            <img class="zone-preview" id="prevHtmAlbumCover" alt=""/>
-            <div class="upload-progress" id="progHtmAlbumCover"></div>
-            <button class="zone-clear" onclick="clearHtmAlbumCover(event)" title="Entfernen">&times;</button>
+            <div class="s3-hint" id="hintHtmAlbumCover"></div>
           </div>
-          <div class="s3-hint" id="hintHtmAlbumCover"></div>
         </div>
       </div>
 
-      <!-- MODUS: Einzelsong — Playlist + Song-Liste -->
-      <div id="htmPlayField">
+      <!-- Song-Picker -->
+      <div id="htmPlayField" style="display:none">
         <div class="htm-field">
-          <span class="htm-label">Playlist w&auml;hlen</span>
+          <span class="htm-label">Playlist</span>
           <select class="htm-input" id="htmPlaylistSelect" onchange="htmLoadPlaylistSongs()">
             <option value="">&#8212; Playlist w&auml;hlen &#8212;</option>
           </select>
         </div>
         <div class="htm-field">
-          <span class="htm-label">Song aus Playlist w&auml;hlen</span>
+          <span class="htm-label">Song</span>
           <div id="htmSongList" style="max-height:200px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F">
             <div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Zuerst eine Playlist w&auml;hlen</div>
           </div>
@@ -1022,14 +1017,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div>
         <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:rgba(133,172,201,.06);border:1px solid rgba(133,172,201,.14);border-radius:9px;margin-bottom:12px;cursor:pointer;user-select:none">
           <input type="checkbox" id="htmLyricsCycle" style="accent-color:#85ACC9;width:14px;height:14px"/>
-          <span style="font-size:12px;color:#cfe5f5;font-weight:600">Lyrics-Klickfolge aktivieren</span>
-          <span style="font-size:10px;color:rgba(133,172,201,.45);margin-left:auto">Play &rarr; Lyrics &rarr; Schlie&szlig;en &rarr; Pause</span>
+          <span style="font-size:12px;color:#cfe5f5;font-weight:600">Lyrics-Klickfolge</span>
+          <span style="font-size:10px;color:rgba(133,172,201,.45);margin-left:auto">Play &rarr; Lyrics &rarr; Pause</span>
         </label>
       </div>
 
       <div class="htm-actions">
         <button class="htm-cancel" onclick="closeHomeTileModal()">Abbrechen</button>
-        <button class="htm-save" onclick="saveHomeTile()">&Uuml;bernehmen</button>
+        <button class="htm-save" onclick="saveHomeTile()">&#10003; &Uuml;bernehmen</button>
       </div>
     </div>
 
@@ -2667,7 +2662,8 @@ function buildCell(row, cellIdx, extraClass, editing){
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'teaser')" title="Teaser bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openHomeTileModal('${row.id}',${cellIdx},'action')" title="Klick-Aktion" style="background:rgba(50,180,100,.2);color:#6fda9a">▶</button>
           ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
       el.appendChild(ov);
@@ -2897,16 +2893,19 @@ function finishRow(id){
   if(row){ row.editing = false; renderHomeEditor(); }
 }
 
-/* ── Cell edit: route to tile modal or slideshow modal ── */
+/* ── Cell edit: route to Teaser-Phase oder Aktion-Phase ── */
 function openCellEdit(rowId, cellIdx){
   const row  = rowById(rowId);
   if(!row) return;
   const cell = row.cells[cellIdx];
   if(cell.type === 'slideshow'){
     openSlideshowModal(rowId);
-  } else {
-    openHomeTileModal(rowId, cellIdx);
+    return;
   }
+  // Kachel bereits befüllt (hat Teaser-Motiv) → Phase B: Aktion definieren
+  // Kachel noch leer (isTypedEmpty, neuer Teaser) → Phase A: Teaser-Motiv hochladen
+  const hasTeaserMotif = !!(cell.imageUrl || cell.teaserMotifUrl);
+  openHomeTileModal(rowId, cellIdx, hasTeaserMotif ? 'action' : 'teaser');
 }
 
 function clearCell(rowId, cellIdx){
@@ -2930,12 +2929,17 @@ function initHomeEditor(){
   });
 }
 
-/* ══ TILE MODAL ════════════════════════════════════════════════════════════ */
+/* ══ TILE MODAL (v187) ════════════════════════════════════════════════════
+   Zwei-Phasen-Prozess:
+   Phase A (Teaser): Format + Bild + Beschriftung → speichert & schließt Modal
+   Phase B (Aktion): Song / Album / Link → öffnet sich erst beim Klick auf befüllte Kachel
+══════════════════════════════════════════════════════════════════════════ */
 
 let htmEditTarget  = null;  // { rowId, cellIdx }
-let htmSelectedSong = null; // { slug, title, artist, coverUrl, cover21Url }
+let htmModalMode   = 'teaser'; // 'teaser' | 'action'
+let htmSelectedSong = null;
 let htmMotifFile = null;
-let htmMotifUrl  = ''; // bereits hochgeladenes Custom-Motiv für diese Home-Kachel
+let htmMotifUrl  = '';
 
 /* Virtual playlists for language filter */
 const VIRTUAL_PLAYLISTS = [
@@ -3002,99 +3006,112 @@ function clearHtmMotif(e){
   updateHtmMotifHint();
 }
 
-function openHomeTileModal(rowId, cellIdx){
+function openHomeTileModal(rowId, cellIdx, mode){
+  // mode='teaser': Phase A — Teaser-Motiv + Format + Beschriftung definieren
+  // mode='action': Phase B — Klick-Aktion (Song / Album / Link) definieren
   htmEditTarget   = { rowId, cellIdx };
-  htmSelectedSong = null;
+  htmModalMode    = mode || 'teaser';
   htmMotifFile    = null;
-  htmMotifUrl     = '';
   htmAlbumCoverFile = null;
-  htmAlbumCoverUrl  = '';
 
   const row  = rowById(rowId);
   const cell = row && row.cells[cellIdx];
 
-  // v183: Always start at step 1
-  const s1 = document.getElementById('htmStep1');
-  const s2 = document.getElementById('htmStep2');
-  if(s1) s1.style.display = '';
-  if(s2) s2.style.display = 'none';
+  const panelTeaser = document.getElementById('htmPanelTeaser');
+  const panelAction = document.getElementById('htmPanelAction');
 
-  // Restore teaser motif — ONLY teaserMotifUrl, never albumCoverUrl
-  // Guard: if teaserMotifUrl was accidentally set to albumCoverUrl (old bug), treat as empty
-  const _tm = (cell && cell.teaserMotifUrl) || '';
-  const _ac = (cell && cell.albumCoverUrl) || '';
-  htmMotifUrl = (_tm && _tm !== _ac) ? _tm : '';
-  htmSetMotifPreview(htmMotifUrl);
-  updateHtmMotifHint();
+  if(htmModalMode === 'teaser'){
+    // ── Phase A: Teaser ──
+    document.getElementById('htmTitle').textContent = 'Teaser-Motiv';
+    if(panelTeaser) panelTeaser.style.display = '';
+    if(panelAction) panelAction.style.display = 'none';
 
-  // Restore teaser aspect — map cell.type → aspect key
-  // span-4/4x1 → '4x1', span-half-l → 'half', span-full → 'full',
-  // span-2/2x1 → '2x1', else → saved teaserAspect or '1x1'
-  const _typeToAspect = {
-    'span-4': '4x1', '4x1': '4x1',
-    'span-half-l': 'half',
-    'span-full': 'full',
-    'span-2': '2x1', '2x1': '2x1',
-  };
-  htmCurrentAspect = _typeToAspect[cell && cell.type] || (cell && cell.teaserAspect) || '1x1';
-  document.querySelectorAll('#htmAspectSeg .htm-seg-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.aspect === htmCurrentAspect);
-  });
+    // Vorhandenes Motiv wiederherstellen (nie albumCoverUrl als Teaser verwenden)
+    const _tm = (cell && cell.teaserMotifUrl) || '';
+    const _ac = (cell && cell.albumCoverUrl)  || '';
+    htmMotifUrl = (_tm && _tm !== _ac) ? _tm : '';
+    htmSetMotifPreview(htmMotifUrl);
+    updateHtmMotifHint();
 
-  // Restore action
-  htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : 'album');
-  document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.action === htmCurrentAction);
-  });
-  const lf = document.getElementById('htmActionLinkField');
-  if(lf) lf.style.display = htmCurrentAction === 'link' ? '' : 'none';
+    // Format (Aspect)
+    const _typeToAspect = {
+      'span-4':'4x1','4x1':'4x1','span-half-l':'half','span-full':'full','span-2':'2x1','2x1':'2x1',
+    };
+    htmCurrentAspect = _typeToAspect[cell && cell.type] || (cell && cell.teaserAspect) || '1x1';
+    document.querySelectorAll('#htmAspectSeg .htm-seg-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.aspect === htmCurrentAspect);
+    });
 
-  // Restore link URL
-  const luEl = document.getElementById('htmLinkUrl');
-  if(luEl) luEl.value = cell ? (cell.url||'') : '';
+    // Beschriftung
+    const altEl = document.getElementById('htmAltText');
+    if(altEl) altEl.value = (cell && cell.alt) || '';
 
-  // Restore alt text
-  const altEl = document.getElementById('htmAltText');
-  if(altEl) altEl.value = cell ? (cell.alt||'') : '';
+  } else {
+    // ── Phase B: Aktion ──
+    document.getElementById('htmTitle').textContent = 'Klick-Aktion';
+    if(panelTeaser) panelTeaser.style.display = 'none';
+    if(panelAction) panelAction.style.display = '';
 
-  // Restore album cover
-  htmAlbumCoverUrl = (cell && cell.albumCoverUrl) || '';
-  htmSetAlbumCoverPreview(htmAlbumCoverUrl);
-  updateHtmAlbumCoverHint();
+    // Mini-Vorschau des Teasers (read-only)
+    const thumb = document.getElementById('htmActionTeaserThumb');
+    const thumbImg = document.getElementById('htmActionThumbImg');
+    const thumbLabel = document.getElementById('htmActionThumbLabel');
+    const teaserImg = (cell && cell.teaserMotifUrl) || (cell && cell.imageUrl) || '';
+    if(teaserImg && thumb){
+      thumb.style.display = 'flex';
+      if(thumbImg) thumbImg.src = teaserImg;
+      if(thumbLabel) thumbLabel.textContent = (cell && cell.alt) || '';
+    } else if(thumb){
+      thumb.style.display = 'none';
+    }
 
-  // Restore content mode
-  htmContentMode   = (cell && cell.contentMode) || 'song';
-  htmSelectedAlbum = null;
+    // Klick-Aktion wiederherstellen
+    htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : 'album');
+    document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.action === htmCurrentAction);
+    });
+    htmApplyActionUI(htmCurrentAction, cell);
 
-  // Restore saved album if contentMode=album
-  if(htmContentMode === 'album' && cell && cell.albumSlug){
-    const savedAl = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===cell.albumSlug);
-    if(savedAl){
-      htmSelectedAlbum = {
-        slug:     savedAl.slug,
-        title:    savedAl.title || savedAl.slug,
-        coverUrl: savedAl.cover_url || '',
-        tracks:   savedAl.tracks || []
-      };
+    // Album-Cover
+    htmAlbumCoverUrl = (cell && cell.albumCoverUrl) || '';
+    htmSetAlbumCoverPreview(htmAlbumCoverUrl);
+    updateHtmAlbumCoverHint();
+
+    // Content-Modus
+    htmContentMode   = (cell && cell.contentMode) || 'album';
+    htmSelectedAlbum = null;
+    htmSelectedSong  = null;
+
+    if(htmCurrentAction !== 'link'){
+      if(htmContentMode === 'album' && cell && cell.albumSlug){
+        const savedAl = (typeof albumsData !== 'undefined' ? albumsData : []).find(a=>a.slug===cell.albumSlug);
+        if(savedAl) htmSelectedAlbum = { slug:savedAl.slug, title:savedAl.title||savedAl.slug, coverUrl:savedAl.cover_url||'', tracks:savedAl.tracks||[] };
+      }
+      if(htmContentMode === 'song' && cell && cell.slug){
+        htmSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.albumCoverUrl||cell.imageUrl||'', cover21Url:cell.cover21Url||'', playlistSlug:cell.playlistSlug||'' };
+      }
+    }
+
+    const cyc = document.getElementById('htmLyricsCycle');
+    if(cyc) cyc.checked = !!(cell && cell.lyricsCycle);
+
+    if(htmCurrentAction === 'link'){
+      const luEl = document.getElementById('htmLinkUrl');
+      if(luEl) luEl.value = (cell && cell.url) || '';
+    } else if(htmContentMode === 'song'){
+      const sel = document.getElementById('htmPlaylistSelect');
+      if(sel && sel.options.length <= 1) htmPopulatePlaylists(cell ? cell.playlistSlug : '');
+      htmRenderSelectedSong();
+    } else {
+      htmPopulateAlbumDropdown().then(()=>{
+        if(htmSelectedAlbum && htmSelectedAlbum.slug){
+          const sel = document.getElementById('htmAlbumSelect');
+          if(sel) sel.value = htmSelectedAlbum.slug;
+          htmOnAlbumSelect();
+        }
+      }).catch(()=>{});
     }
   }
-
-  // Restore previously saved song if any (mode=song)
-  if(cell && cell.slug && cell.imageUrl && htmContentMode === 'song'){
-    htmSelectedSong = {
-      slug:       cell.slug,
-      title:      cell.alt  || cell.slug,
-      artist:     cell.artist || '',
-      coverUrl:   cell.albumCoverUrl || cell.imageUrl,
-      cover21Url: cell.cover21Url || cell.imageUrl,
-      playlistSlug: cell.playlistSlug || ''
-    };
-  }
-
-  const cyc = document.getElementById('htmLyricsCycle');
-  if(cyc) cyc.checked = !!(cell && cell.lyricsCycle);
-
-  htmRenderSelectedSong();
 
   document.getElementById('homeTileModal').classList.add('open');
 }
@@ -3104,33 +3121,156 @@ function closeHomeTileModal(){
   htmEditTarget     = null;
   htmSelectedSong   = null;
   htmSelectedAlbum  = null;
-  htmContentMode    = 'song';
+  htmContentMode    = 'album';
   htmMotifFile      = null;
   htmMotifUrl       = '';
   htmAlbumCoverFile = null;
   htmAlbumCoverUrl  = '';
-  // Reset album dropdown so it gets re-populated fresh next time
   const sel = document.getElementById('htmAlbumSelect');
-  if(sel){ sel.innerHTML = '<option value="">&#8212; Album wählen &#8212;</option>'; }
+  if(sel) sel.innerHTML = '<option value="">&#8212; Album wählen &#8212;</option>';
 }
 
-function htmSetFn(fn, el){
-  // Legacy - kept for compat. New modal uses htmSetAction.
-  if(el){
-    document.querySelectorAll('#homeTileModal .htm-seg-btn').forEach(b=>b.classList.remove('active'));
-    el.classList.add('active');
+/* v187: Teaser-Phase speichern — schließt Modal, Kachel erscheint in der Preview */
+async function saveTeaserOnly(){
+  if(!htmEditTarget) return;
+  const { rowId, cellIdx } = htmEditTarget;
+  const row  = rowById(rowId);
+  if(!row) return;
+  const cell = row.cells[cellIdx];
+
+  markHomeAction();
+
+  cell.alt         = document.getElementById('htmAltText')?.value?.trim() || '';
+  cell.teaserAspect = htmCurrentAspect || '1x1';
+
+  // Upload Motiv wenn neu gewählt
+  let teaserUrl = htmMotifUrl || '';
+  if(htmMotifFile){
+    const btn = document.getElementById('htmSaveTeaserBtn');
+    if(btn){ btn.disabled=true; btn.textContent='Lädt hoch …'; }
+    try{
+      toast('Teaser-Motiv wird hochgeladen …','ok');
+      teaserUrl = await uploadToS3(htmMotifFile, htmMotifS3Key(htmMotifFile), 'progHtmMotif');
+    }catch(e){
+      toast('Upload Fehler: '+e.message,'err');
+      if(btn){ btn.disabled=false; btn.textContent='✓ Teaser übernehmen'; }
+      return;
+    }
   }
-  const pf = document.getElementById('htmPlayField');
-  const lf = document.getElementById('htmActionLinkField');
-  if(pf) pf.style.display = (fn==='play'||fn==='album') ? '' : 'none';
-  if(lf) lf.style.display = fn==='link' ? '' : 'none';
+
+  if(teaserUrl){
+    cell.imageUrl       = teaserUrl;
+    cell.teaserMotifUrl = teaserUrl;
+    cell.customImageUrl = teaserUrl;
+  }
+
+  // Zell-Typ und Layout anhand Format setzen
+  const _aspectToType = { '1x1':'1x1','2x1':'span-2','4x1':'span-4','half':'span-half-l','full':'span-full' };
+  const newType = _aspectToType[htmCurrentAspect] || '1x1';
+  cell.type = newType;
+
+  if(newType === 'span-4' || newType === 'span-full'){
+    for(let i=1;i<row.cells.length;i++) row.cells[i].type='hidden';
+  } else if(newType === 'span-half-l'){
+    if(row.cells[1]) row.cells[1].type='span-half-r';
+    for(let i=2;i<row.cells.length;i++) row.cells[i].type='hidden';
+  } else if(newType === 'span-2'){
+    for(let i=1;i<row.cells.length;i++){
+      if(row.cells[i].type==='hidden'||!row.cells[i].type) row.cells[i].type='empty';
+    }
+  }
+
+  closeHomeTileModal();
+  renderHomeEditor();
 }
 
-/* v183: Teaser Modal Step logic */
+/* v187: Aktion-Phase speichern */
+async function saveHomeTile(){
+  if(!htmEditTarget) return;
+  const { rowId, cellIdx } = htmEditTarget;
+  const row  = rowById(rowId);
+  if(!row) return;
+  const cell = row.cells[cellIdx];
+
+  markHomeAction();
+
+  cell.teaserAction = htmCurrentAction || 'album';
+
+  // Upload Album-Cover falls neu gewählt
+  let albumCoverFinal = htmAlbumCoverUrl || '';
+  if(htmAlbumCoverFile){
+    try{
+      toast('Cover wird hochgeladen …','ok');
+      albumCoverFinal = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
+    }catch(e){ toast('Upload Fehler Cover: '+e.message,'err'); return; }
+  }
+
+  if(htmCurrentAction === 'link'){
+    cell.fn  = 'link';
+    cell.url = document.getElementById('htmLinkUrl')?.value?.trim() || '';
+    cell.slug = ''; cell.lyricsCycle = false; cell.albumCoverUrl = '';
+
+  } else if(htmContentMode === 'album'){
+    if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
+    cell.fn           = 'play';
+    cell.url          = '';
+    cell.contentMode  = 'album';
+    cell.albumSlug    = htmSelectedAlbum.slug;
+    cell.playlistSlug = htmSelectedAlbum.slug;
+    cell.slug         = htmSelectedAlbum.slug;
+    cell.artist       = '';
+    cell.lyricsCycle  = false;
+    cell.cover21Url   = '';
+    cell.useCover21   = false;
+    if(!cell.alt) cell.alt = htmSelectedAlbum.title || '';
+    cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
+    // Teaser-Motiv bleibt unberührt — imageUrl / teaserMotifUrl werden hier NICHT angefasst
+
+  } else {
+    // Einzelsong
+    if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
+    cell.fn           = 'play';
+    cell.url          = '';
+    cell.contentMode  = 'song';
+    cell.albumSlug    = '';
+    cell.slug         = htmSelectedSong.slug;
+    cell.playlistSlug = htmSelectedSong.playlistSlug || '';
+    cell.cover21Url   = htmSelectedSong.cover21Url || '';
+    cell.useCover21   = false;
+    cell.lyricsCycle  = !!document.getElementById('htmLyricsCycle')?.checked;
+    cell.artist       = htmSelectedSong.artist || '';
+    if(!cell.alt && htmSelectedSong.title) cell.alt = htmSelectedSong.title;
+    cell.albumCoverUrl = albumCoverFinal || htmSelectedSong.coverUrl || '';
+    // Teaser-Motiv bleibt unberührt — imageUrl / teaserMotifUrl werden hier NICHT angefasst
+    // Ausnahme: 1:1 ohne eigenes Teaser-Motiv → Song-Cover als Fallback
+    if(!cell.teaserMotifUrl && !cell.imageUrl){
+      cell.imageUrl       = cell.albumCoverUrl;
+      cell.teaserMotifUrl = cell.albumCoverUrl;
+      cell.customImageUrl = cell.albumCoverUrl;
+    }
+  }
+
+  closeHomeTileModal();
+  renderHomeEditor();
+}
+
+/* v187: Aktion-UI je nach gewählter Aktion anzeigen */
+function htmApplyActionUI(action, cell){
+  const lf = document.getElementById('htmActionLinkField');
+  const af = document.getElementById('htmAlbumPickField');
+  const pf = document.getElementById('htmPlayField');
+  if(lf) lf.style.display = action==='link'  ? '' : 'none';
+  if(af) af.style.display = action==='album' ? '' : 'none';
+  if(pf) pf.style.display = action==='play'  ? '' : 'none';
+}
+
+/* ── State vars ── */
 let htmCurrentAspect = '1x1';
 let htmCurrentAction = 'album';
 let htmAlbumCoverFile = null;
 let htmAlbumCoverUrl  = '';
+let htmContentMode   = 'album';
+let htmSelectedAlbum = null;
 
 function htmSetAspect(aspect, el){
   htmCurrentAspect = aspect;
@@ -3142,93 +3282,18 @@ function htmSetAction(action, el){
   htmCurrentAction = action;
   document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
-  const lf = document.getElementById('htmActionLinkField');
-  if(lf) lf.style.display = action==='link' ? '' : 'none';
-  const pf = document.getElementById('htmPlayField');
-  if(pf) pf.style.display = (action==='link') ? 'none' : '';
-}
-
-function htmGoStep2(){
-  document.getElementById('htmStep1').style.display = 'none';
-  document.getElementById('htmStep2').style.display = '';
-
-  const isLink = htmCurrentAction === 'link';
-
-  // Album-Cover-Upload: nur wenn Teaser != 1x1 und keine Link-Aktion
-  const needAlbumCover = htmCurrentAspect !== '1x1' && !isLink;
-  const acf = document.getElementById('htmAlbumCoverField');
-  if(acf) acf.style.display = needAlbumCover ? '' : 'none';
-
-  // Content-Modus-Umschalter: nur sichtbar wenn action != link
-  const cmf = document.getElementById('htmContentModeField');
-  if(cmf) cmf.style.display = isLink ? 'none' : '';
-
-  const lbl = document.getElementById('htmStep2Label');
-  if(lbl) lbl.textContent = isLink ? 'Schritt 2: Link' : 'Schritt 2: Inhalt';
-
-  // Link-Aktion: weder Song noch Album nötig
-  if(isLink){
-    const pf = document.getElementById('htmPlayField');
-    const af = document.getElementById('htmAlbumPickField');
-    if(pf) pf.style.display = 'none';
-    if(af) af.style.display = 'none';
-    return;
-  }
-
-  // Restore content mode from saved cell
-  const target = htmEditTarget && rowById(htmEditTarget.rowId);
-  const cell = target && target.cells && target.cells[htmEditTarget.cellIdx];
-  const savedMode = (cell && cell.contentMode) || 'song';
-  htmContentMode = savedMode;
-  document.querySelectorAll('#htmContentModeSeg .htm-seg-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.mode === savedMode);
-  });
-
-  const pf = document.getElementById('htmPlayField');
-  const af = document.getElementById('htmAlbumPickField');
-  if(pf) pf.style.display = savedMode === 'song' ? '' : 'none';
-  if(af) af.style.display = savedMode === 'album' ? '' : 'none';
-
-  if(savedMode === 'song'){
-    // Populate playlists if not done
+  htmApplyActionUI(action, null);
+  // Bei Album-Modus: Dropdown befüllen
+  if(action === 'album') htmPopulateAlbumDropdown().catch(()=>{});
+  else if(action === 'play'){
     const sel = document.getElementById('htmPlaylistSelect');
-    if(sel && sel.options.length <= 1) htmPopulatePlaylists(cell ? cell.playlistSlug : '');
-  } else {
-    // Cover-Feld initial verstecken im Album-Modus, bis Album gewählt wird
-    const acfAlb = document.getElementById('htmAlbumCoverField');
-    if(acfAlb && !htmSelectedAlbum) acfAlb.style.display = 'none';
-
-    htmPopulateAlbumDropdown().then(()=>{
-      // Restore saved album selection after dropdown is filled
-      if(htmSelectedAlbum && htmSelectedAlbum.slug){
-        const sel = document.getElementById('htmAlbumSelect');
-        if(sel) sel.value = htmSelectedAlbum.slug;
-        htmOnAlbumSelect(); // zeigt Cover-Feld + Preview
-      }
-    }).catch(()=>{});
+    if(sel && sel.options.length <= 1) htmPopulatePlaylists('');
   }
 }
-
-function htmGoStep1(){
-  document.getElementById('htmStep1').style.display = '';
-  document.getElementById('htmStep2').style.display = 'none';
-}
-/* ── v184: Content-Mode (Einzelsong vs. Album) ── */
-let htmContentMode   = 'song';   // 'song' | 'album'
-let htmSelectedAlbum = null;     // { slug, title, coverUrl, tracks:[] }
 
 function htmSetContentMode(mode, el){
+  // Legacy-Kompatibilität — wird im neuen Modal nicht mehr direkt aufgerufen
   htmContentMode = mode;
-  document.querySelectorAll('#htmContentModeSeg .htm-seg-btn').forEach(b=>b.classList.remove('active'));
-  if(el) el.classList.add('active');
-
-  const playField  = document.getElementById('htmPlayField');
-  const albumField = document.getElementById('htmAlbumPickField');
-  if(playField)  playField.style.display  = mode === 'song'  ? '' : 'none';
-  if(albumField) albumField.style.display = mode === 'album' ? '' : 'none';
-
-  // Album-Modus: befülle Dropdown wenn noch nicht geschehen
-  if(mode === 'album') htmPopulateAlbumDropdown().catch(()=>{});
 }
 
 async function htmPopulateAlbumDropdown(){
