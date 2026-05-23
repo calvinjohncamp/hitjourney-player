@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v189 -->
+<!-- Version: admin-v20260523-v190 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2447,30 +2447,22 @@ async function loadHomeLayout(){
 
 async function saveHomeLayout(){
   try {
-    // v183 fix: UPSERT statt DELETE+INSERT – verhindert Race-Condition beim Neuanlegen.
+    // v190: Reihenfolge hart synchronisieren.
+    // Kein teilweises UPSERT mehr: Bei neu eingefügten Zeilen konnte row_order auf der Live-Seite
+    // gegen alte Werte laufen. Deshalb wird die Home-Struktur in genau der Editor-Reihenfolge
+    // neu geschrieben.
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
-    const currentIds = new Set(payload.map(r=>r.id));
 
-    // 1. Bestehende IDs aus Supabase holen
-    const existRes = await fetch(sbUrl('/rest/v1/home_layout?select=id'), {headers:hdrs()});
-    let toDelete = [];
-    if(existRes.ok){
-      const existing = await existRes.json();
-      toDelete = existing.map(r=>r.id).filter(id=>!currentIds.has(id));
-    }
+    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?id=not.is.null&apikey='+SB_KEY, {
+      method:'DELETE',
+      headers:hdrsMin()
+    });
+    if(!delRes.ok) throw new Error(await delRes.text());
 
-    // 2. Veraltete Zeilen löschen
-    if(toDelete.length > 0){
-      const inList = '('+toDelete.map(id=>'"'+id+'"').join(',')+')'
-      await fetch(SB_URL+'/rest/v1/home_layout?id=in.'+inList+'&apikey='+SB_KEY,
-        {method:'DELETE', headers:hdrsMin()});
-    }
-
-    // 3. Aktuelle Zeilen via UPSERT schreiben (row_order korrekt)
     if(payload.length > 0){
       const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
         method:'POST',
-        headers:{...hdrs(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
+        headers:{...hdrs(), 'Prefer':'return=minimal'},
         body: JSON.stringify(payload)
       });
       if(!res.ok) throw new Error(await res.text());
@@ -3185,8 +3177,6 @@ async function saveTeaserOnly(){
   const rowObj = rowById(rowId);
   if(rowObj) rowObj.editing = false;
   renderHomeEditor();
-  // Auto-save: Teaser-Änderungen sofort in Supabase sichern (Position + Inhalt)
-  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 async function saveHomeTile(){
   if(!htmEditTarget) return;
@@ -3257,8 +3247,6 @@ async function saveHomeTile(){
   const rowObj2 = rowById(rowId);
   if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
-  // Auto-save: Aktions-Änderungen (Album-Cover, Slug, Aktion) sofort in Supabase sichern
-  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
 }
 
 /* v187: Aktion-UI je nach gewählter Aktion anzeigen */
@@ -3360,8 +3348,10 @@ function htmOnAlbumSelect(){
     tracks:   al.tracks || []
   };
 
-  // Album-Cover automatisch vorbelegen (überschreibbar per Upload)
-  if(coverUrl && !htmAlbumCoverFile){
+  // Album-Cover automatisch vorbelegen (überschreibbar per Upload).
+  // v190: Ein bereits gespeichertes, manuell hochgeladenes Albumcover beim erneuten Öffnen
+  // NICHT durch das Standard-Cover des Albums überschreiben.
+  if(coverUrl && !htmAlbumCoverFile && !htmAlbumCoverUrl){
     htmAlbumCoverUrl = coverUrl;
     htmSetAlbumCoverPreview(coverUrl);
     updateHtmAlbumCoverHint();
