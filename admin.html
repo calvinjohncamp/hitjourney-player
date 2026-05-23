@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v190-home-wysiwyg-albumcover -->
+<!-- Version: admin-v20260523-v191 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2617,6 +2617,20 @@ function buildCells(row, grid){
   }
 }
 
+
+function homeCellActionLabel(cell){
+  if(!cell) return {cls:'badge-play', txt:'▶ Play'};
+  if(cell.type === 'slideshow') return {cls:'badge-slide', txt:'◈ Diashow'};
+  const action = cell.teaserAction || (cell.fn === 'link' ? 'link' : (cell.contentMode === 'album' || cell.albumSlug ? 'album' : 'play'));
+  if(action === 'album' || cell.contentMode === 'album' || cell.albumSlug) return {cls:'badge-slide', txt:'💿 Album'};
+  if(action === 'link' || cell.fn === 'link'){
+    const u = String(cell.url || '');
+    if(u.startsWith('#')) return {cls:'badge-link', txt:'↪ Unterseite'};
+    return {cls:'badge-link', txt:'🔗 Link'};
+  }
+  return {cls:'badge-play', txt:'▶ Play'};
+}
+
 /* ── Single cell ── */
 function buildCell(row, cellIdx, extraClass, editing){
   const cell = row.cells[cellIdx];
@@ -2657,8 +2671,9 @@ function buildCell(row, cellIdx, extraClass, editing){
     {
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
-      const badgeCls = isSlide ? 'badge-slide' : cell.fn==='play' ? 'badge-play' : 'badge-link';
-      const badgeTxt = isSlide ? '◈ Diashow' : cell.fn==='play' ? '▶ Play' : '🔗 Link';
+      const _badge = homeCellActionLabel(cell);
+      const badgeCls = _badge.cls;
+      const badgeTxt = _badge.txt;
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
@@ -3066,7 +3081,7 @@ function openHomeTileModal(rowId, cellIdx, mode){
     }
 
     // Klick-Aktion wiederherstellen
-    htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : (cell && cell.contentMode === 'song' ? 'play' : 'album')); // v190
+    htmCurrentAction = (cell && cell.teaserAction) || (cell && cell.fn === 'link' ? 'link' : ((cell && (cell.contentMode === 'song' || (cell.slug && !cell.albumSlug))) ? 'play' : 'album'));
     document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.action === htmCurrentAction);
     });
@@ -3185,30 +3200,8 @@ async function saveTeaserOnly(){
   const rowObj = rowById(rowId);
   if(rowObj) rowObj.editing = false;
   renderHomeEditor();
-  // Auto-save: Teaser-Änderungen sofort in Supabase sichern (Position + Inhalt)
-  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
+  toast('Teaser-Motiv übernommen ✓ — bitte Home speichern', 'ok');
 }
-
-async function persistAlbumCoverIfNeeded(albumSlug, coverUrl){
-  if(!albumSlug || !coverUrl) return;
-  try{
-    const res = await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+encodeURIComponent(albumSlug)+'&apikey='+SB_KEY, {
-      method:'PATCH',
-      headers:{...hdrs(), 'Prefer':'return=minimal'},
-      body: JSON.stringify({ cover_url: coverUrl })
-    });
-    if(!res.ok) throw new Error(await res.text());
-    if(typeof albumsData !== 'undefined'){
-      const al = albumsData.find(a=>a.slug===albumSlug);
-      if(al) al.cover_url = coverUrl;
-    }
-    toast('Albumcover dauerhaft gespeichert ✓','ok');
-  }catch(e){
-    toast('Albumcover konnte nicht dauerhaft am Album gespeichert werden: '+e.message,'err');
-    throw e;
-  }
-}
-
 async function saveHomeTile(){
   if(!htmEditTarget) return;
   const { rowId, cellIdx } = htmEditTarget;
@@ -3222,21 +3215,11 @@ async function saveHomeTile(){
 
   // Upload Album-Cover falls neu gewählt
   let albumCoverFinal = htmAlbumCoverUrl || '';
-  const hadNewAlbumCover = !!htmAlbumCoverFile;
-  const saveBtn = document.getElementById('htmSaveActionBtn');
   if(htmAlbumCoverFile){
     try{
-      if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Cover lädt hoch …'; }
-      toast('Albumcover wird hochgeladen …','ok');
+      toast('Cover wird hochgeladen …','ok');
       albumCoverFinal = await uploadToS3(htmAlbumCoverFile, htmAlbumCoverS3Key(htmAlbumCoverFile), 'progHtmAlbumCover');
-      htmAlbumCoverUrl = albumCoverFinal;
-      htmSetAlbumCoverPreview(albumCoverFinal);
-      updateHtmAlbumCoverHint();
-      toast('Albumcover hochgeladen ✓','ok');
-    }catch(e){
-      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = '✓ Aktion speichern'; }
-      toast('Upload Fehler Cover: '+e.message,'err'); return;
-    }
+    }catch(e){ toast('Upload Fehler Cover: '+e.message,'err'); return; }
   }
 
   if(htmCurrentAction === 'link'){
@@ -3244,8 +3227,7 @@ async function saveHomeTile(){
     cell.url = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     cell.slug = ''; cell.lyricsCycle = false; cell.albumCoverUrl = '';
 
-  } else if(htmCurrentAction === 'album'){
-    htmContentMode = 'album';
+  } else if(htmContentMode === 'album'){
     if(!htmSelectedAlbum){ toast('Bitte ein Album auswählen','err'); return; }
     cell.fn           = 'play';
     cell.url          = '';
@@ -3259,15 +3241,9 @@ async function saveHomeTile(){
     cell.useCover21   = false;
     if(!cell.alt) cell.alt = htmSelectedAlbum.title || '';
     cell.albumCoverUrl = albumCoverFinal || htmSelectedAlbum.coverUrl || '';
-    // v190: neues Albumcover wirklich am Album/Playlist-Datensatz speichern.
-    // Damit ist es nicht nur an diese Home-Kachel gebunden, sondern künftig das Albumcover.
-    if(albumCoverFinal && (hadNewAlbumCover || albumCoverFinal !== (htmSelectedAlbum.coverUrl||''))){
-      await persistAlbumCoverIfNeeded(htmSelectedAlbum.slug, albumCoverFinal);
-    }
     // Teaser-Motiv bleibt unberührt — imageUrl / teaserMotifUrl werden hier NICHT angefasst
 
-  } else if(htmCurrentAction === 'play'){
-    htmContentMode = 'song';
+  } else {
     // Einzelsong
     if(!htmSelectedSong){ toast('Bitte einen Song auswählen','err'); return; }
     cell.fn           = 'play';
@@ -3295,8 +3271,11 @@ async function saveHomeTile(){
   const rowObj2 = rowById(rowId);
   if(rowObj2) rowObj2.editing = false;
   renderHomeEditor();
-  // Auto-save: Aktions-Änderungen (Album-Cover, Slug, Aktion) sofort in Supabase sichern
-  try { await saveHomeLayout(); } catch(e){ toast('Auto-Save Fehler: '+e.message,'err'); }
+  if(albumCoverFinal){
+    toast('Albumcover gespeichert und mit Album verknüpft ✓ — bitte Home speichern', 'ok');
+  } else {
+    toast('Klick-Aktion übernommen ✓ — bitte Home speichern', 'ok');
+  }
 }
 
 /* v187: Aktion-UI je nach gewählter Aktion anzeigen */
@@ -3325,17 +3304,10 @@ function htmSetAspect(aspect, el){
 
 function htmSetAction(action, el){
   htmCurrentAction = action;
-  // v190: Aktion und Content-Modus strikt koppeln.
-  // Vorher konnte "Song" gewählt sein, während htmContentMode noch "album" blieb.
-  // Das führte dazu, dass die falsche Speicherlogik ausgeführt wurde.
-  if(action === 'album') htmContentMode = 'album';
-  else if(action === 'play') htmContentMode = 'song';
-  else if(action === 'link') htmContentMode = 'link';
-
   document.querySelectorAll('#htmActionSeg .htm-seg-btn').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
   htmApplyActionUI(action, null);
-
+  // Bei Album-Modus: Dropdown befüllen
   if(action === 'album') htmPopulateAlbumDropdown().catch(()=>{});
   else if(action === 'play'){
     const sel = document.getElementById('htmPlaylistSelect');
