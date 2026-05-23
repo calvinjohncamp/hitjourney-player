@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v185 -->
+<!-- Version: admin-v20260523-v186 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2594,10 +2594,11 @@ function buildCells(row, grid){
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
     grid.appendChild(buildCell(row, 0, 'span-2', editing));
-    // In editing mode show remaining cells (they may be filled); in view mode hide empty ones
+    // In editing mode show remaining cells (they may be filled); in view mode hide truly empty ones
     for(let i=1;i<4;i++){
       const cell = c[i];
-      if(editing || (cell.imageUrl || cell.bgUrl)){
+      const typedEmpty = cell.type && cell.type !== 'empty' && cell.type !== 'hidden' && !(cell.imageUrl || cell.bgUrl);
+      if(editing || cell.imageUrl || cell.bgUrl || typedEmpty){
         grid.appendChild(buildCell(row,i,'',editing));
       }
     }
@@ -2610,11 +2611,12 @@ function buildCells(row, grid){
     grid.appendChild(buildCell(row, 2, 'trio-c', editing)); // po
 
   } else {
-    // Default: 1:1 cells — in view mode skip empty ones
+    // Default: 1:1 cells — in view mode skip truly empty ones, but show typed-empty ones
     for(let i=0;i<4;i++){
       const cell = c[i];
       if(cell.type === 'hidden') continue;
-      if(!editing && !(cell.imageUrl || cell.bgUrl)) continue;
+      const typedEmpty = cell.type && cell.type !== 'empty' && cell.type !== 'hidden' && !(cell.imageUrl || cell.bgUrl);
+      if(!editing && !(cell.imageUrl || cell.bgUrl) && !typedEmpty) continue;
       grid.appendChild(buildCell(row,i,'',editing));
     }
   }
@@ -2630,6 +2632,9 @@ function buildCell(row, cellIdx, extraClass, editing){
 
   const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0);
   const isSlide  = cell.type === 'slideshow';
+  // v185: Kachel mit gesetztem Typ aber noch ohne Inhalt (nach Typ-Wahl, vor Befüllung).
+  // Wird auch außerhalb des Editing-Modus als klickbarer leerer Teaser angezeigt.
+  const isTypedEmpty = !isFilled && !isSlide && cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
 
   if(isFilled || isSlide){
     // Filled — always show image
@@ -2673,6 +2678,31 @@ function buildCell(row, cellIdx, extraClass, editing){
       lbl2.textContent = '◈ ' + (cell.alt||'Diashow') + ' · ' + (cell.slides?cell.slides.length:0) + ' Songs';
       el.appendChild(lbl2);
     }
+  } else if(isTypedEmpty){
+    // v185: Typ gesetzt, aber noch kein Motiv hochgeladen.
+    // Zeige eine klickbare leere Kachel als Vorschau — auch ohne Editing-Modus.
+    const typeLabels = {
+      '1x1':'1:1', 'span-2':'2:1', '2x1':'2:1', 'span-4':'4:1 voll', '4x1':'4:1 voll',
+      'span-half-l':'1:2 halb', 'span-half-r':'1:2 halb', 'span-full':'1:4 ganz',
+      'trio-a':'Trio (L)', 'trio-b':'Trio (M)', 'trio-c':'Trio (R)',
+    };
+    const typeLabel = typeLabels[cell.type] || cell.type;
+    const emp = document.createElement('div');
+    emp.className = 'he-cell-empty';
+    emp.style.cssText = 'cursor:pointer';
+    emp.innerHTML = `
+      <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:rgba(133,172,201,.35);stroke-width:1.5;fill:none;margin-bottom:3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <div class="he-cell-hint" style="color:rgba(133,172,201,.55);font-size:7.5px">${typeLabel}</div>
+      <div class="he-cell-hint" style="color:rgba(133,172,201,.35);font-size:6.5px;margin-top:1px">Klicken → Motiv &amp; Aktion</div>`;
+    el.appendChild(emp);
+    // Kleines X zum Löschen (Typ zurücksetzen) — immer sichtbar
+    const rm = document.createElement('button');
+    rm.className = 'he-cell-act rem';
+    rm.style.cssText = 'position:absolute;top:5px;right:5px;opacity:.6;z-index:5';
+    rm.title = 'Typ zurücksetzen';
+    rm.textContent = '×';
+    rm.onclick = (e)=>{ e.stopPropagation(); clearCell(row.id, cellIdx); };
+    el.appendChild(rm);
   } else if(editing){
     // Empty cell — only show "+" in editing mode
     const emp = document.createElement('div');
@@ -2681,10 +2711,14 @@ function buildCell(row, cellIdx, extraClass, editing){
     el.appendChild(emp);
   }
 
-  // v169: Gefüllte Zellen/Diashows öffnen den Editor immer direkt.
-  // Leere Zellen brauchen weiterhin den Zeilen-Bearbeitungsmodus, damit die Home-Ansicht ruhig bleibt.
+  // Klick-Routing:
+  // – Befüllte/Diashow: immer Tile-Editor öffnen
+  // – Typ gesetzt, leer (isTypedEmpty): immer Tile-Modal öffnen (Step 1 → Motiv hochladen)
+  // – Typ nicht gesetzt, editing: Typ-Menü zeigen
+  // – Typ nicht gesetzt, kein editing: nichts tun
   el.onclick = ()=>{
     if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
+    if(isTypedEmpty){ openCellEdit(row.id, cellIdx); return; }
     if(!editing) return;
     toggleTypeMenu(el, row.id, cellIdx);
   };
@@ -2807,11 +2841,11 @@ function applyType(rowId, cellIdx, type){
 
   renderHomeEditor();
 
+  // Slideshow öffnet sofort den Diashow-Editor (eigenes Modal).
+  // Alle anderen Typen: kein Auto-Open — der Teaser erscheint als leere Kachel in der Vorschau.
+  // Der Nutzer klickt dann selbst auf die Kachel, um das Tile-Modal zu öffnen.
   if(type === 'slideshow'){
     setTimeout(()=>openSlideshowModal(rowId), 80);
-  } else {
-    const targetIdx = (type === '1x1') ? cellIdx : 0;
-    setTimeout(()=>openCellEdit(rowId, targetIdx), 80);
   }
 }
 
