@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523-v184d -->
+<!-- Version: admin-v20260523-v184e -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -2917,11 +2917,14 @@ function htmMotifExt(file){
   return '.jpg';
 }
 function htmMotifS3Key(file){
-  const row = htmEditTarget && rowById(htmEditTarget.rowId);
+  // Teaser-Motiv: eindeutiger Key, nie mit Album-Cover verwechseln
+  const row  = htmEditTarget && rowById(htmEditTarget.rowId);
   const cell = row && row.cells && row.cells[htmEditTarget.cellIdx];
-  const base = (htmSelectedSong && htmSelectedSong.slug) || (cell && cell.slug) || ('home-motiv-'+Date.now());
-  const kind = (cell && (cell.type === 'lyrics21' || cell.useCover21)) ? 'lyrics21' : 'home-tile';
-  return `artwork/${makeSlug(base)||base}-${kind}${htmMotifExt(file)}`;
+  const base = (cell && cell.alt && makeSlug(cell.alt))
+             || (htmSelectedSong && htmSelectedSong.slug)
+             || (cell && cell.slug)
+             || ('home-teaser-'+Date.now());
+  return `artwork/${makeSlug(base)||base}-teaser${htmMotifExt(file)}`;
 }
 function htmSetMotifPreview(url){
   const zone=document.getElementById('zHtmMotif');
@@ -2981,8 +2984,8 @@ function openHomeTileModal(rowId, cellIdx){
   if(s1) s1.style.display = '';
   if(s2) s2.style.display = 'none';
 
-  // Restore teaser motif
-  htmMotifUrl = (cell && (cell.teaserMotifUrl || cell.customImageUrl || cell.customMotifUrl)) || '';
+  // Restore teaser motif — ONLY teaserMotifUrl, never albumCoverUrl/customImageUrl
+  htmMotifUrl = (cell && cell.teaserMotifUrl) || '';
   htmSetMotifPreview(htmMotifUrl);
   updateHtmMotifHint();
 
@@ -3273,8 +3276,11 @@ function htmClearAlbum(){
 function htmAlbumCoverS3Key(file){
   const name = (file&&file.name||'').toLowerCase();
   const ext = name.endsWith('.png') ? '.png' : name.endsWith('.webp') ? '.webp' : '.jpg';
-  const base = (htmSelectedSong && htmSelectedSong.slug) || ('album-cover-'+Date.now());
-  return 'artwork/'+( makeSlug(base)||base )+'-cover'+ext;
+  // Use album slug (album mode) or song slug (song mode), never teaser slug
+  const base = (htmSelectedAlbum && htmSelectedAlbum.slug)
+             || (htmSelectedSong  && htmSelectedSong.slug)
+             || ('album-cover-'+Date.now());
+  return 'artwork/'+( makeSlug(base)||base )+'-albumcover'+ext;
 }
 function htmSetAlbumCoverPreview(url){
   const zone = document.getElementById('zHtmAlbumCover');
