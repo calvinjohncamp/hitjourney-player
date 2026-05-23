@@ -7,7 +7,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="#06141F" name="theme-color"/>
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523c-timeout-hash-nav -->
+<!-- Version: admin-v20260523d-lazy-songs -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&display=swap" rel="stylesheet"/>
@@ -1320,6 +1320,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab'+tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)).classList.add('active');
+    if(tab.dataset.tab==='songs' && !songsLoaded){ songsLoaded=true; loadSongs(); }
     if(tab.dataset.tab==='playlists') loadPlaylists();
     if(tab.dataset.tab==='home') initHomeEditor();
   });
@@ -4193,7 +4194,7 @@ function importCurrentHome(){
   }
 })();
 
-loadSongs();
+let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
 
 /* ══════════════════════════════════════════════════════════════════════════
    SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)
