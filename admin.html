@@ -9401,14 +9401,23 @@ function moveCellInRow(rowId, cellIdx, dir){
   const newPos = pos + dir;
   if(newPos < 0 || newPos >= visible.length) return;
   markHomeAction();
-  // Swap the two cells
   const targetIdx = visible[newPos];
-  const tmp = {...row.cells[cellIdx]};
-  // Swap content but keep types
-  const typeA = row.cells[cellIdx].type;
-  const typeB = row.cells[targetIdx].type;
-  row.cells[cellIdx] = {...row.cells[targetIdx], type: typeA};
-  row.cells[targetIdx] = {...tmp, type: typeB};
+  // Nur den Inhalt tauschen, die Zell-Typen bleiben an ihrer Position
+  // (das Grid-Layout hängt an t0 = cells[0].type)
+  const CONTENT_KEYS = ['imageUrl','customImageUrl','bgUrl','alt','slug','fn','url','artist',
+    '_badge','mp3','lyricsCycle','useCover21','cover21Url','showSongTitle','showSongNumber',
+    'showProgressDots','titleX','titleY','dotsX','dotsY','startColor','coverFitSquare',
+    'coverFitLeft','coverFitTop','coverFitWidth','coverFitHeight','coverShape','coverFitMode',
+    'coverAngleOffset','slides','bgOpacity'];
+  const aContent = {}, bContent = {};
+  CONTENT_KEYS.forEach(k => {
+    aContent[k] = row.cells[cellIdx][k];
+    bContent[k] = row.cells[targetIdx][k];
+  });
+  CONTENT_KEYS.forEach(k => {
+    row.cells[cellIdx][k]    = bContent[k];
+    row.cells[targetIdx][k]  = aContent[k];
+  });
   renderHomeEditor();
 }
 
@@ -9511,8 +9520,12 @@ function buildCells(row, grid){
       // 2:1-half + 2× 1:1
       grid.classList.add('layout-2x1plus2');
       grid.appendChild(buildCell(row, 0, 'cell-2x1half', editing));
-      if(editing || (c[1].imageUrl||c[1].bgUrl)) grid.appendChild(buildCell(row, 1, '', editing));
-      if(editing || (c[2].imageUrl||c[2].bgUrl)) grid.appendChild(buildCell(row, 2, '', editing));
+      // Slots 1+2: im Edit-Modus immer rendern (auch leer), sonst nur wenn befüllt
+      // Im Edit-Modus alle Slots rendern (auch leer → befüllbar); außerhalb nur wenn Inhalt vorhanden
+      if(editing) grid.appendChild(buildCell(row, 1, '', editing));
+      else if(c[1].imageUrl||c[1].bgUrl) grid.appendChild(buildCell(row, 1, '', editing));
+      if(editing) grid.appendChild(buildCell(row, 2, '', editing));
+      else if(c[2].imageUrl||c[2].bgUrl) grid.appendChild(buildCell(row, 2, '', editing));
     }
 
   } else if(t0 === '1x1-big'){
