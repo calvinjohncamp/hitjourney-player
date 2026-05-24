@@ -9483,6 +9483,7 @@ function buildCell(row, cellIdx, extraClass, editing){
 
   const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0);
   const isSlide  = cell.type === 'slideshow';
+  const hasLayoutType = cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
 
   if(isFilled || isSlide){
     // Filled — always show image
@@ -9534,16 +9535,26 @@ function buildCell(row, cellIdx, extraClass, editing){
     // Empty cell — only show "+" in editing mode
     const emp = document.createElement('div');
     emp.className = 'he-cell-empty';
-    emp.innerHTML = `<div class="he-cell-plus">+</div><div class="he-cell-hint">Typ wählen</div>`;
+    const hintText = hasLayoutType ? 'Inhalt wählen' : 'Format wählen';
+    emp.innerHTML = `<div class="he-cell-plus">+</div><div class="he-cell-hint">${hintText}</div>`;
     el.appendChild(emp);
   }
 
-  // v169: Gefüllte Zellen/Diashows öffnen den Editor immer direkt.
-  // Leere Zellen brauchen weiterhin den Zeilen-Bearbeitungsmodus, damit die Home-Ansicht ruhig bleibt.
+  // Click logic:
+  // - Filled cells → always open cell edit (change content/action)
+  // - Empty cells with layout type set → open cell edit (fill content)
+  // - Empty cells with no layout type (type='empty') → open layout picker
+  const hasLayoutType = cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
   el.onclick = ()=>{
     if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
     if(!editing) return;
-    toggleTypeMenu(el, row.id, cellIdx);
+    if(hasLayoutType){
+      // Layout already chosen — go straight to content fill
+      openCellEdit(row.id, cellIdx);
+    } else {
+      // No layout yet — open layout picker
+      toggleTypeMenu(el, row.id, cellIdx);
+    }
   };
 
   return el;
