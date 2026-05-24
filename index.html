@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v185-new-layout-types-20260524 -->
+<!-- Version: v186-2x1plus2-fix-20260524 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5569,12 +5569,23 @@ function renderHomeLayout(){
       return;
     }
 
-    // ── 2× 2:1 nebeneinander (2x1-half) ─────────────────────────────
+    // ── 2x1-half: entweder 2× 2:1 nebeneinander ODER 2:1 + 2× 1:1 ──
     if(t0 === '2x1-half'){
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        grid.appendChild(buildHomeCard(cell, 'span-2col'));
-      });
+      const t1 = cells[1] && cells[1].type;
+      if(t1 === '2x1-half'){
+        // 2× 2:1 nebeneinander (2x2half)
+        cells.forEach(cell => {
+          if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+          grid.appendChild(buildHomeCard(cell, 'span-2col'));
+        });
+      } else {
+        // 2:1 halb + 2× 1:1 (2x1plus2)
+        cells.forEach(cell => {
+          if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+          const cls = cell.type === '2x1-half' ? 'span-2col' : 'square';
+          grid.appendChild(buildHomeCard(cell, cls));
+        });
+      }
       return;
     }
 
