@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524e-step3-song-album-lyrics -->
+<!-- Version: admin-v20260524g-movebar-remove-1x2 -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -382,6 +382,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-act.edt:hover{background:rgba(133,172,201,.55)}
 .he-cell-act.rem{background:rgba(220,80,80,.3);color:#f08080}
 .he-cell-act.rem:hover{background:rgba(220,80,80,.55)}
+/* Move bar — below each cell in editing mode */
+.he-cell-movebar{display:flex;justify-content:center;gap:6px;padding:3px 0;flex-shrink:0}
+.he-cell-wrap{display:flex;flex-direction:column}
+.he-cell-movebar-btn{background:rgba(133,172,201,.15);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;padding:2px 10px;line-height:1.4;transition:background .15s}
+.he-cell-movebar-btn:hover{background:rgba(133,172,201,.35);color:#cfe5f5}
+.he-cell-movebar-btn:disabled{opacity:.2;cursor:default}
 .he-type-menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:3px;background:rgba(6,14,22,.94);z-index:20;padding:5px}
 .he-type-btn{padding:5px 4px;border-radius:5px;border:none;cursor:pointer;font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;background:rgba(133,172,201,.1);color:#85ACC9;transition:background .15s;white-space:nowrap;text-align:center}
 .he-type-btn:hover{background:rgba(133,172,201,.28);color:#cfe5f5}
@@ -545,11 +551,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-grid.layout-2big{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .he-cell.cell-1x1big{aspect-ratio:1/1;width:100%}
 
-/* 1:2 Hochformat + 2× 1:1 */
-.he-row-grid.layout-1x2mix{display:grid;grid-template-columns:1fr 1fr;gap:4px;align-items:stretch}
-.he-cell.cell-1x2tall{aspect-ratio:1/2;width:100%}
-.layout-1x2mix-right{display:flex;flex-direction:column;gap:4px}
-.layout-1x2mix-right .he-cell{flex:1;min-height:0}
+/* 1:2 Hochformat entfernt */
 
 /* ══ LAYOUT PICKER MODAL ══════════════════════════════════════════════════ */
 #layoutPickerModal{display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:20px}
@@ -7524,10 +7526,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-type-icon">━━</span>
           <span class="htm-type-label">4:1 Panorama</span>
         </button>
-        <button class="htm-type-btn" data-type="1x2" onclick="htmPickType('1x2',this)">
-          <span class="htm-type-icon">▮</span>
-          <span class="htm-type-label">1:2 Hochformat</span>
-        </button>
         <button class="htm-type-btn" data-type="trio" onclick="htmPickType('trio',this)">
           <span class="htm-type-icon">▮▮▮</span>
           <span class="htm-type-label">Trio · 3 Karten</span>
@@ -7620,7 +7618,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
 
       <!-- Motiv-Vorschau (wird nach Auswahl angezeigt) -->
-      <div id="htmMotifPreviewStrip" class="htm-motif-preview" style="display:none;margin-top:10px"></div>
 
       <div class="htm-actions" style="margin-top:12px">
         <button class="htm-save" onclick="htmGoStep(3)" id="htmStep2Next" style="width:100%">Weiter →</button>
@@ -7651,8 +7648,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
       <!-- Song wählen (action=play) -->
       <div id="htmActionSongField" style="display:none;margin-top:10px">
-        <input class="htm-input" id="htmActionSongSearch" placeholder="Song suchen …" oninput="htmFilterActionSongs(this.value)" style="margin-bottom:6px">
-        <div id="htmActionSongList" style="max-height:180px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F"></div>
+        <div id="htmActionSongList" style="max-height:220px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F"></div>
         <div id="htmActionSelectedSong" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(50,180,100,.07);border:1px solid rgba(50,180,100,.2);border-radius:9px;margin-top:8px">
           <img id="htmActionSongCover" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0">
           <div style="min-width:0;flex:1">
@@ -7767,17 +7763,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">3× 1:1,5<br>Trio</div>
       </div>
 
-      <!-- 1:2 Hochformat + 2× 1:1 -->
-      <div class="lpm-option" data-layout="1x1x2-mix" onclick="lpmPick(this)">
-        <div class="lpm-option-preview">
-          <div class="lpm-sq h2 big"></div>
-          <div style="flex:2;display:flex;flex-direction:column;gap:3px">
-            <div class="lpm-sq h1" style="flex:1;aspect-ratio:auto"></div>
-            <div class="lpm-sq h1" style="flex:1;aspect-ratio:auto"></div>
-          </div>
-        </div>
-        <div class="lpm-label">1:2 Hochformat<br>+ 2× 1:1</div>
-      </div>
 
       <!-- 2:1 Halbe + 2× 1:1 -->
       <div class="lpm-option" data-layout="1x2x1-plus2" onclick="lpmPick(this)">
@@ -9465,16 +9450,6 @@ function buildCells(row, grid){
     grid.appendChild(buildCell(row, 0, 'cell-1x1big', editing));
     grid.appendChild(buildCell(row, 1, 'cell-1x1big', editing));
 
-  } else if(t0 === '1x2-tall'){
-    // 1:2 Hochformat + 2× 1:1 rechts
-    grid.classList.add('layout-1x2mix');
-    grid.appendChild(buildCell(row, 0, 'cell-1x2tall', editing));
-    const right = document.createElement('div');
-    right.className = 'layout-1x2mix-right';
-    if(editing || (c[1].imageUrl||c[1].bgUrl)) right.appendChild(buildCell(row, 1, '', editing));
-    if(editing || (c[2].imageUrl||c[2].bgUrl)) right.appendChild(buildCell(row, 2, '', editing));
-    grid.appendChild(right);
-
   } else if(t0 === 'trio-a'){
     grid.classList.add('trio-grid');
     grid.appendChild(buildCell(row, 0, 'trio-a', editing));
@@ -9542,13 +9517,9 @@ function buildCell(row, cellIdx, extraClass, editing){
       ov.className = 'he-cell-overlay always-edit';
       const badgeCls = isSlide ? 'badge-diashow' : cell._badge==='Album' ? 'badge-album' : cell._badge==='Unterseite' ? 'badge-unterseite' : cell.fn==='link' ? 'badge-link' : 'badge-song';
       const badgeTxt = isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='link' ? 'Link' : 'Song');
-      const reorderBtns = editing ? `
-          <button class="he-cell-act mov" onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},-1)" title="Nach links">←</button>
-          <button class="he-cell-act mov" onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},1)" title="Nach rechts">→</button>` : '';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
-          ${reorderBtns}
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
           ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
@@ -9585,6 +9556,31 @@ function buildCell(row, cellIdx, extraClass, editing){
     }
   };
 
+  // In editing mode: wrap cell + move bar in a flex column container
+  if(editing){
+    const wrap = document.createElement('div');
+    wrap.className = 'he-cell-wrap';
+    // Transfer grid-relevant classes/dataset from el to wrap
+    wrap.style.cssText = el.style.cssText;
+    // Move bar
+    const mb = document.createElement('div');
+    mb.className = 'he-cell-movebar';
+    const btnL = document.createElement('button');
+    btnL.className = 'he-cell-movebar-btn';
+    btnL.textContent = '←';
+    btnL.title = 'Nach links';
+    btnL.onclick = e=>{ e.stopPropagation(); moveCellInRow(row.id, cellIdx, -1); };
+    const btnR = document.createElement('button');
+    btnR.className = 'he-cell-movebar-btn';
+    btnR.textContent = '→';
+    btnR.title = 'Nach rechts';
+    btnR.onclick = e=>{ e.stopPropagation(); moveCellInRow(row.id, cellIdx, 1); };
+    mb.appendChild(btnL);
+    mb.appendChild(btnR);
+    wrap.appendChild(el);
+    wrap.appendChild(mb);
+    return wrap;
+  }
   return el;
 }
 
@@ -9615,7 +9611,6 @@ const LPM_TYPE_MAP = {
   '2x2x1-half': '2x2half',    // 2× 2:1 side by side
   '1x4x1':      '4x1',        // 4:1 panorama
   '3x1x15':     'trio',
-  '1x1x2-mix':  '1x2mix',     // 1:2 + 2×1:1
   '1x2x1-plus2':'2x1plus2',   // 2:1 half + 2×1:1
   'slideshow':   'slideshow',
 };
@@ -9697,15 +9692,6 @@ function applyType(rowId, cellIdx, type){
     row.cells[0] = {...row.cells[0], ...old[0], type:'trio-a'};
     row.cells[1] = {...row.cells[1], ...old[1], type:'trio-b'};
     row.cells[2] = {...row.cells[2], ...old[2], type:'trio-c'};
-    row.cells[3].type = 'hidden';
-
-  } else if(type === '1x2mix'){
-    // 1:2 Hochformat (spans 2 cols) + 2× 1:1 stacked right
-    const old = row.cells.map(c=>({...c}));
-    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    row.cells[0] = {...row.cells[0], ...old[0], type:'1x2-tall'};
-    row.cells[1] = {...row.cells[1], ...old[1], type:'1x1'};
-    row.cells[2] = {...row.cells[2], ...old[2], type:'1x1'};
     row.cells[3].type = 'hidden';
 
   } else if(type === '2x1plus2'){
@@ -10136,6 +10122,7 @@ function clearHtmAlbumMotif(e){
 
 /* ── Motif preview strip (shows current motif in correct aspect ratio) ── */
 function htmUpdateMotifPreview(){
+  return; // Preview strip removed — upload zone shows image inline
   const strip = document.getElementById('htmMotifPreviewStrip');
   if(!strip) return;
 
@@ -10168,7 +10155,7 @@ function htmUpdateMotifPreview(){
 let htmActionSelectedSong  = null;  // { slug, title, artist, coverUrl }
 let htmActionSelectedAlbum = null;  // { slug, title, coverUrl }
 
-function htmInitStep3(){
+async function htmInitStep3(){
   // Pre-select action: prefer existing cell data, then derive from source
   if(!htmChosenAction){
     htmChosenAction = htmChosenSource==='album' ? 'album' : htmChosenSource==='song' ? 'play' : 'play';
@@ -10186,8 +10173,12 @@ function htmInitStep3(){
     htmActionSelectedSong = htmSelectedSong;
     htmRenderActionSelectedSong();
   }
-  // Render song list
-  htmRenderActionSongList('');
+  // Load songs if not yet loaded, then render
+  if(!allSongs.length){
+    const r = await fetch(sbUrl('/rest/v1/songs?select=slug,title,artist,cover_url,lyrics21_url&order=title.asc'),{headers:hdrs()});
+    if(r.ok) allSongs = await r.json();
+  }
+  htmRenderActionSongList();
 
   // Restore lyrics cycle checkbox
   const cb = document.getElementById('htmLyricsCycleCheck');
@@ -10209,16 +10200,11 @@ function htmShowActionDetail(action){
 }
 
 /* Action song list */
-function htmFilterActionSongs(q){ htmRenderActionSongList(q); }
-function htmRenderActionSongList(q){
+function htmFilterActionSongs(q){ htmRenderActionSongList(); }
+function htmRenderActionSongList(){
   const list = document.getElementById('htmActionSongList');
   if(!list) return;
-  const query = (q||'').toLowerCase().trim();
-  const songs = allSongs.filter(s=>
-    !query ||
-    (s.title||'').toLowerCase().includes(query) ||
-    (s.artist||'').toLowerCase().includes(query)
-  ).slice(0,80);
+  const songs = allSongs.slice(0, 200);
   if(!songs.length){
     list.innerHTML = '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs gefunden</div>';
     return;
@@ -10264,22 +10250,25 @@ function htmClearActionSong(){
 /* Action album dropdown */
 function htmPopulateActionAlbumSelect(){
   const sel = document.getElementById('htmActionAlbumSelect');
-  if(!sel || !allPlaylists) return;
-  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
-  allPlaylists.forEach(pl=>{
-    const opt = document.createElement('option');
-    opt.value = pl.slug;
-    opt.textContent = pl.title||pl.slug;
-    if(htmActionSelectedAlbum && htmActionSelectedAlbum.slug===pl.slug) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  htmRenderActionAlbum();
+  if(!sel) return;
+  const doFill = ()=>{
+    sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
+    albumsData.forEach(pl=>{
+      const opt = document.createElement('option');
+      opt.value = pl.slug;
+      opt.textContent = pl.title||pl.slug;
+      if(htmActionSelectedAlbum && htmActionSelectedAlbum.slug===pl.slug) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    htmRenderActionAlbum();
+  };
+  if(!albumsData.length){ loadPlaylists().then(doFill); } else { doFill(); }
 }
 function htmPickActionAlbum(){
   const sel = document.getElementById('htmActionAlbumSelect');
   const slug = sel.value;
   if(!slug){ htmActionSelectedAlbum=null; htmRenderActionAlbum(); return; }
-  const pl = allPlaylists.find(p=>p.slug===slug);
+  const pl = albumsData.find(p=>p.slug===slug);
   if(pl){
     htmActionSelectedAlbum = { slug:pl.slug, title:pl.title||pl.slug, coverUrl:pl.cover_url||'' };
     htmRenderActionAlbum();
