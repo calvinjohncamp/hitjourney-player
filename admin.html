@@ -358,10 +358,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.trio-b{grid-area:bd;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.trio-b{aspect-ratio:2/1}}
 .he-cell.trio-c{grid-area:po;aspect-ratio:1/1}
-/* Equal trio (3 gleich breite 1:1 Kacheln, z.B. Kurs Nordwest / Songwriter's / One Million) */
-.he-row-grid.trio-grid--equal{display:grid !important;grid-template-columns:1fr 1fr 1fr !important;gap:10px}
-.he-row-grid.trio-grid--equal .he-cell{grid-area:unset !important}
-.he-row-grid.trio-grid--equal .he-cell.trio-b .he-cell-img{aspect-ratio:unset !important}
 .he-cell.hidden-cell{display:none}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
@@ -7414,7 +7410,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('ea48370e-aac2-4137-b6f9-64f805ca2fea',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817"><div class="he-row-bar"><span class="he-row-label">Z11</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid trio-grid--equal"><div class="he-cell trio-a" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg" alt="Kurs Nordwest"><div class="he-cell-altlabel">Kurs Nordwest</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817"><div class="he-row-bar"><span class="he-row-label">Z11</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg" alt="Kurs Nordwest"><div class="he-cell-altlabel">Kurs Nordwest</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',0)" title="Bearbeiten">✎</button>
@@ -9228,9 +9224,8 @@ function buildCells(row, grid){
     }
 
   } else if(t0 === 'trio-a'){
-    // Trio: asymmetrisch (gl 1:1 + bd 2:1 + po 1:1) oder gleich (3× 1:1)
-    const isAsymmetric = (row.cells[1]?.slug || '').toLowerCase() === 'buried-diamonds';
-    grid.classList.add(isAsymmetric ? 'trio-grid' : 'trio-grid trio-grid--equal');
+    // Trio: use CSS grid-areas gl/bd/po
+    grid.classList.add('trio-grid');
     grid.appendChild(buildCell(row, 0, 'trio-a', editing)); // gl
     grid.appendChild(buildCell(row, 1, 'trio-b', editing)); // bd
     grid.appendChild(buildCell(row, 2, 'trio-c', editing)); // po
@@ -10763,6 +10758,36 @@ function importCurrentHome(){
 let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
 // Songs beim Start laden (Songs-Tab ist default aktiv)
 songsLoaded = true; loadSongs();
+
+// ── Home-Editor beim Start initialisieren, falls HOME-Tab aktiv ist ──
+// (Verhindert den Bug: Bearbeiten-Button ohne onclick im statisch gerenderten HTML)
+(function(){
+  const activeTab = document.querySelector('.tab.active');
+  if(activeTab && activeTab.dataset.tab === 'home'){
+    initHomeEditor();
+  }
+})();
+
+// ── Event-Delegation für Home-Editor Buttons ──
+// Fängt Klicks auf .edit-row, .del, .move auch im statisch gerenderten HTML ab
+document.getElementById('homeEditorWrap').addEventListener('click', function(e){
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const rowEl = btn.closest('.he-row');
+  if(!rowEl) return;
+  const rowId = rowEl.dataset.rowId;
+  if(!rowId) return;
+
+  if(btn.classList.contains('edit-row')){
+    e.stopPropagation();
+    // Wenn homeLayout noch leer ist (async load noch nicht fertig), warten
+    if(!homeLayout || homeLayout.length === 0){
+      initHomeEditor();
+      return;
+    }
+    editRow(rowId);
+  }
+});
 
 /* ══════════════════════════════════════════════════════════════════════════
    SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)
