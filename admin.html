@@ -8906,6 +8906,11 @@ document.getElementById('naName').addEventListener('input', e=>{
 document.getElementById('naSlug').addEventListener('input', e=>e.target.dataset.m='1');
 document.getElementById('newAlbumOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('newAlbumOverlay')) closeNewAlbum(); });
 
+// Backdrop-Klick schließt das Kachel-Modal
+document.getElementById('homeTileModal').addEventListener('click', e=>{
+  if(e.target === document.getElementById('homeTileModal')) closeHomeTileModal();
+});
+
 function onFileAlbum(input){ if(input.files[0]){ albumFileNew=input.files[0]; document.getElementById('prevAlbumCover').src=URL.createObjectURL(albumFileNew); document.getElementById('zAlbumCover').classList.add('has-file'); } }
 function onDropAlbum(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumCover')); const f=e.dataTransfer.files[0]; if(f){ albumFileNew=f; document.getElementById('prevAlbumCover').src=URL.createObjectURL(f); document.getElementById('zAlbumCover').classList.add('has-file'); } }
 function clearAlbumCover(e){ e.preventDefault(); e.stopPropagation(); albumFileNew=null; document.getElementById('prevAlbumCover').src=''; document.getElementById('zAlbumCover').classList.remove('has-file'); }
@@ -9889,10 +9894,10 @@ function closeHomeTileModal(){
 
 /* ── Save ── */
 async function saveHomeTile(){
-  if(!htmEditTarget) return;
+  if(!htmEditTarget){ closeHomeTileModal(); return; }
   const { rowId, cellIdx } = htmEditTarget;
   const row  = rowById(rowId);
-  if(!row) return;
+  if(!row){ closeHomeTileModal(); toast('Fehler: Zeile nicht gefunden – bitte Seite neu laden','err'); return; }
 
   if(!htmChosenAction){ toast('Bitte eine Aktion wählen','err'); return; }
 
@@ -9929,7 +9934,7 @@ async function saveHomeTile(){
   // Now update the actual cell (applyType may have reset it)
   const updatedRow = rowById(rowId);
   const updatedCell = updatedRow && updatedRow.cells[cellIdx];
-  if(!updatedCell) return;
+  if(!updatedCell){ closeHomeTileModal(); return; }
 
   updatedCell.type       = newType;
   updatedCell.imageUrl   = imageUrl;
@@ -10760,7 +10765,6 @@ let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
 songsLoaded = true; loadSongs();
 
 // ── Home-Editor beim Start initialisieren, falls HOME-Tab aktiv ist ──
-// (Verhindert den Bug: Bearbeiten-Button ohne onclick im statisch gerenderten HTML)
 (function(){
   const activeTab = document.querySelector('.tab.active');
   if(activeTab && activeTab.dataset.tab === 'home'){
@@ -10768,25 +10772,17 @@ songsLoaded = true; loadSongs();
   }
 })();
 
-// ── Event-Delegation für Home-Editor Buttons ──
-// Fängt Klicks auf .edit-row, .del, .move auch im statisch gerenderten HTML ab
+// ── Event-Delegation für .edit-row Buttons im statisch gerenderten HTML ──
 document.getElementById('homeEditorWrap').addEventListener('click', function(e){
-  const btn = e.target.closest('button');
+  const btn = e.target.closest('button.edit-row');
   if(!btn) return;
   const rowEl = btn.closest('.he-row');
   if(!rowEl) return;
   const rowId = rowEl.dataset.rowId;
   if(!rowId) return;
-
-  if(btn.classList.contains('edit-row')){
-    e.stopPropagation();
-    // Wenn homeLayout noch leer ist (async load noch nicht fertig), warten
-    if(!homeLayout || homeLayout.length === 0){
-      initHomeEditor();
-      return;
-    }
-    editRow(rowId);
-  }
+  e.stopPropagation();
+  if(!homeLayout || homeLayout.length === 0){ initHomeEditor(); return; }
+  editRow(rowId);
 });
 
 /* ══════════════════════════════════════════════════════════════════════════
