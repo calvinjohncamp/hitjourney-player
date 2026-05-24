@@ -4200,6 +4200,8 @@ function showKursNordwest(){
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenSwf) screenSwf.style.display='none';
   hideLanguageScreens();
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
   screenKnw.style.display = 'block';
   backBtn.classList.add('visible');
   logoHome.style.display = 'none';
@@ -4222,6 +4224,8 @@ function showSongwritersFavorites(){
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
   hideLanguageScreens();
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
   screenSwf.style.display = 'block';
   backBtn.classList.add('visible');
   logoHome.style.display = 'none';
