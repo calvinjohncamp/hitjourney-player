@@ -5464,6 +5464,15 @@ function renderHomeLayout(){
 
   const rows = window._homeLayoutRows || [];
 
+  // Hardcodierte Blöcke ausblenden wenn dynamisches Layout vorhanden
+  if(rows.length > 0){
+    const edSection = document.getElementById('edSection');
+    if(edSection) edSection.style.display = 'none';
+    // Hardcodierten languageTeaser ausblenden (nicht den dynamisch erzeugten)
+    const ltStatic = document.querySelector('.home-language-grid');
+    if(ltStatic && !ltStatic.closest('#homeGrid')) ltStatic.style.display = 'none';
+  }
+
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
     grid.innerHTML = getFallbackHomeHTML();
