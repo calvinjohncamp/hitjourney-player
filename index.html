@@ -187,25 +187,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio--equal .home-card img{
   width:100%;
   flex-shrink:0;
-  aspect-ratio:3/4;
+  aspect-ratio:2/3;
   object-fit:cover;
-  object-position:center top;
+  object-position:center;
   display:block;
 }
 .home-card-label{
-  flex:1;
-  min-height:90px;
-  padding:18px 10px 20px;
+  flex:0 0 auto;
+  height:90px;
+  padding:0 10px;
   background:#000;
   font-family:'Anton',sans-serif;
-  font-size:clamp(14px,2.2vw,20px);
+  font-size:clamp(13px,1.8vw,18px);
   font-weight:400;
   letter-spacing:.10em;
   text-transform:uppercase;
   color:rgba(255,255,255,.92);
   text-align:center;
   pointer-events:none;
-  line-height:1.45;
+  line-height:1.35;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -2450,7 +2450,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
   .home-trio .trio-bd img{aspect-ratio:2/1}
   .home-trio--equal{ gap:12px; }
-  .home-trio--equal .home-card img{ aspect-ratio:3/4; }
+  .home-trio--equal .home-card img{ aspect-ratio:2/3; }
   .featured-teaser{grid-column:1/-1}
 
   /* Editorial row: 3 columns, more padding */
@@ -5712,6 +5712,7 @@ function buildHomeCard(cell, extraClass){
     const knownLines = {
       'Kurs Nordwest':            ['Kurs','Nordwest',''],
       "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
+      'Songwriters Favorites':    ['Song',"Writers",'Favorites'],
       'One Million Streams Ahead':['One Million','Streams','Ahead'],
     };
     const lines = knownLines[cell.alt] || cell.alt.split(' ').reduce((acc,w,i)=>{
