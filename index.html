@@ -5551,8 +5551,11 @@ function buildHomeCard(cell, extraClass){
   el.className = 'home-card ' + (extraClass||'');
 
   // album key from PLAYLIST_MAP or direct slug
-  const albumKey = resolveAlbumKey(cell.slug);
+  // Special slugs get their own subpage — do NOT set data-album (prevents wireHomeGrid double-listener)
+  const _specialSlugs = ['kurs-nordwest', 'songwriters-picks'];
+  const albumKey = _specialSlugs.includes((cell.slug||'').toLowerCase()) ? null : resolveAlbumKey(cell.slug);
   if(albumKey) el.dataset.album = albumKey;
+  el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
 
   const img = document.createElement('img');
   img.alt = cell.alt || '';
