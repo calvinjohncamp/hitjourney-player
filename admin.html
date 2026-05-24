@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524l -->
+<!-- Version: admin-v20260524n -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -370,7 +370,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.editing-mode:hover .he-cell-overlay{opacity:1}
 /* Alt label — bottom of cell, always visible */
 .he-cell-altlabel{position:absolute;bottom:0;left:0;right:0;padding:18px 8px 7px;background:linear-gradient(transparent,rgba(6,20,32,.75));font-size:10px;font-weight:700;color:rgba(207,229,245,.8);letter-spacing:.04em;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.he-cell.trio-a .he-cell-altlabel,.he-cell.trio-b .he-cell-altlabel,.he-cell.trio-c .he-cell-altlabel{padding:40px 10px 12px;font-size:13px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;text-align:center;white-space:normal;background:linear-gradient(transparent,rgba(4,14,24,.90) 50%,rgba(4,14,24,.97))}
+.he-cell.trio-a .he-cell-altlabel,.he-cell.trio-b .he-cell-altlabel,.he-cell.trio-c .he-cell-altlabel{padding:60px 12px 16px;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;white-space:normal;background:linear-gradient(transparent,rgba(0,0,0,.92) 45%,#000)}
 .he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
 .badge-play{background:rgba(50,180,100,.8)}
 .badge-slide{background:rgba(120,90,200,.8)}
@@ -7679,7 +7679,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <span class="htm-label">URL</span>
         <input class="htm-input" id="htmLinkUrl" placeholder="https://…">
         <span class="htm-label" style="margin-top:8px">Label (Beschriftung auf der Kachel)</span>
-        <input class="htm-input" id="htmLinkAlt" placeholder="z.B. Kurs Nordwest">
+        <input class="htm-input" id="htmLinkAlt" placeholder="z.B. One Million Streams Ahead">
       </div>
 
       <!-- Unterseite (action=subpage) -->
@@ -9397,19 +9397,7 @@ function buildRowEl(row, idx){
 
   el.appendChild(bar);
 
-  // ── Caption (nur für Trio-Zeilen) ──
-  const isTrio = row.cells && row.cells[0] && row.cells[0].type === 'trio-a';
-  if(isTrio){
-    const capWrap = document.createElement('div');
-    capWrap.className = 'he-row-caption-wrap';
-    const capTA = document.createElement('textarea');
-    capTA.className = 'he-row-caption';
-    capTA.placeholder = 'Textblock unter dem Trio (optional) …';
-    capTA.value = row.caption || '';
-    capTA.oninput = ()=>{ row.caption = capTA.value; };
-    capWrap.appendChild(capTA);
-    el.appendChild(capWrap);
-  }
+  // Caption-Block entfernt — Labels pro Kachel via cell.alt
 
   // ── Grid ──
   const grid = document.createElement('div');
@@ -9933,7 +9921,7 @@ function htmInitStep2(){
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
   }
-  // Upload-Zone Aspect Ratio: 1:1 für Trio/Quadrat, 2:1 sonst
+  // Upload-Zone Aspect: 1:1 für Trio/Quadrat, 2:1 sonst
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
     uploadZone.classList.toggle('sq', isSquare);
@@ -10148,7 +10136,7 @@ function clearHtmAlbumMotif(e){
 
 /* ── Motif preview strip (shows current motif in correct aspect ratio) ── */
 function htmUpdateMotifPreview(){
-  // Zeigt Cover des gewählten Songs/Albums im Upload-Zone-Frame
+  // Zeigt Cover im Upload-Zone-Frame
   const zone = document.getElementById('zHtmMotif');
   const img  = document.getElementById('prevHtmMotif');
   if(zone && img){
@@ -10159,7 +10147,7 @@ function htmUpdateMotifPreview(){
     if(coverUrl){ img.src = coverUrl; zone.classList.add('has-file'); }
     else        { img.src = '';       zone.classList.remove('has-file'); }
   }
-  if(false){ // dead code — preview strip removed
+  if(false){ // dead code — preview strip entfernt
   return; // Preview strip removed — upload zone shows image inline
   const strip = document.getElementById('htmMotifPreviewStrip');
   if(!strip) return;

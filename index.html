@@ -190,8 +190,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card-label{
   position:absolute;bottom:0;left:0;right:0;
   padding:70px 16px 20px;
-  background:linear-gradient(transparent,rgba(4,14,24,.92) 40%,rgba(4,14,24,.99));
-  font-size:15px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(transparent,rgba(0,0,0,.93) 42%,#000);
+  font-size:15px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
   color:#fff;text-align:center;pointer-events:none;
   white-space:normal;word-break:break-word;line-height:1.3;
 }
@@ -4454,14 +4454,9 @@ function renderLanguageGrid(lang, songs){
   if(!grid) return;
   grid.innerHTML = '';
 
-  // Supabase-Layout vorhanden: statische Sections ausblenden
-  // (diese Inhalte kommen jetzt aus Supabase home_layout)
-  const edSec = document.getElementById('edSection');
-  if(edSec) edSec.style.display = 'none';
-  const langGrid = document.querySelector('.home-language-grid');
-  if(langGrid) langGrid.style.display = 'none';
-  const finalGrid = document.querySelector('.home-final-grid');
-  if(finalGrid) finalGrid.style.display = 'none';
+  // Supabase aktiv: statische Sections ausblenden
+  ['edSection'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+  ['.home-language-grid','.home-final-grid'].forEach(sel=>{ const e=document.querySelector(sel); if(e) e.style.display='none'; });
 
   if(count) count.textContent = songs.length + ' Songs';
   songs.forEach((s,i)=>{
@@ -5659,9 +5654,9 @@ function buildHomeCard(cell, extraClass){
     : (cell.imageUrl || cell.customImageUrl);
   el.appendChild(img);
 
-  // Label-Balken: nur für Trio-Kacheln
-  const _trioTypes = new Set(['trio-a','trio-b','trio-c']);
-  if(cell.alt && _trioTypes.has(cell.type)){
+  // Label-Balken: nur für Trio-Kacheln (trio-a/b/c)
+  const _TRIO = new Set(['trio-a','trio-b','trio-c']);
+  if(cell.alt && _TRIO.has(cell.type)){
     const lbl = document.createElement('div');
     lbl.className = 'home-card-label';
     lbl.textContent = cell.alt;
