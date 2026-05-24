@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524n -->
+<!-- Version: admin-v20260524o -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9396,7 +9396,13 @@ function rowIsFullyFilled(row){
 function moveCellInRow(rowId, cellIdx, dir){
   const row = rowById(rowId);
   if(!row) return;
-  const visible = row.cells.map((c,i)=>i).filter(i => row.cells[i].type !== 'hidden' && row.cells[i].type !== 'empty');
+  // Only swap among filled cells — a trio slot with no imageUrl must not participate,
+  // otherwise swapping pulls an empty cell over a filled one and the filled one disappears.
+  const isFilled = c => !!(c.imageUrl || c.bgUrl || (c.type==='slideshow' && c.slides && c.slides.length>0));
+  const visible = row.cells.map((c,i)=>i).filter(i => {
+    const c = row.cells[i];
+    return c.type !== 'hidden' && c.type !== 'empty' && isFilled(c);
+  });
   const pos = visible.indexOf(cellIdx);
   const newPos = pos + dir;
   if(newPos < 0 || newPos >= visible.length) return;
@@ -9536,9 +9542,13 @@ function buildCells(row, grid){
 
   } else if(t0 === 'trio-a'){
     grid.classList.add('trio-grid');
-    grid.appendChild(buildCell(row, 0, 'trio-a', editing));
-    grid.appendChild(buildCell(row, 1, 'trio-b', editing));
-    grid.appendChild(buildCell(row, 2, 'trio-c', editing));
+    // In edit mode: always render all 3 slots (empty ones show '+' to allow filling).
+    // Outside edit mode: only render filled cells (prevents invisible empty divs and visual glitches).
+    ['trio-a','trio-b','trio-c'].forEach((cls,i)=>{
+      const cell = c[i];
+      const filled = !!(cell.imageUrl || cell.bgUrl);
+      if(editing || filled) grid.appendChild(buildCell(row, i, cls, editing));
+    });
 
   } else if(t0 === 'span-2' || t0 === '2x1'){
     // Legacy 2x1
