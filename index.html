@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v188-album-fn-routing-20260524 -->
+<!-- Version: v189-click-handler-clean-20260524 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5609,7 +5609,9 @@ function buildHomeCard(cell, extraClass){
 
   // Special slugs get their own subpage — do NOT set data-album (prevents wireHomeGrid double-listener)
   const _specialSlugs = ['kurs-nordwest', 'songwriters-picks'];
-  const albumKey = _specialSlugs.includes((cell.slug||'').toLowerCase()) ? null : resolveAlbumKey(cell.slug);
+  // fn=album/link/subpage: Admin-Intent hat Vorrang — albumKey immer auflösen
+  const _fnOverride = cell.fn === 'album' || cell.fn === 'link' || cell.fn === 'subpage';
+  const albumKey = (!_fnOverride && _specialSlugs.includes((cell.slug||'').toLowerCase())) ? null : resolveAlbumKey(cell.slug);
   if(albumKey) el.dataset.album = albumKey;
   el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
 
@@ -5643,24 +5645,20 @@ function buildHomeCard(cell, extraClass){
       return;
     }
 
-    // Spezielle Slugs → eigene Unterseiten
-    // Nur wenn fn NICHT explizit auf album/link/subpage gesetzt ist
-    const specialSlug = (cell.slug || '').toLowerCase();
-    const fnOverride = cell.fn === 'album' || cell.fn === 'link' || cell.fn === 'subpage';
-    if(!fnOverride){
-      if(specialSlug === 'kurs-nordwest'){ showKursNordwest(); return; }
-      if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
+    // fn=album: Admin hat explizit ein Album verlinkt
+    if(cell.fn === 'album'){
+      if(albumKey) { showAlbum(albumKey); return; }
+      if(cell.slug) playSongBySlug(cell.slug);
+      return;
     }
 
-    if(cell.fn === 'album'){
-      // fn=album: slug ist ein Playlist/Album-Slug — direkt auflösen
-      const key = albumKey || cell.slug;
-      if(key) showAlbum(key);
-    } else if(albumKey){
-      showAlbum(albumKey);
-    } else if(cell.slug){
-      playSongBySlug(cell.slug);
-    }
+    // Spezielle Slugs → eigene Unterseiten (nur wenn kein fn-Override)
+    const specialSlug = (cell.slug || '').toLowerCase();
+    if(specialSlug === 'kurs-nordwest'){ showKursNordwest(); return; }
+    if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
+
+    if(albumKey) showAlbum(albumKey);
+    else if(cell.slug) playSongBySlug(cell.slug);
   });
   return el;
 }
