@@ -172,13 +172,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   grid-template-areas:unset !important;
   gap:10px;
 }
-.home-trio--equal .home-card{
-  grid-area:unset !important;
-}
-.home-trio--equal .home-card img{
-  aspect-ratio:unset !important;
-  width:100% !important;
-}
+.home-trio--equal .home-card{ grid-area:unset !important; }
+/* trio-bd bekommt normalerweise aspect-ratio:2/1 — im equal-Trio nicht */
+.home-trio--equal .trio-bd img{ aspect-ratio:unset !important; }
 
 
 /* ══ HOME FOOTER INFO BUTTON ══ */
