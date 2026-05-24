@@ -7277,7 +7277,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <button class="home-toolbar-btn cancel" id="homeCancelBtn" onclick="cancelHomeEdits()" title="Alle ungespeicherten Änderungen verwerfen">
         Abbrechen
       </button>
-      <button class="home-toolbar-btn save" onclick="saveHomeLayout()">
+      <button class="home-toolbar-btn save" id="homeSaveBtn" onclick="saveHomeLayout()" disabled style="opacity:.4;cursor:not-allowed">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
         Speichern
       </button>
@@ -9078,9 +9078,18 @@ async function loadHomeLayout(){
   homeLayoutBase = cloneHomeLayout(homeLayout);
   homeUndoStack = [];
   renderHomeEditor();
+  // Speichern-Button freischalten nach erfolgreichem Laden
+  const sb = document.getElementById('homeSaveBtn');
+  if(sb){ sb.disabled = false; sb.style.opacity = ''; sb.style.cursor = ''; }
 }
 
 async function saveHomeLayout(){
+  // Guard: niemals mit leerem State speichern
+  if(!homeLayout || homeLayout.length === 0){
+    toast('Speichern abgebrochen: Layout noch nicht geladen.','err');
+    console.warn('saveHomeLayout() abgebrochen — homeLayout ist leer.');
+    return;
+  }
   try {
     const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
 
