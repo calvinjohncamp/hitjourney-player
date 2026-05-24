@@ -171,13 +171,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio .trio-bd img{aspect-ratio:2/1}
 .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
 
-/* Equal-Trio: 3 gleiche Spalten, Bilder in natürlichem Seitenverhältnis */
+/* Equal-Trio: 3 gleiche Spalten, Hochformat 2:3 */
 .home-trio--equal{
   grid-template-columns:1fr 1fr 1fr !important;
   grid-template-areas:unset !important;
 }
 .home-trio--equal .home-card{ grid-area:unset !important; }
-.home-trio--equal .home-card img{ aspect-ratio:unset !important; }
+.home-trio--equal .home-card img{ aspect-ratio:2/3 !important; object-fit:cover }
+/* Caption block under trio */
+.home-trio-caption{
+  grid-column:1/-1;
+  padding:18px 14px 4px;
+  font-size:13px;
+  line-height:1.7;
+  color:rgba(207,229,245,.55);
+  white-space:pre-wrap;
+}
 
 
 /* ══ HOME FOOTER INFO BUTTON ══ */
@@ -5537,11 +5546,18 @@ function renderHomeLayout(){
       const cellC = cells[2];
       if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
       const trio = document.createElement('div');
-      const isAsymmetric = (cellB && (cellB.slug || '').toLowerCase() === 'buried-diamonds');
-      trio.className = 'home-trio' + (isAsymmetric ? '' : ' home-trio--equal') + ' wide';
-      if(cellA && cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(cellB && cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(cellC && cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      // Always equal 3-column portrait layout for admin-managed trios
+      trio.className = 'home-trio home-trio--equal wide';
+      if(cellA && cellA.imageUrl) trio.appendChild(buildHomeCard(cellA, ''));
+      if(cellB && cellB.imageUrl) trio.appendChild(buildHomeCard(cellB, ''));
+      if(cellC && cellC.imageUrl) trio.appendChild(buildHomeCard(cellC, ''));
+      // Caption block (from row.caption in Supabase)
+      if(row.caption){
+        const cap = document.createElement('div');
+        cap.className = 'home-trio-caption';
+        cap.textContent = row.caption;
+        trio.appendChild(cap);
+      }
       grid.appendChild(trio);
       return;
     }
@@ -6316,11 +6332,6 @@ function getFallbackHomeHTML(){
     <div class="ft-song-num" id="ftSongNum">01 / 10</div>
   </div>
   <div class="ft-dots" id="ftDots"></div>
-</div>
-<div class="home-trio wide">
-  <div class="home-card trio-gl" data-album="grosseLiebe"><img alt="Grosse Liebe" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg"/></div>
-  <div class="home-card trio-bd" data-album="buriedDiamonds"><img alt="Buried Diamonds" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg"/></div>
-  <div class="home-card trio-po" data-album="poesie"><img alt="Poesie" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg"/></div>
 </div>
 <div class="home-card wide" id="archiveCard"><img alt="the archive" loading="eager" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg"/></div>`;
 }

@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524g-movebar-remove-1x2 -->
+<!-- Version: admin-v20260524h-trio-portrait-caption -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -352,13 +352,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
-.he-row-grid.trio-grid{grid-template-areas:'gl gl' 'bd po';grid-template-rows:auto auto;gap:10px}
-@media(min-width:600px){.he-row-grid.trio-grid{grid-template-columns:1fr 2fr 1fr;grid-template-areas:'gl bd po';grid-template-rows:auto}}
-.he-cell.trio-a{grid-area:gl;aspect-ratio:1/1}
-.he-cell.trio-b{grid-area:bd;aspect-ratio:2/1}
-@media(min-width:600px){.he-cell.trio-b{aspect-ratio:2/1}}
-.he-cell.trio-c{grid-area:po;aspect-ratio:1/1}
+.he-row-grid.trio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c{aspect-ratio:2/3;min-height:120px}
 .he-cell.hidden-cell{display:none}
+.he-row-caption-wrap{padding:0 2px 6px}
+.he-row-caption{width:100%;box-sizing:border-box;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.12);border-radius:8px;color:#85ACC9;font-size:12px;padding:8px 10px;resize:vertical;min-height:56px;font-family:inherit;line-height:1.5;margin-top:6px}
+.he-row-caption:focus{outline:none;border-color:rgba(133,172,201,.35)}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
 .he-cell.editing-mode:hover{border-color:rgba(133,172,201,.45);background:#0d2436}
@@ -9228,6 +9227,7 @@ async function loadHomeLayout(){
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
+      caption: row.caption || undefined,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
         const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
@@ -9264,7 +9264,7 @@ async function saveHomeLayout(){
     return;
   }
   try {
-    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells }));
+    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells, caption:r.caption||null }));
 
     // DELETE alle vorhandenen Zeilen — row_order >= 0 trifft immer zu
     const delRes = await fetch(SB_URL+'/rest/v1/home_layout?row_order=gte.0'+'&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
@@ -9391,6 +9391,20 @@ function buildRowEl(row, idx){
   }
 
   el.appendChild(bar);
+
+  // ── Caption (nur für Trio-Zeilen) ──
+  const isTrio = row.cells && row.cells[0] && row.cells[0].type === 'trio-a';
+  if(isTrio){
+    const capWrap = document.createElement('div');
+    capWrap.className = 'he-row-caption-wrap';
+    const capTA = document.createElement('textarea');
+    capTA.className = 'he-row-caption';
+    capTA.placeholder = 'Textblock unter dem Trio (optional) …';
+    capTA.value = row.caption || '';
+    capTA.oninput = ()=>{ row.caption = capTA.value; };
+    capWrap.appendChild(capTA);
+    el.appendChild(capWrap);
+  }
 
   // ── Grid ──
   const grid = document.createElement('div');
@@ -9657,6 +9671,7 @@ function applyType(rowId, cellIdx, type){
     row.cells[1] = {...row.cells[1], ...old[1], type:'1x1-big'};
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
+    if(row.caption === undefined) row.caption = '';
 
   } else if(type === '4x1-wide'){
     // 2:1 full width (spans 4 cols, aspect 2:1)
