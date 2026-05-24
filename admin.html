@@ -10211,16 +10211,12 @@ async function saveHomeTile(){
   else if(htmChosenSource === 'song')  imageUrl = finalImageUrl || (htmSelectedSong ? htmSelectedSong.coverUrl : '');
   else if(htmChosenSource === 'album') imageUrl = finalAlbumCover;
 
-  // Apply type to row layout
-  const newType = htmChosenType || cell.type || '1x1';
-  applyType(rowId, cellIdx, newType==='1x2'?'1x1':newType); // reuse applyType for layout reset, 1x2 treated as 1x1 for now
-
-  // Now update the actual cell (applyType may have reset it)
-  const updatedRow = rowById(rowId);
+  // Update cell content directly — NEVER reset the row layout via applyType here
+  const updatedRow  = rowById(rowId);
   const updatedCell = updatedRow && updatedRow.cells[cellIdx];
   if(!updatedCell){ closeHomeTileModal(); return; }
 
-  updatedCell.type       = newType;
+  // Keep existing layout type — only update content
   updatedCell.imageUrl   = imageUrl;
   updatedCell.customImageUrl = htmChosenSource==='upload' ? finalImageUrl : '';
   updatedCell.lyricsCycle= htmChosenAction === 'lyrics';
