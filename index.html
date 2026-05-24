@@ -175,6 +175,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio--equal .home-card{ grid-area:unset !important; }
 /* trio-bd bekommt normalerweise aspect-ratio:2/1 — im equal-Trio nicht */
 .home-trio--equal .trio-bd img{ aspect-ratio:unset !important; }
+/* featured-teaser im equal-Trio: kein full-width, natürliches Seitenverhältnis des Bildes */
+.home-trio--equal .featured-teaser{
+  grid-column:unset !important;
+  aspect-ratio:unset !important;
+}
 
 
 /* ══ HOME FOOTER INFO BUTTON ══ */
@@ -5533,13 +5538,36 @@ function renderHomeLayout(){
       if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
       const trio = document.createElement('div');
       // Asymmetrisches Layout (gl 1:1 + bd 2:1 + po 1:1) nur wenn cellB ein Querformat-Bild hat
-      // Erkennbar am Slug 'buried-diamonds'; alle anderen Trios → gleichbreite 3-Spalten
+      // Erkennbar am Slug 'buried-diamonds'; alle anderen Trios → gleichbreite 3-Spalten mit Slideshow-Renderer
       const isAsymmetric = (cellB.slug || '').toLowerCase() === 'buried-diamonds';
       trio.className = 'home-trio' + (isAsymmetric ? '' : ' home-trio--equal') + ' wide';
-      // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
-      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      if(isAsymmetric){
+        // Original asymmetrisches Trio: einfache home-cards
+        if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+        if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+        if(cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      } else {
+        // Equal trio: buildSlideshowEl für Titel-Overlay und korrektes Bild-Rendering
+        const buildEqualCard = (cell) => {
+          if(!cell.imageUrl || isFinalJustThisDanceCell(cell)) return null;
+          const el = buildSlideshowEl(cell);
+          el.style.borderRadius = '8px';
+          el.style.overflow = 'hidden';
+          // Special-slug routing
+          const specialSlug = (cell.slug||'').toLowerCase();
+          el.addEventListener('click', (e) => {
+            e.stopImmediatePropagation();
+            if(specialSlug === 'kurs-nordwest'){ showKursNordwest(); return; }
+            if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
+            playSongOrAlbum(cell);
+          }, true);
+          return el;
+        };
+        [cellA, cellB, cellC].forEach(cell => {
+          const el = buildEqualCard(cell);
+          if(el) trio.appendChild(el);
+        });
+      }
       grid.appendChild(trio);
       return;
     }
