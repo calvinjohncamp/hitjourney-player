@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524-final-3fixes -->
+<!-- Version: admin-v20260524d-step2-step3-ux -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -7623,8 +7623,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div id="htmMotifPreviewStrip" class="htm-motif-preview" style="display:none;margin-top:10px"></div>
 
       <div class="htm-actions" style="margin-top:12px">
-        <button class="htm-cancel" onclick="htmGoStep(1)">← Zurück</button>
-        <button class="htm-save" onclick="htmGoStep(3)" id="htmStep2Next">Weiter →</button>
+        <button class="htm-save" onclick="htmGoStep(3)" id="htmStep2Next" style="width:100%">Weiter →</button>
       </div>
     </div>
 
@@ -7648,12 +7647,22 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-action-icon">🔗</span>
           <span class="htm-action-label">Externer Link</span>
         </button>
+        <button class="htm-action-btn" data-action="subpage" onclick="htmSetAction('subpage',this)" style="grid-column:1/-1">
+          <span class="htm-action-icon">↗</span>
+          <span class="htm-action-label">Unterseite öffnen</span>
+        </button>
       </div>
 
       <!-- Link URL (nur bei action=link) -->
       <div class="htm-field" id="htmActionLinkField" style="display:none">
         <span class="htm-label">URL</span>
         <input class="htm-input" id="htmLinkUrl" placeholder="https://…">
+      </div>
+
+      <!-- Unterseite URL (nur bei action=subpage) -->
+      <div class="htm-field" id="htmActionSubpageField" style="display:none">
+        <span class="htm-label">Unterseiten-Pfad (z.B. /songs/quiet-knife)</span>
+        <input class="htm-input" id="htmSubpageUrl" placeholder="/songs/…">
       </div>
 
       <!-- Lyrics-Checkbox Info (nur bei action=lyrics) -->
@@ -9876,6 +9885,9 @@ function htmSaveLanguageTeaser(){
 }
 
 /* ── Step 2: source / motif ── */
+// Types where Song/Album cover makes sense (1:1 aspect ratio)
+const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','trio-a','trio-b','trio-c','span-2']);
+
 function htmInitStep2(){
   // Populate song list on first open
   htmRenderSongList('');
@@ -9883,6 +9895,18 @@ function htmInitStep2(){
   htmPopulateAlbumSelect();
   // Update preview strip
   htmUpdateMotifPreview();
+  // Show/hide Song+Album tabs based on cell type
+  const isSquare = HTM_SQUARE_TYPES.has(htmChosenType);
+  const songTab  = document.querySelector('.htm-source-tab[onclick*="song"]');
+  const albumTab = document.querySelector('.htm-source-tab[onclick*="album"]');
+  if(songTab)  songTab.style.display  = isSquare ? '' : 'none';
+  if(albumTab) albumTab.style.display = isSquare ? '' : 'none';
+  // If current source is song/album but type is not square → reset to upload
+  if(!isSquare && (htmChosenSource === 'song' || htmChosenSource === 'album')){
+    htmChosenSource = 'upload';
+    const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
+    if(uploadTab) { uploadTab.click(); }
+  }
 }
 
 function htmSetSource(source, btn){
@@ -10141,8 +10165,9 @@ function htmSetAction(action, btn){
 }
 
 function htmShowActionDetail(action){
-  document.getElementById('htmActionLinkField').style.display   = action==='link'   ? '' : 'none';
-  document.getElementById('htmActionLyricsInfo').style.display  = action==='lyrics' ? '' : 'none';
+  document.getElementById('htmActionLinkField').style.display    = action==='link'    ? '' : 'none';
+  document.getElementById('htmActionLyricsInfo').style.display   = action==='lyrics'  ? '' : 'none';
+  document.getElementById('htmActionSubpageField').style.display = action==='subpage' ? '' : 'none';
 }
 
 /* ── Open ── */
@@ -10163,8 +10188,14 @@ function openHomeTileModal(rowId, cellIdx){
   const cell = row && row.cells[cellIdx];
   if(cell){
     htmChosenType   = cell.type || '';
-    htmChosenAction = cell.lyricsCycle ? 'lyrics' : (cell.fn==='link' ? 'link' : cell.fn==='album' ? 'album' : 'play');
+    htmChosenAction = cell.lyricsCycle ? 'lyrics' : (cell.fn==='link' ? 'link' : cell.fn==='subpage' ? 'subpage' : cell.fn==='album' ? 'album' : 'play');
     htmMotifUrl     = cell.customImageUrl || cell.imageUrl || '';
+    if(cell.fn === 'subpage' && cell.url){
+      setTimeout(()=>{
+        const f = document.getElementById('htmSubpageUrl');
+        if(f) f.value = cell.url;
+      }, 50);
+    }
     if(cell.slug && cell.imageUrl){
       htmChosenSource = 'song';
       htmSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl, cover21Url:cell.cover21Url||cell.imageUrl };
@@ -10240,7 +10271,11 @@ async function saveHomeTile(){
   updatedCell.customImageUrl = htmChosenSource==='upload' ? finalImageUrl : '';
   updatedCell.lyricsCycle= htmChosenAction === 'lyrics';
 
-  if(htmChosenAction === 'link'){
+  if(htmChosenAction === 'subpage'){
+    updatedCell.fn   = 'subpage';
+    updatedCell.url  = document.getElementById('htmSubpageUrl')?.value?.trim() || '';
+    updatedCell.slug = '';
+  } else if(htmChosenAction === 'link'){
     updatedCell.fn   = 'link';
     updatedCell.url  = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     updatedCell.slug = '';
@@ -10260,7 +10295,7 @@ async function saveHomeTile(){
   }
 
   // Badge / label
-  const badgeMap = {play:'Song', lyrics:'Song', album:'Album', link:'Link'};
+  const badgeMap = {play:'Song', lyrics:'Song', album:'Album', link:'Link', subpage:'Unterseite'};
   updatedCell._badge = badgeMap[htmChosenAction] || 'Song';
 
   closeHomeTileModal();
