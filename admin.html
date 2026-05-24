@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524b-strip-static-html-addrow-fix -->
+<!-- Version: admin-v20260524c-fix-duplicate-const -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9398,7 +9398,6 @@ function buildCell(row, cellIdx, extraClass, editing){
   // - Filled cells → always open cell edit (change content/action)
   // - Empty cells with layout type set → open cell edit (fill content)
   // - Empty cells with no layout type (type='empty') → open layout picker
-  const hasLayoutType = cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
   el.onclick = ()=>{
     if(isFilled || isSlide){ openCellEdit(row.id, cellIdx); return; }
     if(!editing) return;
