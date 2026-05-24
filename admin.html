@@ -376,6 +376,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .badge-slide{background:rgba(120,90,200,.8)}
 .he-cell-acts{display:flex;gap:2px}
 .he-cell-act{width:18px;height:18px;border-radius:3px;border:none;cursor:pointer;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.he-cell-act.mov{background:rgba(133,172,201,.2);color:#85ACC9}
+.he-cell-act.mov:hover{background:rgba(133,172,201,.45);color:#cfe5f5}
 .he-cell-act.edt{background:rgba(133,172,201,.3);color:#cfe5f5}
 .he-cell-act.edt:hover{background:rgba(133,172,201,.55)}
 .he-cell-act.rem{background:rgba(220,80,80,.3);color:#f08080}
@@ -7993,12 +7995,12 @@ let editTarget = null;
 let _artistPickPending = false;
 
 /* ── TOAST ── */
-function toast(text, type='ok'){
+function toast(text, type='ok', duration=2800){
   const el = document.getElementById('toast');
   el.textContent = text;
   el.className = 'show ' + type;
   clearTimeout(el._t);
-  el._t = setTimeout(()=>el.className='', 2800);
+  el._t = setTimeout(()=>el.className='', duration);
 }
 
 /* ── TABS ── */
@@ -9301,6 +9303,36 @@ function renderHomeEditor(){
   updateHomeUndoUi();
 }
 
+/* ── Check if all visible cells in a row are filled ── */
+function rowVisibleCells(row){
+  return row.cells.filter(c => c.type !== 'hidden' && c.type !== 'empty');
+}
+function rowIsFullyFilled(row){
+  const visible = rowVisibleCells(row);
+  if(visible.length === 0) return false;
+  return visible.every(c => c.imageUrl || c.bgUrl || (c.type === 'slideshow' && c.slides && c.slides.length > 0));
+}
+
+/* ── Reorder cells within a row ── */
+function moveCellInRow(rowId, cellIdx, dir){
+  const row = rowById(rowId);
+  if(!row) return;
+  const visible = row.cells.map((c,i)=>i).filter(i => row.cells[i].type !== 'hidden' && row.cells[i].type !== 'empty');
+  const pos = visible.indexOf(cellIdx);
+  const newPos = pos + dir;
+  if(newPos < 0 || newPos >= visible.length) return;
+  markHomeAction();
+  // Swap the two cells
+  const targetIdx = visible[newPos];
+  const tmp = {...row.cells[cellIdx]};
+  // Swap content but keep types
+  const typeA = row.cells[cellIdx].type;
+  const typeB = row.cells[targetIdx].type;
+  row.cells[cellIdx] = {...row.cells[targetIdx], type: typeA};
+  row.cells[targetIdx] = {...tmp, type: typeB};
+  renderHomeEditor();
+}
+
 /* ── Row element ── */
 function buildRowEl(row, idx){
   const el = document.createElement('div');
@@ -9327,6 +9359,16 @@ function buildRowEl(row, idx){
   bar.appendChild(btnDel);
 
   if(row.editing){
+    // Show fill status
+    const visible = rowVisibleCells(row);
+    const filled  = visible.filter(c => c.imageUrl || c.bgUrl || (c.type==='slideshow'&&c.slides?.length>0)).length;
+    const total   = visible.length;
+    if(total > 0 && filled < total){
+      const status = document.createElement('span');
+      status.style.cssText = 'font-size:10px;color:rgba(133,172,201,.4);margin-left:4px;flex:1;white-space:nowrap';
+      status.textContent = `${filled}/${total} befüllt`;
+      bar.appendChild(status);
+    }
     const btnDone = makeBarBtn('✓ Fertig','done','Bearbeitung abschließen', ()=>finishRow(row.id));
     bar.appendChild(btnDone);
   } else {
@@ -9470,9 +9512,13 @@ function buildCell(row, cellIdx, extraClass, editing){
       ov.className = 'he-cell-overlay always-edit';
       const badgeCls = isSlide ? 'badge-diashow' : cell._badge==='Album' ? 'badge-album' : cell._badge==='Unterseite' ? 'badge-unterseite' : cell.fn==='link' ? 'badge-link' : 'badge-song';
       const badgeTxt = isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='link' ? 'Link' : 'Song');
+      const reorderBtns = editing ? `
+          <button class="he-cell-act mov" onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},-1)" title="Nach links">←</button>
+          <button class="he-cell-act mov" onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},1)" title="Nach rechts">→</button>` : '';
       ov.innerHTML = `
         <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
         <div class="he-cell-acts">
+          ${reorderBtns}
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
           ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
         </div>`;
@@ -9656,12 +9702,9 @@ function applyType(rowId, cellIdx, type){
 
   if(type === 'slideshow'){
     setTimeout(()=>openSlideshowModal(rowId), 80);
-  } else {
-    const targetIdx = ['1x1'].includes(type) ? cellIdx : 0;
-    setTimeout(()=>openCellEdit(rowId, targetIdx), 80);
   }
+  // No auto-openCellEdit: user sees the row layout and clicks individual cells themselves
 }
-
 
 /* ── Row operations ── */
 function addRow(){
@@ -10207,7 +10250,14 @@ async function saveHomeTile(){
 
   closeHomeTileModal();
   renderHomeEditor();
-  toast('Kachel gespeichert ✓','ok');
+
+  // Check if row is now fully filled → show hint
+  const savedRow = rowById(rowId);
+  if(savedRow && rowIsFullyFilled(savedRow)){
+    toast('Alle Kacheln befüllt ✓ — Klicke auf jede Kachel um Aktionen zu ändern, oder „Fertig" um abzuschließen.','ok', 4000);
+  } else {
+    toast('Kachel gespeichert ✓','ok');
+  }
 }
 
 /* ── Legacy stubs (keep JS from breaking) ── */
