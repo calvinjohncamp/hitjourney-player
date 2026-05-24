@@ -165,20 +165,20 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio .trio-bd img{aspect-ratio:2/1}
 .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
 
-/* Trio mit 3 gleich breiten Spalten gleicher Höhe (Kurs Nordwest / Songwriter's / One Million) */
+/* Trio mit 3 gleich breiten Hochformat-Kacheln (Kurs Nordwest / Songwriter's / One Million) */
 .home-trio--equal{
-  display:flex !important;
-  flex-direction:row !important;
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr !important;
   grid-template-areas:unset !important;
-  grid-template-columns:unset !important;
   gap:10px;
 }
 .home-trio--equal .home-card{
-  flex:1 1 0 !important;
-  min-width:0;
   grid-area:unset !important;
 }
-.home-trio--equal img{ aspect-ratio:1/1 !important; width:100%; object-fit:cover }
+.home-trio--equal .home-card img{
+  aspect-ratio:unset !important;
+  width:100% !important;
+}
 
 
 /* ══ HOME FOOTER INFO BUTTON ══ */

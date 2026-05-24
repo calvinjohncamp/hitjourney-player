@@ -359,8 +359,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 @media(min-width:600px){.he-cell.trio-b{aspect-ratio:2/1}}
 .he-cell.trio-c{grid-area:po;aspect-ratio:1/1}
 /* Equal trio (3 gleich breite 1:1 Kacheln, z.B. Kurs Nordwest / Songwriter's / One Million) */
-.he-row-grid.trio-grid--equal{display:flex;flex-direction:row;gap:10px}
-.he-row-grid.trio-grid--equal .he-cell{flex:1 1 0;min-width:0;grid-area:unset;aspect-ratio:1/1}
+.he-row-grid.trio-grid--equal{display:grid !important;grid-template-columns:1fr 1fr 1fr !important;gap:10px}
+.he-row-grid.trio-grid--equal .he-cell{grid-area:unset !important}
+.he-row-grid.trio-grid--equal .he-cell .he-cell-img{aspect-ratio:unset !important;width:100%}
 .he-cell.hidden-cell{display:none}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
