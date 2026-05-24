@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524o -->
+<!-- Version: admin-v20260524p -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -10145,15 +10145,19 @@ function htmClearSong(){
 function htmPopulateAlbumSelect(){
   const sel = document.getElementById('htmAlbumSelect');
   if(!sel) return;
-  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
-  const playlists = (typeof albumsData !== 'undefined' ? albumsData : []);
-  playlists.forEach(p=>{
-    const opt = document.createElement('option');
-    opt.value = p.slug;
-    opt.textContent = p.title || p.slug;
-    if(htmSelectedAlbum && htmSelectedAlbum.slug === p.slug) opt.selected = true;
-    sel.appendChild(opt);
-  });
+  const doFill = ()=>{
+    sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
+    const playlists = (typeof albumsData !== 'undefined' ? albumsData : []);
+    playlists.forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.slug;
+      opt.textContent = p.title || p.slug;
+      if(htmSelectedAlbum && htmSelectedAlbum.slug === p.slug) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  };
+  // Alben nachladen falls noch nicht geschehen (analog zu htmPopulateActionAlbumSelect)
+  if(!albumsData.length){ loadPlaylists().then(doFill); } else { doFill(); }
 }
 
 function htmPickAlbum(){
