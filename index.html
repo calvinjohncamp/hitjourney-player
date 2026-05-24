@@ -139,7 +139,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tp-play-btn{left:42.5%;top:37.5%;width:52px;height:52px}
 }
 
-.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
+.home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s;position:relative}
 .home-card:active{transform:scale(.95);opacity:.85}
 .home-card.wide{grid-column:1/-1}
 /* New layout types from admin v9 */
@@ -186,6 +186,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   line-height:1.7;
   color:rgba(207,229,245,.55);
   white-space:pre-wrap;
+}
+/* Label-Balken auf Kacheln (aus cell.alt) */
+.home-card-label{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  padding:22px 12px 10px;
+  background:linear-gradient(transparent,rgba(6,20,32,.82));
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:rgba(207,229,245,.92);
+  text-align:center;
+  pointer-events:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 
@@ -5642,6 +5659,14 @@ function buildHomeCard(cell, extraClass){
   el.appendChild(img);
 
   // Click action
+  // Label-Balken (dunkler Overlay-Balken unten mit cell.alt)
+  if(cell.alt){
+    const lbl = document.createElement('div');
+    lbl.className = 'home-card-label';
+    lbl.textContent = cell.alt;
+    el.appendChild(lbl);
+  }
+
   el.addEventListener('click', () => {
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.

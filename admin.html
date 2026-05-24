@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524i-trio-square-subpage-label -->
+<!-- Version: admin-v20260524j-trio-sq-upload-link-alt -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -7677,12 +7677,16 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div class="htm-field" id="htmActionLinkField" style="display:none;margin-top:10px">
         <span class="htm-label">URL</span>
         <input class="htm-input" id="htmLinkUrl" placeholder="https://…">
+        <span class="htm-label" style="margin-top:8px">Label (Beschriftung auf der Kachel)</span>
+        <input class="htm-input" id="htmLinkAlt" placeholder="z.B. Kurs Nordwest">
       </div>
 
       <!-- Unterseite (action=subpage) -->
       <div class="htm-field" id="htmActionSubpageField" style="display:none;margin-top:10px">
         <span class="htm-label">Unterseiten-Slug (wird neu angelegt)</span>
         <input class="htm-input" id="htmSubpageUrl" placeholder="z.B. meine-unterseite">
+        <span class="htm-label" style="margin-top:8px">Label (Beschriftung auf der Kachel)</span>
+        <input class="htm-input" id="htmSubpageAlt" placeholder="z.B. Kurs Nordwest">
       </div>
 
       <div class="htm-actions" style="margin-top:12px">
@@ -9928,6 +9932,12 @@ function htmInitStep2(){
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
   }
+  // Upload-Zone Aspect Ratio: 1:1 für Trio/Quadrat-Typen, 2:1 sonst
+  const uploadZone = document.getElementById('zHtmMotif');
+  if(uploadZone){
+    uploadZone.classList.toggle('sq', isSquare);
+    uploadZone.classList.toggle('wide', !isSquare);
+  }
 }
 
 function htmSetSource(source, btn){
@@ -10334,6 +10344,16 @@ function openHomeTileModal(rowId, cellIdx){
       setTimeout(()=>{
         const f = document.getElementById('htmSubpageUrl');
         if(f) f.value = cell.url;
+        const fa = document.getElementById('htmSubpageAlt');
+        if(fa) fa.value = cell.alt || '';
+      }, 50);
+    }
+    if(cell.fn === 'link' && cell.url){
+      setTimeout(()=>{
+        const f = document.getElementById('htmLinkUrl');
+        if(f) f.value = cell.url;
+        const fa = document.getElementById('htmLinkAlt');
+        if(fa) fa.value = cell.alt || '';
       }, 50);
     }
     if(cell.slug && cell.imageUrl){
@@ -10419,12 +10439,12 @@ async function saveHomeTile(){
     updatedCell.fn   = 'subpage';
     updatedCell.url  = document.getElementById('htmSubpageUrl')?.value?.trim() || '';
     updatedCell.slug = '';
-    updatedCell.alt  = '';
+    updatedCell.alt  = document.getElementById('htmSubpageAlt')?.value?.trim() || '';
   } else if(htmChosenAction === 'link'){
     updatedCell.fn   = 'link';
     updatedCell.url  = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     updatedCell.slug = '';
-    updatedCell.alt  = '';
+    updatedCell.alt  = document.getElementById('htmLinkAlt')?.value?.trim() || '';
   } else if(htmChosenAction === 'album' && htmActionSelectedAlbum){
     updatedCell.fn   = 'album';
     updatedCell.slug = htmActionSelectedAlbum.slug;
