@@ -525,6 +525,61 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
 
 
+/* ══ NEW LAYOUT GRID TYPES ════════════════════════════════════════════════ */
+
+/* 2:1 ganze Breite */
+.he-row-grid.layout-2x1full{display:grid;grid-template-columns:1fr}
+.he-cell.cell-2x1full{aspect-ratio:4/2;width:100%}
+
+/* 2× 2:1 halbe Breite nebeneinander */
+.he-row-grid.layout-2x2half{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.he-cell.cell-2x1half{aspect-ratio:2/1;width:100%}
+
+/* 2:1 halb + 2× 1:1 rechts */
+.he-row-grid.layout-2x1plus2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px}
+.he-row-grid.layout-2x1plus2 .cell-2x1half{aspect-ratio:2/1;grid-row:1/3}
+
+/* 2× große 1:1 */
+.he-row-grid.layout-2big{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.he-cell.cell-1x1big{aspect-ratio:1/1;width:100%}
+
+/* 1:2 Hochformat + 2× 1:1 */
+.he-row-grid.layout-1x2mix{display:grid;grid-template-columns:1fr 1fr;gap:4px;align-items:stretch}
+.he-cell.cell-1x2tall{aspect-ratio:1/2;width:100%}
+.layout-1x2mix-right{display:flex;flex-direction:column;gap:4px}
+.layout-1x2mix-right .he-cell{flex:1;min-height:0}
+
+/* ══ LAYOUT PICKER MODAL ══════════════════════════════════════════════════ */
+#layoutPickerModal{display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:20px}
+#layoutPickerModal.open{display:flex}
+.lpm-inner{background:#0B1E2D;border:1px solid rgba(133,172,201,.22);border-radius:18px 18px 14px 14px;width:100%;max-width:540px;padding:22px 18px 18px;animation:fadeIn .2s ease;max-height:88vh;overflow-y:auto}
+.lpm-inner::-webkit-scrollbar{display:none}
+.lpm-title{font-size:15px;font-weight:800;color:#cfe5f5;margin-bottom:4px;letter-spacing:.01em}
+.lpm-sub{font-size:11px;color:rgba(133,172,201,.4);margin-bottom:18px}
+
+/* Grid of layout options */
+.lpm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.lpm-option{border:1.5px solid rgba(133,172,201,.15);border-radius:12px;background:rgba(133,172,201,.04);cursor:pointer;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;position:relative}
+.lpm-option:hover{background:rgba(133,172,201,.1);border-color:rgba(133,172,201,.35)}
+.lpm-option.selected{background:rgba(133,172,201,.16);border-color:#85ACC9}
+.lpm-option-preview{width:100%;display:flex;gap:3px;align-items:flex-end}
+/* Preview shapes */
+.lpm-sq{background:rgba(133,172,201,.25);border-radius:4px;flex:1}
+.lpm-sq.h1{aspect-ratio:1/1}
+.lpm-sq.h2{aspect-ratio:1/2}
+.lpm-sq.h15{aspect-ratio:1/1.5}
+.lpm-sq.w2{flex:2;aspect-ratio:2/1}
+.lpm-sq.w4{flex:4;aspect-ratio:4/1}
+.lpm-sq.big{flex:2;aspect-ratio:1/1}
+.lpm-sq.diashow{flex:4;aspect-ratio:2/1;background:linear-gradient(135deg,rgba(120,90,200,.35),rgba(133,172,201,.2));border:1px dashed rgba(120,90,200,.5);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px}
+.lpm-label{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.5);text-align:center;line-height:1.4}
+.lpm-option:hover .lpm-label,.lpm-option.selected .lpm-label{color:#cfe5f5}
+/* Full-width diashow option */
+.lpm-option.full{grid-column:1/-1}
+/* Cancel */
+.lpm-cancel{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:rgba(133,172,201,.08);color:rgba(133,172,201,.6);transition:background .15s}
+.lpm-cancel:hover{background:rgba(133,172,201,.16);color:#cfe5f5}
+
 /* ── Snapshot-Button ── */
 .snapshot-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1px solid rgba(255,200,80,.25);cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.06em;background:rgba(255,200,80,.08);color:#f0c040;transition:background .15s;white-space:nowrap}
 .snapshot-btn:hover{background:rgba(255,200,80,.18)}
@@ -7619,6 +7674,103 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
+<!-- ══ LAYOUT PICKER MODAL ══ -->
+<div id="layoutPickerModal">
+  <div class="lpm-inner">
+    <div class="lpm-title">Zeilenformat wählen</div>
+    <div class="lpm-sub">Wähle das Layout für diese Zeile. Klicke danach auf jede Kachel, um den Inhalt zu definieren.</div>
+    <div class="lpm-grid" id="lpmGrid">
+
+      <!-- 4× 1:1 Quadrat -->
+      <div class="lpm-option" data-layout="4x1x1" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+        </div>
+        <div class="lpm-label">4× 1:1<br>Quadrat</div>
+      </div>
+
+      <!-- 2× 1:1 groß -->
+      <div class="lpm-option" data-layout="2x1x1" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq h1 big"></div>
+          <div class="lpm-sq h1 big"></div>
+        </div>
+        <div class="lpm-label">2× 1:1<br>Groß</div>
+      </div>
+
+      <!-- 2:1 Ganze Breite -->
+      <div class="lpm-option" data-layout="1x2x1-full" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq w4" style="aspect-ratio:4/2"></div>
+        </div>
+        <div class="lpm-label">2:1 Quer<br>Ganze Breite</div>
+      </div>
+
+      <!-- 2:1 Halbe Breite (2 nebeneinander) -->
+      <div class="lpm-option" data-layout="2x2x1-half" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq w2" style="aspect-ratio:2/1"></div>
+          <div class="lpm-sq w2" style="aspect-ratio:2/1"></div>
+        </div>
+        <div class="lpm-label">2× 2:1 Quer<br>Halbe Breite</div>
+      </div>
+
+      <!-- 4:1 Panorama -->
+      <div class="lpm-option" data-layout="1x4x1" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq w4" style="aspect-ratio:4/1"></div>
+        </div>
+        <div class="lpm-label">4:1 Panorama<br>Volle Breite</div>
+      </div>
+
+      <!-- 3× 1:1,5 Trio -->
+      <div class="lpm-option" data-layout="3x1x15" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq h15"></div>
+          <div class="lpm-sq h15"></div>
+          <div class="lpm-sq h15"></div>
+        </div>
+        <div class="lpm-label">3× 1:1,5<br>Trio</div>
+      </div>
+
+      <!-- 1:2 Hochformat + 2× 1:1 -->
+      <div class="lpm-option" data-layout="1x1x2-mix" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq h2 big"></div>
+          <div style="flex:2;display:flex;flex-direction:column;gap:3px">
+            <div class="lpm-sq h1" style="flex:1;aspect-ratio:auto"></div>
+            <div class="lpm-sq h1" style="flex:1;aspect-ratio:auto"></div>
+          </div>
+        </div>
+        <div class="lpm-label">1:2 Hochformat<br>+ 2× 1:1</div>
+      </div>
+
+      <!-- 2:1 Halbe + 2× 1:1 -->
+      <div class="lpm-option" data-layout="1x2x1-plus2" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq w2" style="aspect-ratio:2/1;flex:2"></div>
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+        </div>
+        <div class="lpm-label">2:1 Quer<br>+ 2× 1:1</div>
+      </div>
+
+      <!-- Diashow (full-width) -->
+      <div class="lpm-option full" data-layout="slideshow" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center">
+          <div class="lpm-sq diashow">◈</div>
+        </div>
+        <div class="lpm-label">Diashow — Animierter Bilderstreifen</div>
+      </div>
+
+    </div>
+    <button class="lpm-cancel" onclick="closeLpm()">Abbrechen</button>
+  </div>
+</div>
+
 <!-- ══ HOME SLIDESHOW MODAL ══ -->
 <div id="homeSlideshowModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);flex-direction:column;align-items:center;justify-content:flex-end;padding:0">
   <div style="width:100%;max-width:560px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:94vh;animation:fadeIn .2s ease">
@@ -9208,8 +9360,6 @@ function buildCells(row, grid){
   grid.className = 'he-row-grid';
   const c = row.cells;
   const editing = row.editing;
-
-  // Determine visual layout from cell types
   const t0 = c[0].type;
 
   if(t0 === 'slideshow'){
@@ -9218,9 +9368,51 @@ function buildCells(row, grid){
   } else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
     grid.appendChild(buildCell(row, 0, 'span-4', editing));
 
+  } else if(t0 === '2x1-full'){
+    // 2:1 ganze Breite — volle Breite, 2:1 Seitenverhältnis
+    grid.classList.add('layout-2x1full');
+    grid.appendChild(buildCell(row, 0, 'cell-2x1full', editing));
+
+  } else if(t0 === '2x1-half'){
+    // 2× 2:1 nebeneinander, oder 2:1 + 1:1 + 1:1
+    const t1 = c[1].type;
+    if(t1 === '2x1-half'){
+      grid.classList.add('layout-2x2half');
+      grid.appendChild(buildCell(row, 0, 'cell-2x1half', editing));
+      grid.appendChild(buildCell(row, 1, 'cell-2x1half', editing));
+    } else {
+      // 2:1-half + 2× 1:1
+      grid.classList.add('layout-2x1plus2');
+      grid.appendChild(buildCell(row, 0, 'cell-2x1half', editing));
+      if(editing || (c[1].imageUrl||c[1].bgUrl)) grid.appendChild(buildCell(row, 1, '', editing));
+      if(editing || (c[2].imageUrl||c[2].bgUrl)) grid.appendChild(buildCell(row, 2, '', editing));
+    }
+
+  } else if(t0 === '1x1-big'){
+    // 2× große 1:1 Quadrate
+    grid.classList.add('layout-2big');
+    grid.appendChild(buildCell(row, 0, 'cell-1x1big', editing));
+    grid.appendChild(buildCell(row, 1, 'cell-1x1big', editing));
+
+  } else if(t0 === '1x2-tall'){
+    // 1:2 Hochformat + 2× 1:1 rechts
+    grid.classList.add('layout-1x2mix');
+    grid.appendChild(buildCell(row, 0, 'cell-1x2tall', editing));
+    const right = document.createElement('div');
+    right.className = 'layout-1x2mix-right';
+    if(editing || (c[1].imageUrl||c[1].bgUrl)) right.appendChild(buildCell(row, 1, '', editing));
+    if(editing || (c[2].imageUrl||c[2].bgUrl)) right.appendChild(buildCell(row, 2, '', editing));
+    grid.appendChild(right);
+
+  } else if(t0 === 'trio-a'){
+    grid.classList.add('trio-grid');
+    grid.appendChild(buildCell(row, 0, 'trio-a', editing));
+    grid.appendChild(buildCell(row, 1, 'trio-b', editing));
+    grid.appendChild(buildCell(row, 2, 'trio-c', editing));
+
   } else if(t0 === 'span-2' || t0 === '2x1'){
+    // Legacy 2x1
     grid.appendChild(buildCell(row, 0, 'span-2', editing));
-    // In editing mode show remaining cells (they may be filled); in view mode hide empty ones
     for(let i=1;i<4;i++){
       const cell = c[i];
       if(editing || (cell.imageUrl || cell.bgUrl)){
@@ -9228,15 +9420,8 @@ function buildCells(row, grid){
       }
     }
 
-  } else if(t0 === 'trio-a'){
-    // Trio: use CSS grid-areas gl/bd/po
-    grid.classList.add('trio-grid');
-    grid.appendChild(buildCell(row, 0, 'trio-a', editing)); // gl
-    grid.appendChild(buildCell(row, 1, 'trio-b', editing)); // bd
-    grid.appendChild(buildCell(row, 2, 'trio-c', editing)); // po
-
   } else {
-    // Default: 1:1 cells — in view mode skip empty ones
+    // Default: 1:1 cells
     for(let i=0;i<4;i++){
       const cell = c[i];
       if(cell.type === 'hidden') continue;
@@ -9318,67 +9503,108 @@ function buildCell(row, cellIdx, extraClass, editing){
   return el;
 }
 
-/* ── Type menu (appears on click on empty cell in edit mode) ── */
-function toggleTypeMenu(cellEl, rowId, cellIdx){
-  // Remove any existing menus
-  document.querySelectorAll('.he-type-menu').forEach(m=>m.remove());
+/* ══ LAYOUT PICKER MODAL (LPM) ══════════════════════════════════════════ */
 
-  const menu = document.createElement('div');
-  menu.className = 'he-type-menu';
+let lpmTargetRowId   = null;
+let lpmTargetCellIdx = null;  // which cell was clicked (used for 1:1 and mixed layouts)
 
-  const row = rowById(rowId);
-  const currentType = row.cells[cellIdx].type;
-
-  const types = [
-    {key:'1x1',      label:'1:1 · Quadratisch'},
-    {key:'2x1',      label:'2:1 · Quer (×2)'},
-    {key:'trio',     label:'3er Block'},
-    {key:'4x1',      label:'4:1 · Volle Breite'},
-    {key:'lyrics21', label:'Lyrics-Sheet 21 · volle Breite'},
-    {key:'slideshow',label:'◈ Diashow'},
-  ];
-
-  types.forEach(t=>{
-    const btn = document.createElement('button');
-    btn.className = 'he-type-btn' + (currentType===t.key?' selected':'');
-    btn.textContent = t.label;
-    btn.onclick = (e)=>{ e.stopPropagation(); applyType(rowId, cellIdx, t.key); };
-    menu.appendChild(btn);
-  });
-  const cancel = document.createElement('button');
-  cancel.className = 'he-type-btn cancel';
-  cancel.textContent = '× Abbrechen';
-  cancel.onclick = (e)=>{ e.stopPropagation(); menu.remove(); };
-  menu.appendChild(cancel);
-
-  cellEl.appendChild(menu);
+function openLpm(rowId, cellIdx){
+  lpmTargetRowId   = rowId;
+  lpmTargetCellIdx = cellIdx ?? 0;
+  // Reset selection
+  document.querySelectorAll('.lpm-option').forEach(o=>o.classList.remove('selected'));
+  document.getElementById('layoutPickerModal').classList.add('open');
 }
 
-/* ── Apply a type to a cell (may merge/reset siblings) ── */
+function closeLpm(){
+  document.getElementById('layoutPickerModal').classList.remove('open');
+  lpmTargetRowId = null;
+  lpmTargetCellIdx = null;
+}
+
+// Map layout key → applyType key
+const LPM_TYPE_MAP = {
+  '4x1x1':      '1x1',
+  '2x1x1':      '2big',
+  '1x2x1-full': '4x1-wide',   // 2:1 full width (maps to span-4 with 2:1 aspect)
+  '2x2x1-half': '2x2half',    // 2× 2:1 side by side
+  '1x4x1':      '4x1',        // 4:1 panorama
+  '3x1x15':     'trio',
+  '1x1x2-mix':  '1x2mix',     // 1:2 + 2×1:1
+  '1x2x1-plus2':'2x1plus2',   // 2:1 half + 2×1:1
+  'slideshow':   'slideshow',
+};
+
+function lpmPick(optionEl){
+  document.querySelectorAll('.lpm-option').forEach(o=>o.classList.remove('selected'));
+  optionEl.classList.add('selected');
+  const layout = optionEl.dataset.layout;
+  closeLpm();
+  setTimeout(()=> applyType(lpmTargetRowId, lpmTargetCellIdx, LPM_TYPE_MAP[layout]||layout), 60);
+}
+
+// Backdrop click closes lpm
+document.getElementById('layoutPickerModal').addEventListener('click', e=>{
+  if(e.target === document.getElementById('layoutPickerModal')) closeLpm();
+});
+
+/* ── Type menu (appears on click on empty cell in edit mode) ── */
+function toggleTypeMenu(cellEl, rowId, cellIdx){
+  // Open the new layout picker modal instead of the old dropdown menu
+  openLpm(rowId, cellIdx);
+}
+
+
+/* ── Apply a layout type to a row ── */
 function applyType(rowId, cellIdx, type){
   const row = rowById(rowId);
   if(!type || !row) return;
 
   markHomeAction();
 
-  // Wichtig: Eine normale 1:1-Kachel darf NICHT die ganze Zeile zurücksetzen.
-  // Genau das war der Fehler: Nach Feld 1 wurde beim Bestücken von Feld 2 die Zeile neu aufgebaut,
-  // wodurch praktisch keine 2/3/4 Medien in einer Zeile sauber möglich waren.
   if(type === '1x1'){
+    // Single 1:1 cell — just update this cell's type, leave others as-is
     const keep = {...row.cells[cellIdx]};
     row.cells[cellIdx] = {...emptyCell(), ...keep, type:'1x1'};
 
-  } else if(type === '2x1'){
-    // 2:1 ist ein Layout für den linken Zeilenbereich. Bereits vorhandene Zusatzkacheln rechts bleiben erhalten.
+  } else if(type === '2big'){
+    // 2× large 1:1 (each spans 2 columns) — reset row to 2 big cells
     const old = row.cells.map(c=>({...c}));
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    row.cells[0] = {...row.cells[0], ...old[0], type:'span-2'};
-    for(let i=1;i<4;i++){
-      // sichtbare rechte Felder weiter nutzbar lassen
-      row.cells[i] = {...row.cells[i], ...old[i], type:(old[i]?.type && old[i].type!=='hidden' ? old[i].type : 'empty')};
-    }
+    row.cells[0] = {...row.cells[0], ...old[0], type:'1x1-big'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'1x1-big'};
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === '4x1-wide'){
+    // 2:1 full width (spans 4 cols, aspect 2:1)
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'2x1-full'};
+    row.cells[1].type = 'hidden';
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === '2x2half'){
+    // 2× 2:1 side by side (each spans 2 cols, aspect 2:1)
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'2x1-half'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'2x1-half'};
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === '4x1'){
+    // 4:1 panorama
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
+    row.cells[1].type = 'hidden';
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
 
   } else if(type === 'trio'){
+    // 3× 1:1.5
     const old = row.cells.map(c=>({...c}));
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old[0], type:'trio-a'};
@@ -9386,30 +9612,44 @@ function applyType(rowId, cellIdx, type){
     row.cells[2] = {...row.cells[2], ...old[2], type:'trio-c'};
     row.cells[3].type = 'hidden';
 
-  } else if(type === '4x1'){
-    const old0 = {...row.cells[cellIdx]};
+  } else if(type === '1x2mix'){
+    // 1:2 Hochformat (spans 2 cols) + 2× 1:1 stacked right
+    const old = row.cells.map(c=>({...c}));
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
-    row.cells[1].type = 'hidden';
-    row.cells[2].type = 'hidden';
+    row.cells[0] = {...row.cells[0], ...old[0], type:'1x2-tall'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'1x1'};
+    row.cells[2] = {...row.cells[2], ...old[2], type:'1x1'};
+    row.cells[3].type = 'hidden';
+
+  } else if(type === '2x1plus2'){
+    // 2:1 half width + 2× 1:1
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'2x1-half'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'1x1'};
+    row.cells[2] = {...row.cells[2], ...old[2], type:'1x1'};
     row.cells[3].type = 'hidden';
 
   } else if(type === 'lyrics21'){
-    // Lyrics-Sheet 2:1: volle Breite, nimmt automatisch das 2:1-Lyricssheet 21/Cover21 des Songs.
-    const old0 = {...row.cells[cellIdx]};
+    const old0 = {...row.cells[0]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old0, type:'lyrics21', useCover21:true};
-    row.cells[1].type = 'hidden';
-    row.cells[2].type = 'hidden';
-    row.cells[3].type = 'hidden';
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
+
+  } else if(type === '2x1'){
+    // Legacy: 2:1 mit extra slots rechts
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'span-2'};
+    for(let i=1;i<4;i++){
+      row.cells[i] = {...row.cells[i], ...old[i], type:(old[i]?.type && old[i].type!=='hidden' ? old[i].type : 'empty')};
+    }
 
   } else if(type === 'slideshow'){
-    const old0 = {...row.cells[cellIdx]};
+    const old0 = {...row.cells[0]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old0, type:'slideshow'};
-    row.cells[1].type = 'hidden';
-    row.cells[2].type = 'hidden';
-    row.cells[3].type = 'hidden';
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
   }
 
   renderHomeEditor();
@@ -9417,10 +9657,11 @@ function applyType(rowId, cellIdx, type){
   if(type === 'slideshow'){
     setTimeout(()=>openSlideshowModal(rowId), 80);
   } else {
-    const targetIdx = (type === '1x1') ? cellIdx : 0;
+    const targetIdx = ['1x1'].includes(type) ? cellIdx : 0;
     setTimeout(()=>openCellEdit(rowId, targetIdx), 80);
   }
 }
+
 
 /* ── Row operations ── */
 function addRow(){
@@ -10767,9 +11008,7 @@ songsLoaded = true; loadSongs();
 // ── Home-Editor beim Start initialisieren, falls HOME-Tab aktiv ist ──
 (function(){
   const activeTab = document.querySelector('.tab.active');
-  if(activeTab && activeTab.dataset.tab === 'home'){
-    initHomeEditor();
-  }
+  if(activeTab && activeTab.dataset.tab === 'home') initHomeEditor();
 })();
 
 // ── Event-Delegation für .edit-row Buttons im statisch gerenderten HTML ──
