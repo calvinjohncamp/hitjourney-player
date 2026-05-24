@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260523f-restore-startup-load -->
+<!-- Version: admin-v20260524a-lpm-race-fix-step2-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9595,9 +9595,12 @@ const LPM_TYPE_MAP = {
 function lpmPick(optionEl){
   document.querySelectorAll('.lpm-option').forEach(o=>o.classList.remove('selected'));
   optionEl.classList.add('selected');
-  const layout = optionEl.dataset.layout;
+  const layout  = optionEl.dataset.layout;
+  // Capture before closeLpm() nulls them
+  const rowId   = lpmTargetRowId;
+  const cellIdx = lpmTargetCellIdx;
   closeLpm();
-  setTimeout(()=> applyType(lpmTargetRowId, lpmTargetCellIdx, LPM_TYPE_MAP[layout]||layout), 60);
+  setTimeout(()=> applyType(rowId, cellIdx, LPM_TYPE_MAP[layout]||layout), 60);
 }
 
 // Backdrop click closes lpm
@@ -9615,7 +9618,10 @@ function toggleTypeMenu(cellEl, rowId, cellIdx){
 /* ── Apply a layout type to a row ── */
 function applyType(rowId, cellIdx, type){
   const row = rowById(rowId);
-  if(!type || !row) return;
+  if(!type || !row){
+    if(!rowId) console.error('applyType: rowId is null — lpmPick race condition?');
+    return;
+  }
 
   markHomeAction();
 
@@ -10173,9 +10179,10 @@ function openHomeTileModal(rowId, cellIdx){
   // Mark existing type button
   document.querySelectorAll('.htm-type-btn').forEach(b=>b.classList.toggle('selected', b.dataset.type===htmChosenType));
 
-  // Always go to step 2 if layout type is already set (from the layout picker modal)
-  // Step 1 (old type picker) is now only a fallback for legacy cells without a type
-  const layoutAlreadySet = cell && cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
+  // All non-empty, non-hidden types count as "layout already chosen".
+  // Includes trio sub-types (trio-a/b/c), 1x1, 1x1-big, 2x1-half, 2x1-full, 1x2-tall, span-4, etc.
+  const EMPTY_TYPES = new Set(['empty', 'hidden', '']);
+  const layoutAlreadySet = cell && cell.type && !EMPTY_TYPES.has(cell.type);
   if(layoutAlreadySet || (cell && (cell.imageUrl||cell.slug))){
     htmGoStep(2);
   } else {
