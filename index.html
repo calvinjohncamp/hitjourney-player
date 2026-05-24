@@ -5702,24 +5702,24 @@ function buildHomeCard(cell, extraClass){
     : (cell.imageUrl || cell.customImageUrl);
   el.appendChild(img);
 
-  // Label-Balken: nur für Trio-Kacheln (trio-a/b/c)
+  // Label-Balken: für Trio-Kacheln IMMER erzeugen
   const _TRIO = new Set(['trio-a','trio-b','trio-c']);
-  if(cell.alt && (cell._isTrio || _TRIO.has(cell.type))){
+  if(cell._isTrio || _TRIO.has(cell.type)){
     const lbl = document.createElement('div');
     lbl.className = 'home-card-label';
-    // Zeilenumbrüche: bekannte Titel bekommen feste 3-Zeilen-Aufteilung,
-    // sonst wird nach Wort gesplittet (max 2 Wörter pro Zeile)
     const knownLines = {
-      'Kurs Nordwest':            ['Kurs','Nordwest',''],
+      'Kurs Nordwest':            ['Kurs','Nordwest'],
       "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
-      'Songwriters Favorites':    ['Song',"Writers",'Favorites'],
+      'Songwriters Favorites':    ['Song','Writers','Favorites'],
       'One Million Streams Ahead':['One Million','Streams','Ahead'],
     };
-    const lines = knownLines[cell.alt] || cell.alt.split(' ').reduce((acc,w,i)=>{
+    // Fallback: Titel aus imageUrl ableiten wenn alt leer
+    const altText = cell.alt || (cell.imageUrl||'').split('/').pop().replace(/[%+]/g,' ').replace(/\.(jpg|png|webp)/i,'').trim();
+    const lines = knownLines[altText] || knownLines[cell.alt] || (altText ? altText.split(' ').reduce((acc,w,i)=>{
       if(i%2===0) acc.push(w); else acc[acc.length-1]+=' '+w; return acc;
-    },[]);
+    },[]) : ['']);
     lines.forEach(line => {
-      if(line === '') return; // leere Zeile überspringen
+      if(!line) return;
       const sp = document.createElement('span');
       sp.textContent = line;
       lbl.appendChild(sp);
