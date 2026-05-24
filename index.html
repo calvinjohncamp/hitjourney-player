@@ -165,6 +165,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-trio .trio-bd img{aspect-ratio:2/1}
 .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
 
+/* Trio mit 3 gleich breiten Spalten gleicher Höhe (Kurs Nordwest / Songwriter's / One Million) */
+.home-trio--equal{
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-areas:"gl bd po";
+}
+.home-trio--equal .trio-gl,
+.home-trio--equal .trio-bd,
+.home-trio--equal .trio-po{ grid-area:unset }
+.home-trio--equal .home-card:nth-child(1){ grid-area:gl }
+.home-trio--equal .home-card:nth-child(2){ grid-area:bd }
+.home-trio--equal .home-card:nth-child(3){ grid-area:po }
+.home-trio--equal img{ aspect-ratio:1/1; width:100%; object-fit:cover }
+
 
 /* ══ HOME FOOTER INFO BUTTON ══ */
 .home-info-footer{
@@ -2404,6 +2417,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
   .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
   .home-trio .trio-bd img{aspect-ratio:2/1}
+  .home-trio--equal{
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-areas:"gl bd po";
+  }
+  .home-trio--equal img{ aspect-ratio:1/1 }
   .featured-teaser{grid-column:1/-1}
 
   /* Editorial row: 3 columns, more padding */
@@ -5520,7 +5538,10 @@ function renderHomeLayout(){
       const cellC = cells[2]; // tall right
       if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
       const trio = document.createElement('div');
-      trio.className = 'home-trio wide';
+      // Asymmetrisches Layout (gl 1:1 + bd 2:1 + po 1:1) nur wenn cellB ein Querformat-Bild hat
+      // Erkennbar am Slug 'buried-diamonds'; alle anderen Trios → gleichbreite 3-Spalten
+      const isAsymmetric = (cellB.slug || '').toLowerCase() === 'buried-diamonds';
+      trio.className = 'home-trio' + (isAsymmetric ? '' : ' home-trio--equal') + ' wide';
       // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
       if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
       if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
