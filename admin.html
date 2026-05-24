@@ -10173,8 +10173,14 @@ function openHomeTileModal(rowId, cellIdx){
   // Mark existing type button
   document.querySelectorAll('.htm-type-btn').forEach(b=>b.classList.toggle('selected', b.dataset.type===htmChosenType));
 
-  // If cell already configured skip to step 2
-  htmGoStep(cell && (cell.imageUrl||cell.slug) ? 2 : 1);
+  // Always go to step 2 if layout type is already set (from the layout picker modal)
+  // Step 1 (old type picker) is now only a fallback for legacy cells without a type
+  const layoutAlreadySet = cell && cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
+  if(layoutAlreadySet || (cell && (cell.imageUrl||cell.slug))){
+    htmGoStep(2);
+  } else {
+    htmGoStep(1);
+  }
   document.getElementById('homeTileModal').classList.add('open');
 }
 
