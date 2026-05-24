@@ -5575,6 +5575,10 @@ function buildHomeCard(cell, extraClass){
       if(cell.url === '#archive'){ showArchive(); return; }
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
+    // Spezielle Slugs → eigene Unterseiten statt Album
+    const specialSlug = (cell.slug || '').toLowerCase();
+    if(specialSlug === 'kurs-nordwest'){ showKursNordwest(); return; }
+    if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
 
     // Home-Sonderfall: einzelne Audio-Teaser wie oben „Tante Paula“
     // verhalten sich wie „Just This Dance“: Klick 1 = Play, Klick 2 = Pause,
