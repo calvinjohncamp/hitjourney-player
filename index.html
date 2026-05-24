@@ -5738,7 +5738,7 @@ function buildHomeCard(cell, extraClass){
   el.addEventListener('click', () => {
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
-    if(cell.fn === 'play' && (cell.lyricsCycle || cell.type === 'lyrics21' || cell.useCover21)){
+    if(cell.fn === 'play' && (cell.lyricsCycle || cell.useCover21)){
       if(playHomeLyricsCycle(cell, el)) return;
     }
     if(cell.fn === 'link'){
