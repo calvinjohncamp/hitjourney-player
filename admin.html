@@ -10756,8 +10756,9 @@ function importCurrentHome(){
 })();
 
 let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
-// Songs beim Start laden (Songs-Tab ist default aktiv)
+// Songs und Home-Layout beim Start sofort laden
 songsLoaded = true; loadSongs();
+homeEditorReady = true; loadHomeLayout();
 
 /* ══════════════════════════════════════════════════════════════════════════
    SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)
