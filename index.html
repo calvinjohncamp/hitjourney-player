@@ -141,6 +141,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 .home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s;position:relative}
 .home-card:active{transform:scale(.95);opacity:.85}
+.home-card.playing::after{content:'';position:absolute;inset:0;border-radius:8px;border:2px solid rgba(133,172,201,.55);pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
+.home-card.playing .home-card-label{background:rgba(11,30,50,.88)}
+@keyframes hcPulse{0%,100%{border-color:rgba(133,172,201,.55)}50%{border-color:rgba(133,172,201,.15)}}
 .home-card.wide{grid-column:1/-1}
 /* New layout types from admin v9 */
 .home-row-wrap{display:contents} /* row wrapper transparent to grid */
@@ -5764,7 +5767,7 @@ function buildHomeCard(cell, extraClass){
     if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
 
     if(albumKey) showAlbum(albumKey);
-    else if(cell.slug) playSongBySlug(cell.slug);
+    else if(cell.slug) toggleHomeCardPlay(cell, el);
   });
   return el;
 }
@@ -6366,6 +6369,73 @@ function playSongBySlug(slug){
   setImgSrcWithFallback(nowCover, getImgUrls(song,'cover'));
   playerBar.classList.add('visible');
 }
+
+/* ── Home-Card: Play/Pause ohne Player-Bar ── */
+// Aktive Home-Card-Kachel merken für Klassen-Reset beim Wechsel
+let _hjHomeCardActive = null; // { mp3, el }
+
+function toggleHomeCardPlay(cell, el){
+  const slug = cell.slug || '';
+  const song = SUPABASE_SONGS.find(s => s.slug === slug);
+  if(!song || !song.mp3) return;
+
+  const current = audio.currentSrc || audio.src || '';
+  const isThisSong = sameAudioUrl(current, song.mp3);
+
+  // Laufender Player-Bar-Song soll nicht weiterlaufen
+  featuredMode = true;
+  playerBar.classList.remove('visible');
+
+  if(isThisSong){
+    // Gleicher Song: Play/Pause toggeln
+    if(audio.paused){
+      audio.play().catch(()=>{});
+      el.classList.add('playing');
+    } else {
+      audio.pause();
+      el.classList.remove('playing');
+    }
+    return;
+  }
+
+  // Neuer Song: vorherige Kachel resetten
+  if(_hjHomeCardActive && _hjHomeCardActive.el){
+    _hjHomeCardActive.el.classList.remove('playing');
+  }
+  window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'home-card' } }));
+  _hjHomeCardActive = { mp3: song.mp3, el };
+  audio.src = song.mp3;
+  audio.load();
+  audio.play().then(() => { el.classList.add('playing'); }).catch(()=>{});
+}
+
+// Standalone-Teaser-Wechsel: Home-Card-Kachel resetten
+window.addEventListener('hj:teaser-audio-switch', (e) => {
+  if(e.detail && e.detail.source !== 'home-card' && _hjHomeCardActive && _hjHomeCardActive.el){
+    _hjHomeCardActive.el.classList.remove('playing');
+  }
+});
+
+// Audio-Events: playing-Klasse synchron halten
+audio.addEventListener('pause', () => {
+  if(_hjHomeCardActive && _hjHomeCardActive.el &&
+     sameAudioUrl(audio.currentSrc || audio.src, _hjHomeCardActive.mp3)){
+    _hjHomeCardActive.el.classList.remove('playing');
+  }
+});
+audio.addEventListener('play', () => {
+  if(_hjHomeCardActive && _hjHomeCardActive.el &&
+     sameAudioUrl(audio.currentSrc || audio.src, _hjHomeCardActive.mp3)){
+    featuredMode = true;
+    playerBar.classList.remove('visible');
+    _hjHomeCardActive.el.classList.add('playing');
+  }
+});
+audio.addEventListener('ended', () => {
+  if(_hjHomeCardActive && _hjHomeCardActive.el){
+    _hjHomeCardActive.el.classList.remove('playing');
+  }
+});
 
 /* ── Wire data-album clicks on newly created cards ── */
 function wireHomeGrid(grid){
