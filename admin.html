@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524h-trio-portrait-caption -->
+<!-- Version: admin-v20260524i-trio-square-subpage-label -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -353,7 +353,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
 .he-row-grid.trio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c{aspect-ratio:2/3;min-height:120px}
+.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c{aspect-ratio:1/1;min-height:80px}
 .he-cell.hidden-cell{display:none}
 .he-row-caption-wrap{padding:0 2px 6px}
 .he-row-caption{width:100%;box-sizing:border-box;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.12);border-radius:8px;color:#85ACC9;font-size:12px;padding:8px 10px;resize:vertical;min-height:56px;font-family:inherit;line-height:1.5;margin-top:6px}
@@ -7641,7 +7641,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </button>
         <button class="htm-action-btn" data-action="subpage" onclick="htmSetAction('subpage',this)">
           <span class="htm-action-icon">↗</span>
-          <span class="htm-action-label">Unterseite öffnen</span>
+          <span class="htm-action-label">Unterseite gestalten</span>
         </button>
       </div>
 
@@ -7681,8 +7681,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
       <!-- Unterseite (action=subpage) -->
       <div class="htm-field" id="htmActionSubpageField" style="display:none;margin-top:10px">
-        <span class="htm-label">Unterseiten-Pfad (z.B. /songs/quiet-knife)</span>
-        <input class="htm-input" id="htmSubpageUrl" placeholder="/songs/…">
+        <span class="htm-label">Unterseiten-Slug (wird neu angelegt)</span>
+        <input class="htm-input" id="htmSubpageUrl" placeholder="z.B. meine-unterseite">
       </div>
 
       <div class="htm-actions" style="margin-top:12px">
