@@ -194,23 +194,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .home-card-label{
   flex:0 0 auto;
-  height:90px;
-  padding:0 10px;
+  height:120px;
+  padding:0 12px;
   background:#000;
   font-family:'Anton',sans-serif;
-  font-size:clamp(13px,1.8vw,18px);
+  font-size:clamp(15px,2.1vw,22px);
   font-weight:400;
   letter-spacing:.10em;
   text-transform:uppercase;
   color:rgba(255,255,255,.92);
   text-align:center;
   pointer-events:none;
-  line-height:1.35;
+  line-height:1.4;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:0;
+  gap:2px;
 }
 
 
@@ -5710,7 +5710,7 @@ function buildHomeCard(cell, extraClass){
     const knownLines = {
       'Kurs Nordwest':            ['Kurs','Nordwest'],
       "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
-      'Songwriters Favorites':    ['Song','Writers','Favorites'],
+      'Songwriters Favorites':    ['Song',"Writer's",'Favorites'],
       'One Million Streams Ahead':['One Million','Streams','Ahead'],
     };
     // Fallback: Titel aus imageUrl ableiten wenn alt leer
