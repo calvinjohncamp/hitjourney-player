@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524r -->
+<!-- Version: admin-v20260524s -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -373,20 +373,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-altlabel{position:absolute;bottom:0;left:0;right:0;padding:18px 8px 7px;background:linear-gradient(transparent,rgba(6,20,32,.75));font-size:10px;font-weight:700;color:rgba(207,229,245,.8);letter-spacing:.04em;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ── Trio-Zellen: NACH allen globalen Regeln — gewinnt Cascade ── */
 .he-row-grid.trio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c,
-.he-cell-wrap.trio-a > .he-cell,.he-cell-wrap.trio-b > .he-cell,.he-cell-wrap.trio-c > .he-cell{aspect-ratio:unset !important;min-height:unset !important;display:flex !important;flex-direction:column !important;overflow:hidden;position:relative;}
+.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c{aspect-ratio:unset !important;min-height:unset !important;display:flex !important;flex-direction:column !important;overflow:hidden;position:relative;}
 .he-cell.trio-a img.he-cell-img,
 .he-cell.trio-b img.he-cell-img,
-.he-cell.trio-c img.he-cell-img,
-.he-cell-wrap.trio-a > .he-cell img.he-cell-img,
-.he-cell-wrap.trio-b > .he-cell img.he-cell-img,
-.he-cell-wrap.trio-c > .he-cell img.he-cell-img{position:static !important;width:100% !important;height:auto !important;aspect-ratio:2/3 !important;object-fit:cover !important;display:block !important;flex-shrink:0 !important}
+.he-cell.trio-c img.he-cell-img{position:static !important;width:100% !important;height:auto !important;aspect-ratio:2/3 !important;object-fit:cover !important;display:block !important;flex-shrink:0 !important}
 .he-cell.trio-a .he-cell-altlabel,
 .he-cell.trio-b .he-cell-altlabel,
-.he-cell.trio-c .he-cell-altlabel,
-.he-cell-wrap.trio-a .he-cell-altlabel,
-.he-cell-wrap.trio-b .he-cell-altlabel,
-.he-cell-wrap.trio-c .he-cell-altlabel{
+.he-cell.trio-c .he-cell-altlabel{
   position:static !important;
   inset:unset !important;
   bottom:unset !important;
@@ -428,15 +421,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Move bar — below each cell in editing mode */
 .he-cell-movebar{display:flex;justify-content:center;gap:6px;padding:3px 0;flex-shrink:0}
 .he-cell-wrap{display:flex;flex-direction:column}
-/* Wenn Grid-Klassen auf he-cell-wrap sitzen (Edit-Modus), dieselben Grid-Properties wie auf he-cell */
-.he-cell-wrap.span-2{grid-column:1/-1;aspect-ratio:unset}
-@media(min-width:600px){.he-cell-wrap.span-2{grid-column:span 2}}
-.he-cell-wrap.span-4,.he-cell-wrap.span-slide,.he-cell-wrap.language-cell{grid-column:1/-1}
-.he-cell-wrap.trio-a,.he-cell-wrap.trio-b,.he-cell-wrap.trio-c{display:flex;flex-direction:column}
-.he-cell-wrap.cell-2x1half{flex:1;min-width:0}
-.he-cell-wrap.cell-1x1big{flex:1;min-width:0}
-/* he-cell inside wrap inherits full size */
-.he-cell-wrap > .he-cell{flex:1;min-height:0}
 .he-cell-movebar-btn{background:rgba(133,172,201,.15);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;padding:2px 10px;line-height:1.4;transition:background .15s}
 .he-cell-movebar-btn:hover{background:rgba(133,172,201,.35);color:#cfe5f5}
 .he-cell-movebar-btn:disabled{opacity:.2;cursor:default}
@@ -9412,8 +9396,8 @@ function rowIsFullyFilled(row){
 function moveCellInRow(rowId, cellIdx, dir){
   const row = rowById(rowId);
   if(!row) return;
-  // Only swap among filled cells — a trio slot with no imageUrl must not participate,
-  // otherwise swapping pulls an empty cell over a filled one and the filled one disappears.
+
+  // Nur befüllte Zellen nehmen am Swap teil
   const isFilled = c => !!(c.imageUrl || c.bgUrl || (c.type==='slideshow' && c.slides && c.slides.length>0));
   const visible = row.cells.map((c,i)=>i).filter(i => {
     const c = row.cells[i];
@@ -9424,22 +9408,32 @@ function moveCellInRow(rowId, cellIdx, dir){
   if(newPos < 0 || newPos >= visible.length) return;
   markHomeAction();
   const targetIdx = visible[newPos];
-  // Nur den Inhalt tauschen, die Zell-Typen bleiben an ihrer Position
-  // (das Grid-Layout hängt an t0 = cells[0].type)
-  const CONTENT_KEYS = ['imageUrl','customImageUrl','bgUrl','alt','slug','fn','url','artist',
-    '_badge','mp3','lyricsCycle','useCover21','cover21Url','showSongTitle','showSongNumber',
-    'showProgressDots','titleX','titleY','dotsX','dotsY','startColor','coverFitSquare',
-    'coverFitLeft','coverFitTop','coverFitWidth','coverFitHeight','coverShape','coverFitMode',
-    'coverAngleOffset','slides','bgOpacity'];
-  const aContent = {}, bContent = {};
-  CONTENT_KEYS.forEach(k => {
-    aContent[k] = row.cells[cellIdx][k];
-    bContent[k] = row.cells[targetIdx][k];
+
+  // Bei Trio-Zeilen: die Typ-Labels (trio-a/b/c) sind nur Positions-Marker,
+  // kein unterschiedliches Layout. Deshalb: ganzes Cell-Objekt tauschen,
+  // aber die Typ-Labels an ihrer Indexposition belassen (sie definieren die Slot-Position).
+  // Bei allen anderen Layouts: ebenfalls ganzes Objekt tauschen, Typ bleibt am Slot.
+  const TRIO_TYPES = new Set(['trio-a','trio-b','trio-c']);
+  const aType = row.cells[cellIdx].type;
+  const bType = row.cells[targetIdx].type;
+  const isTrio = TRIO_TYPES.has(aType) && TRIO_TYPES.has(bType);
+
+  // Kompletten Inhalt tauschen (alle Keys außer 'id' und 'type')
+  const skip = new Set(['id','type']);
+  const allKeys = new Set([...Object.keys(row.cells[cellIdx]), ...Object.keys(row.cells[targetIdx])]);
+  const aSnap = {}, bSnap = {};
+  allKeys.forEach(k => {
+    if(skip.has(k)) return;
+    aSnap[k] = row.cells[cellIdx][k];
+    bSnap[k] = row.cells[targetIdx][k];
   });
-  CONTENT_KEYS.forEach(k => {
-    row.cells[cellIdx][k]    = bContent[k];
-    row.cells[targetIdx][k]  = aContent[k];
+  allKeys.forEach(k => {
+    if(skip.has(k)) return;
+    row.cells[cellIdx][k]   = bSnap[k];
+    row.cells[targetIdx][k] = aSnap[k];
   });
+  // Typ-Labels bleiben an ihrer Slot-Position (Grid-Layout hängt daran)
+
   renderHomeEditor();
 }
 
@@ -9718,12 +9712,6 @@ function buildCell(row, cellIdx, extraClass, editing){
   // In editing mode: wrap cell + move bar in a flex column container
   if(editing){
     const wrap = document.createElement('div');
-    // Grid-positionierende Klassen vom he-cell auf den Wrapper übertragen:
-    // Der Wrapper ist das direkte Grid-Kind, das he-cell ist dessen flex-Child.
-    const GRID_CLASSES = ['span-2','span-4','span-slide','cell-2x1full','cell-2x1half',
-      'cell-1x1big','trio-a','trio-b','trio-c','language-cell'];
-    const gridCls = GRID_CLASSES.filter(c => el.classList.contains(c));
-    gridCls.forEach(c => { el.classList.remove(c); wrap.classList.add(c); });
     wrap.classList.add('he-cell-wrap');
     wrap.style.cssText = el.style.cssText;
     // Move bar
