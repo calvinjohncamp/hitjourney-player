@@ -5609,9 +5609,9 @@ function renderHomeLayout(){
       const trio = document.createElement('div');
       // Always equal 3-column portrait layout for admin-managed trios
       trio.className = 'home-trio home-trio--equal wide';
-      if(cellA && cellA.imageUrl) trio.appendChild(buildHomeCard(cellA, ''));
-      if(cellB && cellB.imageUrl) trio.appendChild(buildHomeCard(cellB, ''));
-      if(cellC && cellC.imageUrl) trio.appendChild(buildHomeCard(cellC, ''));
+      if(cellA && cellA.imageUrl) trio.appendChild(buildHomeCard({...cellA, _isTrio:true}, ''));
+      if(cellB && cellB.imageUrl) trio.appendChild(buildHomeCard({...cellB, _isTrio:true}, ''));
+      if(cellC && cellC.imageUrl) trio.appendChild(buildHomeCard({...cellC, _isTrio:true}, ''));
       // Caption block (from row.caption in Supabase)
       if(row.caption){
         const cap = document.createElement('div');
@@ -5704,7 +5704,7 @@ function buildHomeCard(cell, extraClass){
 
   // Label-Balken: nur für Trio-Kacheln (trio-a/b/c)
   const _TRIO = new Set(['trio-a','trio-b','trio-c']);
-  if(cell.alt && _TRIO.has(cell.type)){
+  if(cell.alt && (cell._isTrio || _TRIO.has(cell.type))){
     const lbl = document.createElement('div');
     lbl.className = 'home-card-label';
     // Zeilenumbrüche: bekannte Titel bekommen feste 3-Zeilen-Aufteilung,
