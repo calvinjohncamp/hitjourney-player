@@ -5514,6 +5514,11 @@ function renderHomeLayout(){
 
   grid.innerHTML = '';
 
+  // Statische Sections ausblenden — werden durch dynamische Zeilen ersetzt
+  ['.home-language-grid','.home-final-grid'].forEach(sel=>{
+    const e = document.querySelector(sel); if(e) e.style.display='none';
+  });
+
   // isFinalJustThisDanceCell: nur noch no-op — Just This Dance wird nicht mehr
   // automatisch aus dem dynamischen Layout gefiltert. Der Admin entscheidet selbst.
   function isFinalJustThisDanceCell(cell){ return false; }
@@ -5523,6 +5528,37 @@ function renderHomeLayout(){
     if(!cells.length) return;
     const t0 = cells[0] && cells[0].type;
     if(!t0 || t0 === 'empty') return;
+
+    // ── Language Teaser (German / English Split) ──────────────────
+    if(t0 === 'language'){
+      const teaser = document.createElement('div');
+      teaser.className = 'language-teaser';
+      teaser.id = 'languageTeaser';
+      teaser.setAttribute('aria-label', 'German and English Songs');
+      const img = document.createElement('img');
+      img.alt = 'German and English Songs';
+      img.loading = 'lazy';
+      img.src = 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg';
+      const btnDe = document.createElement('button');
+      btnDe.className = 'language-teaser-half left';
+      btnDe.type = 'button';
+      btnDe.setAttribute('aria-label', 'German Songs');
+      btnDe.onclick = ()=>showLanguage('de');
+      const btnEn = document.createElement('button');
+      btnEn.className = 'language-teaser-half right';
+      btnEn.type = 'button';
+      btnEn.setAttribute('aria-label', 'English Songs');
+      btnEn.onclick = ()=>showLanguage('en');
+      const split = document.createElement('div');
+      split.className = 'language-teaser-split';
+      split.setAttribute('aria-hidden', 'true');
+      teaser.appendChild(img);
+      teaser.appendChild(btnDe);
+      teaser.appendChild(btnEn);
+      teaser.appendChild(split);
+      grid.appendChild(teaser);
+      return;
+    }
 
     // ── Slideshow ──────────────────────────────────────────────────
     if(t0 === 'slideshow'){
