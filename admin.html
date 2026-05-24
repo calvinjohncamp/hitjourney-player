@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524p -->
+<!-- Version: admin-v20260524r -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -373,13 +373,20 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-altlabel{position:absolute;bottom:0;left:0;right:0;padding:18px 8px 7px;background:linear-gradient(transparent,rgba(6,20,32,.75));font-size:10px;font-weight:700;color:rgba(207,229,245,.8);letter-spacing:.04em;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ── Trio-Zellen: NACH allen globalen Regeln — gewinnt Cascade ── */
 .he-row-grid.trio-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c{aspect-ratio:unset !important;min-height:unset !important;display:flex !important;flex-direction:column !important;overflow:hidden;position:relative;}
+.he-cell.trio-a,.he-cell.trio-b,.he-cell.trio-c,
+.he-cell-wrap.trio-a > .he-cell,.he-cell-wrap.trio-b > .he-cell,.he-cell-wrap.trio-c > .he-cell{aspect-ratio:unset !important;min-height:unset !important;display:flex !important;flex-direction:column !important;overflow:hidden;position:relative;}
 .he-cell.trio-a img.he-cell-img,
 .he-cell.trio-b img.he-cell-img,
-.he-cell.trio-c img.he-cell-img{position:static !important;width:100% !important;height:auto !important;aspect-ratio:2/3 !important;object-fit:cover !important;display:block !important;flex-shrink:0 !important}
+.he-cell.trio-c img.he-cell-img,
+.he-cell-wrap.trio-a > .he-cell img.he-cell-img,
+.he-cell-wrap.trio-b > .he-cell img.he-cell-img,
+.he-cell-wrap.trio-c > .he-cell img.he-cell-img{position:static !important;width:100% !important;height:auto !important;aspect-ratio:2/3 !important;object-fit:cover !important;display:block !important;flex-shrink:0 !important}
 .he-cell.trio-a .he-cell-altlabel,
 .he-cell.trio-b .he-cell-altlabel,
-.he-cell.trio-c .he-cell-altlabel{
+.he-cell.trio-c .he-cell-altlabel,
+.he-cell-wrap.trio-a .he-cell-altlabel,
+.he-cell-wrap.trio-b .he-cell-altlabel,
+.he-cell-wrap.trio-c .he-cell-altlabel{
   position:static !important;
   inset:unset !important;
   bottom:unset !important;
@@ -421,6 +428,15 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Move bar — below each cell in editing mode */
 .he-cell-movebar{display:flex;justify-content:center;gap:6px;padding:3px 0;flex-shrink:0}
 .he-cell-wrap{display:flex;flex-direction:column}
+/* Wenn Grid-Klassen auf he-cell-wrap sitzen (Edit-Modus), dieselben Grid-Properties wie auf he-cell */
+.he-cell-wrap.span-2{grid-column:1/-1;aspect-ratio:unset}
+@media(min-width:600px){.he-cell-wrap.span-2{grid-column:span 2}}
+.he-cell-wrap.span-4,.he-cell-wrap.span-slide,.he-cell-wrap.language-cell{grid-column:1/-1}
+.he-cell-wrap.trio-a,.he-cell-wrap.trio-b,.he-cell-wrap.trio-c{display:flex;flex-direction:column}
+.he-cell-wrap.cell-2x1half{flex:1;min-width:0}
+.he-cell-wrap.cell-1x1big{flex:1;min-width:0}
+/* he-cell inside wrap inherits full size */
+.he-cell-wrap > .he-cell{flex:1;min-height:0}
 .he-cell-movebar-btn{background:rgba(133,172,201,.15);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;padding:2px 10px;line-height:1.4;transition:background .15s}
 .he-cell-movebar-btn:hover{background:rgba(133,172,201,.35);color:#cfe5f5}
 .he-cell-movebar-btn:disabled{opacity:.2;cursor:default}
@@ -9702,8 +9718,13 @@ function buildCell(row, cellIdx, extraClass, editing){
   // In editing mode: wrap cell + move bar in a flex column container
   if(editing){
     const wrap = document.createElement('div');
-    wrap.className = 'he-cell-wrap';
-    // Transfer grid-relevant classes/dataset from el to wrap
+    // Grid-positionierende Klassen vom he-cell auf den Wrapper übertragen:
+    // Der Wrapper ist das direkte Grid-Kind, das he-cell ist dessen flex-Child.
+    const GRID_CLASSES = ['span-2','span-4','span-slide','cell-2x1full','cell-2x1half',
+      'cell-1x1big','trio-a','trio-b','trio-c','language-cell'];
+    const gridCls = GRID_CLASSES.filter(c => el.classList.contains(c));
+    gridCls.forEach(c => { el.classList.remove(c); wrap.classList.add(c); });
+    wrap.classList.add('he-cell-wrap');
     wrap.style.cssText = el.style.cssText;
     // Move bar
     const mb = document.createElement('div');
