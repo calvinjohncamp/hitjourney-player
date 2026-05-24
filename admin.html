@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524k -->
+<!-- Version: admin-v20260524l -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -370,6 +370,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.editing-mode:hover .he-cell-overlay{opacity:1}
 /* Alt label — bottom of cell, always visible */
 .he-cell-altlabel{position:absolute;bottom:0;left:0;right:0;padding:18px 8px 7px;background:linear-gradient(transparent,rgba(6,20,32,.75));font-size:10px;font-weight:700;color:rgba(207,229,245,.8);letter-spacing:.04em;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.he-cell.trio-a .he-cell-altlabel,.he-cell.trio-b .he-cell-altlabel,.he-cell.trio-c .he-cell-altlabel{padding:40px 10px 12px;font-size:13px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;text-align:center;white-space:normal;background:linear-gradient(transparent,rgba(4,14,24,.90) 50%,rgba(4,14,24,.97))}
 .he-cell-badge{font-size:7px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 4px;border-radius:3px;color:#fff}
 .badge-play{background:rgba(50,180,100,.8)}
 .badge-slide{background:rgba(120,90,200,.8)}
@@ -9932,7 +9933,7 @@ function htmInitStep2(){
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
   }
-  // Upload-Zone Aspect Ratio: 1:1 für Trio/Quadrat-Typen, 2:1 sonst
+  // Upload-Zone Aspect Ratio: 1:1 für Trio/Quadrat, 2:1 sonst
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
     uploadZone.classList.toggle('sq', isSquare);
@@ -10147,30 +10148,19 @@ function clearHtmAlbumMotif(e){
 
 /* ── Motif preview strip (shows current motif in correct aspect ratio) ── */
 function htmUpdateMotifPreview(){
-  // Sync the upload-zone frame with the selected song/album cover
+  // Zeigt Cover des gewählten Songs/Albums im Upload-Zone-Frame
   const zone = document.getElementById('zHtmMotif');
   const img  = document.getElementById('prevHtmMotif');
-  if(!zone || !img) return;
-
-  let coverUrl = '';
-  if(htmChosenSource === 'upload'){
-    coverUrl = htmMotifUrl; // file upload sets this directly
-  } else if(htmChosenSource === 'song' && htmSelectedSong){
-    coverUrl = htmSelectedSong.coverUrl || '';
-  } else if(htmChosenSource === 'album'){
-    coverUrl = htmAlbumMotifUrl || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+  if(zone && img){
+    let coverUrl = '';
+    if(htmChosenSource === 'upload')     coverUrl = htmMotifUrl;
+    else if(htmChosenSource === 'song')  coverUrl = htmSelectedSong  ? (htmMotifUrl || htmSelectedSong.coverUrl)  : '';
+    else if(htmChosenSource === 'album') coverUrl = htmAlbumMotifUrl || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+    if(coverUrl){ img.src = coverUrl; zone.classList.add('has-file'); }
+    else        { img.src = '';       zone.classList.remove('has-file'); }
   }
-
-  if(coverUrl){
-    img.src = coverUrl;
-    zone.classList.add('has-file');
-  } else {
-    img.src = '';
-    zone.classList.remove('has-file');
-  }
-
-  // DEAD CODE below (preview strip removed) — keep for reference
-  if(false){
+  if(false){ // dead code — preview strip removed
+  return; // Preview strip removed — upload zone shows image inline
   const strip = document.getElementById('htmMotifPreviewStrip');
   if(!strip) return;
 
