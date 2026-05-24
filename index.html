@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v184-language-elegant-artwork-frame-20260522 -->
+<!-- Version: v185-new-layout-types-20260524 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -142,6 +142,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card{cursor:pointer;border-radius:8px;overflow:hidden;background:#0B2A42;transition:transform .13s,opacity .13s}
 .home-card:active{transform:scale(.95);opacity:.85}
 .home-card.wide{grid-column:1/-1}
+/* New layout types from admin v9 */
+.home-row-wrap{display:contents} /* row wrapper transparent to grid */
+.home-card.span-2col{grid-column:span 2}  /* 2:1 half-width (2 of 4 cols) */
+.home-card.span-2col img{aspect-ratio:2/1}
+.home-card.big-square{grid-column:span 2} /* 1x1-big: 2 cols wide, 1:1 aspect */
+.home-card.big-square img{aspect-ratio:1/1}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.square img{aspect-ratio:1/1}
@@ -5530,21 +5536,45 @@ function renderHomeLayout(){
       return;
     }
 
-    // ── 3er Trio ──────────────────────────────────────────────────
+    // ── 3er Trio (trio-a/b/c) ────────────────────────────────────────
     if(t0 === 'trio-a'){
-      const cellA = cells[0]; // 1:1 top-left
-      const cellB = cells[1]; // 2:1 bottom-left
-      const cellC = cells[2]; // tall right
+      const cellA = cells[0];
+      const cellB = cells[1];
+      const cellC = cells[2];
       if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
       const trio = document.createElement('div');
-      // Asymmetrisches Layout nur für Buried-Diamonds-Trio; alle anderen → 3 gleiche Spalten
-      const isAsymmetric = (cellB.slug || '').toLowerCase() === 'buried-diamonds';
+      const isAsymmetric = (cellB && (cellB.slug || '').toLowerCase() === 'buried-diamonds');
       trio.className = 'home-trio' + (isAsymmetric ? '' : ' home-trio--equal') + ' wide';
-      // trio-gl = top-left, trio-bd = bottom (2:1), trio-po = right tall
-      if(cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
-      if(cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
-      if(cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
+      if(cellA && cellA.imageUrl && !isFinalJustThisDanceCell(cellA)) trio.appendChild(buildHomeCard(cellA, 'trio-gl'));
+      if(cellB && cellB.imageUrl && !isFinalJustThisDanceCell(cellB)) trio.appendChild(buildHomeCard(cellB, 'trio-bd'));
+      if(cellC && cellC.imageUrl && !isFinalJustThisDanceCell(cellC)) trio.appendChild(buildHomeCard(cellC, 'trio-po'));
       grid.appendChild(trio);
+      return;
+    }
+
+    // ── 2× 1:1 groß (1x1-big) — je 2 Spalten breit ──────────────────
+    if(t0 === '1x1-big'){
+      cells.forEach(cell => {
+        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+        grid.appendChild(buildHomeCard(cell, 'big-square'));
+      });
+      return;
+    }
+
+    // ── 2:1 volle Breite (2x1-full) ──────────────────────────────────
+    if(t0 === '2x1-full'){
+      const cell = cells[0];
+      if(!cell || !cell.imageUrl || isFinalJustThisDanceCell(cell)) return;
+      grid.appendChild(buildHomeCard(cell, 'wide'));
+      return;
+    }
+
+    // ── 2× 2:1 nebeneinander (2x1-half) ─────────────────────────────
+    if(t0 === '2x1-half'){
+      cells.forEach(cell => {
+        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
+        grid.appendChild(buildHomeCard(cell, 'span-2col'));
+      });
       return;
     }
 
@@ -5552,8 +5582,7 @@ function renderHomeLayout(){
     if(t0 === '1x1' || t0 === 'empty'){
       cells.forEach(cell => {
         if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        const el = buildHomeCard(cell, 'square');
-        grid.appendChild(el);
+        grid.appendChild(buildHomeCard(cell, 'square'));
       });
       return;
     }
