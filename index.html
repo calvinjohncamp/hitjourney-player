@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v186-2x1plus2-fix-20260524 -->
+<!-- Version: v187-jtd-filter-removed-20260524 -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5492,15 +5492,9 @@ function renderHomeLayout(){
 
   grid.innerHTML = '';
 
-  // Just This Dance ist als finaler Home-Teaser fest am Ende gesetzt.
-  // Falls er zusätzlich noch aus dem dynamischen Home-Layout/Supabase kommt,
-  // wird er hier unterdrückt, damit er auf Home nicht doppelt erscheint.
-  function isFinalJustThisDanceCell(cell){
-    if(!cell) return false;
-    const hay = [cell.slug, cell.alt, cell.title, cell.imageUrl, cell.url, cell.mp3]
-      .filter(Boolean).join(' ').toLowerCase();
-    return hay.includes('just-this-dance') || hay.includes('just this dance');
-  }
+  // isFinalJustThisDanceCell: nur noch no-op — Just This Dance wird nicht mehr
+  // automatisch aus dem dynamischen Layout gefiltert. Der Admin entscheidet selbst.
+  function isFinalJustThisDanceCell(cell){ return false; }
 
   rows.forEach(row => {
     const cells = row.cells || [];
