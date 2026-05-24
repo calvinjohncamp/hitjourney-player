@@ -5712,9 +5712,13 @@ function buildHomeCard(cell, extraClass){
       "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
       'Songwriters Favorites':    ['Song',"Writer's",'Favorites'],
       'One Million Streams Ahead':['One Million','Streams','Ahead'],
+      '1 Million Streams':        ['One Million','Streams','Ahead'],
+      '1 Million Streams Ahead':  ['One Million','Streams','Ahead'],
     };
     // Fallback: Titel aus imageUrl ableiten wenn alt leer
-    const altText = cell.alt || (cell.imageUrl||'').split('/').pop().replace(/[%+]/g,' ').replace(/\.(jpg|png|webp)/i,'').trim();
+    const _rawFileName = (cell.imageUrl||'').split('/').pop().replace(/\.(jpg|png|webp)/i,'').trim();
+    const _decodedFileName = (() => { try { return decodeURIComponent(_rawFileName); } catch(_){ return _rawFileName.replace(/[%+]/g,' '); } })();
+    const altText = cell.alt || _decodedFileName;
     const lines = knownLines[altText] || knownLines[cell.alt] || (altText ? altText.split(' ').reduce((acc,w,i)=>{
       if(i%2===0) acc.push(w); else acc[acc.length-1]+=' '+w; return acc;
     },[]) : ['']);

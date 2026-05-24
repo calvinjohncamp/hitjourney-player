@@ -9548,29 +9548,36 @@ function buildCell(row, cellIdx, extraClass, editing){
       el.appendChild(img);
     }
     // Alt text overlay (bottom, always visible, subtle)
-    if(cell.alt){
-      const lbl = document.createElement('div');
-      lbl.className = 'he-cell-altlabel';
-      // Trio-Zellen: gleiche 3-Zeilen-Logik wie index.html
+    {
       const _TRIO_TYPES = new Set(['trio-a','trio-b','trio-c']);
-      if(_TRIO_TYPES.has(cell.type)){
-        const knownLines = {
-          'Kurs Nordwest':            ['Kurs','Nordwest'],
-          "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
-          'Songwriters Favorites':    ['Song',"Writer's",'Favorites'],
-          'One Million Streams Ahead':['One Million','Streams','Ahead'],
-        };
-        const lines = knownLines[cell.alt] || cell.alt.split(' ');
-        lines.forEach(line => {
-          if(!line) return;
-          const sp = document.createElement('span');
-          sp.textContent = line;
-          lbl.appendChild(sp);
-        });
-      } else {
-        lbl.textContent = cell.alt;
+      const _isTrio = _TRIO_TYPES.has(cell.type);
+      if(cell.alt || _isTrio){
+        const lbl = document.createElement('div');
+        lbl.className = 'he-cell-altlabel';
+        if(_isTrio){
+          const knownLines = {
+            'Kurs Nordwest':            ['Kurs','Nordwest'],
+            "Songwriter's Favorites":   ['Song',"Writer's",'Favorites'],
+            'Songwriters Favorites':    ['Song',"Writer's",'Favorites'],
+            'One Million Streams Ahead':['One Million','Streams','Ahead'],
+            '1 Million Streams':        ['One Million','Streams','Ahead'],
+            '1 Million Streams Ahead':  ['One Million','Streams','Ahead'],
+          };
+          const _rawFn = (cell.imageUrl||'').split('/').pop().replace(/\.(jpg|png|webp)/i,'').trim();
+          const _decoded = (() => { try { return decodeURIComponent(_rawFn); } catch(_){ return _rawFn.replace(/[%+]/g,' '); } })();
+          const altText = cell.alt || _decoded;
+          const lines = knownLines[altText] || (altText ? altText.split(' ') : ['']);
+          lines.forEach(line => {
+            if(!line) return;
+            const sp = document.createElement('span');
+            sp.textContent = line;
+            lbl.appendChild(sp);
+          });
+        } else {
+          lbl.textContent = cell.alt;
+        }
+        el.appendChild(lbl);
       }
-      el.appendChild(lbl);
     }
     // v169: Gefüllte Motive/Diashows sind immer direkt bearbeitbar.
     // Entfernen bleibt nur im Zeilen-Bearbeitungsmodus sichtbar, damit im Normalmodus nichts versehentlich gelöscht wird.
