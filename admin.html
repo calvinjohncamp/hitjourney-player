@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524s -->
+<!-- Version: admin-v20260524t -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9409,17 +9409,17 @@ function moveCellInRow(rowId, cellIdx, dir){
   markHomeAction();
   const targetIdx = visible[newPos];
 
-  // Bei Trio-Zeilen: die Typ-Labels (trio-a/b/c) sind nur Positions-Marker,
-  // kein unterschiedliches Layout. Deshalb: ganzes Cell-Objekt tauschen,
-  // aber die Typ-Labels an ihrer Indexposition belassen (sie definieren die Slot-Position).
-  // Bei allen anderen Layouts: ebenfalls ganzes Objekt tauschen, Typ bleibt am Slot.
+  // Bei Trio-Zeilen: die Typ-Labels (trio-a/b/c) definieren das Layout (Größe/Position).
+  // Damit ganze Blöcke verschoben werden (Inhalt UND Form), tauschen wir ALLES —
+  // also auch den type — zwischen den beiden Cells.
+  // Bei allen anderen Layouts: type bleibt am Slot (nur Inhalt tauschen).
   const TRIO_TYPES = new Set(['trio-a','trio-b','trio-c']);
   const aType = row.cells[cellIdx].type;
   const bType = row.cells[targetIdx].type;
   const isTrio = TRIO_TYPES.has(aType) && TRIO_TYPES.has(bType);
 
-  // Kompletten Inhalt tauschen (alle Keys außer 'id' und 'type')
-  const skip = new Set(['id','type']);
+  // Bei Trio: auch 'type' tauschen → ganzer Block (Layout + Inhalt) wird verschoben
+  const skip = isTrio ? new Set(['id']) : new Set(['id','type']);
   const allKeys = new Set([...Object.keys(row.cells[cellIdx]), ...Object.keys(row.cells[targetIdx])]);
   const aSnap = {}, bSnap = {};
   allKeys.forEach(k => {
@@ -9432,7 +9432,6 @@ function moveCellInRow(rowId, cellIdx, dir){
     row.cells[cellIdx][k]   = bSnap[k];
     row.cells[targetIdx][k] = aSnap[k];
   });
-  // Typ-Labels bleiben an ihrer Slot-Position (Grid-Layout hängt daran)
 
   renderHomeEditor();
 }
