@@ -1235,10 +1235,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .language-teaser-half.left{left:0;}
 .language-teaser-half.right{right:0;}
 .language-teaser-half:active{background:rgba(255,255,255,.06);}
-.language-teaser-split{
-  position:absolute;left:50%;top:0;bottom:0;width:1px;
-  background:rgba(255,255,255,.10);pointer-events:none;
-}
+
 #screenLanguageGerman,
 #screenLanguageEnglish{
   display:none;
@@ -2748,7 +2745,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <img alt="German and English Songs" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg"/>
     <button class="language-teaser-half left" type="button" onclick="showLanguage('de')" aria-label="German Songs"></button>
     <button class="language-teaser-half right" type="button" onclick="showLanguage('en')" aria-label="English Songs"></button>
-    <div class="language-teaser-split" aria-hidden="true"></div>
+  
   </div>
 </div>
 <!-- Finaler Home-Teaser: Just This Dance · Lara Wolff -->
@@ -5549,13 +5546,9 @@ function renderHomeLayout(){
       btnEn.type = 'button';
       btnEn.setAttribute('aria-label', 'English Songs');
       btnEn.onclick = ()=>showLanguage('en');
-      const split = document.createElement('div');
-      split.className = 'language-teaser-split';
-      split.setAttribute('aria-hidden', 'true');
       teaser.appendChild(img);
       teaser.appendChild(btnDe);
       teaser.appendChild(btnEn);
-      teaser.appendChild(split);
       grid.appendChild(teaser);
       return;
     }
