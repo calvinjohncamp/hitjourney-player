@@ -484,6 +484,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .badge-song{background:rgba(50,180,100,.8)}
 .badge-album{background:rgba(88,132,220,.8)}
 .badge-unterseite{background:rgba(200,150,50,.8)}
+.badge-subpage{background:rgba(200,150,50,.8)}
+.badge-playlist{background:rgba(180,80,160,.8)}
 .badge-link{background:rgba(88,132,164,.8)}
 .badge-diashow{background:rgba(120,90,200,.8)}
 .badge-language{background:rgba(180,120,40,.9)}
@@ -640,7 +642,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       Restore
     </button>
     <button class="snapshot-btn" onclick="makeSnapshot()" title="Sicherheitskopie erstellen" disabled="">⏳ Lädt…</button>
-    <button class="snapshot-restore-btn" onclick="testRLS()" title="Supabase RLS &amp; Schreibrechte testen" style="background:rgba(255,100,80,.08);color:#f08070;border-color:rgba(255,100,80,.25)">🔍 RLS-Test</button>
+    
     <div class="hj-header-badge">Admin</div>
   </div>
 </div>
@@ -7376,13 +7378,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </button>
     </div>
   </div>
-  <!-- Import banner — immer sichtbar, damit fehlende Streifen wiederhergestellt werden können -->
-  <div id="importHomeBanner" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(133,172,201,.06);border-bottom:1px solid rgba(133,172,201,.1);gap:10px;flex-shrink:0">
-    <span style="font-size:11px;color:rgba(133,172,201,.5)">Fehlende Zeilen (Editorial, Language Teaser)? → Seite neu importieren</span>
-    <button id="importHomeBtn" onclick="importCurrentHome()" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(133,172,201,.3);background:rgba(133,172,201,.1);color:#85ACC9;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
-      ↓ Seite importieren
-    </button>
-  </div>
+
   <div class="home-editor-wrap" id="homeEditorWrap"><div class="he-add-bar top"><button class="he-add-btn" onclick="addRowAtTop()">＋ Neue Zeile oben hinzufügen</button></div><div class="he-row" data-row-id="n48z9wv"><div class="he-row-bar"><span class="he-row-label">Z1</span><button class="he-row-bar-btn move" title="Nach oben" disabled="">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="n48z9wv" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Cover.jpg" alt="What If Tonight"><div class="he-cell-altlabel">What If Tonight</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
@@ -7434,22 +7430,22 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('0klmiq6',0)" title="Bearbeiten">✎</button>
           
         </div></div><div style="position: absolute; bottom: 6px; left: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(207, 229, 245, 0.85); pointer-events: none; background: rgba(6, 20, 32, 0.5); padding: 3px 7px; border-radius: 4px;">◈ IN THE SPOTLIGHT · 12 Songs</div></div></div></div><div class="he-row" data-row-id="dsyyln8"><div class="he-row-bar"><span class="he-row-label">Z5</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50"><div class="he-cell-altlabel">Top 50</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',0)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad"><div class="he-cell-altlabel">30° Grad</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',1)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories"><div class="he-cell-altlabel">30 Stories</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',2)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100"><div class="he-cell-altlabel">Top 100</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',3)" title="Bearbeiten">✎</button>
           
@@ -7459,17 +7455,17 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('lyisw1r',0)" title="Bearbeiten">✎</button>
           
         </div></div></div></div></div><div class="he-row" data-row-id="czb4w2g"><div class="he-row-bar"><span class="he-row-label">Z7</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="czb4w2g" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe"><div class="he-cell-altlabel"><span>Grosse</span><span>Liebe</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',0)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell trio-b" data-row-id="czb4w2g" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds"><div class="he-cell-altlabel"><span>Buried</span><span>Diamonds</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-playlist">Playlist</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',1)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell trio-c" data-row-id="czb4w2g" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie"><div class="he-cell-altlabel"><span>Poesie</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-album">Album</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',2)" title="Bearbeiten">✎</button>
           
@@ -7503,17 +7499,17 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="he-cell-acts" style="pointer-events:none;opacity:.4">
           <span style="font-size:10px;color:rgba(207,229,245,.7);letter-spacing:.04em">Wird automatisch befüllt</span>
         </div></div><div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15);pointer-events:none"></div><div style="position:absolute;bottom:14px;left:25%;transform:translateX(-50%);font-size:11px;font-weight:800;letter-spacing:.14em;color:rgba(207,229,245,.8);text-transform:uppercase;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.6)">GERMAN</div><div style="position:absolute;bottom:14px;left:75%;transform:translateX(-50%);font-size:11px;font-weight:800;letter-spacing:.14em;color:rgba(207,229,245,.8);text-transform:uppercase;pointer-events:none;text-shadow:0 1px 6px rgba(0,0,0,.6)">ENGLISH</div></div></div></div><div class="he-row" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817"><div class="he-row-bar"><span class="he-row-label">Z11</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg" alt="Kurs Nordwest"><div class="he-cell-altlabel"><span>Kurs</span><span>Nordwest</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-subpage">Unterseite</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',0)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell trio-b" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg" alt="Songwriters Favorites"><div class="he-cell-altlabel"><span>Song</span><span>Writer&#39;s</span><span>Favorites</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-subpage">Unterseite</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',1)" title="Bearbeiten">✎</button>
           
         </div></div></div><div class="he-cell trio-c" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg" alt="One Million Streams Ahead"><div class="he-cell-altlabel"><span>One Million</span><span>Streams</span><span>Ahead</span></div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
+        <span class="he-cell-badge badge-link">Link</span>
         <div class="he-cell-acts">
           <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',2)" title="Bearbeiten">✎</button>
           
@@ -9585,8 +9581,8 @@ function buildCell(row, cellIdx, extraClass, editing){
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
       const isLang = cell.type === 'language';
-      const badgeCls = isLang ? 'badge-language' : isSlide ? 'badge-diashow' : cell._badge==='Album' ? 'badge-album' : cell._badge==='Unterseite' ? 'badge-unterseite' : cell.fn==='link' ? 'badge-link' : 'badge-song';
-      const badgeTxt = isLang ? '⬡ German · English' : isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='link' ? 'Link' : 'Song');
+      const badgeCls = isLang ? 'badge-language' : isSlide ? 'badge-diashow' : cell._badge==='Album' ? 'badge-album' : cell._badge==='Playlist' ? 'badge-playlist' : (cell._badge==='Unterseite' || cell.fn==='subpage') ? 'badge-subpage' : cell.fn==='link' ? 'badge-link' : 'badge-song';
+      const badgeTxt = isLang ? '⬡ German · English' : isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='subpage' ? 'Unterseite' : cell.fn==='link' ? 'Link' : 'Song');
       if(isLang){
         // Language Teaser: read-only, kein Edit-Button
         ov.innerHTML = `
@@ -10549,7 +10545,7 @@ async function saveHomeTile(){
 
   // Badge / label
   const isLyrics = updatedCell.lyricsCycle;
-  const badgeMap = {play: isLyrics ? 'Song ♪' : 'Song', album:'Album', link:'Link', subpage:'Unterseite'};
+  const badgeMap = {play: isLyrics ? 'Song ♪' : 'Song', album:'Album', link:'Link', subpage:'Unterseite', playlist:'Playlist'};
   updatedCell._badge = badgeMap[htmChosenAction] || 'Song';
 
   closeHomeTileModal();
