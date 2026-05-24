@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524d-step2-step3-ux -->
+<!-- Version: admin-v20260524e-step3-song-album-lyrics -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -7635,10 +7635,6 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-action-icon">▶</span>
           <span class="htm-action-label">Song abspielen</span>
         </button>
-        <button class="htm-action-btn" data-action="lyrics" onclick="htmSetAction('lyrics',this)">
-          <span class="htm-action-icon">🎵</span>
-          <span class="htm-action-label">Play + Lyrics-Modus</span>
-        </button>
         <button class="htm-action-btn" data-action="album" onclick="htmSetAction('album',this)">
           <span class="htm-action-icon">▤</span>
           <span class="htm-action-label">Album öffnen</span>
@@ -7647,27 +7643,51 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-action-icon">🔗</span>
           <span class="htm-action-label">Externer Link</span>
         </button>
-        <button class="htm-action-btn" data-action="subpage" onclick="htmSetAction('subpage',this)" style="grid-column:1/-1">
+        <button class="htm-action-btn" data-action="subpage" onclick="htmSetAction('subpage',this)">
           <span class="htm-action-icon">↗</span>
           <span class="htm-action-label">Unterseite öffnen</span>
         </button>
       </div>
 
-      <!-- Link URL (nur bei action=link) -->
-      <div class="htm-field" id="htmActionLinkField" style="display:none">
+      <!-- Song wählen (action=play) -->
+      <div id="htmActionSongField" style="display:none;margin-top:10px">
+        <input class="htm-input" id="htmActionSongSearch" placeholder="Song suchen …" oninput="htmFilterActionSongs(this.value)" style="margin-bottom:6px">
+        <div id="htmActionSongList" style="max-height:180px;overflow-y:auto;border:1px solid rgba(133,172,201,.12);border-radius:9px;background:#06141F"></div>
+        <div id="htmActionSelectedSong" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(50,180,100,.07);border:1px solid rgba(50,180,100,.2);border-radius:9px;margin-top:8px">
+          <img id="htmActionSongCover" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0">
+          <div style="min-width:0;flex:1">
+            <div id="htmActionSongTitle" style="font-size:13px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="htmActionSongArtist" style="font-size:11px;color:rgba(133,172,201,.5)"></div>
+          </div>
+          <button onclick="htmClearActionSong()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">×</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:13px;color:rgba(133,172,201,.8)">
+          <input type="checkbox" id="htmLyricsCycleCheck" style="width:16px;height:16px;accent-color:#85ACC9">
+          Play + Lyrics-Modus aktivieren
+        </label>
+      </div>
+
+      <!-- Album wählen (action=album) -->
+      <div id="htmActionAlbumField" style="display:none;margin-top:10px">
+        <select class="htm-input" id="htmActionAlbumSelect" onchange="htmPickActionAlbum()">
+          <option value="">— Album / Playlist wählen —</option>
+        </select>
+        <div id="htmActionSelectedAlbum" style="display:none;align-items:center;gap:10px;padding:8px 10px;background:rgba(88,132,220,.07);border:1px solid rgba(88,132,220,.2);border-radius:9px;margin-top:8px">
+          <img id="htmActionAlbumCover" src="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0">
+          <div id="htmActionAlbumTitle" style="font-size:13px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0"></div>
+        </div>
+      </div>
+
+      <!-- Externer Link (action=link) -->
+      <div class="htm-field" id="htmActionLinkField" style="display:none;margin-top:10px">
         <span class="htm-label">URL</span>
         <input class="htm-input" id="htmLinkUrl" placeholder="https://…">
       </div>
 
-      <!-- Unterseite URL (nur bei action=subpage) -->
-      <div class="htm-field" id="htmActionSubpageField" style="display:none">
+      <!-- Unterseite (action=subpage) -->
+      <div class="htm-field" id="htmActionSubpageField" style="display:none;margin-top:10px">
         <span class="htm-label">Unterseiten-Pfad (z.B. /songs/quiet-knife)</span>
         <input class="htm-input" id="htmSubpageUrl" placeholder="/songs/…">
-      </div>
-
-      <!-- Lyrics-Checkbox Info (nur bei action=lyrics) -->
-      <div id="htmActionLyricsInfo" style="display:none;padding:8px 10px;background:rgba(133,172,201,.06);border:1px solid rgba(133,172,201,.12);border-radius:8px;font-size:11px;color:rgba(133,172,201,.6);margin-bottom:10px">
-        Klick-Zyklus: Play → Cover → Lyrics → Pause. Keine Player-Bar.
       </div>
 
       <div class="htm-actions" style="margin-top:12px">
@@ -10145,29 +10165,136 @@ function htmUpdateMotifPreview(){
 }
 
 /* ── Step 3: action ── */
+let htmActionSelectedSong  = null;  // { slug, title, artist, coverUrl }
+let htmActionSelectedAlbum = null;  // { slug, title, coverUrl }
+
 function htmInitStep3(){
-  // Pre-select action based on source
-  const auto = htmChosenSource==='album' ? 'album' : htmChosenSource==='song' ? 'play' : '';
-  if(auto && !htmChosenAction) htmChosenAction = auto;
-  if(htmChosenAction){
-    document.querySelectorAll('.htm-action-btn').forEach(b=>{
-      b.classList.toggle('selected', b.dataset.action===htmChosenAction);
-    });
-    htmShowActionDetail(htmChosenAction);
+  // Pre-select action: prefer existing cell data, then derive from source
+  if(!htmChosenAction){
+    htmChosenAction = htmChosenSource==='album' ? 'album' : htmChosenSource==='song' ? 'play' : 'play';
   }
+  document.querySelectorAll('.htm-action-btn').forEach(b=>{
+    b.classList.toggle('selected', b.dataset.action===htmChosenAction);
+  });
+  htmShowActionDetail(htmChosenAction);
+
+  // Populate album dropdown
+  htmPopulateActionAlbumSelect();
+
+  // If we already have a song from Step 2, pre-select it in Step 3 too
+  if(htmSelectedSong && !htmActionSelectedSong){
+    htmActionSelectedSong = htmSelectedSong;
+    htmRenderActionSelectedSong();
+  }
+  // Render song list
+  htmRenderActionSongList('');
+
+  // Restore lyrics cycle checkbox
+  const cb = document.getElementById('htmLyricsCycleCheck');
+  if(cb) cb.checked = (htmChosenAction === 'lyrics');
 }
 
 function htmSetAction(action, btn){
-  htmChosenAction = action;
+  htmChosenAction = (action === 'lyrics') ? 'play' : action; // lyrics is a modifier not a separate action
   document.querySelectorAll('.htm-action-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   htmShowActionDetail(action);
 }
 
 function htmShowActionDetail(action){
+  document.getElementById('htmActionSongField').style.display    = action==='play'    ? '' : 'none';
+  document.getElementById('htmActionAlbumField').style.display   = action==='album'   ? '' : 'none';
   document.getElementById('htmActionLinkField').style.display    = action==='link'    ? '' : 'none';
-  document.getElementById('htmActionLyricsInfo').style.display   = action==='lyrics'  ? '' : 'none';
   document.getElementById('htmActionSubpageField').style.display = action==='subpage' ? '' : 'none';
+}
+
+/* Action song list */
+function htmFilterActionSongs(q){ htmRenderActionSongList(q); }
+function htmRenderActionSongList(q){
+  const list = document.getElementById('htmActionSongList');
+  if(!list) return;
+  const query = (q||'').toLowerCase().trim();
+  const songs = allSongs.filter(s=>
+    !query ||
+    (s.title||'').toLowerCase().includes(query) ||
+    (s.artist||'').toLowerCase().includes(query)
+  ).slice(0,80);
+  if(!songs.length){
+    list.innerHTML = '<div style="padding:12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs gefunden</div>';
+    return;
+  }
+  list.innerHTML = '';
+  songs.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'htm-song-row' + (htmActionSelectedSong && htmActionSelectedSong.slug===s.slug ? ' selected':'');
+    row.innerHTML = `
+      <img class="htm-song-row-cover" src="${s.cover_url||''}" onerror="this.src=''"/>
+      <div class="htm-song-row-info">
+        <div class="htm-song-row-title">${s.title||s.slug}</div>
+        <div class="htm-song-row-artist">${s.artist||''}</div>
+      </div>
+      <span class="htm-song-row-check">✓</span>`;
+    row.onclick = ()=>{
+      htmActionSelectedSong = { slug:s.slug, title:s.title||s.slug, artist:s.artist||'', coverUrl:s.cover_url||'', cover21Url:s.lyrics21_url||s.cover_url||'' };
+      htmRenderActionSelectedSong();
+      list.querySelectorAll('.htm-song-row').forEach(r=>r.classList.remove('selected'));
+      row.classList.add('selected');
+    };
+    list.appendChild(row);
+  });
+}
+function htmRenderActionSelectedSong(){
+  const box = document.getElementById('htmActionSelectedSong');
+  if(!box) return;
+  if(htmActionSelectedSong){
+    box.style.display = 'flex';
+    document.getElementById('htmActionSongCover').src   = htmActionSelectedSong.coverUrl||'';
+    document.getElementById('htmActionSongTitle').textContent  = htmActionSelectedSong.title||'';
+    document.getElementById('htmActionSongArtist').textContent = htmActionSelectedSong.artist||'';
+  } else {
+    box.style.display = 'none';
+  }
+}
+function htmClearActionSong(){
+  htmActionSelectedSong = null;
+  htmRenderActionSelectedSong();
+  document.querySelectorAll('#htmActionSongList .htm-song-row').forEach(r=>r.classList.remove('selected'));
+}
+
+/* Action album dropdown */
+function htmPopulateActionAlbumSelect(){
+  const sel = document.getElementById('htmActionAlbumSelect');
+  if(!sel || !allPlaylists) return;
+  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
+  allPlaylists.forEach(pl=>{
+    const opt = document.createElement('option');
+    opt.value = pl.slug;
+    opt.textContent = pl.title||pl.slug;
+    if(htmActionSelectedAlbum && htmActionSelectedAlbum.slug===pl.slug) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  htmRenderActionAlbum();
+}
+function htmPickActionAlbum(){
+  const sel = document.getElementById('htmActionAlbumSelect');
+  const slug = sel.value;
+  if(!slug){ htmActionSelectedAlbum=null; htmRenderActionAlbum(); return; }
+  const pl = allPlaylists.find(p=>p.slug===slug);
+  if(pl){
+    htmActionSelectedAlbum = { slug:pl.slug, title:pl.title||pl.slug, coverUrl:pl.cover_url||'' };
+    htmRenderActionAlbum();
+  }
+}
+function htmRenderActionAlbum(){
+  const box = document.getElementById('htmActionSelectedAlbum');
+  if(!box) return;
+  if(htmActionSelectedAlbum){
+    box.style.display = 'flex';
+    document.getElementById('htmActionAlbumCover').src = htmActionSelectedAlbum.coverUrl||'';
+    document.getElementById('htmActionAlbumTitle').textContent = htmActionSelectedAlbum.title||'';
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 /* ── Open ── */
@@ -10175,6 +10302,8 @@ function openHomeTileModal(rowId, cellIdx){
   htmEditTarget    = { rowId, cellIdx };
   htmSelectedSong  = null;
   htmSelectedAlbum = null;
+  htmActionSelectedSong  = null;
+  htmActionSelectedAlbum = null;
   htmMotifFile     = null;
   htmMotifUrl      = '';
   htmAlbumMotifFile = null;
@@ -10188,7 +10317,14 @@ function openHomeTileModal(rowId, cellIdx){
   const cell = row && row.cells[cellIdx];
   if(cell){
     htmChosenType   = cell.type || '';
-    htmChosenAction = cell.lyricsCycle ? 'lyrics' : (cell.fn==='link' ? 'link' : cell.fn==='subpage' ? 'subpage' : cell.fn==='album' ? 'album' : 'play');
+    htmChosenAction = cell.fn==='link' ? 'link' : cell.fn==='subpage' ? 'subpage' : cell.fn==='album' ? 'album' : 'play';
+    // Restore action-level song/album selections from existing cell
+    if(cell.slug && (cell.fn==='play'||!cell.fn)){
+      htmActionSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl||'', cover21Url:cell.cover21Url||cell.imageUrl||''};
+    }
+    if(cell.fn==='album' && cell.slug){
+      htmActionSelectedAlbum = { slug:cell.slug, title:cell.alt||cell.slug, coverUrl:cell.imageUrl||''};
+    }
     htmMotifUrl     = cell.customImageUrl || cell.imageUrl || '';
     if(cell.fn === 'subpage' && cell.url){
       setTimeout(()=>{
@@ -10221,6 +10357,7 @@ function openHomeTileModal(rowId, cellIdx){
 function closeHomeTileModal(){
   document.getElementById('homeTileModal').classList.remove('open');
   htmEditTarget = null; htmSelectedSong = null; htmSelectedAlbum = null;
+  htmActionSelectedSong = null; htmActionSelectedAlbum = null;
   htmMotifFile = null; htmMotifUrl = '';
   htmAlbumMotifFile = null; htmAlbumMotifUrl = '';
   htmChosenType = ''; htmChosenAction = ''; htmChosenSource = 'upload';
@@ -10269,33 +10406,38 @@ async function saveHomeTile(){
   // Keep existing layout type — only update content
   updatedCell.imageUrl   = imageUrl;
   updatedCell.customImageUrl = htmChosenSource==='upload' ? finalImageUrl : '';
-  updatedCell.lyricsCycle= htmChosenAction === 'lyrics';
+
+  // Lyrics cycle = play action + checkbox ticked
+  const lyricsCb = document.getElementById('htmLyricsCycleCheck');
+  updatedCell.lyricsCycle = htmChosenAction === 'play' && lyricsCb && lyricsCb.checked;
 
   if(htmChosenAction === 'subpage'){
     updatedCell.fn   = 'subpage';
     updatedCell.url  = document.getElementById('htmSubpageUrl')?.value?.trim() || '';
     updatedCell.slug = '';
+    updatedCell.alt  = '';
   } else if(htmChosenAction === 'link'){
     updatedCell.fn   = 'link';
     updatedCell.url  = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     updatedCell.slug = '';
     updatedCell.alt  = '';
-  } else if(htmChosenAction === 'album' && htmSelectedAlbum){
-    updatedCell.fn   = 'play';
-    updatedCell.slug = htmSelectedAlbum.slug;
-    updatedCell.alt  = htmSelectedAlbum.title;
+  } else if(htmChosenAction === 'album' && htmActionSelectedAlbum){
+    updatedCell.fn   = 'album';
+    updatedCell.slug = htmActionSelectedAlbum.slug;
+    updatedCell.alt  = htmActionSelectedAlbum.title;
     updatedCell.url  = '';
-  } else if(htmSelectedSong){
+  } else if(htmChosenAction === 'play' && htmActionSelectedSong){
     updatedCell.fn     = 'play';
-    updatedCell.slug   = htmSelectedSong.slug;
-    updatedCell.alt    = htmSelectedSong.title;
-    updatedCell.artist = htmSelectedSong.artist;
-    updatedCell.cover21Url = htmSelectedSong.cover21Url;
+    updatedCell.slug   = htmActionSelectedSong.slug;
+    updatedCell.alt    = htmActionSelectedSong.title;
+    updatedCell.artist = htmActionSelectedSong.artist;
+    updatedCell.cover21Url = htmActionSelectedSong.cover21Url;
     updatedCell.url    = '';
   }
 
   // Badge / label
-  const badgeMap = {play:'Song', lyrics:'Song', album:'Album', link:'Link', subpage:'Unterseite'};
+  const isLyrics = updatedCell.lyricsCycle;
+  const badgeMap = {play: isLyrics ? 'Song ♪' : 'Song', album:'Album', link:'Link', subpage:'Unterseite'};
   updatedCell._badge = badgeMap[htmChosenAction] || 'Song';
 
   closeHomeTileModal();
