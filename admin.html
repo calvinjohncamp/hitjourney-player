@@ -358,6 +358,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.trio-b{grid-area:bd;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.trio-b{aspect-ratio:2/1}}
 .he-cell.trio-c{grid-area:po;aspect-ratio:1/1}
+/* Equal trio (3 gleich breite 1:1 Kacheln, z.B. Kurs Nordwest / Songwriter's / One Million) */
+.he-row-grid.trio-grid--equal{display:flex;flex-direction:row;gap:10px}
+.he-row-grid.trio-grid--equal .he-cell{flex:1 1 0;min-width:0;grid-area:unset;aspect-ratio:1/1}
 .he-cell.hidden-cell{display:none}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
@@ -546,8 +549,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-4"></path></svg>
       Restore
     </button>
-    <button class="snapshot-btn" onclick="makeSnapshot()" title="Sicherheitskopie erstellen" disabled="">⏳ Initialisiert…</button>
-    <button class="snapshot-restore-btn" onclick="testRLS()" title="Supabase RLS & Schreibrechte testen" style="background:rgba(255,100,80,.08);color:#f08070;border-color:rgba(255,100,80,.25)">🔍 RLS-Test</button>
+    <button class="snapshot-btn" onclick="makeSnapshot()" title="Sicherheitskopie erstellen" disabled="">⏳ Lädt…</button>
+    <button class="snapshot-restore-btn" onclick="testRLS()" title="Supabase RLS &amp; Schreibrechte testen" style="background:rgba(255,100,80,.08);color:#f08070;border-color:rgba(255,100,80,.25)">🔍 RLS-Test</button>
     <div class="hj-header-badge">Admin</div>
   </div>
 </div>
@@ -7271,13 +7274,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   <div class="home-toolbar">
     <span class="home-toolbar-title">Home-Editor</span>
     <div style="display:flex;gap:6px">
-      <button class="home-toolbar-btn undo" id="homeUndoBtn" onclick="undoHomeAction()" title="Letzte Änderung rückgängig machen">
+      <button class="home-toolbar-btn undo" id="homeUndoBtn" onclick="undoHomeAction()" title="Letzte Änderung rückgängig machen" disabled="">
         ↶ Rückgängig
       </button>
-      <button class="home-toolbar-btn cancel" id="homeCancelBtn" onclick="cancelHomeEdits()" title="Alle ungespeicherten Änderungen verwerfen">
+      <button class="home-toolbar-btn cancel" id="homeCancelBtn" onclick="cancelHomeEdits()" title="Alle ungespeicherten Änderungen verwerfen" disabled="">
         Abbrechen
       </button>
-      <button class="home-toolbar-btn save" id="homeSaveBtn" onclick="saveHomeLayout()" disabled style="opacity:.4;cursor:not-allowed">
+      <button class="home-toolbar-btn save" id="homeSaveBtn" onclick="saveHomeLayout()" style="">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
         Speichern
       </button>
@@ -7290,150 +7293,150 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       ↓ Seite importieren
     </button>
   </div>
-  <div class="home-editor-wrap" id="homeEditorWrap"><div class="he-add-bar top"><button class="he-add-btn" onclick="addRowAtTop()">＋ Neue Zeile oben hinzufügen</button></div><div class="he-row" data-row-id="v6omezz"><div class="he-row-bar"><span class="he-row-label">Z1</span><button class="he-row-bar-btn move" title="Nach oben" disabled="">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="v6omezz" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Cover.jpg" alt="What If Tonight"><div class="he-cell-altlabel">What If Tonight</div><div class="he-cell-overlay always-edit">
+  <div class="home-editor-wrap" id="homeEditorWrap"><div class="he-add-bar top"><button class="he-add-btn" onclick="addRowAtTop()">＋ Neue Zeile oben hinzufügen</button></div><div class="he-row" data-row-id="n48z9wv"><div class="he-row-bar"><span class="he-row-label">Z1</span><button class="he-row-bar-btn move" title="Nach oben" disabled="">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="n48z9wv" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/What%20If%20Tonight%20-%20Cover.jpg" alt="What If Tonight"><div class="he-cell-altlabel">What If Tonight</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('v6omezz',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('n48z9wv',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="v6omezz" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Real%20-%20Cover.jpg" alt="Real" style="opacity: 0.15;"><div class="he-cell-altlabel">Real</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="n48z9wv" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/real%20-%20Cover.jpg" alt="Real"><div class="he-cell-altlabel">Real</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('v6omezz',1)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('n48z9wv',1)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="v6omezz" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg" alt="Half of Everything"><div class="he-cell-altlabel">Half of Everything</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="n48z9wv" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Half%20of%20Everything%20-%20Cover.jpg" alt="Half of Everything"><div class="he-cell-altlabel">Half of Everything</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('v6omezz',2)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('n48z9wv',2)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="v6omezz" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20-%20Cover.jpg" alt="Berlin" style="opacity: 0.15;"><div class="he-cell-altlabel">Berlin</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="n48z9wv" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/BERLIN%20-%20Cover.jpg" alt="Berlin"><div class="he-cell-altlabel">Berlin</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('v6omezz',3)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('n48z9wv',3)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="rrx5qla"><div class="he-row-bar"><span class="he-row-label">Z2</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="rrx5qla" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg" alt="Tante Paula · Lara Wolff"><div class="he-cell-altlabel">Tante Paula · Lara Wolff</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="shm921k"><div class="he-row-bar"><span class="he-row-label">Z2</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="shm921k" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/tante-paula-lara-wolff-cover-2-1.jpg" alt="Tante Paula · Lara Wolff"><div class="he-cell-altlabel">Tante Paula · Lara Wolff</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('rrx5qla',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('shm921k',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="pv3zdei"><div class="he-row-bar"><span class="he-row-label">Z3</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="pv3zdei" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Cover.jpg" alt="Zu Sehr"><div class="he-cell-altlabel">Zu Sehr</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="7wfg42a"><div class="he-row-bar"><span class="he-row-label">Z3</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="7wfg42a" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Zu%20Sehr%20-%20Cover.jpg" alt="Zu Sehr"><div class="he-cell-altlabel">Zu Sehr</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('pv3zdei',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('7wfg42a',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="pv3zdei" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20Baby%20-%20Cover.jpg" alt="Klartext Baby" style="opacity: 0.15;"><div class="he-cell-altlabel">Klartext Baby</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="7wfg42a" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Klartext%20-%20Cover.jpg" alt="Klartext"><div class="he-cell-altlabel">Klartext</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('pv3zdei',1)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('7wfg42a',1)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="pv3zdei" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg" alt="Sehnsucht"><div class="he-cell-altlabel">Sehnsucht</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="7wfg42a" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Sehnsucht%20-%20Cover.jpg" alt="Sehnsucht"><div class="he-cell-altlabel">Sehnsucht</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('pv3zdei',2)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('7wfg42a',2)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="pv3zdei" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Lara%20Wolff%20-%20Cover.jpg" alt="Lara Wolff" style="opacity: 0.15;"><div class="he-cell-altlabel">Lara Wolff</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="7wfg42a" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Flaschenpost%20von%20Dir%20-%20Cover.jpg" alt="Flaschenpost von Dir"><div class="he-cell-altlabel">Flaschenpost von Dir</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('pv3zdei',3)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('7wfg42a',3)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="botys8q"><div class="he-row-bar"><span class="he-row-label">Z4</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-slide" data-row-id="botys8q" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Cover.jpg" alt="IN THE SPOTLIGHT" style="opacity: 0.15;"><div class="he-cell-altlabel">IN THE SPOTLIGHT</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="0klmiq6"><div class="he-row-bar"><span class="he-row-label">Z4</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-slide" data-row-id="0klmiq6" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Neues%20Licht%20-%20Fokus.jpg" alt="IN THE SPOTLIGHT"><div class="he-cell-altlabel">IN THE SPOTLIGHT</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-diashow">◈ Diashow</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('botys8q',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('0klmiq6',0)" title="Bearbeiten">✎</button>
           
-        </div></div><div style="position: absolute; bottom: 6px; left: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(207, 229, 245, 0.85); pointer-events: none; background: rgba(6, 20, 32, 0.5); padding: 3px 7px; border-radius: 4px;">◈ IN THE SPOTLIGHT · 10 Songs</div></div></div></div><div class="he-row" data-row-id="16973mo"><div class="he-row-bar"><span class="he-row-label">Z5</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="16973mo" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50"><div class="he-cell-altlabel">Top 50</div><div class="he-cell-overlay always-edit">
+        </div></div><div style="position: absolute; bottom: 6px; left: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(207, 229, 245, 0.85); pointer-events: none; background: rgba(6, 20, 32, 0.5); padding: 3px 7px; border-radius: 4px;">◈ IN THE SPOTLIGHT · 12 Songs</div></div></div></div><div class="he-row" data-row-id="dsyyln8"><div class="he-row-bar"><span class="he-row-label">Z5</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top50-cover.jpg" alt="Top 50"><div class="he-cell-altlabel">Top 50</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('16973mo',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="16973mo" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad"><div class="he-cell-altlabel">30° Grad</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20Grad%20-%20Cover.jpg" alt="30° Grad"><div class="he-cell-altlabel">30° Grad</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('16973mo',1)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',1)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="16973mo" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories"><div class="he-cell-altlabel">30 Stories</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/30%20stories%20-%20Cover.jpg" alt="30 Stories"><div class="he-cell-altlabel">30 Stories</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('16973mo',2)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',2)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="16973mo" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100"><div class="he-cell-altlabel">Top 100</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dsyyln8" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg" alt="Top 100"><div class="he-cell-altlabel">Top 100</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('16973mo',3)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dsyyln8',3)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="r72lvr3"><div class="he-row-bar"><span class="he-row-label">Z6</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="r72lvr3" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Johnny%20-%20Cover%202-1.jpg" alt="Johnny · BRO" style="opacity: 0.15;"><div class="he-cell-altlabel">Johnny · BRO</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="lyisw1r"><div class="he-row-bar"><span class="he-row-label">Z6</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="lyisw1r" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/johnny-lyrics21.jpg" alt="Johnny (Song for my mother)"><div class="he-cell-altlabel">Johnny (Song for my mother)</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('r72lvr3',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('lyisw1r',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="zw4ihyc"><div class="he-row-bar"><span class="he-row-label">Z7</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="zw4ihyc" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe"><div class="he-cell-altlabel">Grosse Liebe</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="czb4w2g"><div class="he-row-bar"><span class="he-row-label">Z7</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="czb4w2g" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/grosse-liebe-cover.jpg" alt="Grosse Liebe"><div class="he-cell-altlabel">Grosse Liebe</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('zw4ihyc',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell trio-b" data-row-id="zw4ihyc" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds"><div class="he-cell-altlabel">Buried Diamonds</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell trio-b" data-row-id="czb4w2g" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Teaser.jpg" alt="Buried Diamonds"><div class="he-cell-altlabel">Buried Diamonds</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('zw4ihyc',1)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',1)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell trio-c" data-row-id="zw4ihyc" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie"><div class="he-cell-altlabel">Poesie</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell trio-c" data-row-id="czb4w2g" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg" alt="Poesie"><div class="he-cell-altlabel">Poesie</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('zw4ihyc',2)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('czb4w2g',2)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="upxhwi9"><div class="he-row-bar"><span class="he-row-label">Z8</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-slide" data-row-id="upxhwi9" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Gleich%20Zurueck%20-%20Cover.jpg" alt="Gleich Zurück · Velvet Radio" style="opacity: 0.15;"><div class="he-cell-altlabel">Gleich Zurück · Velvet Radio</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="43dj8sl"><div class="he-row-bar"><span class="he-row-label">Z8</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-slide" data-row-id="43dj8sl" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Herbstlaub%20-%20Cover.jpg" alt=""><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-diashow">◈ Diashow</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('upxhwi9',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('43dj8sl',0)" title="Bearbeiten">✎</button>
           
-        </div></div><div style="position: absolute; bottom: 6px; left: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(207, 229, 245, 0.85); pointer-events: none; background: rgba(6, 20, 32, 0.5); padding: 3px 7px; border-radius: 4px;">◈ Gleich Zurück · Velvet Radio · 2 Songs</div></div></div></div><div class="he-row" data-row-id="grulvze"><div class="he-row-bar"><span class="he-row-label">Z9</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="grulvze" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20World%20Is%20Wide%20-%20Cover.jpg" alt="This World Is Wide" style="opacity: 0.15;"><div class="he-cell-altlabel">This World Is Wide</div><div class="he-cell-overlay always-edit">
+        </div></div><div style="position: absolute; bottom: 6px; left: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(207, 229, 245, 0.85); pointer-events: none; background: rgba(6, 20, 32, 0.5); padding: 3px 7px; border-radius: 4px;">◈ Diashow · 12 Songs</div></div></div></div><div class="he-row" data-row-id="dchs3ts"><div class="he-row-bar"><span class="he-row-label">Z9</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="dchs3ts" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/This%20world%20is%20wide%20-%20Cover.jpg" alt="This world is wide"><div class="he-cell-altlabel">This world is wide</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('grulvze',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dchs3ts',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="grulvze" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20You%20Were%20With%20Me%20-%20Cover.jpg" alt="Anywhere You Were With Me" style="opacity: 0.15;"><div class="he-cell-altlabel">Anywhere You Were With Me</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dchs3ts" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Anywhere%20you%20were%20with%20me%20-%20Cover.jpg" alt="Anywhere you were with me"><div class="he-cell-altlabel">Anywhere you were with me</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('grulvze',1)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dchs3ts',1)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="grulvze" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20Pieces%20-%20Cover.jpg" alt="Broken Pieces" style="opacity: 0.15;"><div class="he-cell-altlabel">Broken Pieces</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dchs3ts" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Broken%20pieces%20-%20Cover.jpg" alt="Broken Pieces"><div class="he-cell-altlabel">Broken Pieces</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('grulvze',2)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dchs3ts',2)" title="Bearbeiten">✎</button>
           
-        </div></div></div><div class="he-cell" data-row-id="grulvze" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Stories%20-%20Cover.jpg" alt="Stories" style="opacity: 0.15;"><div class="he-cell-altlabel">Stories</div><div class="he-cell-overlay always-edit">
+        </div></div></div><div class="he-cell" data-row-id="dchs3ts" data-cell-idx="3"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/in%20the%20end%20-%20sadie%20cover%202.jpg" alt="Nothing but Stories"><div class="he-cell-altlabel">Nothing but Stories</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('grulvze',3)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('dchs3ts',3)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="druklls"><div class="he-row-bar"><span class="he-row-label">Z10</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="druklls" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="Brave New Songs · The Archive"><div class="he-cell-altlabel">Brave New Songs · The Archive</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="ea48370e-aac2-4137-b6f9-64f805ca2fea"><div class="he-row-bar"><span class="he-row-label">Z10</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="ea48370e-aac2-4137-b6f9-64f805ca2fea" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg" alt="German &amp; English Songs"><div class="he-cell-altlabel">German &amp; English Songs</div><div class="he-cell-overlay always-edit">
+        <span class="he-cell-badge badge-song">Song</span>
+        <div class="he-cell-acts">
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('ea48370e-aac2-4137-b6f9-64f805ca2fea',0)" title="Bearbeiten">✎</button>
+          
+        </div></div></div></div></div><div class="he-row" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817"><div class="he-row-bar"><span class="he-row-label">Z11</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg" alt="Kurs Nordwest"><div class="he-cell-altlabel">Kurs Nordwest</div><div class="he-cell-overlay always-edit">
+        <span class="he-cell-badge badge-song">Song</span>
+        <div class="he-cell-acts">
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',0)" title="Bearbeiten">✎</button>
+          
+        </div></div></div><div class="he-cell trio-b" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg" alt="Songwriters Favorites"><div class="he-cell-altlabel">Songwriters Favorites</div><div class="he-cell-overlay always-edit">
+        <span class="he-cell-badge badge-song">Song</span>
+        <div class="he-cell-acts">
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',1)" title="Bearbeiten">✎</button>
+          
+        </div></div></div><div class="he-cell trio-c" data-row-id="3690706b-235d-4fb5-a890-c26bc4454817" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg" alt="One Million Streams Ahead"><div class="he-cell-altlabel">One Million Streams Ahead</div><div class="he-cell-overlay always-edit">
+        <span class="he-cell-badge badge-song">Song</span>
+        <div class="he-cell-acts">
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('3690706b-235d-4fb5-a890-c26bc4454817',2)" title="Bearbeiten">✎</button>
+          
+        </div></div></div></div></div><div class="he-row" data-row-id="pnjcu8f"><div class="he-row-bar"><span class="he-row-label">Z12</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="pnjcu8f" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/archive.jpg" alt="The Archive"><div class="he-cell-altlabel">The Archive</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-link">Link</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('druklls',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('pnjcu8f',0)" title="Bearbeiten">✎</button>
           
-        </div></div></div></div></div><div class="he-row" data-row-id="ki16d7x"><div class="he-row-bar"><span class="he-row-label">Z11</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid trio-grid"><div class="he-cell trio-a" data-row-id="ki16d7x" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Kurs%20Nordwest%20sw.jpg" alt="Kurs Nordwest"><div class="he-cell-altlabel">Kurs Nordwest</div><div class="he-cell-overlay always-edit">
+        </div></div></div></div></div><div class="he-row" data-row-id="70s80sm"><div class="he-row-bar"><span class="he-row-label">Z13</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten" disabled="">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="70s80sm" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just-this-dance-lara-wolff-cover-2-1.jpg" alt="Just This Dance · Lara Wolff"><div class="he-cell-altlabel">Just This Dance · Lara Wolff</div><div class="he-cell-overlay always-edit">
         <span class="he-cell-badge badge-song">Song</span>
         <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('ki16d7x',0)" title="Bearbeiten">✎</button>
-          
-        </div></div></div><div class="he-cell trio-b" data-row-id="ki16d7x" data-cell-idx="1"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Songwriters%20Favorites.jpg" alt="Songwriter's Favorites"><div class="he-cell-altlabel">Songwriter's Favorites</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
-        <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('ki16d7x',1)" title="Bearbeiten">✎</button>
-          
-        </div></div></div><div class="he-cell trio-c" data-row-id="ki16d7x" data-cell-idx="2"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/1%20Million%20Streams.jpg" alt="One Million Streams Ahead"><div class="he-cell-altlabel">One Million Streams Ahead</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-link">Link</span>
-        <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('ki16d7x',2)" title="Bearbeiten">✎</button>
-          
-        </div></div></div></div></div><div class="he-row" data-row-id="byi16pp"><div class="he-row-bar"><span class="he-row-label">Z12</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell" data-row-id="byi16pp" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/german%20%2B%20english.jpg" alt="German &amp; English Songs"><div class="he-cell-altlabel">German &amp; English Songs</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
-        <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('byi16pp',0)" title="Bearbeiten">✎</button>
-          
-        </div></div></div></div></div><div class="he-row" data-row-id="usju3k2"><div class="he-row-bar"><span class="he-row-label">Z13</span><button class="he-row-bar-btn move" title="Nach oben">↑</button><button class="he-row-bar-btn move" title="Nach unten" disabled="">↓</button><button class="he-row-bar-btn del" title="Zeile löschen">×</button><button class="he-row-bar-btn edit-row" title="Zeile bearbeiten">Bearbeiten</button></div><div class="he-row-grid"><div class="he-cell span-4" data-row-id="usju3k2" data-cell-idx="0"><img class="he-cell-img" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/just-this-dance-lara-wolff-cover-2-1.jpg" alt="Just This Dance · Lara Wolff"><div class="he-cell-altlabel">Just This Dance · Lara Wolff</div><div class="he-cell-overlay always-edit">
-        <span class="he-cell-badge badge-song">Song</span>
-        <div class="he-cell-acts">
-          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('usju3k2',0)" title="Bearbeiten">✎</button>
+          <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('70s80sm',0)" title="Bearbeiten">✎</button>
           
         </div></div></div></div></div><div class="he-add-bar bottom"><button class="he-add-btn" onclick="addRow()">＋ Neue Zeile unten hinzufügen</button></div></div>
 </div>
@@ -9224,8 +9227,9 @@ function buildCells(row, grid){
     }
 
   } else if(t0 === 'trio-a'){
-    // Trio: use CSS grid-areas gl/bd/po
-    grid.classList.add('trio-grid');
+    // Trio: asymmetrisch (gl 1:1 + bd 2:1 + po 1:1) oder gleich (3× 1:1)
+    const isAsymmetric = (row.cells[1]?.slug || '').toLowerCase() === 'buried-diamonds';
+    grid.classList.add(isAsymmetric ? 'trio-grid' : 'trio-grid trio-grid--equal');
     grid.appendChild(buildCell(row, 0, 'trio-a', editing)); // gl
     grid.appendChild(buildCell(row, 1, 'trio-b', editing)); // bd
     grid.appendChild(buildCell(row, 2, 'trio-c', editing)); // po
@@ -10756,9 +10760,8 @@ function importCurrentHome(){
 })();
 
 let songsLoaded = false; // lazy: wird beim Songs-Tab-Klick geladen
-// Songs und Home-Layout beim Start sofort laden
+// Songs beim Start laden (Songs-Tab ist default aktiv)
 songsLoaded = true; loadSongs();
-homeEditorReady = true; loadHomeLayout();
 
 /* ══════════════════════════════════════════════════════════════════════════
    SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)

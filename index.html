@@ -167,15 +167,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* Trio mit 3 gleich breiten Spalten gleicher Höhe (Kurs Nordwest / Songwriter's / One Million) */
 .home-trio--equal{
-  grid-template-columns:1fr 1fr 1fr;
-  grid-template-areas:"gl bd po";
+  display:flex;
+  flex-direction:row;
+  gap:10px;
 }
-.home-trio--equal .trio-gl,
-.home-trio--equal .trio-bd,
-.home-trio--equal .trio-po{ grid-area:unset }
-.home-trio--equal .home-card:nth-child(1){ grid-area:gl }
-.home-trio--equal .home-card:nth-child(2){ grid-area:bd }
-.home-trio--equal .home-card:nth-child(3){ grid-area:po }
+.home-trio--equal .home-card{
+  flex:1 1 0;
+  min-width:0;
+  grid-area:unset;
+}
 .home-trio--equal img{ aspect-ratio:1/1; width:100%; object-fit:cover }
 
 
@@ -2417,11 +2417,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
   .home-trio .trio-gl img,.home-trio .trio-po img{aspect-ratio:1/1}
   .home-trio .trio-bd img{aspect-ratio:2/1}
-  .home-trio--equal{
-    grid-template-columns:1fr 1fr 1fr;
-    grid-template-areas:"gl bd po";
-  }
-  .home-trio--equal img{ aspect-ratio:1/1 }
+  .home-trio--equal{ gap:12px }
   .featured-teaser{grid-column:1/-1}
 
   /* Editorial row: 3 columns, more padding */
