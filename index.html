@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v196-panorama-4x1-album-click-fix -->
+<!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -5767,7 +5767,8 @@ function buildHomeCard(cell, extraClass){
   const _specialSlugs = ['kurs-nordwest', 'songwriters-picks'];
   // fn=album/link/subpage: Admin-Intent hat Vorrang — albumKey immer auflösen
   const _fnOverride = cell.fn === 'album' || cell.fn === 'link' || cell.fn === 'subpage';
-  const albumKey = (!_fnOverride && _specialSlugs.includes((cell.slug||'').toLowerCase())) ? null : resolveAlbumKey(cell.slug);
+  const targetSlug = cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug;
+  const albumKey = (!_fnOverride && _specialSlugs.includes((targetSlug||'').toLowerCase())) ? null : resolveAlbumKey(targetSlug);
   if(albumKey) el.dataset.album = albumKey;
   el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
 
@@ -5832,8 +5833,14 @@ function buildHomeCard(cell, extraClass){
 
     // fn=album: Admin hat explizit ein Album verlinkt
     if(cell.fn === 'album'){
-      if(albumKey) { showAlbum(albumKey); return; }
-      if(cell.slug) playSongBySlug(cell.slug);
+      const key = albumKey || resolveAlbumKey(targetSlug) || resolveAlbumKey(cell.slug);
+      if(key && ALBUMS[key]) { showAlbum(key); return; }
+      // Album tiles should never silently fall through to audio playback. If the
+      // playlist arrives a moment later, retry once after the Supabase load has settled.
+      setTimeout(()=>{
+        const retryKey = resolveAlbumKey(targetSlug) || resolveAlbumKey(cell.slug);
+        if(retryKey && ALBUMS[retryKey]) showAlbum(retryKey);
+      }, 200);
       return;
     }
 
@@ -6424,12 +6431,26 @@ function initDynamicSlideshow(id, slides){
 /* ── Resolve playlist slug → ALBUMS key ── */
 function resolveAlbumKey(slug){
   if(!slug) return null;
-  // Direct key match
-  if(ALBUMS[slug]) return slug;
-  // Via PLAYLIST_MAP
-  const info = PLAYLIST_MAP[slug];
-  if(info) return info.key;
-  return null;
+  const raw = String(slug).trim();
+  const norm = raw.toLowerCase();
+
+  // Direct key match (dynamic Admin albums often use slug === key)
+  if(ALBUMS[raw]) return raw;
+  if(ALBUMS[norm]) return norm;
+
+  // Via fixed PLAYLIST_MAP
+  const info = PLAYLIST_MAP[raw] || PLAYLIST_MAP[norm];
+  if(info && ALBUMS[info.key]) return info.key;
+
+  // Robust fallback: compare against the playlist slug stored inside every album.
+  // This fixes Admin-created 4:1 panorama album teasers where the visible tile is
+  // saved correctly, but the click target is a playlist slug that is not one of
+  // the old hardcoded album keys.
+  const found = Object.entries(ALBUMS || {}).find(([key, album]) => {
+    const aSlug = String((album && album.slug) || '').toLowerCase();
+    return aSlug && aSlug === norm;
+  });
+  return found ? found[0] : null;
 }
 
 /* ── Play song or album based on cell config ── */

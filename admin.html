@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260525-panorama-4x1-fix -->
+<!-- Version: admin-v20260525-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -10789,8 +10789,13 @@ function openHomeTileModal(rowId, cellIdx){
       }, 50);
     }
     if(cell.slug && cell.imageUrl){
-      htmChosenSource = 'song';
-      htmSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl, cover21Url:cell.cover21Url||cell.imageUrl };
+      if(cell.fn === 'album'){
+        htmChosenSource = 'album';
+        htmSelectedAlbum = { slug:cell.albumSlug || cell.playlist_slug || cell.slug, title:cell.albumTitle || cell.alt || cell.slug, coverUrl:cell.imageUrl||'' };
+      } else {
+        htmChosenSource = 'song';
+        htmSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl, cover21Url:cell.cover21Url||cell.imageUrl };
+      }
     }
   }
 
@@ -10924,6 +10929,12 @@ async function saveHomeTile(){
     const targetAlbum = htmActionSelectedAlbum || htmSelectedAlbum;
     updatedCell.fn   = 'album';
     updatedCell.slug = targetAlbum.slug;
+    // Extra target fields are intentionally redundant. They make the Live-App robust
+    // for 4:1 panorama album teasers even if a future edit changes the visible motif
+    // source or treats slug as a song slug.
+    updatedCell.albumSlug = targetAlbum.slug;
+    updatedCell.playlist_slug = targetAlbum.slug;
+    updatedCell.albumTitle = targetAlbum.title;
     updatedCell.alt  = targetAlbum.title;
     updatedCell.url  = '';
   } else if(htmChosenAction === 'play' && htmActionSelectedSong){
