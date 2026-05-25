@@ -246,6 +246,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 #newAlbumOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
 #newAlbumOverlay.open{display:flex}
 #newAlbumModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:6px 20px 40px;animation:slideUp .25s ease}
+#albumCoverOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
+#albumCoverOverlay.open{display:flex}
+#albumCoverModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:6px 20px 40px;animation:slideUp .25s ease}
+.btn-album-cover-change{padding:0}
 
 
 /* ══ EDIT SCREEN ══ */
@@ -7289,6 +7293,34 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
+<!-- ══ ALBUM COVER CHANGE MODAL ══ -->
+<div id="albumCoverOverlay">
+  <div id="albumCoverModal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Album-Cover ersetzen</div>
+    <div class="section-label" style="margin-top:14px">Album</div>
+    <div class="ai" id="acAlbumTitle" style="pointer-events:none;opacity:.85">—</div>
+
+    <div class="section-label">Neues 1:1 Cover</div>
+    <div class="upload-zone sq" id="zAlbumCoverEdit" style="max-width:220px" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropAlbumCoverEdit(event)">
+      <input id="albumCoverEditInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.jpg,.jpeg,.png,.webp" onchange="onFileAlbumCoverEdit(this)">
+      <div class="upload-zone-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>Cover hochladen</span>
+        <small>1:1 empfohlen</small>
+      </div>
+      <img class="zone-preview" id="prevAlbumCoverEdit" alt="">
+      <button class="zone-clear" onclick="clearAlbumCoverEdit(event)" title="Entfernen">×</button>
+    </div>
+
+    <div class="form-msg" id="acMsg" style="margin-top:12px"></div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn-cancel" onclick="closeAlbumCoverModal()">Abbrechen</button>
+      <button class="btn-save" id="btnSaveAlbumCover" onclick="saveAlbumCoverEdit()">Cover speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ EDIT SCREEN (full-page, kein Modal) ══ -->
 <div class="screen" id="tabEdit">
   <div class="edit-nav">
@@ -8976,10 +9008,9 @@ function renderAlbums(){
         </div>
         <div class="album-actions">
           <span class="album-meta">${al.tracks.length} Songs</span>
-          <label class="btn-album-cover-change" title="Cover-Bild ersetzen" onclick="event.stopPropagation()">
+          <button class="btn-album-cover-change" title="Cover-Bild ersetzen" onclick="openAlbumCoverModal(event,'${al.slug}')">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" style="display:none" onchange="onCoverChangeAlbum(event,'${al.slug}','${esc(al.title||al.slug)}')">
-          </label>
+          </button>
           <button class="btn-album-del" onclick="askDeleteAlbum(event,'${al.slug}','${esc(al.title||al.slug)}')" title="Album löschen">
             <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
@@ -9261,17 +9292,73 @@ function onFileAlbum(input){ if(input.files[0]){ albumFileNew=input.files[0]; do
 function onDropAlbum(e){ e.preventDefault(); offDrag(document.getElementById('zAlbumCover')); const f=e.dataTransfer.files[0]; if(f){ albumFileNew=f; document.getElementById('prevAlbumCover').src=URL.createObjectURL(f); document.getElementById('zAlbumCover').classList.add('has-file'); } }
 function clearAlbumCover(e){ e.preventDefault(); e.stopPropagation(); albumFileNew=null; document.getElementById('prevAlbumCover').src=''; document.getElementById('zAlbumCover').classList.remove('has-file'); }
 
-async function onCoverChangeAlbum(event, slug, title){
-  const file = event.target.files[0];
-  if(!file) return;
+
+let albumCoverEditFile = null;
+let albumCoverEditSlug = null;
+
+function openAlbumCoverModal(event, slug){
+  if(event) event.stopPropagation();
   const al = albumsData.find(a=>a.slug===slug);
-  if(!al) return;
-  const s3Key = `artwork/${title} - Cover.jpg`;
-  toast('Cover wird hochgeladen …');
+  if(!al){ toast('Album nicht gefunden','err'); return; }
+  albumCoverEditSlug = slug;
+  albumCoverEditFile = null;
+  document.getElementById('acAlbumTitle').textContent = al.title || al.slug;
+  document.getElementById('acMsg').className = 'form-msg';
+  document.getElementById('albumCoverEditInput').value = '';
+  document.getElementById('prevAlbumCoverEdit').src = al.cover_url || '';
+  document.getElementById('zAlbumCoverEdit').classList.toggle('has-file', !!al.cover_url);
+  document.getElementById('albumCoverOverlay').classList.add('open');
+}
+function closeAlbumCoverModal(){
+  document.getElementById('albumCoverOverlay').classList.remove('open');
+  albumCoverEditFile = null;
+  albumCoverEditSlug = null;
+}
+function onFileAlbumCoverEdit(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  albumCoverEditFile = f;
+  document.getElementById('prevAlbumCoverEdit').src = URL.createObjectURL(f);
+  document.getElementById('zAlbumCoverEdit').classList.add('has-file');
+  document.getElementById('acMsg').className = 'form-msg';
+}
+function onDropAlbumCoverEdit(e){
+  e.preventDefault();
+  offDrag(document.getElementById('zAlbumCoverEdit'));
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f){
+    albumCoverEditFile = f;
+    document.getElementById('prevAlbumCoverEdit').src = URL.createObjectURL(f);
+    document.getElementById('zAlbumCoverEdit').classList.add('has-file');
+    document.getElementById('acMsg').className = 'form-msg';
+  }
+}
+function clearAlbumCoverEdit(e){
+  e.preventDefault(); e.stopPropagation();
+  albumCoverEditFile = null;
+  document.getElementById('albumCoverEditInput').value = '';
+  const al = albumsData.find(a=>a.slug===albumCoverEditSlug);
+  document.getElementById('prevAlbumCoverEdit').src = al?.cover_url || '';
+  document.getElementById('zAlbumCoverEdit').classList.toggle('has-file', !!al?.cover_url);
+}
+document.getElementById('albumCoverOverlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('albumCoverOverlay')) closeAlbumCoverModal();
+});
+
+async function saveAlbumCoverEdit(){
+  const al = albumsData.find(a=>a.slug===albumCoverEditSlug);
+  const msgEl = document.getElementById('acMsg');
+  if(!al){ showMsg(msgEl,'Album nicht gefunden.','err'); return; }
+  if(!albumCoverEditFile){ showMsg(msgEl,'Bitte zuerst ein neues Cover hochladen.','err'); return; }
+  const btn = document.getElementById('btnSaveAlbumCover');
+  btn.disabled = true;
+  btn.textContent = 'Cover wird hochgeladen …';
   try{
-    const newUrl = await uploadToS3(file, s3Key, null);
-    // Supabase patch
-    const r = await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+slug+'&apikey='+SB_KEY, {
+    const ext = (albumCoverEditFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+    const safeBase = makeSlug(al.title || al.slug) || al.slug || ('album-'+Date.now());
+    const s3Key = `artwork/${safeBase}-cover-${Date.now()}.${ext}`;
+    const newUrl = await uploadToS3(albumCoverEditFile, s3Key, null);
+    const r = await fetch(SB_URL+'/rest/v1/playlists?slug=eq.'+encodeURIComponent(al.slug)+'&apikey='+SB_KEY, {
       method:'PATCH',
       headers:{...hdrs(),'Prefer':'return=minimal'},
       body: JSON.stringify({cover_url: newUrl})
@@ -9279,9 +9366,16 @@ async function onCoverChangeAlbum(event, slug, title){
     if(!r.ok) throw new Error(await r.text());
     al.cover_url = newUrl;
     renderAlbums();
+    updateAlbumDropdown();
+    showMsg(msgEl,'Cover gespeichert.','ok');
     toast('✓ Cover aktualisiert');
+    setTimeout(closeAlbumCoverModal, 650);
   } catch(e){
-    toast('Upload-Fehler: '+e.message,'err');
+    showMsg(msgEl,'Upload-Fehler: '+e.message,'err');
+    toast('Upload-Fehler','err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Cover speichern';
   }
 }
 
