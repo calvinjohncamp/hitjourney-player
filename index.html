@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v195-panorama-4x1-fix -->
+<!-- Version: v196-panorama-4x1-album-click-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -3803,21 +3803,41 @@ async function loadFromSupabase() {
     SUPABASE_SONGS.push({...song, albumKey:'language'});
   });
 
-  // 2. Playlist-Tracks laden (playlist_slug direkt in der Tabelle)
-  const tracksRes = await fetch(
-    SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',
-    { headers }
-  );
+  // 2. Playlists + Playlist-Tracks laden
+  // v196: Die Live-App darf nicht nur die fest verdrahteten Standard-Alben kennen.
+  // Neue Alben aus dem Admin (z.B. 4:1-Panorama-Teaser) müssen ebenfalls als
+  // klickbare Albumziele verfügbar sein, sonst ist das Bild sichtbar, aber der Klick läuft ins Leere.
+  const [playlistsRes, tracksRes] = await Promise.all([
+    fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title.asc', { headers }),
+    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
+  ]);
+  if (!playlistsRes.ok) throw new Error('Playlists fetch failed: ' + playlistsRes.status);
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
+  const playlistsRaw = await playlistsRes.json();
   const tracksRaw = await tracksRes.json();
 
   // 3. ALBUMS aufbauen
   ALBUMS = {};
   ALBUM_ORDER.forEach(key => { ALBUMS[key] = null; });
 
+  const playlistInfoBySlug = {};
+  Object.entries(PLAYLIST_MAP).forEach(([slug, info]) => {
+    playlistInfoBySlug[slug] = {...info, slug};
+  });
+  playlistsRaw.forEach(pl => {
+    const known = PLAYLIST_MAP[pl.slug];
+    playlistInfoBySlug[pl.slug] = {
+      slug:  pl.slug,
+      key:   known ? known.key : pl.slug,
+      title: pl.title || (known && known.title) || pl.slug,
+      meta:  known ? known.meta : '',
+      cover: pl.cover_url || (known && known.cover) || ''
+    };
+  });
+
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
-    const info = PLAYLIST_MAP[playlistSlug];
+    const info = playlistInfoBySlug[playlistSlug];
     if (!info) return;
     const song = songMap[row.song_slug];
     if (!song) return;
@@ -3825,16 +3845,20 @@ async function loadFromSupabase() {
     if (!ALBUMS[info.key]) {
       ALBUMS[info.key] = {
         title: info.title,
-        meta:  info.meta,
+        meta:  info.meta || '',
         cover: info.cover,
+        slug:  playlistSlug,
         songs: []
       };
     }
     ALBUMS[info.key].songs.push(song);
   });
 
-  // Null-Einträge entfernen
-  Object.keys(ALBUMS).forEach(k => { if (!ALBUMS[k]) delete ALBUMS[k]; });
+  // Meta für dynamische Alben nach tatsächlicher Songzahl setzen und leere Einträge entfernen
+  Object.keys(ALBUMS).forEach(k => {
+    if (!ALBUMS[k] || !ALBUMS[k].songs || !ALBUMS[k].songs.length) { delete ALBUMS[k]; return; }
+    if(!ALBUMS[k].meta) ALBUMS[k].meta = ALBUMS[k].songs.length + ' Songs';
+  });
 
   // Buried Diamonds: immer alphabetisch sortieren — neue Songs automatisch korrekt einsortiert
   if(ALBUMS.buriedDiamonds && ALBUMS.buriedDiamonds.songs) {
@@ -4399,7 +4423,9 @@ function showHome(){
 function showAlbum(key){
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
-  const alb=ALBUMS[key]; curAlbum=key;
+  const alb=ALBUMS[key];
+  if(!alb || !alb.songs || !alb.songs.length){ console.warn('[hitjourney] Album nicht gefunden:', key); return; }
+  curAlbum=key;
   setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
