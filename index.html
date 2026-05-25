@@ -3891,7 +3891,7 @@ async function loadFromSupabase() {
 
   // 4. Home-Layout laden
   try {
-    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers });
+    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc&hjcache=' + Date.now(), { headers:{...headers,'Cache-Control':'no-store'}, cache:'no-store' });
     if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
@@ -5577,11 +5577,82 @@ function initApp() {
 
 // ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
 
+const HJ_HOME_SCHEMA_VERSION = 199;
+const HJ_SLIDESHOW_DEFAULTS = {
+  type:'slideshow', fn:'play', slug:'', url:'', imageUrl:'', alt:'', bgUrl:'',
+  startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:true,
+  showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0,
+  coverFitLeft:'0', coverFitTop:'7', coverFitWidth:'52', coverFitHeight:'86',
+  coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf',
+  titleSize:'normal', titleX:'4', titleY:'78', dotsX:'4', dotsY:'86'
+};
+function hjBool(v, fallback=true){
+  if(v === undefined || v === null || v === '') return fallback;
+  if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
+  return true;
+}
+function hjChoice(v, allowed, fallback){ return allowed.includes(v) ? v : fallback; }
+function hjNumStr(v, fallback, min=-999, max=999){
+  const n = parseFloat(v);
+  const safe = Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  return String(safe).replace(/\.0+$/,'');
+}
+function hjSafeHex(value, fallback='#F1ECDF'){
+  let v = String(value||'').trim();
+  if(!v) return fallback;
+  if(v[0] !== '#') v = '#'+v;
+  if(/^#[0-9a-fA-F]{3}$/.test(v)) v = '#' + v.slice(1).split('').map(ch=>ch+ch).join('');
+  return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toUpperCase() : fallback;
+}
+function hjNormalizeSlideshowCell(c){
+  const src = c || {};
+  const clean = {...HJ_SLIDESHOW_DEFAULTS, id:src.id || ('ss_'+Math.random().toString(36).slice(2))};
+  clean.fn = hjChoice(src.fn || 'play', ['play','link','album','subpage'], 'play');
+  clean.slug = String(src.slug || src.playlistSlug || src.albumSlug || '').trim();
+  clean.url = String(src.url || '').trim();
+  clean.alt = String(src.alt || src.title || '').trim();
+  clean.bgUrl = String(src.bgUrl || src.imageUrl || '').trim();
+  clean.imageUrl = clean.bgUrl;
+  clean.startColor = hjSafeHex(src.startColor || '#0A0A0A', '#0A0A0A');
+  clean.overlayPos = String(src.overlayPos || 'bottom-left');
+  clean.coverFitSquare = hjBool(src.coverFitSquare, true);
+  clean.showSongTitle = hjBool(src.showSongTitle ?? src.showTitle ?? src.titleVisible, true);
+  clean.showSongNumber = hjBool(src.showSongNumber ?? src.showNumber ?? src.numberVisible, true);
+  clean.showProgressDots = hjBool(src.showProgressDots ?? src.showDots ?? src.dotsVisible, true);
+  clean.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(src.coverAngleOffset ?? 0) || 0));
+  clean.coverFitLeft = hjNumStr(src.coverFitLeft, 0, -40, 140);
+  clean.coverFitTop = hjNumStr(src.coverFitTop, 7, -40, 140);
+  clean.coverFitWidth = hjNumStr(src.coverFitWidth, 52, 4, 160);
+  clean.coverFitHeight = hjNumStr(src.coverFitHeight, 86, 8, 190);
+  clean.coverShape = hjChoice(src.coverShape, ['square','circle'], 'square');
+  clean.coverFitMode = hjChoice(src.coverFitMode, ['contain','cover'], 'contain');
+  clean.titleStyleMode = hjChoice(src.titleStyleMode || src.songTitleStyle, ['outline','solid'], 'outline');
+  clean.titleColor = hjSafeHex(src.titleColor || src.songTitleColor || '#f1ecdf', '#F1ECDF');
+  clean.titleSize = hjChoice(src.titleSize || src.songTitleSize, ['small','normal','large','xlarge'], 'normal');
+  clean.titleX = hjNumStr(src.titleX, 4, -20, 120);
+  clean.titleY = hjNumStr(src.titleY, 78, -20, 120);
+  clean.dotsX = hjNumStr(src.dotsX, 4, -20, 120);
+  clean.dotsY = hjNumStr(src.dotsY, 86, -20, 120);
+  clean.slides = Array.isArray(src.slides) ? src.slides.map(s=>({
+    ...s, slug:String(s.slug||'').trim(), title:s.title||s.slug||'', artist:s.artist||'',
+    coverUrl:s.coverUrl || s.cover || s.cover_url || '',
+    focusUrl:s.coverUrl || s.cover || s.cover_url || s.focusUrl || ''
+  })) : [];
+  clean.hjSchemaVersion = HJ_HOME_SCHEMA_VERSION;
+  return clean;
+}
+function hjNormalizeHomeRows(rows){
+  return (rows||[]).map(row=>({
+    ...row,
+    cells: (Array.isArray(row.cells) ? row.cells : []).map(c => c && c.type === 'slideshow' ? hjNormalizeSlideshowCell(c) : c)
+  }));
+}
+
 function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = window._homeLayoutRows || [];
+  const rows = hjNormalizeHomeRows(window._homeLayoutRows || []);
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -6062,6 +6133,7 @@ function hjBindCoverFallback(img){
 }
 
 function buildSlideshowEl(cell){
+  cell = hjNormalizeSlideshowCell(cell);
   const slides  = cell.slides  || [];
   const bgUrl   = cell.bgUrl   || cell.imageUrl || '';
   const title   = cell.alt     || '';
@@ -7067,7 +7139,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v162-home-top-teaser-toggle-no-player-20260522';
+  const VERSION = 'v199-slideshow-state-cache-fix-20260525';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
