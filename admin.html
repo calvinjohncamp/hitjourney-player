@@ -9511,99 +9511,6 @@ function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
 function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
 
-/* v199 — defensive Home-/Diashow-State-Normalisierung.
-   Ziel: Safari/iPad darf nach Style-Änderungen nie mehr alte/halb gecachte
-   Diashow-Werte mit neuen Daten mischen. Jede Diashow wird beim Laden und
-   vor dem Speichern vollständig auf ein sauberes Schema gebracht. */
-const HJ_HOME_SCHEMA_VERSION = 199;
-const HJ_SLIDESHOW_DEFAULTS = {
-  type:'slideshow', fn:'play', slug:'', url:'', imageUrl:'', alt:'', bgUrl:'',
-  startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[],
-  coverFitSquare:true, showSongTitle:true, showSongNumber:true, showProgressDots:true,
-  coverAngleOffset:0, coverFitLeft:'0', coverFitTop:'7', coverFitWidth:'52', coverFitHeight:'86',
-  coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf',
-  titleSize:'normal', titleX:'4', titleY:'78', dotsX:'4', dotsY:'86'
-};
-function hjBool(v, fallback=true){
-  if(v === undefined || v === null || v === '') return fallback;
-  if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
-  return true;
-}
-function hjNumStr(v, fallback, min=-999, max=999){
-  const n = parseFloat(v);
-  const safe = Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
-  return String(safe).replace(/\.0+$/,'');
-}
-function hjChoice(v, allowed, fallback){ return allowed.includes(v) ? v : fallback; }
-function normalizeSlideshowCell(c){
-  const src = c || {};
-  const clean = {...HJ_SLIDESHOW_DEFAULTS, id:src.id || uid()};
-  clean.fn = hjChoice(src.fn || 'play', ['play','link','album','subpage'], 'play');
-  clean.slug = String(src.slug || src.playlistSlug || src.albumSlug || '').trim();
-  clean.url = String(src.url || '').trim();
-  clean.alt = String(src.alt || src.title || '').trim();
-  clean.bgUrl = String(src.bgUrl || src.imageUrl || '').trim();
-  clean.imageUrl = clean.bgUrl;
-  clean.startColor = normalizeHexColor(src.startColor || '#0A0A0A');
-  clean.overlayPos = String(src.overlayPos || 'bottom-left');
-  clean.coverFitSquare = hjBool(src.coverFitSquare, true);
-  clean.showSongTitle = hjBool(src.showSongTitle ?? src.showTitle ?? src.titleVisible, true);
-  clean.showSongNumber = hjBool(src.showSongNumber ?? src.showNumber ?? src.numberVisible, true);
-  clean.showProgressDots = hjBool(src.showProgressDots ?? src.showDots ?? src.dotsVisible, true);
-  clean.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(src.coverAngleOffset ?? 0) || 0));
-  clean.coverFitLeft = hjNumStr(src.coverFitLeft, 0, -40, 140);
-  clean.coverFitTop = hjNumStr(src.coverFitTop, 7, -40, 140);
-  clean.coverFitWidth = hjNumStr(src.coverFitWidth, 52, 4, 160);
-  clean.coverFitHeight = hjNumStr(src.coverFitHeight, 86, 8, 190);
-  clean.coverShape = hjChoice(src.coverShape, ['square','circle'], 'square');
-  clean.coverFitMode = hjChoice(src.coverFitMode, ['contain','cover'], 'contain');
-  clean.titleStyleMode = hjChoice(src.titleStyleMode || src.songTitleStyle, ['outline','solid'], 'outline');
-  clean.titleColor = normalizeHexColor(src.titleColor || src.songTitleColor || '#f1ecdf');
-  clean.titleSize = hjChoice(src.titleSize || src.songTitleSize, ['small','normal','large','xlarge'], 'normal');
-  clean.titleX = hjNumStr(src.titleX, 4, -20, 120);
-  clean.titleY = hjNumStr(src.titleY, 78, -20, 120);
-  clean.dotsX = hjNumStr(src.dotsX, 4, -20, 120);
-  clean.dotsY = hjNumStr(src.dotsY, 86, -20, 120);
-  clean.slides = Array.isArray(src.slides) ? src.slides.map(s=>({
-    ...s,
-    slug:String(s.slug||'').trim(),
-    title:s.title||s.slug||'',
-    artist:s.artist||'',
-    coverUrl:s.coverUrl || s.cover || s.cover_url || '',
-    focusUrl:s.coverUrl || s.cover || s.cover_url || s.focusUrl || ''
-  })) : [];
-  clean.hjSchemaVersion = HJ_HOME_SCHEMA_VERSION;
-  return clean;
-}
-function normalizeHomeCell(c){
-  if(!c) return emptyCell();
-  if(c.type === 'slideshow') return normalizeSlideshowCell(c);
-  const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
-  cc.coverFitSquare = hjBool(cc.coverFitSquare, false);
-  cc.lyricsCycle = hjBool(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
-  cc.showSongTitle = hjBool(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
-  cc.showSongNumber = hjBool(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
-  cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
-  cc.hjSchemaVersion = HJ_HOME_SCHEMA_VERSION;
-  return cc;
-}
-function normalizeHomeLayoutRows(rows){
-  return (rows||[]).map(row=>({
-    id: row.id || uid(), editing:false, caption: row.caption || undefined,
-    cells: ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(normalizeHomeCell)
-  }));
-}
-function hjInvalidateClientCaches(reason){
-  try{
-    sessionStorage.setItem('hj-last-home-save', String(Date.now()));
-    localStorage.setItem('hj-home-layout-version', String(Date.now()));
-    localStorage.removeItem('hj-home-layout-draft');
-    localStorage.removeItem('hj-home-layout-cache');
-  }catch(e){}
-  console.log('[hitjourney] Client-Cache invalidiert:', reason || 'home-save');
-}
-
-
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
 }
@@ -9611,10 +9518,29 @@ function makeRow(){
 /* ── Load / Save Supabase ── */
 async function loadHomeLayout(){
   try {
-    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc&hjcache='+Date.now()),{headers:{...hdrs(),'Cache-Control':'no-store'}, cache:'no-store'});
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs()});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
-    homeLayout = normalizeHomeLayoutRows(rows);
+    homeLayout = rows.map(row=>({
+      id:      row.id,
+      editing: false,
+      caption: row.caption || undefined,
+      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+        // Kompatibilität mit älteren Feldnamen/Strings
+        const bv = (v, fallback=true) => {
+          if(v === undefined || v === null || v === '') return fallback;
+          if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
+          return true;
+        };
+        cc.coverFitSquare = bv(cc.coverFitSquare, false);
+        cc.lyricsCycle = bv(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
+        cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
+        cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
+        cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
+        return cc;
+      })
+    }));
   } catch(e){
     homeLayout = [];
   }
@@ -9635,7 +9561,7 @@ async function saveHomeLayout(){
     return;
   }
   try {
-    const payload = normalizeHomeLayoutRows(homeLayout).map((r,i)=>({ id:r.id, row_order:i, cells:r.cells, caption:r.caption||null }));
+    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells, caption:r.caption||null }));
 
     // DELETE alle vorhandenen Zeilen — row_order >= 0 trifft immer zu
     const delRes = await fetch(SB_URL+'/rest/v1/home_layout?row_order=gte.0'+'&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
@@ -9653,10 +9579,8 @@ async function saveHomeLayout(){
         throw new Error('POST ' + res.status + ': ' + txt.slice(0,300));
       }
     }
-    homeLayout = normalizeHomeLayoutRows(homeLayout);
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
-    hjInvalidateClientCaches('home-layout-save');
     renderHomeEditor();
     toast('Home gespeichert ✓','ok');
   } catch(e){
@@ -11747,7 +11671,7 @@ async function saveSlideshowTile(){
   if(!row) return;
   const fn    = document.getElementById('htmSlideshowFn').value;
   let bgUrl = document.getElementById('htmSsBgUrl').value.trim();
-  const oldCellId = row.cells[0]?.id || uid();
+  const cell  = row.cells[0];
   const btn = document.getElementById('ssSaveBtn');
   if(ssFrameFile){
     try{
@@ -11761,10 +11685,6 @@ async function saveSlideshowTile(){
     }
   }
   markHomeAction();
-  // v199: Diashow beim Übernehmen komplett neu aus sauberen Defaults aufbauen.
-  // Dadurch bleiben keine alten Style-/Layout-Werte aus iPad-Safari-Caches im Objekt hängen.
-  row.cells[0] = {...emptyCell(), id: oldCellId, type:'slideshow'};
-  let cell = row.cells[0];
   cell.fn         = fn;
   cell.slug       = document.getElementById('htmSlideshowSlug').value.trim();
   cell.url        = document.getElementById('htmSlideshowUrl').value.trim();
@@ -11792,7 +11712,6 @@ async function saveSlideshowTile(){
   cell.dotsX  = document.getElementById('htmSsDotsX')?.value?.trim() || '4';
   cell.dotsY  = document.getElementById('htmSsDotsY')?.value?.trim() || '86';
   cell.slides     = htmSlides.map(s=>({...s, coverUrl:s.coverUrl || s.cover || s.cover_url || '', focusUrl:s.coverUrl || s.cover || s.cover_url || ''}));
-  row.cells[0] = normalizeSlideshowCell(cell);
 
   // Wichtig v166:
   // „Übernehmen“ im Diashow-Modal speichert jetzt sofort in Supabase.
