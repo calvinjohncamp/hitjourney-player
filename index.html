@@ -1078,20 +1078,20 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers img{border-radius:50%;}
 .featured-teaser.frame-fill.cover-fit-square.cover-fit-cover .ft-covers img{object-fit:cover!important;}
 
-/* v191 — Admin-Diashow mit Frame:
-   Der Frame liegt wieder ÜBER dem rotierenden Cover. So erscheint das Plattencover
-   sauber im quadratischen bzw. runden Fenster, statt als riesiges Vollbildmotiv
-   den Frame zu verdecken. */
+/* v192 — JPG-Frame-Modus:
+   Die Frames sind JPGs, also NICHT transparent. Deshalb muss das wechselnde
+   Plattencover als Quadrat/Kreis sichtbar AUF dem Frame liegen, exakt an der
+   im Admin gespeicherten Position. Der Frame bleibt darunter die Bühne. */
 .featured-teaser.frame-fill.cover-fit-square .ft-covers{
-  z-index:2;
+  z-index:4;
   box-shadow:none;
 }
 .featured-teaser.frame-fill.cover-fit-square .ft-frame{
-  z-index:4;
+  z-index:1;
 }
 .featured-teaser.frame-fill.cover-fit-square .ft-song-name,
 .featured-teaser.frame-fill.cover-fit-square .ft-dots{
-  z-index:5;
+  z-index:6;
 }
 
 .ft-frame {
@@ -6138,6 +6138,7 @@ function hjFitSlideshowCoverWindow(frameImg){
     covers.style.aspectRatio = 'auto'; covers.style.transformOrigin = '50% 50%'; covers.style.transform = 'rotate(' + ang.toFixed(2) + 'deg)';
     covers.style.background = getComputedStyle(wrap).getPropertyValue('--ft-start-color') || '#0a0a0a';
     covers.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0';
+    covers.querySelectorAll('img').forEach(img=>{ img.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0'; });
     return;
   }
   try{
@@ -6221,7 +6222,8 @@ function hjFitSlideshowCoverWindow(frameImg){
     covers.style.width = width + '%';
     covers.style.height = height + '%';
     covers.style.aspectRatio = '1 / 1';
-    covers.style.borderRadius = '0';
+    covers.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0';
+    covers.querySelectorAll('img').forEach(img=>{ img.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0'; });
     covers.style.transformOrigin = '50% 50%';
     covers.style.transform = 'rotate(' + angleDeg.toFixed(2) + 'deg)';
     covers.dataset.fitAngle = angleDeg.toFixed(2);
@@ -6231,7 +6233,7 @@ function hjFitSlideshowCoverWindow(frameImg){
     if([lf,tp,wd,ht].every(Number.isFinite)){
       const coverAngleOffset = parseFloat(wrap.dataset.coverAngleOffset || '0') || 0;
       covers.style.left = lf + '%'; covers.style.top = tp + '%'; covers.style.width = wd + '%'; covers.style.height = ht + '%';
-      covers.style.aspectRatio = '1 / 1'; covers.style.borderRadius = '0'; covers.style.transformOrigin = '50% 50%';
+      covers.style.aspectRatio = '1 / 1'; covers.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0'; covers.querySelectorAll('img').forEach(img=>{ img.style.borderRadius = wrap.classList.contains('cover-shape-circle') ? '50%' : '0'; }); covers.style.transformOrigin = '50% 50%';
       covers.style.transform = 'rotate(' + coverAngleOffset.toFixed(2) + 'deg)';
       return;
     }
