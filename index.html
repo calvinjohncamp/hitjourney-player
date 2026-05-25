@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v190 -->
+<!-- Version: v191-slideshow-frame-window-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1078,16 +1078,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .featured-teaser.frame-fill.cover-fit-square.cover-shape-circle .ft-covers img{border-radius:50%;}
 .featured-teaser.frame-fill.cover-fit-square.cover-fit-cover .ft-covers img{object-fit:cover!important;}
 
-/* v169 — Velvet Radio / PNG-frame fallback:
-   Wenn ein hochgeladenes Frame keine echte Alpha-Transparenz liefert oder die
-   transparente Flaeche vom Browser nicht auslesbar ist, liegt das 1:1-Cover-Fenster
-   sichtbar ueber dem Frame. So bleibt das manuell justierte Quadrat sichtbar und klickbar. */
+/* v191 — Admin-Diashow mit Frame:
+   Der Frame liegt wieder ÜBER dem rotierenden Cover. So erscheint das Plattencover
+   sauber im quadratischen bzw. runden Fenster, statt als riesiges Vollbildmotiv
+   den Frame zu verdecken. */
 .featured-teaser.frame-fill.cover-fit-square .ft-covers{
-  z-index:4;
-  box-shadow:0 0 0 1px rgba(6,20,32,.18);
+  z-index:2;
+  box-shadow:none;
 }
 .featured-teaser.frame-fill.cover-fit-square .ft-frame{
-  z-index:3;
+  z-index:4;
 }
 .featured-teaser.frame-fill.cover-fit-square .ft-song-name,
 .featured-teaser.frame-fill.cover-fit-square .ft-dots{
@@ -6021,7 +6021,9 @@ function buildSlideshowEl(cell){
     return true;
   };
   const hasManualWys = ['coverFitLeft','coverFitTop','coverFitWidth','coverFitHeight','coverShape','coverFitMode'].some(k => cell[k] !== undefined && cell[k] !== null && cell[k] !== '');
-  const coverFitSquare = boolVal(cell.coverFitSquare, hasManualWys);
+  // v191: Eine Diashow mit hochgeladenem Frame darf nie in den alten Vollbild-Cover-Modus fallen.
+  // Der Frame bildet die Bühne; das wechselnde Plattencover sitzt als Quadrat/Kreis im Frame-Fenster.
+  const coverFitSquare = boolVal(cell.coverFitSquare, !!bgUrl || hasManualWys);
   // Robust gegen ältere/abweichende Feldnamen und stringifizierte Werte aus Supabase/JSON.
   const showSongTitle = boolVal(cell.showSongTitle ?? cell.showTitle ?? cell.titleVisible, true);
   const showSongNumber = boolVal(cell.showSongNumber ?? cell.showNumber ?? cell.numberVisible, true);
