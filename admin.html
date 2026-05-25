@@ -10218,6 +10218,8 @@ function htmSaveLanguageTeaser(){
 /* ── Step 2: source / motif ── */
 // Types where Song/Album cover makes sense (1:1 aspect ratio)
 const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','trio-a','trio-b','trio-c','span-2']);
+// Types with 2:1 aspect ratio
+const HTM_WIDE_TYPES = new Set(['2x1-half','2x1-full','span-4','4x1','lyrics21']);
 
 function htmInitStep2(){
   // Populate song list on first open
@@ -10228,17 +10230,19 @@ function htmInitStep2(){
   htmUpdateMotifPreview();
   // Show/hide Song+Album tabs based on cell type
   const isSquare = HTM_SQUARE_TYPES.has(htmChosenType);
+  const isWide   = HTM_WIDE_TYPES.has(htmChosenType);
   const songTab  = document.querySelector('.htm-source-tab[onclick*="song"]');
   const albumTab = document.querySelector('.htm-source-tab[onclick*="album"]');
   if(songTab)  songTab.style.display  = isSquare ? '' : 'none';
-  if(albumTab) albumTab.style.display = isSquare ? '' : 'none';
-  // If current source is song/album but type is not square → reset to upload
-  if(!isSquare && (htmChosenSource === 'song' || htmChosenSource === 'album')){
+  // Album tab: visible for square AND wide types (album has cover21Url for 2:1)
+  if(albumTab) albumTab.style.display = (isSquare || isWide) ? '' : 'none';
+  // If current source is song but type is not square → reset to upload
+  if(!isSquare && htmChosenSource === 'song'){
     htmChosenSource = 'upload';
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
   }
-  // Upload-Zone Aspect: 1:1 für Trio/Quadrat, 2:1 sonst
+  // Upload-Zone Aspect: sq für Quadrat, wide sonst
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
     uploadZone.classList.toggle('sq', isSquare);
@@ -10483,7 +10487,7 @@ function htmUpdateMotifPreview(){
 
   // Determine how many cells to show
   const count = htmChosenType==='trio' ? 3 : (htmChosenType==='language' ? 2 : 1);
-  const ratio  = htmChosenType==='1x2' ? '1/2' : htmChosenType==='2x1'||htmChosenType==='4x1' ? '2/1' : '1/1';
+  const ratio  = htmChosenType==='1x2' ? '1/2' : (htmChosenType==='2x1'||htmChosenType==='4x1'||htmChosenType==='2x1-half') ? '2/1' : '1/1';
 
   strip.innerHTML = '';
   for(let i=0;i<count;i++){
