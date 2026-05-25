@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260525-plus2-album-motif-fix -->
+<!-- Version: admin-v20260525-plus2-reuse-upload-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -10242,6 +10242,9 @@ function htmInitStep2(){
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
   }
+  // Source tab UI immer zum internen Zustand synchronisieren
+  htmSetSourceVisual(htmChosenSource);
+
   // Upload-Zone Aspect: sq für Quadrat, wide sonst
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
@@ -10252,11 +10255,11 @@ function htmInitStep2(){
 
 function htmSetSource(source, btn){
   htmChosenSource = source;
-  document.querySelectorAll('.htm-source-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('htmSrcUpload').style.display = source==='upload' ? '' : 'none';
-  document.getElementById('htmSrcSong').style.display   = source==='song'   ? '' : 'none';
-  document.getElementById('htmSrcAlbum').style.display  = source==='album'  ? '' : 'none';
+  htmSetSourceVisual(source);
+  if(btn){
+    document.querySelectorAll('.htm-source-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
   htmUpdateMotifPreview();
 }
 
@@ -10647,8 +10650,52 @@ function htmRenderActionAlbum(){
   }
 }
 
+/* ── Modal UI Reset: prevents stale file inputs / old previews on repeated jobs ── */
+function htmResetUploadUi(){
+  ['htmMotifFileInput','htmAlbumMotifInput'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['prevHtmMotif','prevHtmAlbumMotif','htmSelectedCover','htmAlbumCover','htmActionSongCover','htmActionAlbumCover'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.src = '';
+  });
+  ['zHtmMotif','zHtmAlbumMotif'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('has-file','dragover');
+  });
+  ['progHtmMotif','progHtmAlbumMotif'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.width = '0%';
+  });
+  ['htmSongSearch','htmLinkUrl','htmLinkAlt','htmSubpageUrl','htmSubpageAlt'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  const albumSel = document.getElementById('htmAlbumSelect');
+  if(albumSel) albumSel.value = '';
+  const actionAlbumSel = document.getElementById('htmActionAlbumSelect');
+  if(actionAlbumSel) actionAlbumSel.value = '';
+  const cb = document.getElementById('htmLyricsCycleCheck');
+  if(cb) cb.checked = false;
+  htmSetSourceVisual('upload');
+}
+function htmSetSourceVisual(source){
+  document.querySelectorAll('.htm-source-tab').forEach(b=>{
+    const txt = (b.getAttribute('onclick')||'');
+    b.classList.toggle('active', txt.includes("'"+source+"'") || txt.includes('"'+source+'"'));
+  });
+  const up = document.getElementById('htmSrcUpload');
+  const sg = document.getElementById('htmSrcSong');
+  const al = document.getElementById('htmSrcAlbum');
+  if(up) up.style.display = source==='upload' ? '' : 'none';
+  if(sg) sg.style.display = source==='song'   ? '' : 'none';
+  if(al) al.style.display = source==='album'  ? '' : 'none';
+}
+
 /* ── Open ── */
 function openHomeTileModal(rowId, cellIdx){
+  htmResetUploadUi();
   htmEditTarget    = { rowId, cellIdx };
   htmSelectedSong  = null;
   htmSelectedAlbum = null;
@@ -10698,6 +10745,9 @@ function openHomeTileModal(rowId, cellIdx){
     }
   }
 
+  // Sync source tab UI with restored/default state (prevents previous Album/Upload tab from sticking)
+  htmSetSourceVisual(htmChosenSource);
+
   // Mark existing type button
   document.querySelectorAll('.htm-type-btn').forEach(b=>b.classList.toggle('selected', b.dataset.type===htmChosenType));
 
@@ -10716,6 +10766,7 @@ function openHomeTileModal(rowId, cellIdx){
 /* ── Close ── */
 function closeHomeTileModal(){
   document.getElementById('homeTileModal').classList.remove('open');
+  htmResetUploadUi();
   htmEditTarget = null; htmSelectedSong = null; htmSelectedAlbum = null;
   htmActionSelectedSong = null; htmActionSelectedAlbum = null;
   htmMotifFile = null; htmMotifUrl = '';
@@ -10775,7 +10826,12 @@ async function saveHomeTile(){
   let imageUrl = '';
   if(htmChosenSource === 'upload')     imageUrl = finalImageUrl || motifPreviewSrc;
   else if(htmChosenSource === 'song')  imageUrl = finalImageUrl || motifPreviewSrc || (htmSelectedSong ? htmSelectedSong.coverUrl : '');
-  else if(htmChosenSource === 'album') imageUrl = finalAlbumCover || finalImageUrl || albumPreviewSrc || motifPreviewSrc || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+  else if(htmChosenSource === 'album') {
+    // Wichtig für 2:1-Album-Teaser:
+    // Das Home-Motiv (oberes 2:1-Feld / Frame) hat Vorrang vor dem Album-Cover.
+    // Das Album-Cover ist nur Fallback bzw. Cover auf der Albumseite.
+    imageUrl = finalImageUrl || motifPreviewSrc || finalAlbumCover || albumPreviewSrc || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+  }
 
   // If Step 2 selected Album/Song, carry that selection into Step 3 automatically.
   if(htmChosenAction === 'album' && !htmActionSelectedAlbum && htmSelectedAlbum){
