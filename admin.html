@@ -582,17 +582,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-grid.layout-2x2half{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .he-cell.cell-2x1half{aspect-ratio:2/1;width:100%}
 
-/* 2:1 halb + 2× 1:1 rechts — left variant (default) */
-.he-row-grid.layout-2x1plus2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px}
-.he-row-grid.layout-2x1plus2 .cell-2x1half{aspect-ratio:2/1;grid-row:1/3}
+/* 2:1 halb + 2× 1:1 — left variant (default) [2:1][1:1][1:1] */
+.he-row-grid.layout-2x1plus2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;align-items:stretch}
+.he-row-grid.layout-2x1plus2 .cell-2x1half{aspect-ratio:2/1;width:100%}
 
-/* 2:1 halb + 2× 1:1 — center variant */
-.he-row-grid.layout-2x1plus2-center{display:grid;grid-template-columns:1fr 2fr 1fr;gap:4px}
-.he-row-grid.layout-2x1plus2-center .cell-2x1half{aspect-ratio:2/1;grid-row:1/3}
+/* 2:1 halb + 2× 1:1 — center variant [1:1][2:1][1:1] */
+.he-row-grid.layout-2x1plus2-center{display:grid;grid-template-columns:1fr 2fr 1fr;gap:4px;align-items:stretch}
+.he-row-grid.layout-2x1plus2-center .cell-2x1half{aspect-ratio:2/1;width:100%}
+.he-row-grid.layout-2x1plus2-center .p2-sq-top,.he-row-grid.layout-2x1plus2-center .p2-sq-bot{aspect-ratio:1/1;width:100%}
 
-/* 2:1 halb + 2× 1:1 — right variant */
-.he-row-grid.layout-2x1plus2-right{display:grid;grid-template-columns:1fr 1fr 2fr;gap:4px}
-.he-row-grid.layout-2x1plus2-right .cell-2x1half{aspect-ratio:2/1;grid-row:1/3}
+/* 2:1 halb + 2× 1:1 — right variant [1:1][1:1][2:1] */
+.he-row-grid.layout-2x1plus2-right{display:grid;grid-template-columns:1fr 1fr 2fr;gap:4px;align-items:stretch}
+.he-row-grid.layout-2x1plus2-right .cell-2x1half{aspect-ratio:2/1;width:100%}
+.he-row-grid.layout-2x1plus2-right .p2-sq-top,.he-row-grid.layout-2x1plus2-right .p2-sq-bot{aspect-ratio:1/1;width:100%}
 
 /* 2× große 1:1 */
 .he-row-grid.layout-2big{display:grid;grid-template-columns:1fr 1fr;gap:4px}
@@ -9628,28 +9630,22 @@ function buildCells(row, grid){
       // left: [2:1][1:1][1:1]
       grid.classList.add('layout-2x1plus2');
       grid.appendChild(buildCell(row, 0, 'cell-2x1half', editing));
-      if(editing) grid.appendChild(buildCell(row, 1, '', editing));
-      else if(c[1].imageUrl||c[1].bgUrl) grid.appendChild(buildCell(row, 1, '', editing));
-      if(editing) grid.appendChild(buildCell(row, 2, '', editing));
-      else if(c[2].imageUrl||c[2].bgUrl) grid.appendChild(buildCell(row, 2, '', editing));
+      if(editing || c[1].imageUrl||c[1].bgUrl) grid.appendChild(buildCell(row, 1, '', editing));
+      if(editing || c[2].imageUrl||c[2].bgUrl) grid.appendChild(buildCell(row, 2, '', editing));
     }
 
   } else if(t0 === '1x1' && c[1] && c[1].type === '2x1-half'){
     // center: [1:1][2:1][1:1]
     grid.classList.add('layout-2x1plus2-center');
-    if(editing) grid.appendChild(buildCell(row, 0, '', editing));
-    else if(c[0].imageUrl||c[0].bgUrl) grid.appendChild(buildCell(row, 0, '', editing));
+    if(editing || c[0].imageUrl||c[0].bgUrl) grid.appendChild(buildCell(row, 0, 'p2-sq-top', editing));
     grid.appendChild(buildCell(row, 1, 'cell-2x1half', editing));
-    if(editing) grid.appendChild(buildCell(row, 2, '', editing));
-    else if(c[2].imageUrl||c[2].bgUrl) grid.appendChild(buildCell(row, 2, '', editing));
+    if(editing || c[2].imageUrl||c[2].bgUrl) grid.appendChild(buildCell(row, 2, 'p2-sq-bot', editing));
 
   } else if(t0 === '1x1' && c[1] && c[1].type === '1x1' && c[2] && c[2].type === '2x1-half'){
     // right: [1:1][1:1][2:1]
     grid.classList.add('layout-2x1plus2-right');
-    if(editing) grid.appendChild(buildCell(row, 0, '', editing));
-    else if(c[0].imageUrl||c[0].bgUrl) grid.appendChild(buildCell(row, 0, '', editing));
-    if(editing) grid.appendChild(buildCell(row, 1, '', editing));
-    else if(c[1].imageUrl||c[1].bgUrl) grid.appendChild(buildCell(row, 1, '', editing));
+    if(editing || c[0].imageUrl||c[0].bgUrl) grid.appendChild(buildCell(row, 0, 'p2-sq-top', editing));
+    if(editing || c[1].imageUrl||c[1].bgUrl) grid.appendChild(buildCell(row, 1, 'p2-sq-bot', editing));
     grid.appendChild(buildCell(row, 2, 'cell-2x1half', editing));
 
   } else if(t0 === '1x1-big'){
