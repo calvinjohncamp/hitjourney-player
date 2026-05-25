@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260524t -->
+<!-- Version: admin-v20260525-plus2-center-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9702,7 +9702,7 @@ function buildCell(row, cellIdx, extraClass, editing){
     // For slideshow: prefer bgUrl, fall back to first slide cover
     let imgSrc = isSlide
       ? (cell.bgUrl || cell.imageUrl || (cell.slides && cell.slides[0] && (cell.slides[0].focusUrl || cell.slides[0].coverUrl)) || '')
-      : cell.imageUrl;
+      : (cell.imageUrl || cell.customImageUrl || cell.cover21Url || cell.bgUrl || '');
     if(imgSrc){
       const img = document.createElement('img');
       img.className = 'he-cell-img';
@@ -10441,8 +10441,10 @@ function onHtmAlbumMotifDrop(e){
   if(!file) return;
   htmAlbumMotifFile = file;
   htmAlbumMotifUrl  = URL.createObjectURL(file);
+  const zone = document.getElementById('zHtmAlbumMotif');
   const img = document.getElementById('prevHtmAlbumMotif');
   if(img) img.src = htmAlbumMotifUrl;
+  if(zone) zone.classList.add('has-file');
   htmRenderSelectedAlbum();
   htmUpdateMotifPreview();
 }
@@ -10520,10 +10522,16 @@ async function htmInitStep3(){
   // Populate album dropdown
   htmPopulateActionAlbumSelect();
 
-  // If we already have a song from Step 2, pre-select it in Step 3 too
+  // If Step 2 already selected a source, pre-select the matching action target in Step 3 too.
+  // This is critical for wide album tiles (2:1 + 2×1:1): the user should not have
+  // to select the same album twice just to make the tile render after „Fertig“.
   if(htmSelectedSong && !htmActionSelectedSong){
     htmActionSelectedSong = htmSelectedSong;
     htmRenderActionSelectedSong();
+  }
+  if(htmSelectedAlbum && !htmActionSelectedAlbum){
+    htmActionSelectedAlbum = htmSelectedAlbum;
+    htmRenderActionAlbum();
   }
   // Load songs if not yet loaded, then render
   if(!allSongs.length){
@@ -10743,11 +10751,25 @@ async function saveHomeTile(){
     }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
   }
 
-  // Determine effective image URL
+  // Determine effective image URL. For album-source tiles, the uploaded 2:1 motif
+  // must become the visible Home image; the album selection is only the click target.
   let imageUrl = '';
   if(htmChosenSource === 'upload')     imageUrl = finalImageUrl;
   else if(htmChosenSource === 'song')  imageUrl = finalImageUrl || (htmSelectedSong ? htmSelectedSong.coverUrl : '');
-  else if(htmChosenSource === 'album') imageUrl = finalAlbumCover;
+  else if(htmChosenSource === 'album') imageUrl = finalAlbumCover || finalImageUrl || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+
+  // If Step 2 selected Album/Song, carry that selection into Step 3 automatically.
+  if(htmChosenAction === 'album' && !htmActionSelectedAlbum && htmSelectedAlbum){
+    htmActionSelectedAlbum = htmSelectedAlbum;
+  }
+  if(htmChosenAction === 'play' && !htmActionSelectedSong && htmSelectedSong){
+    htmActionSelectedSong = htmSelectedSong;
+  }
+
+  if(!imageUrl){
+    toast('Bitte ein Motiv auswählen oder hochladen','err');
+    return;
+  }
 
   // Update cell content directly — NEVER reset the row layout via applyType here
   const updatedRow  = rowById(rowId);
@@ -10772,10 +10794,11 @@ async function saveHomeTile(){
     updatedCell.url  = document.getElementById('htmLinkUrl')?.value?.trim() || '';
     updatedCell.slug = '';
     updatedCell.alt  = document.getElementById('htmLinkAlt')?.value?.trim() || '';
-  } else if(htmChosenAction === 'album' && htmActionSelectedAlbum){
+  } else if(htmChosenAction === 'album' && (htmActionSelectedAlbum || htmSelectedAlbum)){
+    const targetAlbum = htmActionSelectedAlbum || htmSelectedAlbum;
     updatedCell.fn   = 'album';
-    updatedCell.slug = htmActionSelectedAlbum.slug;
-    updatedCell.alt  = htmActionSelectedAlbum.title;
+    updatedCell.slug = targetAlbum.slug;
+    updatedCell.alt  = targetAlbum.title;
     updatedCell.url  = '';
   } else if(htmChosenAction === 'play' && htmActionSelectedSong){
     updatedCell.fn     = 'play';
