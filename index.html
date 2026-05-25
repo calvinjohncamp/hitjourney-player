@@ -6262,7 +6262,7 @@ function initDynamicSlideshow(id, slides){
   let featuredCurrentMp3 = null;
   let timer = null;
   const intervalMs = 4000;
-  const initialDelayMs = 1200;
+  const initialDelayMs = intervalMs; // v193: Start-JPG/Frame bleibt genauso lange sichtbar wie jedes Cover
 
   // Build dots
   if(dotsEl){
@@ -6276,7 +6276,9 @@ function initDynamicSlideshow(id, slides){
   }
 
   function goTo(idx){
-    if(idx < 0){
+    // v193: Nach dem letzten Song kommt bewusst wieder der reine JPG-Frame
+    // ohne Cover-Ebene. Dieser Blank-State dauert exakt so lange wie jedes Dia.
+    if(idx < 0 || idx >= slides.length){
       cur = -1;
       imgs.forEach(img=>img.classList.remove('active'));
       if(dotsEl) dotsEl.querySelectorAll('.ft-dot').forEach(d=>d.classList.remove('active'));
@@ -6316,7 +6318,7 @@ function initDynamicSlideshow(id, slides){
   goTo(-1);
   // Erstes echtes Cover bewusst vorladen; danach startet die Diashow automatisch nach kurzer Hex-/Startfarben-Pause.
   // v174: Nicht endlos auf ein langsam ladendes/fehlendes erstes Cover warten.
-  // Nach kurzer Hex-Farbton-Pause startet die Diashow zuverlässig automatisch.
+  // Nach einer vollen Dia-Länge startet die Diashow zuverlässig automatisch — der reine Frame ist das erste Dia.
   let autoStarted = false;
   function safeStart(){ if(autoStarted) return; autoStarted = true; startRotation(); }
   const startFallback = setTimeout(safeStart, 900);
