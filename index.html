@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v191-slideshow-frame-window-fix -->
+<!-- Version: v194-slideshow-title-style -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
@@ -1180,7 +1180,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   font-size: clamp(18px, 4.2vw, 42px);
   letter-spacing: .02em;
   text-transform: none;
-  color: #f1ecdf;
+  color: var(--ft-song-title-color, #f1ecdf);
   text-shadow:
     0 1px 4px rgba(0,0,0,.95),
     0 2px 14px rgba(0,0,0,.8),
@@ -1190,6 +1190,13 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
      1px  1px 0 rgba(0,0,0,.7);
   line-height: 1.15;
 }
+.featured-teaser.title-style-solid .ft-song-title{
+  color:var(--ft-song-title-color, #f1ecdf);
+  text-shadow:none;
+}
+.featured-teaser.title-size-small .ft-song-title{font-size:clamp(14px,3.2vw,32px)}
+.featured-teaser.title-size-large .ft-song-title{font-size:clamp(22px,5.2vw,54px)}
+.featured-teaser.title-size-xlarge .ft-song-title{font-size:clamp(26px,6.4vw,68px)}
 .ft-song-artist { display: none; }
 .ft-song-num {
   font-family: 'Special Elite','Courier New',monospace;
@@ -6029,6 +6036,12 @@ function buildSlideshowEl(cell){
   const showSongNumber = boolVal(cell.showSongNumber ?? cell.showNumber ?? cell.numberVisible, true);
   const showProgressDots = boolVal(cell.showProgressDots ?? cell.showDots ?? cell.progressVisible, true);
   const coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cell.coverAngleOffset ?? cell.coverRotateOffset ?? cell.coverRotationOffset ?? 0) || 0));
+  const titleStyleModeRaw = String(cell.titleStyleMode ?? cell.songTitleStyle ?? 'outline').trim().toLowerCase();
+  const titleStyleMode = (titleStyleModeRaw === 'solid' || titleStyleModeRaw === 'plain') ? 'solid' : 'outline';
+  const titleSizeRaw = String(cell.titleSize ?? cell.songTitleSize ?? 'normal').trim().toLowerCase();
+  const titleSize = ['small','normal','large','xlarge'].includes(titleSizeRaw) ? titleSizeRaw : 'normal';
+  const titleColorRaw = String(cell.titleColor ?? cell.songTitleColor ?? '#f1ecdf').trim();
+  const titleColor = /^#[0-9a-fA-F]{6}$/.test(titleColorRaw) ? titleColorRaw : '#f1ecdf';
   const coverFitLeft = cell.coverFitLeft ?? cell.fitLeft ?? '';
   const coverFitTop = cell.coverFitTop ?? cell.fitTop ?? '';
   const coverFitWidth = cell.coverFitWidth ?? cell.fitWidth ?? '';
@@ -6062,7 +6075,7 @@ function buildSlideshowEl(cell){
   const [alignY, alignX] = (posMap[pos]||'flex-end flex-start').split(' ');
 
   const wrap = document.createElement('div');
-  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (coverShape==='circle' ? ' cover-shape-circle' : ' cover-shape-square') + (coverFitMode==='cover' ? ' cover-fit-cover' : ' cover-fit-contain') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '') + (!showProgressDots ? ' hide-progress-dots' : '');
+  wrap.className = 'featured-teaser' + (bgUrl ? ' has-frame frame-fill' : '') + (coverFitSquare ? ' cover-fit-square' : '') + (coverShape==='circle' ? ' cover-shape-circle' : ' cover-shape-square') + (coverFitMode==='cover' ? ' cover-fit-cover' : ' cover-fit-contain') + ' title-style-' + titleStyleMode + (titleSize !== 'normal' ? ' title-size-' + titleSize : '') + (!showSongTitle ? ' hide-song-title' : '') + (!showSongNumber ? ' hide-song-number' : '') + (!showProgressDots ? ' hide-progress-dots' : '');
   wrap.id = 'dynamicSlideshow_' + (cell.id||Math.random().toString(36).slice(2));
   wrap.dataset.coverAngleOffset = String(coverAngleOffset);
   wrap.dataset.coverFitLeft = String(coverFitLeft);
@@ -6071,6 +6084,7 @@ function buildSlideshowEl(cell){
   wrap.dataset.coverFitHeight = String(coverFitHeight);
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
+  wrap.style.setProperty('--ft-song-title-color', titleColor);
 
   if(slides.length === 0){
     // Simple static image teaser

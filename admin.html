@@ -561,6 +561,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ss-wys-overlay .dot{width:6px;height:6px;border-radius:50%;background:#f1ecdf;opacity:.35}.ss-wys-overlay .dot.active{opacity:1}
 .ss-wys-overlay .small{font-size:9px;opacity:.75;letter-spacing:.14em;margin-top:3px}
 .ss-wys-overlay.pulse{animation:ssPulse .7s ease}
+.ss-wys-overlay.text.style-solid{color:var(--ss-title-color,#f1ecdf);text-shadow:none}
+.ss-wys-overlay.text.size-small{font-size:11px}.ss-wys-overlay.text.size-normal{font-size:13px}.ss-wys-overlay.text.size-large{font-size:16px}.ss-wys-overlay.text.size-xlarge{font-size:20px}
+.ss-title-style-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:599px){.ss-title-style-grid{grid-template-columns:1fr}}
 @keyframes ssPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.28)}50%{box-shadow:0 0 0 4px rgba(111,218,154,.35),0 8px 24px rgba(0,0,0,.38)}}
 
 /* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
@@ -7982,6 +7986,42 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Songtitel und Songnummer laufen als gemeinsamer Block. Textblock und Fortschrittspunkte lassen sich unten im WYSIWYG-Feld frei ziehen.</div>
       </div>
 
+      <!-- Songtitel Look -->
+      <div class="htm-field">
+        <span class="htm-label">Songtitel-Look</span>
+        <div class="ss-title-style-grid">
+          <div>
+            <div class="field-label">Stil</div>
+            <select class="htm-input" id="htmSsTitleStyleMode" onchange="ssWysApply()">
+              <option value="outline">Hell + dunkler Rahmen</option>
+              <option value="solid">Einfarbig ohne Rahmen</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Farbe</div>
+            <select class="htm-input" id="htmSsTitleColor" onchange="ssWysApply()">
+              <option value="#f1ecdf">Creme / hell</option>
+              <option value="#85ACC9">Hitjourney-Blau</option>
+              <option value="#cfe5f5">Eisblau</option>
+              <option value="#ffffff">Weiß</option>
+              <option value="#0A0A0A">Schwarz</option>
+              <option value="#F44A22">Orange</option>
+              <option value="#FFD35A">Gelb</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Größe</div>
+            <select class="htm-input" id="htmSsTitleSize" onchange="ssWysApply()">
+              <option value="small">Klein</option>
+              <option value="normal">Normal</option>
+              <option value="large">Groß</option>
+              <option value="xlarge">Sehr groß</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Voreinstellung bleibt exakt wie bisher: helle Schrift mit dunklem Rahmen. Die Farbvarianten sind einfarbig und ohne Rahmen gedacht.</div>
+      </div>
+
       <!-- WYSIWYG Cover-Platzierung -->
       <div class="htm-field">
         <span class="htm-label">Cover-Platzierung direkt im Teaser</span>
@@ -9372,7 +9412,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -9389,7 +9429,7 @@ async function loadHomeLayout(){
       editing: false,
       caption: row.caption || undefined,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -11010,6 +11050,9 @@ function openSlideshowModal(rowId){
     hjSetVal('htmSsFitHeight', (cell && cell.coverFitHeight !== undefined && cell.coverFitHeight !== '') ? cell.coverFitHeight : 86);
     hjSetVal('htmSsCoverShape', (cell && cell.coverShape) || 'square');
     hjSetVal('htmSsCoverFitMode', (cell && cell.coverFitMode) || 'contain');
+    hjSetVal('htmSsTitleStyleMode', (cell && (cell.titleStyleMode || cell.songTitleStyle)) || 'outline');
+    hjSetVal('htmSsTitleColor', (cell && (cell.titleColor || cell.songTitleColor)) || '#f1ecdf');
+    hjSetVal('htmSsTitleSize', (cell && (cell.titleSize || cell.songTitleSize)) || 'normal');
     hjSetVal('htmSsTitleX', (cell && cell.titleX !== undefined && cell.titleX !== '') ? cell.titleX : 4);
     hjSetVal('htmSsTitleY', (cell && cell.titleY !== undefined && cell.titleY !== '') ? cell.titleY : 78);
     hjSetVal('htmSsDotsX',  (cell && cell.dotsX  !== undefined && cell.dotsX  !== '') ? cell.dotsX  : 4);
@@ -11309,7 +11352,16 @@ function ssWysApply(){
   const tx=ssWysNum(document.getElementById('htmSsTitleX')?.value,4), ty=ssWysNum(document.getElementById('htmSsTitleY')?.value,78);
   const dx=ssWysNum(document.getElementById('htmSsDotsX')?.value,4), dy=ssWysNum(document.getElementById('htmSsDotsY')?.value,94);
   function edgePreview(v){ return Math.max(-20, Math.min(120, v)); } // v175: echtes WYSIWYG ohne automatische Rand-Verschiebung
-  if(titleOv){ titleOv.style.left=edgePreview(tx)+'%'; titleOv.style.top=edgePreview(ty)+'%'; titleOv.style.display=((document.getElementById('htmSsShowSongTitle')?.checked||document.getElementById('htmSsShowSongNumber')?.checked)?'':'none'); }
+  if(titleOv){
+    titleOv.style.left=edgePreview(tx)+'%'; titleOv.style.top=edgePreview(ty)+'%'; titleOv.style.display=((document.getElementById('htmSsShowSongTitle')?.checked||document.getElementById('htmSsShowSongNumber')?.checked)?'':'none');
+    const tStyle=document.getElementById('htmSsTitleStyleMode')?.value || 'outline';
+    const tColor=document.getElementById('htmSsTitleColor')?.value || '#f1ecdf';
+    const tSize=document.getElementById('htmSsTitleSize')?.value || 'normal';
+    titleOv.style.setProperty('--ss-title-color', tColor);
+    titleOv.style.color=tColor;
+    titleOv.classList.toggle('style-solid', tStyle==='solid');
+    ['small','normal','large','xlarge'].forEach(sz=>titleOv.classList.toggle('size-'+sz, tSize===sz));
+  }
   if(dotsOv){ dotsOv.style.left=edgePreview(dx)+'%'; dotsOv.style.top=edgePreview(dy)+'%'; dotsOv.style.display=(document.getElementById('htmSsShowProgressDots')?.checked ? 'flex' : 'none'); }
   document.getElementById('ssShapeSquare')?.classList.toggle('active', ssWysState.shape==='square');
   document.getElementById('ssShapeCircle')?.classList.toggle('active', ssWysState.shape==='circle');
@@ -11355,7 +11407,7 @@ function ssWysBind(){
   if(!stage || !box || !handle || !rot || stage.dataset.bound) return;
   stage.dataset.bound='1';
   const dotsOv=document.getElementById('ssWysDots'), textOv=document.getElementById('ssWysText');
-  ['htmSsShowSongTitle','htmSsShowSongNumber','htmSsShowProgressDots'].forEach(id=>document.getElementById(id)?.addEventListener('change', ssWysApply));
+  ['htmSsShowSongTitle','htmSsShowSongNumber','htmSsShowProgressDots','htmSsTitleStyleMode','htmSsTitleColor','htmSsTitleSize'].forEach(id=>document.getElementById(id)?.addEventListener('change', ssWysApply));
   if(dotsOv) dotsOv.addEventListener('pointerdown', e=>ssOverlayStart('dots',e));
   if(textOv) textOv.addEventListener('pointerdown', e=>ssOverlayStart('title',e));
   const start=(mode,e)=>{ const p=ssWysPoint(e); const r=stage.getBoundingClientRect(); ssWysDrag={mode,sx:p.clientX,sy:p.clientY,start:{...ssWysState},rect:r}; e.preventDefault(); };
@@ -11538,6 +11590,9 @@ async function saveSlideshowTile(){
   cell.coverFitHeight = document.getElementById('htmSsFitHeight')?.value?.trim() || '';
   cell.coverShape = document.getElementById('htmSsCoverShape')?.value || 'square';
   cell.coverFitMode = document.getElementById('htmSsCoverFitMode')?.value || 'contain';
+  cell.titleStyleMode = document.getElementById('htmSsTitleStyleMode')?.value || 'outline';
+  cell.titleColor = document.getElementById('htmSsTitleColor')?.value || '#f1ecdf';
+  cell.titleSize = document.getElementById('htmSsTitleSize')?.value || 'normal';
   cell.titleX = document.getElementById('htmSsTitleX')?.value?.trim() || '4';
   cell.titleY = document.getElementById('htmSsTitleY')?.value?.trim() || '78';
   cell.dotsX  = document.getElementById('htmSsDotsX')?.value?.trim() || '4';
@@ -11568,7 +11623,7 @@ function importCurrentHome(){
   }
   markHomeAction();
   const S3 = 'https://hitjourney.s3.eu-west-1.amazonaws.com';
-  function makeCell(o){ return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'', bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleX:4, titleY:78, dotsX:4, dotsY:94, playlistSlug:'', ...o }; }
+  function makeCell(o){ return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'', bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, playlistSlug:'', ...o }; }
   function row(cells){ return { id:uid(), editing:false, cells }; }
 
   homeLayout = [
