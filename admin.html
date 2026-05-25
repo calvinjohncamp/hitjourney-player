@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260525-plus2-reuse-upload-fix-v2-slideshow-frame -->
+<!-- Version: admin-v20260525-panorama-4x1-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -121,6 +121,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Square zones for images */
 .upload-zone.sq{aspect-ratio:1/1}
 .upload-zone.wide{aspect-ratio:2/1}
+.upload-zone.panorama{aspect-ratio:4/1}
 .upload-zone.mp3-zone{height:72px}
 .upload-zone-icon{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .upload-zone-icon svg{width:22px;height:22px;stroke:rgba(133,172,201,.4);stroke-width:1.5;fill:none}
@@ -350,8 +351,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* span-2: 2 cols wide, 2:1 ratio */
 .he-cell.span-2{grid-column:1/-1;aspect-ratio:2/1}
 @media(min-width:600px){.he-cell.span-2{grid-column:span 2;aspect-ratio:2/1}}
-/* span-4 / Lyrics-Sheet 21: full width, immer 2:1 (wie live — The Archive, Tante Paula, Just This Dance) */
+/* span-4 / Lyrics-Sheet 21: full width, bleibt 2:1 (The Archive, Tante Paula, Just This Dance) */
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
+/* echtes Panorama 4:1: volle Breite, aber deutlich flacher */
+.he-cell.panorama-4x1{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
@@ -9651,7 +9654,11 @@ function buildCells(row, grid){
   } else if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
-  } else if(t0 === 'span-4' || t0 === '4x1' || t0 === 'lyrics21'){
+  } else if(t0 === '4x1'){
+    // echtes 4:1 Panorama — nicht als 2:1 span-4 rendern
+    grid.appendChild(buildCell(row, 0, 'panorama-4x1', editing));
+
+  } else if(t0 === 'span-4' || t0 === 'lyrics21'){
     grid.appendChild(buildCell(row, 0, 'span-4', editing));
 
   } else if(t0 === '2x1-full'){
@@ -10028,10 +10035,10 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells[3].type = 'hidden';
 
   } else if(type === '4x1'){
-    // 4:1 panorama
+    // 4:1 panorama — als eigener Typ speichern, damit Admin und Live 4:1 bleiben
     const old0 = {...row.cells[0]};
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-    row.cells[0] = {...row.cells[0], ...old0, type:'span-4'};
+    row.cells[0] = {...row.cells[0], ...old0, type:'4x1'};
     row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
@@ -10285,11 +10292,13 @@ function htmInitStep2(){
   // Source tab UI immer zum internen Zustand synchronisieren
   htmSetSourceVisual(htmChosenSource);
 
-  // Upload-Zone Aspect: sq für Quadrat, wide sonst
+  // Upload-Zone Aspect: Quadrat = 1:1, Panorama = 4:1, sonst Wide = 2:1
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
+    const isPanorama = htmChosenType === '4x1';
     uploadZone.classList.toggle('sq', isSquare);
-    uploadZone.classList.toggle('wide', !isSquare);
+    uploadZone.classList.toggle('wide', !isSquare && !isPanorama);
+    uploadZone.classList.toggle('panorama', isPanorama);
   }
 }
 
@@ -10533,7 +10542,7 @@ function htmUpdateMotifPreview(){
 
   // Determine how many cells to show
   const count = htmChosenType==='trio' ? 3 : (htmChosenType==='language' ? 2 : 1);
-  const ratio  = htmChosenType==='1x2' ? '1/2' : (htmChosenType==='2x1'||htmChosenType==='4x1'||htmChosenType==='2x1-half') ? '2/1' : '1/1';
+  const ratio  = htmChosenType==='1x2' ? '1/2' : htmChosenType==='4x1' ? '4/1' : (htmChosenType==='2x1'||htmChosenType==='2x1-half') ? '2/1' : '1/1';
 
   strip.innerHTML = '';
   for(let i=0;i<count;i++){
