@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v198-language-ipad-button-alignment-fix -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -2714,6 +2715,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 @media(min-width:900px){
   .about-wrap{padding-left:32px;padding-right:32px;}
+}
+
+
+/* v198 — iPad portrait language pages: move Random/Play controls one cover-column to the right.
+   Dice now sits above the 3rd / middle cover, Play keeps the same spacing to the right. */
+@media(min-width:600px){
+  .language-actions{
+    grid-column:3 / span 3;
+  }
+  .language-dice-btn{grid-column:1;}
+  .language-play-btn{grid-column:2;}
 }
 
 </style>
