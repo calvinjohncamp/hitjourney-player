@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260525-plus2-center-fix -->
+<!-- Version: admin-v20260525-plus2-album-motif-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -10253,10 +10253,11 @@ function htmInitStep2(){
 function htmSetSource(source, btn){
   htmChosenSource = source;
   document.querySelectorAll('.htm-source-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   document.getElementById('htmSrcUpload').style.display = source==='upload' ? '' : 'none';
   document.getElementById('htmSrcSong').style.display   = source==='song'   ? '' : 'none';
   document.getElementById('htmSrcAlbum').style.display  = source==='album'  ? '' : 'none';
+  htmUpdateMotifPreview();
 }
 
 /* Song search + list */
@@ -10734,6 +10735,20 @@ async function saveHomeTile(){
   markHomeAction();
   const cell = row.cells[cellIdx];
 
+  // Safety net: Chrome keeps the file in the input even if our JS state was reset
+  // while switching from step 2 (motif) to step 3 (action). This was the reason
+  // why a correctly uploaded 2:1 album motif could still trigger "Bitte ein Motiv".
+  const motifInput = document.getElementById('htmMotifFileInput');
+  if(!htmMotifFile && motifInput && motifInput.files && motifInput.files[0]){
+    htmMotifFile = motifInput.files[0];
+    if(!htmMotifUrl) htmMotifUrl = URL.createObjectURL(htmMotifFile);
+  }
+  const albumMotifInput = document.getElementById('htmAlbumMotifInput');
+  if(!htmAlbumMotifFile && albumMotifInput && albumMotifInput.files && albumMotifInput.files[0]){
+    htmAlbumMotifFile = albumMotifInput.files[0];
+    if(!htmAlbumMotifUrl) htmAlbumMotifUrl = URL.createObjectURL(htmAlbumMotifFile);
+  }
+
   // Upload motif if needed
   let finalImageUrl = htmMotifUrl || '';
   if(htmMotifFile){
@@ -10751,12 +10766,16 @@ async function saveHomeTile(){
     }catch(e){ toast('Upload Fehler: '+e.message,'err'); return; }
   }
 
-  // Determine effective image URL. For album-source tiles, the uploaded 2:1 motif
+  // Determine effective image URL. For album-source tiles, an uploaded 2:1 motif
   // must become the visible Home image; the album selection is only the click target.
+  // Robust fallback: also read the preview <img> src so the save works even after
+  // source-tab changes or step changes.
+  const motifPreviewSrc = document.getElementById('prevHtmMotif')?.src || '';
+  const albumPreviewSrc = document.getElementById('prevHtmAlbumMotif')?.src || '';
   let imageUrl = '';
-  if(htmChosenSource === 'upload')     imageUrl = finalImageUrl;
-  else if(htmChosenSource === 'song')  imageUrl = finalImageUrl || (htmSelectedSong ? htmSelectedSong.coverUrl : '');
-  else if(htmChosenSource === 'album') imageUrl = finalAlbumCover || finalImageUrl || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
+  if(htmChosenSource === 'upload')     imageUrl = finalImageUrl || motifPreviewSrc;
+  else if(htmChosenSource === 'song')  imageUrl = finalImageUrl || motifPreviewSrc || (htmSelectedSong ? htmSelectedSong.coverUrl : '');
+  else if(htmChosenSource === 'album') imageUrl = finalAlbumCover || finalImageUrl || albumPreviewSrc || motifPreviewSrc || (htmSelectedAlbum ? htmSelectedAlbum.coverUrl : '');
 
   // If Step 2 selected Album/Song, carry that selection into Step 3 automatically.
   if(htmChosenAction === 'album' && !htmActionSelectedAlbum && htmSelectedAlbum){
@@ -10778,7 +10797,9 @@ async function saveHomeTile(){
 
   // Keep existing layout type — only update content
   updatedCell.imageUrl   = imageUrl;
-  updatedCell.customImageUrl = htmChosenSource==='upload' ? finalImageUrl : '';
+  // Preserve custom uploaded motifs for all sources, including Album tiles.
+  // Without this, a 2:1 custom album motif could be lost or replaced by the 1:1 album cover.
+  updatedCell.customImageUrl = (htmMotifFile || htmMotifUrl) ? finalImageUrl : ((htmAlbumMotifFile || htmAlbumMotifUrl) ? finalAlbumCover : '');
 
   // Lyrics cycle = play action + checkbox ticked
   const lyricsCb = document.getElementById('htmLyricsCycleCheck');
