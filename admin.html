@@ -499,6 +499,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .badge-link{background:rgba(88,132,164,.8)}
 .badge-diashow{background:rgba(120,90,200,.8)}
 .badge-silbertablett{background:#1a1228;color:#c9b3f5}
+@keyframes stAdminSpin{to{transform:rotate(360deg)}}
+
 .badge-language{background:rgba(180,120,40,.9)}
 .htm-inner{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px 16px 12px 12px;width:100%;max-width:500px;padding:20px;animation:fadeIn .2s ease;max-height:82vh;overflow-y:auto}
 
@@ -9775,6 +9777,12 @@ function buildCells(row, grid){
     // Language Teaser: immer volle Breite 2:1, read-only (nicht im Admin änderbar)
     grid.appendChild(buildCell(row, 0, 'span-4 language-cell', editing));
 
+  } else if(t0 === 'silbertablett'){
+    // Silbertablett: 2 gleich breite 2:1-Kacheln nebeneinander (wie layout-2x2half)
+    grid.classList.add('layout-2x2half');
+    grid.appendChild(buildSilbertablettAdminLeft(row, editing));
+    grid.appendChild(buildSilbertablettAdminRight(row, editing));
+
   } else if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
@@ -9864,7 +9872,7 @@ function buildCell(row, cellIdx, extraClass, editing){
   el.dataset.rowId = row.id;
   el.dataset.cellIdx = cellIdx;
 
-  const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0);
+  const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0) || (cell.type==='silbertablett' && cell.stPlaylistSlug);
   const isSlide  = cell.type === 'slideshow';
   const hasLayoutType = cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
 
@@ -10304,6 +10312,134 @@ function openCellEdit(rowId, cellIdx){
   } else {
     openHomeTileModal(rowId, cellIdx);
   }
+}
+
+/* ── Silbertablett Admin-Vorschau: linke Kachel (Diashow) ── */
+function buildSilbertablettAdminLeft(row, editing){
+  const cell = row.cells[0];
+  const el = document.createElement('div');
+  el.className = 'he-cell cell-2x1half' + (editing ? ' editing-mode' : '');
+  el.dataset.rowId  = row.id;
+  el.dataset.cellIdx = 0;
+
+  // Vorschau-Cover: erstes Cover aus der konfigurierten Playlist
+  let previewSrc = '';
+  const slug = cell.stPlaylistSlug || '';
+  if(slug && typeof albumsData !== 'undefined'){
+    const al = albumsData.find(a => a.slug === slug);
+    if(al && al.cover_url) previewSrc = al.cover_url;
+  }
+
+  // Innenlayout: kleine Cover-Strips simulieren
+  el.style.position = 'relative';
+  el.style.overflow = 'hidden';
+  el.style.background = cell.stBgColor || '#000';
+
+  if(previewSrc){
+    const img = document.createElement('img');
+    img.className = 'he-cell-img';
+    img.src = previewSrc;
+    img.alt = slug;
+    img.onerror = () => { img.style.opacity = '.15'; };
+    el.appendChild(img);
+  } else {
+    // Placeholder: 3 schmale Streifen
+    const ph = document.createElement('div');
+    ph.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;opacity:.25';
+    [0,1,2].forEach(i => {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'flex:1;height:70%;background:rgba(133,172,201,.4);border-radius:3px';
+      ph.appendChild(bar);
+    });
+    el.appendChild(ph);
+  }
+
+  // Badge + Edit-Overlay
+  const ov = document.createElement('div');
+  ov.className = 'he-cell-overlay always-edit';
+  ov.innerHTML = `
+    <span class="he-cell-badge badge-silbertablett">◈ Diashow</span>
+    <div class="he-cell-acts">
+      <button class="he-cell-act-btn" onclick="openSilbertablettModal('${row.id}')">✎ Bearbeiten</button>
+      ${editing ? `<button class="he-cell-act-btn del" onclick="clearSilbertablett('${row.id}')">×</button>` : ''}
+    </div>`;
+  el.appendChild(ov);
+
+  if(!editing) el.addEventListener('click', () => openSilbertablettModal(row.id));
+  return el;
+}
+
+/* ── Silbertablett Admin-Vorschau: rechte Kachel (Cover + Rotation) ── */
+function buildSilbertablettAdminRight(row, editing){
+  const cell = row.cells[0];
+  const pos  = cell.stCoverPos || 'right';
+  // Wenn Cover links konfiguriert: Kacheln tauschen (linke Fn zeigt Diashow, rechte Cover)
+  // Für Admin-Vorschau immer: linke Fn = Diashow, rechte = Cover — Tausch nur visuell
+  const el = document.createElement('div');
+  el.className = 'he-cell cell-2x1half' + (editing ? ' editing-mode' : '');
+  el.dataset.rowId  = row.id;
+  el.dataset.cellIdx = 0;
+
+  el.style.position = 'relative';
+  el.style.overflow = 'hidden';
+  el.style.background = cell.stBgColor || '#000';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  el.style.flexDirection = 'column';
+  el.style.gap = '6px';
+
+  // Cover-Bild: eigenes Upload oder erstes Playlist-Cover
+  let coverSrc = cell.stImageUrl || '';
+  if(!coverSrc && cell.stPlaylistSlug && typeof albumsData !== 'undefined'){
+    const al = albumsData.find(a => a.slug === cell.stPlaylistSlug);
+    if(al && al.cover_url) coverSrc = al.cover_url;
+  }
+
+  if(coverSrc){
+    const img = document.createElement('img');
+    img.src = coverSrc;
+    img.alt = cell.stCoverTitle || '';
+    img.style.cssText = 'width:35%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:3px';
+    if(cell.stRotEnabled) img.style.animation = 'stAdminSpin ' + ({slow:8,mid:4,fast:2}[cell.stRotSpeed]||8) + 's linear infinite';
+    img.onerror = () => { img.style.opacity='.2'; };
+    el.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.style.cssText = 'width:35%;aspect-ratio:1/1;border-radius:3px;background:rgba(133,172,201,.15);display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4';
+    ph.textContent = '◎';
+    el.appendChild(ph);
+  }
+
+  if(cell.stShowTitle && cell.stCoverTitle){
+    const t = document.createElement('div');
+    t.style.cssText = 'color:#fff;font-size:10px;opacity:.65;text-align:center;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    t.textContent = cell.stCoverTitle;
+    el.appendChild(t);
+  }
+
+  // Badge
+  const ov = document.createElement('div');
+  ov.className = 'he-cell-overlay always-edit';
+  ov.innerHTML = `<span class="he-cell-badge badge-silbertablett">◎ Cover</span>
+    <div class="he-cell-acts">
+      <button class="he-cell-act-btn" onclick="openSilbertablettModal('${row.id}')">✎ Bearbeiten</button>
+    </div>`;
+  el.appendChild(ov);
+
+  if(!editing) el.addEventListener('click', () => openSilbertablettModal(row.id));
+  return el;
+}
+
+function clearSilbertablett(rowId){
+  const row = rowById(rowId);
+  if(!row) return;
+  markHomeAction();
+  row.cells[0] = {...emptyCell(), type:'silbertablett',
+    stBgColor:'#000000', stCoverPos:'right', stCoverTitle:'',
+    stShowTitle:false, stRotEnabled:false, stRotDir:'cw',
+    stRotSpeed:'slow', stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:''};
+  renderHomeEditor();
 }
 
 function clearCell(rowId, cellIdx){
@@ -11354,25 +11490,45 @@ function stPopulatePlaylists(){
   if(!sel) return;
   const currentVal = (document.getElementById('stPlaylistSlug')||{}).value || '';
   sel.innerHTML = '<option value="">— bitte wählen —</option>';
-  // Aus homeLayout bekannte Playlists + ADMIN_ALBUMS
+
   const known = [];
-  if(typeof ADMIN_ALBUMS !== 'undefined'){
-    Object.entries(ADMIN_ALBUMS).forEach(([slug,album])=>{
-      known.push({ slug, title: album.title || slug });
-    });
+  const seen = new Set();
+  function addEntry(slug, title){
+    if(!slug || seen.has(slug)) return;
+    seen.add(slug);
+    known.push({ slug, title: title || slug });
   }
-  // Auch Standard-Album-Keys
-  ['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'].forEach(k=>{
-    if(!known.find(x=>x.slug===k)) known.push({ slug:k, title:k });
-  });
-  known.sort((a,b)=>a.title.localeCompare(b.title));
-  known.forEach(pl=>{
+
+  // 1. albumsData aus dem Admin (echte Supabase-Titel)
+  if(typeof albumsData !== 'undefined' && albumsData.length){
+    albumsData.forEach(al => addEntry(al.slug, al.title));
+  }
+
+  // 2. Standard-Album-Keys mit echten Titeln als Fallback
+  const STD_TITLES = {
+    'top50':          'Top 50',
+    'grad30':         'Grad 30',
+    'stories30':      'Stories 30',
+    'grosseLiebe':    'Große Liebe',
+    'poesie':         'Poesie',
+    'buriedDiamonds': 'Buried Diamonds',
+    'top100':         'Top 100',
+  };
+  Object.entries(STD_TITLES).forEach(([slug,title]) => addEntry(slug, title));
+
+  known.sort((a,b) => a.title.localeCompare(b.title, 'de'));
+  known.forEach(pl => {
     const opt = document.createElement('option');
     opt.value = pl.slug;
     opt.textContent = pl.title;
     opt.selected = pl.slug === currentVal;
     sel.appendChild(opt);
   });
+
+  // Falls albumsData noch leer: lazy nachladen
+  if(typeof albumsData !== 'undefined' && !albumsData.length){
+    loadPlaylists().then(() => stPopulatePlaylists()).catch(()=>{});
+  }
 }
 
 async function stTryEyedropper(){
