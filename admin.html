@@ -7958,6 +7958,25 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
+<!-- ══ MOTIF CONFIRM MODAL ══ -->
+<div id="motifConfirmModal" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:18px;padding:22px 20px 18px;animation:fadeIn .18s ease">
+    <div style="font-size:13px;font-weight:700;color:#85ACC9;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px">Motiv übernehmen?</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <img id="motifConfirmImg" src="" style="width:80px;height:80px;object-fit:cover;border-radius:10px;background:#06141F;flex-shrink:0;border:1px solid rgba(133,172,201,.15)">
+      <div style="min-width:0">
+        <div id="motifConfirmTitle" style="font-size:14px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="motifConfirmSub" style="font-size:11px;color:rgba(133,172,201,.5);margin-top:3px"></div>
+        <div id="motifConfirmNote" style="font-size:10px;color:rgba(133,172,201,.35);margin-top:6px;line-height:1.4">Dieses Cover wird als Kachelbild verwendet.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="motifConfirmCancel()" style="flex:1;padding:10px;background:rgba(133,172,201,.06);border:1px solid rgba(133,172,201,.15);border-radius:10px;color:rgba(133,172,201,.7);font-size:13px;cursor:pointer">Abbrechen</button>
+      <button onclick="motifConfirmOk()" style="flex:1;padding:10px;background:rgba(50,180,100,.15);border:1px solid rgba(50,180,100,.3);border-radius:10px;color:#6fdb9e;font-size:13px;font-weight:700;cursor:pointer">✓ Übernehmen</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ HOME SLIDESHOW MODAL ══ -->
 <div id="homeSlideshowModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);flex-direction:column;align-items:center;justify-content:flex-end;padding:0">
   <div style="width:100%;max-width:560px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:94vh;animation:fadeIn .2s ease">
@@ -10437,19 +10456,14 @@ function htmRenderSongList(q){
       </div>
       <span class="htm-song-row-check">✓</span>`;
     row.onclick = ()=>{
-      htmSelectedSong = {
+      const candidate = {
         slug: s.slug,
         title: s.title||s.slug,
         artist: s.artist||'',
         coverUrl: s.cover_url||'',
         cover21Url: s.lyrics21_url || s.cover_url || ''
       };
-      // auto-set action to play if nothing chosen yet
-      if(!htmChosenAction) htmChosenAction = 'play';
-      htmRenderSelectedSong();
-      htmUpdateMotifPreview();
-      list.querySelectorAll('.htm-song-row').forEach(r=>r.classList.remove('selected'));
-      row.classList.add('selected');
+      openMotifConfirm('song', candidate);
     };
     list.appendChild(row);
   });
@@ -10472,6 +10486,69 @@ function htmClearSong(){
   htmSelectedSong = null;
   htmRenderSelectedSong();
   htmUpdateMotifPreview();
+}
+
+/* ── Motif Confirm Modal ── */
+let _motifConfirmType      = '';   // 'song' | 'album'
+let _motifConfirmCandidate = null; // pending song or album object
+
+function openMotifConfirm(type, candidate){
+  _motifConfirmType      = type;
+  _motifConfirmCandidate = candidate;
+  const modal = document.getElementById('motifConfirmModal');
+  const img   = document.getElementById('motifConfirmImg');
+  const title = document.getElementById('motifConfirmTitle');
+  const sub   = document.getElementById('motifConfirmSub');
+  const note  = document.getElementById('motifConfirmNote');
+  if(!modal) return;
+  img.src        = candidate.coverUrl || '';
+  title.textContent = candidate.title || candidate.slug || '';
+  sub.textContent   = type === 'song' ? (candidate.artist || '') : 'Album / Playlist';
+  note.textContent  = 'Dieses Cover wird als Kachelbild übernommen.';
+  modal.style.display = 'flex';
+}
+
+function motifConfirmCancel(){
+  _motifConfirmType      = '';
+  _motifConfirmCandidate = null;
+  document.getElementById('motifConfirmModal').style.display = 'none';
+}
+
+function motifConfirmOk(){
+  const type      = _motifConfirmType;
+  const candidate = _motifConfirmCandidate;
+  document.getElementById('motifConfirmModal').style.display = 'none';
+  _motifConfirmType      = '';
+  _motifConfirmCandidate = null;
+  if(!candidate) return;
+
+  if(type === 'song'){
+    htmSelectedSong = candidate;
+    // Motiv-URL direkt in htmMotifUrl einschreiben → wird sicher in saveHomeTile() verwendet
+    htmMotifUrl = candidate.coverUrl || '';
+    htmMotifFile = null;
+    if(!htmChosenAction) htmChosenAction = 'play';
+    htmRenderSelectedSong();
+    // Vorschau im Upload-Zone-Frame aktualisieren
+    const img = document.getElementById('prevHtmMotif');
+    const zone = document.getElementById('zHtmMotif');
+    if(img)  { img.src = htmMotifUrl; }
+    if(zone) { if(htmMotifUrl) zone.classList.add('has-file'); else zone.classList.remove('has-file'); }
+    // Song-Zeile als selected markieren
+    document.querySelectorAll('#htmSongList .htm-song-row').forEach(r=>{
+      r.classList.toggle('selected', r.querySelector('.htm-song-row-title')?.textContent === candidate.title);
+    });
+  } else if(type === 'album'){
+    htmSelectedAlbum = candidate;
+    htmMotifUrl  = candidate.coverUrl || '';
+    htmMotifFile = null;
+    if(!htmChosenAction) htmChosenAction = 'album';
+    htmRenderSelectedAlbum();
+    const img = document.getElementById('prevHtmMotif');
+    const zone = document.getElementById('zHtmMotif');
+    if(img)  { img.src = htmMotifUrl; }
+    if(zone) { if(htmMotifUrl) zone.classList.add('has-file'); else zone.classList.remove('has-file'); }
+  }
 }
 
 /* Album dropdown */
@@ -10500,11 +10577,9 @@ function htmPickAlbum(){
   const playlists = (typeof albumsData !== 'undefined' ? albumsData : []);
   const pl = playlists.find(p=>p.slug===slug);
   if(pl){
-    htmSelectedAlbum = { slug: pl.slug, title: pl.title||pl.slug, coverUrl: pl.cover_url||'' };
-    if(!htmChosenAction) htmChosenAction = 'album';
+    const candidate = { slug: pl.slug, title: pl.title||pl.slug, coverUrl: pl.cover_url||'' };
+    openMotifConfirm('album', candidate);
   }
-  htmRenderSelectedAlbum();
-  htmUpdateMotifPreview();
 }
 
 function htmRenderSelectedAlbum(){
@@ -10686,10 +10761,9 @@ async function htmInitStep3(){
     const r = await fetch(sbUrl('/rest/v1/songs?select=slug,title,artist,cover_url,lyrics21_url&order=title.asc'),{headers:hdrs()});
     if(r.ok) allSongs = await r.json();
   }
-  // Clear the search input so it doesn't carry over from a previous edit session
   const actionSearch = document.getElementById('htmActionSongSearch');
   if(actionSearch) actionSearch.value = '';
-  htmRenderActionSongList();
+  htmRenderActionSongList('');
 
   // Restore lyrics cycle checkbox
   const cb = document.getElementById('htmLyricsCycleCheck');
@@ -10996,9 +11070,8 @@ async function saveHomeTile(){
     htmActionSelectedSong = htmSelectedSong;
   }
 
-  // Fallback: use existing cell image if no new motif was selected/uploaded.
-  // This is the normal case when editing only the action (e.g. swapping the album)
-  // without re-uploading the tile image.
+  // Fallback: wenn kein neues Motiv gewählt wurde (z.B. nur Aktion geändert),
+  // das bestehende Kachelbild beibehalten.
   if(!imageUrl){
     const existingCell = rowById(rowId)?.cells[cellIdx];
     imageUrl = existingCell?.imageUrl || existingCell?.customImageUrl || '';
