@@ -10409,7 +10409,7 @@ function buildSilbertablettAdminRight(row, editing){
     img.src = coverSrc;
     img.alt = cell.stCoverTitle || '';
     img.style.cssText = 'width:35%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:3px';
-    if(cell.stRotEnabled) img.style.animation = 'stAdminSpin ' + ({slow:8,mid:4,fast:2}[cell.stRotSpeed]||8) + 's linear infinite';
+    if(cell.stRotEnabled) img.style.animation = 'stAdminSpin ' + ({slow:16,mid:8}[cell.stRotSpeed]||16) + 's linear infinite';
     img.onerror = () => { img.style.opacity='.2'; };
     el.appendChild(img);
   } else {
@@ -11481,6 +11481,24 @@ function openSilbertablettModal(rowId){
 
   stUpdateColorPreview();
   stPopulatePlaylists();
+  // Cover-Upload zurücksetzen
+  stClearCoverFile();
+  // Gespeichertes stImageUrl anzeigen
+  if(c.stImageUrl){
+    const img = document.getElementById('stCoverPreviewImg');
+    const lbl = document.getElementById('stUploadLabel');
+    const clr = document.getElementById('stClearCoverBtn');
+    if(img){ img.src = c.stImageUrl; img.style.display='block'; }
+    if(lbl) lbl.textContent = 'Eigenes Cover gesetzt';
+    if(clr) clr.style.display='block';
+  }
+  // Song-Liste zurücksetzen
+  stSongListData = [];
+  stRenderSongList();
+  const srch = document.getElementById('stSongSearch');
+  if(srch) srch.value='';
+  const picker = document.getElementById('stSongPicker');
+  if(picker) picker.innerHTML='';
 
   const modal = document.getElementById('silbertablettModal');
   if(modal) modal.style.display = 'flex';
@@ -11491,6 +11509,128 @@ function closeSilbertablettModal(){
   if(modal) modal.style.display = 'none';
   stModalRowId = null;
 }
+
+/* ── Silbertablett: Cover-Upload ── */
+let stCoverFile = null;
+let stCoverLocalUrl = '';
+let stSongListData = []; // [{slug,title,artist,mp3,cover}]
+
+function stOnCoverFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  stCoverFile = file;
+  stCoverLocalUrl = URL.createObjectURL(file);
+  const img = document.getElementById('stCoverPreviewImg');
+  const lbl = document.getElementById('stUploadLabel');
+  const clr = document.getElementById('stClearCoverBtn');
+  if(img){ img.src = stCoverLocalUrl; img.style.display = 'block'; }
+  if(lbl) lbl.textContent = file.name;
+  if(clr) clr.style.display = 'block';
+}
+
+function stClearCoverFile(){
+  stCoverFile = null; stCoverLocalUrl = '';
+  const input = document.getElementById('stCoverFileInput');
+  if(input) input.value = '';
+  const img = document.getElementById('stCoverPreviewImg');
+  const lbl = document.getElementById('stUploadLabel');
+  const clr = document.getElementById('stClearCoverBtn');
+  if(img){ img.src = ''; img.style.display = 'none'; }
+  if(lbl) lbl.textContent = 'Bild hochladen (quadratisch) — oder Album-Cover verwenden';
+  if(clr) clr.style.display = 'none';
+}
+
+/* ── Song-Liste aus Album laden ── */
+async function stLoadAlbumSongs(){
+  const slug = (document.getElementById('stPlaylistSlug')||{}).value || '';
+  const listEl = document.getElementById('stSongList');
+  if(!slug){ if(listEl) listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Bitte zuerst ein Album wählen</div>'; return; }
+
+  if(listEl) listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Lädt…</div>';
+
+  // Tracks aus albumsData
+  const al = (typeof albumsData !== 'undefined') ? albumsData.find(a=>a.slug===slug) : null;
+  let tracks = al ? al.tracks : [];
+  if(!tracks.length && typeof loadPlaylists === 'function'){
+    await loadPlaylists();
+    const al2 = (typeof albumsData !== 'undefined') ? albumsData.find(a=>a.slug===slug) : null;
+    tracks = al2 ? al2.tracks : [];
+  }
+
+  // Songs aus songsData oder SUPABASE_SONGS
+  stSongListData = tracks
+    .sort((a,b)=>(a.position||0)-(b.position||0))
+    .map(t=>{
+      const s = (typeof songsData !== 'undefined' ? songsData : []).find(x=>x.slug===t.song_slug) || {slug:t.song_slug,title:t.song_slug,mp3_url:'',cover_url:''};
+      return { slug:s.slug, title:s.title||s.slug, artist:s.artist||'', mp3:s.mp3_url||'', cover:s.cover_url||'' };
+    });
+
+  stRenderSongList();
+}
+
+function stRenderSongList(){
+  const listEl = document.getElementById('stSongList');
+  if(!listEl) return;
+  if(!stSongListData.length){
+    listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Keine Songs gefunden</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  stSongListData.forEach((s,i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:#2a2a2a;font-size:12px;color:#ccc';
+    const num = document.createElement('span');
+    num.style.cssText = 'color:#555;min-width:18px;text-align:right;font-size:11px';
+    num.textContent = String(i+1).padStart(2,'0');
+    const title = document.createElement('span');
+    title.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    title.textContent = s.title + (s.artist ? ' · ' + s.artist : '');
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.style.cssText = 'background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0';
+    del.onclick = () => { stSongListData.splice(i,1); stRenderSongList(); };
+    row.appendChild(num); row.appendChild(title); row.appendChild(del);
+    listEl.appendChild(row);
+  });
+}
+
+/* ── Song-Picker (Suche + Hinzufügen) ── */
+function stRenderSongPicker(){
+  const q = ((document.getElementById('stSongSearch')||{}).value||'').toLowerCase().trim();
+  const pickerEl = document.getElementById('stSongPicker');
+  if(!pickerEl) return;
+  if(!q){ pickerEl.innerHTML = ''; return; }
+  const source = typeof songsData !== 'undefined' ? songsData : [];
+  const matches = source.filter(s=>{
+    const t = ((s.title||'')+(s.artist||'')+(s.slug||'')).toLowerCase();
+    return t.includes(q);
+  }).slice(0,12);
+  pickerEl.innerHTML = '';
+  matches.forEach(s=>{
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-bottom:1px solid #222;font-size:12px;color:#ccc';
+    row.onmouseenter = ()=>row.style.background='#2a2a2a';
+    row.onmouseleave = ()=>row.style.background='';
+    const title = document.createElement('span');
+    title.style.flex = '1';
+    title.textContent = s.title + (s.artist ? ' · ' + s.artist : '');
+    const add = document.createElement('button');
+    add.textContent = '+ hinzufügen';
+    add.style.cssText = 'background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0';
+    add.onclick = ()=>{
+      const already = stSongListData.find(x=>x.slug===s.slug);
+      if(!already){
+        stSongListData.push({ slug:s.slug, title:s.title||s.slug, artist:s.artist||'', mp3:s.mp3_url||'', cover:s.cover_url||'' });
+        stRenderSongList();
+      }
+      document.getElementById('stSongSearch').value='';
+      pickerEl.innerHTML='';
+    };
+    row.appendChild(title); row.appendChild(add);
+    pickerEl.appendChild(row);
+  });
+}
+
 
 function stUpdateColorPreview(){
   const val = (document.getElementById('stBgColor')||{}).value || '#000000';
@@ -11559,6 +11699,23 @@ async function saveSilbertablettTile(){
   const selVal = (document.getElementById('stPlaylistSlugSel')||{}).value;
   const manVal = (document.getElementById('stPlaylistSlug')||{}).value.trim();
   cell.stPlaylistSlug = selVal || manVal || '';
+  // Song-Liste speichern (überschreibt Album-Standard-Reihenfolge wenn befüllt)
+  if(stSongListData.length){
+    cell.stCustomSongs = stSongListData.map(s=>({slug:s.slug,title:s.title,artist:s.artist,mp3:s.mp3,coverUrl:s.cover}));
+  } else {
+    cell.stCustomSongs = [];
+  }
+  // Cover-Upload zu S3 wenn nötig
+  if(stCoverFile){
+    try{
+      const ext = (stCoverFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+      const s3Key = 'artwork/st-cover-' + Date.now() + '.' + ext;
+      cell.stImageUrl = await uploadToS3(stCoverFile, s3Key, null);
+      stCoverFile = null;
+    } catch(e){
+      toast('Cover-Upload fehlgeschlagen: '+e.message,'err'); return;
+    }
+  }
   renderHomeEditor();
   try{
     await saveHomeLayout();
@@ -12519,22 +12676,49 @@ async function restoreSnapshot(){
         <div>
           <div style="font-size:11px;color:#666;margin-bottom:4px">Geschwindigkeit</div>
           <select id="stRotSpeed" style="width:100%;padding:7px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
-            <option value="slow">Langsam (30s)</option>
-            <option value="mid">Mittel (12s)</option>
-            <option value="fast">Schnell (5s)</option>
+            <option value="slow">Langsam (60s)</option>
+            <option value="mid">Mittel (30s)</option>
           </select>
         </div>
       </div>
     </div>
 
     <!-- Diashow-Geschwindigkeit -->
-    <div style="margin-bottom:20px">
+    <div style="margin-bottom:14px">
       <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Diashow-Wechsel</div>
       <select id="stSsSpeed" style="padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
         <option value="slow">Langsam (8s)</option>
         <option value="mid">Mittel (4s)</option>
         <option value="fast">Schnell (2s)</option>
       </select>
+    </div>
+
+    <!-- Cover-Upload (eigenes 1:1 Motiv) -->
+    <div style="margin-bottom:14px;padding:14px;background:#222;border-radius:10px">
+      <div style="font-size:11px;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em">Eigenes Cover-Motiv (1:1)</div>
+      <div id="stUploadZone" onclick="document.getElementById('stCoverFileInput').click()"
+           style="border:1px dashed #444;border-radius:8px;padding:14px;text-align:center;cursor:pointer;position:relative;min-height:60px;display:flex;align-items:center;justify-content:center;gap:10px">
+        <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
+        <img id="stCoverPreviewImg" src="" alt="" style="display:none;width:48px;height:48px;object-fit:cover;border-radius:4px">
+        <span id="stUploadLabel" style="font-size:12px;color:#888">Bild hochladen (quadratisch) — oder Album-Cover verwenden</span>
+        <button id="stClearCoverBtn" onclick="event.stopPropagation();stClearCoverFile()" style="display:none;position:absolute;top:6px;right:8px;background:none;border:none;color:#888;font-size:16px;cursor:pointer">×</button>
+      </div>
+    </div>
+
+    <!-- Song-Liste der gewählten Playlist -->
+    <div style="margin-bottom:20px;padding:14px;background:#222;border-radius:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em">Songs der Diashow</div>
+        <button onclick="stLoadAlbumSongs()" style="padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer">↻ Aus Album laden</button>
+      </div>
+      <div id="stSongList" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;margin-bottom:8px">
+        <div style="font-size:12px;color:#555;text-align:center;padding:12px">Wähle ein Album und klicke „Aus Album laden"</div>
+      </div>
+      <!-- Song-Suche hinzufügen -->
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="stSongSearch" placeholder="Song suchen…" style="flex:1;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px" oninput="stRenderSongPicker()">
+      </div>
+      <div id="stSongPicker" style="max-height:150px;overflow-y:auto;margin-top:4px;border-radius:6px;background:#1a1a1a"></div>
     </div>
 
     <div style="display:flex;gap:10px">
