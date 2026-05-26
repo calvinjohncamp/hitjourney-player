@@ -595,6 +595,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* 2× 2:1 halbe Breite nebeneinander */
 .he-row-grid.layout-2x2half{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .he-cell.cell-2x1half{aspect-ratio:2/1;width:100%}
+/* Silbertablett: zwei 1:1-Quadrate nebeneinander */
+.he-row-grid.layout-silbertablett{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.he-cell.cell-st-square{aspect-ratio:1/1;width:100%;position:relative;overflow:hidden}
 
 /* 2:1 halb + 2× 1:1 — left variant (default) [2:1][1:1][1:1] */
 .he-row-grid.layout-2x1plus2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;align-items:stretch}
@@ -9778,10 +9781,14 @@ function buildCells(row, grid){
     grid.appendChild(buildCell(row, 0, 'span-4 language-cell', editing));
 
   } else if(t0 === 'silbertablett'){
-    // Silbertablett: 2 gleich breite 2:1-Kacheln nebeneinander (wie layout-2x2half)
-    grid.classList.add('layout-2x2half');
-    grid.appendChild(buildSilbertablettAdminLeft(row, editing));
-    grid.appendChild(buildSilbertablettAdminRight(row, editing));
+    // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
+    grid.classList.add('layout-silbertablett');
+    const stLeft  = cell.stCoverPos === 'left' ? buildSilbertablettAdminRight(row, editing) : buildSilbertablettAdminLeft(row, editing);
+    const stRight = cell.stCoverPos === 'left' ? buildSilbertablettAdminLeft(row, editing)  : buildSilbertablettAdminRight(row, editing);
+    stLeft.className  = stLeft.className.replace('cell-2x1half','cell-st-square');
+    stRight.className = stRight.className.replace('cell-2x1half','cell-st-square');
+    grid.appendChild(stLeft);
+    grid.appendChild(stRight);
 
   } else if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
@@ -10318,7 +10325,7 @@ function openCellEdit(rowId, cellIdx){
 function buildSilbertablettAdminLeft(row, editing){
   const cell = row.cells[0];
   const el = document.createElement('div');
-  el.className = 'he-cell cell-2x1half' + (editing ? ' editing-mode' : '');
+  el.className = 'he-cell cell-st-square' + (editing ? ' editing-mode' : '');
   el.dataset.rowId  = row.id;
   el.dataset.cellIdx = 0;
 
@@ -10376,7 +10383,7 @@ function buildSilbertablettAdminRight(row, editing){
   // Wenn Cover links konfiguriert: Kacheln tauschen (linke Fn zeigt Diashow, rechte Cover)
   // Für Admin-Vorschau immer: linke Fn = Diashow, rechte = Cover — Tausch nur visuell
   const el = document.createElement('div');
-  el.className = 'he-cell cell-2x1half' + (editing ? ' editing-mode' : '');
+  el.className = 'he-cell cell-st-square' + (editing ? ' editing-mode' : '');
   el.dataset.rowId  = row.id;
   el.dataset.cellIdx = 0;
 
@@ -11457,7 +11464,12 @@ function openSilbertablettModal(rowId){
   const c = cell || {};
 
   hjSetVal('stBgColor',       c.stBgColor      || '#000000');
-  hjSetVal('stCoverPos',      c.stCoverPos     || 'right');
+  // Radio-Buttons für Cover-Position
+  const stPos = c.stCoverPos || 'right';
+  const rRight = document.getElementById('stCoverPosRight');
+  const rLeft  = document.getElementById('stCoverPosLeft');
+  if(rRight) rRight.checked = stPos === 'right';
+  if(rLeft)  rLeft.checked  = stPos === 'left';
   hjSetVal('stCoverTitle',    c.stCoverTitle   || '');
   hjSetChecked('stShowTitle', !!c.stShowTitle);
   hjSetChecked('stRotEnabled',!!c.stRotEnabled);
@@ -11499,22 +11511,18 @@ function stPopulatePlaylists(){
     known.push({ slug, title: title || slug });
   }
 
-  // 1. albumsData aus dem Admin (echte Supabase-Titel)
+  // albumsData aus dem Admin (echte Supabase-Titel) — nur diese, keine doppelten Keys
   if(typeof albumsData !== 'undefined' && albumsData.length){
     albumsData.forEach(al => addEntry(al.slug, al.title));
+  } else {
+    // Nur wenn albumsData noch nicht geladen: Fallback-Titel
+    const STD_TITLES = {
+      'top50':'Top 50','grad30':'30° Grad','stories30':'Stories 30',
+      'grosseLiebe':'Große Liebe','poesie':'Poesie',
+      'buriedDiamonds':'Buried Diamonds','top100':'Top 100',
+    };
+    Object.entries(STD_TITLES).forEach(([slug,title]) => addEntry(slug, title));
   }
-
-  // 2. Standard-Album-Keys mit echten Titeln als Fallback
-  const STD_TITLES = {
-    'top50':          'Top 50',
-    'grad30':         'Grad 30',
-    'stories30':      'Stories 30',
-    'grosseLiebe':    'Große Liebe',
-    'poesie':         'Poesie',
-    'buriedDiamonds': 'Buried Diamonds',
-    'top100':         'Top 100',
-  };
-  Object.entries(STD_TITLES).forEach(([slug,title]) => addEntry(slug, title));
 
   known.sort((a,b) => a.title.localeCompare(b.title, 'de'));
   known.forEach(pl => {
@@ -11550,7 +11558,9 @@ async function saveSilbertablettTile(){
   const cell = row.cells[0];
   markHomeAction();
   cell.stBgColor      = (document.getElementById('stBgColor')||{}).value || '#000000';
-  cell.stCoverPos     = (document.getElementById('stCoverPos')||{}).value || 'right';
+  // Cover-Position aus Radio-Buttons lesen
+  const rChecked = document.querySelector('input[name="stCoverPos"]:checked');
+  cell.stCoverPos = rChecked ? rChecked.value : 'right';
   cell.stCoverTitle   = (document.getElementById('stCoverTitle')||{}).value.trim() || '';
   cell.stShowTitle    = !!(document.getElementById('stShowTitle')||{}).checked;
   cell.stRotEnabled   = !!(document.getElementById('stRotEnabled')||{}).checked;
@@ -12473,10 +12483,14 @@ async function restoreSnapshot(){
     <!-- Layout -->
     <div style="margin-bottom:14px">
       <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Cover-Position</div>
-      <select id="stCoverPos" style="padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
-        <option value="right">Diashow links · Cover rechts</option>
-        <option value="left">Cover links · Diashow rechts</option>
-      </select>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;cursor:pointer;font-size:13px;color:#ccc">
+          <input type="radio" name="stCoverPos" id="stCoverPosRight" value="right" style="accent-color:#f1ecdf"> Diashow links · Cover rechts
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;cursor:pointer;font-size:13px;color:#ccc">
+          <input type="radio" name="stCoverPos" id="stCoverPosLeft" value="left" style="accent-color:#f1ecdf"> Cover links · Diashow rechts
+        </label>
+      </div>
     </div>
 
     <!-- Hintergrundfarbe -->
