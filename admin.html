@@ -596,8 +596,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-grid.layout-2x2half{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .he-cell.cell-2x1half{aspect-ratio:2/1;width:100%}
 /* Silbertablett: zwei 1:1-Quadrate nebeneinander */
-.he-row-grid.layout-silbertablett{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.he-cell.cell-st-square{aspect-ratio:1/1;width:100%;position:relative;overflow:hidden}
+.he-row-grid.layout-silbertablett{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0}
+.he-row-grid.layout-silbertablett .he-cell.cell-st-square{aspect-ratio:1/1;width:100%;position:relative;overflow:hidden;min-height:0}
 
 /* 2:1 halb + 2× 1:1 — left variant (default) [2:1][1:1][1:1] */
 .he-row-grid.layout-2x1plus2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;align-items:stretch}
@@ -9783,8 +9783,9 @@ function buildCells(row, grid){
   } else if(t0 === 'silbertablett'){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
     grid.classList.add('layout-silbertablett');
-    const stLeft  = cell.stCoverPos === 'left' ? buildSilbertablettAdminRight(row, editing) : buildSilbertablettAdminLeft(row, editing);
-    const stRight = cell.stCoverPos === 'left' ? buildSilbertablettAdminLeft(row, editing)  : buildSilbertablettAdminRight(row, editing);
+    const _stCell = c[0];
+    const stLeft  = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminRight(row, editing) : buildSilbertablettAdminLeft(row, editing);
+    const stRight = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminLeft(row, editing)  : buildSilbertablettAdminRight(row, editing);
     stLeft.className  = stLeft.className.replace('cell-2x1half','cell-st-square');
     stRight.className = stRight.className.replace('cell-2x1half','cell-st-square');
     grid.appendChild(stLeft);
@@ -11497,45 +11498,32 @@ function stUpdateColorPreview(){
   if(prev) prev.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
 }
 
+function stOnPlaylistSelect(val){
+  const inp = document.getElementById('stPlaylistSlug');
+  if(inp) inp.value = val;
+}
+
 function stPopulatePlaylists(){
   const sel = document.getElementById('stPlaylistSlugSel');
   if(!sel) return;
   const currentVal = (document.getElementById('stPlaylistSlug')||{}).value || '';
-  sel.innerHTML = '<option value="">— bitte wählen —</option>';
+  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
 
-  const known = [];
-  const seen = new Set();
-  function addEntry(slug, title){
-    if(!slug || seen.has(slug)) return;
-    seen.add(slug);
-    known.push({ slug, title: title || slug });
-  }
-
-  // albumsData aus dem Admin (echte Supabase-Titel) — nur diese, keine doppelten Keys
+  // Priorität: albumsData (echte Supabase-Daten, laden falls nötig)
   if(typeof albumsData !== 'undefined' && albumsData.length){
-    albumsData.forEach(al => addEntry(al.slug, al.title));
+    const sorted = [...albumsData].sort((a,b)=>(a.title||'').localeCompare(b.title||'','de'));
+    sorted.forEach(al => {
+      const opt = document.createElement('option');
+      opt.value = al.slug;
+      opt.textContent = al.title || al.slug;
+      opt.selected = al.slug === currentVal;
+      sel.appendChild(opt);
+    });
   } else {
-    // Nur wenn albumsData noch nicht geladen: Fallback-Titel
-    const STD_TITLES = {
-      'top50':'Top 50','grad30':'30° Grad','stories30':'Stories 30',
-      'grosseLiebe':'Große Liebe','poesie':'Poesie',
-      'buriedDiamonds':'Buried Diamonds','top100':'Top 100',
-    };
-    Object.entries(STD_TITLES).forEach(([slug,title]) => addEntry(slug, title));
-  }
-
-  known.sort((a,b) => a.title.localeCompare(b.title, 'de'));
-  known.forEach(pl => {
-    const opt = document.createElement('option');
-    opt.value = pl.slug;
-    opt.textContent = pl.title;
-    opt.selected = pl.slug === currentVal;
-    sel.appendChild(opt);
-  });
-
-  // Falls albumsData noch leer: lazy nachladen
-  if(typeof albumsData !== 'undefined' && !albumsData.length){
-    loadPlaylists().then(() => stPopulatePlaylists()).catch(()=>{});
+    // Noch nicht geladen: nachladen und dann nochmal aufrufen
+    if(typeof loadPlaylists === 'function'){
+      loadPlaylists().then(() => stPopulatePlaylists()).catch(()=>{});
+    }
   }
 }
 
@@ -12476,8 +12464,8 @@ async function restoreSnapshot(){
     <!-- Playlist -->
     <div style="margin-bottom:14px">
       <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Playlist / Album</div>
-      <select id="stPlaylistSlugSel" style="width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px" onchange="document.getElementById('stPlaylistSlug').value=this.value"></select>
-      <input id="stPlaylistSlug" placeholder="oder Slug manuell eingeben…" style="width:100%;margin-top:6px;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:13px">
+      <select id="stPlaylistSlugSel" style="width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px" onchange="stOnPlaylistSelect(this.value)"></select>
+      <input id="stPlaylistSlug" type="hidden" value="">
     </div>
 
     <!-- Layout -->
