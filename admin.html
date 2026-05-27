@@ -11519,8 +11519,12 @@ function openSilbertablettModal(rowId){
   const fileInput = document.getElementById('stCoverFileInput');
   if(fileInput) fileInput.value = '';
 
+  // Restore upload mode (standard / vinyl) — sets frame shape
+  const savedMode = c.stUploadMode || 'standard';
+  stSetUploadMode(savedMode);
+
+  // Restore image preview
   if(c.stImageUrl){
-    // Had a custom uploaded cover → show upload tab with preview
     stSwitchSource('upload');
     const img = document.getElementById('stCoverPreviewImg');
     if(img){ img.src = c.stImageUrl; img.style.display='block'; }
@@ -11608,6 +11612,10 @@ function stWizBack(){
 
 function stStep1Valid(){
   if(stSourceMode === 'upload'){
+    if(stUploadMode === 'vinyl'){
+      // Vinyl mode: label is optional (can use blank center), always valid if mode selected
+      return true;
+    }
     const img = document.getElementById('stCoverPreviewImg');
     return img && img.src && img.style.display !== 'none';
   } else {
@@ -11646,6 +11654,9 @@ function stOnCoverFile(input){
   const clrBtn = document.getElementById('stClearUploadBtn');
   if(clrBtn) clrBtn.style.display='';
   stWysSetSrc(stCoverLocalUrl);
+  // Also update vinyl WYSIWYG label preview
+  const vinylLabel = document.getElementById('stVinylWysLabelImg');
+  if(vinylLabel) vinylLabel.src = stCoverLocalUrl;
 }
 
 function stClearCoverFile(){
@@ -11719,9 +11730,12 @@ function stUpdateColorPreview(){
 }
 
 function stWysUpdateBg(){
-  const bg = document.getElementById('stWysBg');
   const val = (document.getElementById('stBgColor')||{}).value || '#000000';
-  if(bg) bg.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+  const color = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+  const bg = document.getElementById('stWysBg');
+  if(bg) bg.style.background = color;
+  const vinylStage = document.getElementById('stVinylWysStage');
+  if(vinylStage) vinylStage.style.background = color;
 }
 
 async function stTryEyedropper(){
@@ -11776,6 +11790,7 @@ function stWysApply(){
 }
 
 function stWysInit(){
+  stWysShowCorrectBlock();
   const src = stWysGetSrc();
   stWysSetSrc(src);
   const bg = document.getElementById('stWysBg');
@@ -11977,6 +11992,45 @@ function stAddFromDropdown(sel){
 }
 
 
+/* ── Vinyl Mode State ── */
+let stUploadMode = 'standard'; // 'standard' | 'vinyl'
+
+function stCheckNextBtn(){
+  const next = document.getElementById('stBtnNext');
+  if(!next) return;
+  next.disabled = (stCurrentStep === 1 && !stStep1Valid());
+}
+
+function stSetUploadMode(mode){
+  stUploadMode = mode;
+  document.getElementById('stModeStd').classList.toggle('active', mode==='standard');
+  document.getElementById('stModeVinyl').classList.toggle('active', mode==='vinyl');
+  // Toggle round frame shape
+  const frame = document.getElementById('stUploadFrame');
+  if(frame) frame.classList.toggle('vinyl-mode', mode==='vinyl');
+  const hint = document.getElementById('stUploadHint');
+  if(hint) hint.textContent = mode==='vinyl' ? 'Rundes PNG hochladen' : 'PNG · JPG · WebP';
+  stWysShowCorrectBlock();
+  stCheckNextBtn();
+}
+
+function stWysShowCorrectBlock(){
+  const stdBlock   = document.getElementById('stWysStandardBlock');
+  const vinylBlock = document.getElementById('stWysVinylBlock');
+  if(!stdBlock || !vinylBlock) return;
+  const isVinyl = stUploadMode === 'vinyl';
+  stdBlock.style.display   = isVinyl ? 'none' : '';
+  vinylBlock.style.display = isVinyl ? ''     : 'none';
+  if(isVinyl){
+    const src = stWysGetSrc();
+    const labelImg = document.getElementById('stVinylWysLabelImg');
+    if(labelImg) labelImg.src = src || '';
+    const stage = document.getElementById('stVinylWysStage');
+    const val = (document.getElementById('stBgColor')||{}).value || '#000000';
+    if(stage) stage.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+  }
+}
+
 /* ── Save ── */
 async function saveSilbertablettTile(){
   const row = rowById(stModalRowId);
@@ -11993,6 +12047,9 @@ async function saveSilbertablettTile(){
   cell.stRotEnabled   = false;
   cell.stRotDir       = 'cw';
   cell.stRotSpeed     = 'slow';
+
+  // Vinyl mode
+  cell.stUploadMode   = stUploadMode;
 
   // WYS placement
   cell.stCoverX   = stWys.x;
@@ -13009,6 +13066,51 @@ async function restoreSnapshot(){
 .st-picker-add{background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0}
 .st-picker-all-dropdown{width:100%;margin-top:6px;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px;cursor:pointer}
 .st-album-load-btn{padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer}
+
+/* ── Vinyl Shape Toggle ── */
+.st-mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.st-mode-btn{padding:10px 12px;border-radius:10px;background:#2a2a2a;border:2px solid #444;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:border-color .15s,color .15s,background .15s}
+.st-mode-btn.active{border-color:#85ACC9;color:#cfe5f5;background:rgba(133,172,201,.08)}
+
+/* Upload frame: rund im Vinyl-Modus */
+.st-cover-frame.vinyl-mode{border-radius:50%}
+.st-cover-frame.vinyl-mode img{border-radius:50%}
+
+/* ── Vinyl WYSIWYG Preview in Step 2 ── */
+.st-vinyl-wys-stage{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:10px;
+  overflow:hidden;
+  background:#111;
+  margin-bottom:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.st-vinyl-wys-deck{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;display:block;
+  pointer-events:none;
+}
+/* Label zone: weiße Fläche des Plattenspielers.
+   Gemessen an der Grafik: Mittelpunkt bei ~50% x / ~46.5% y,
+   Durchmesser ca. 38.5% der Bildbreite. */
+.st-vinyl-wys-label{
+  position:absolute;
+  left:50%; top:46.5%;
+  transform:translate(-50%,-50%);
+  width:38.5%; padding-bottom:38.5%;
+  border-radius:50%;
+  overflow:hidden;
+  pointer-events:none;
+}
+.st-vinyl-wys-label img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  border-radius:50%;
+}
 </style>
 
 <div id="stWizard">
@@ -13038,17 +13140,27 @@ async function restoreSnapshot(){
 
         <!-- Upload Panel -->
         <div class="st-source-panel active" id="stSrcUpload">
+
+          <!-- Upload Frame — quadratisch oder rund je nach stUploadMode -->
           <div class="st-cover-frame" id="stUploadFrame" onclick="document.getElementById('stCoverFileInput').click()">
             <img id="stCoverPreviewImg" src="" alt="" style="display:none">
             <div class="st-cover-placeholder" id="stUploadPlaceholder">
               <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-              <span>PNG · JPG · WebP</span>
+              <span id="stUploadHint">PNG · JPG · WebP</span>
             </div>
             <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
           </div>
-          <div style="text-align:center;margin-bottom:8px">
+          <div style="text-align:center;margin-bottom:12px">
             <button id="stClearUploadBtn" onclick="stClearCoverFile()" style="display:none;background:none;border:none;color:rgba(133,172,201,.45);font-size:11px;cursor:pointer;text-decoration:underline">× Bild entfernen</button>
           </div>
+
+          <!-- Shape Toggle: Quadratisch | Rund (Vinyl) -->
+          <div style="font-size:10px;color:rgba(133,172,201,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Motiv-Form</div>
+          <div class="st-mode-toggle">
+            <div class="st-mode-btn active" id="stModeStd" onclick="stSetUploadMode('standard')">◻ Quadratisch</div>
+            <div class="st-mode-btn" id="stModeVinyl" onclick="stSetUploadMode('vinyl')">◎ Rund · Vinyl</div>
+          </div>
+
         </div>
 
         <!-- Album Panel -->
@@ -13093,30 +13205,44 @@ async function restoreSnapshot(){
           <option value="4">4 Sekunden</option>
         </select>
 
-        <!-- WYSIWYG Cover Tile -->
-        <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Cover-Platzierung</div>
-        <div style="display:flex;align-items:center;margin-bottom:8px;gap:8px">
-          <label class="st-wys-edit-toggle">
-            <input type="checkbox" id="stEditModeChk" onchange="stWysToggleEdit(this.checked)">
-            <span>Frei positionieren &amp; skalieren</span>
-          </label>
-          <button class="st-wys-reset" onclick="stWysReset()">Zurücksetzen</button>
-        </div>
-        <!-- The WYSIWYG stage — square representing the cover tile -->
-        <div class="st-wys-outer" id="stWysStage">
-          <div class="st-wys-bg" id="stWysBg">
-            <!-- cover image layer -->
-            <div class="st-wys-img" id="stWysImg">
-              <img id="stWysImgEl" src="" alt="" draggable="false">
+        <!-- WYSIWYG Cover Tile — Standard -->
+        <div id="stWysStandardBlock">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Cover-Platzierung</div>
+          <div style="display:flex;align-items:center;margin-bottom:8px;gap:8px">
+            <label class="st-wys-edit-toggle">
+              <input type="checkbox" id="stEditModeChk" onchange="stWysToggleEdit(this.checked)">
+              <span>Frei positionieren &amp; skalieren</span>
+            </label>
+            <button class="st-wys-reset" onclick="stWysReset()">Zurücksetzen</button>
+          </div>
+          <div class="st-wys-outer" id="stWysStage">
+            <div class="st-wys-bg" id="stWysBg">
+              <div class="st-wys-img" id="stWysImg">
+                <img id="stWysImgEl" src="" alt="" draggable="false">
+              </div>
+            </div>
+            <div class="st-wys-sel" id="stWysSel" style="display:none">
+              <div class="st-wys-handle-rot" id="stWysRotHandle">↻</div>
+              <div class="st-wys-handle-scale" id="stWysScaleHandle"></div>
             </div>
           </div>
-          <!-- drag/resize/rotate handle (only visible in edit mode) -->
-          <div class="st-wys-sel" id="stWysSel" style="display:none">
-            <div class="st-wys-handle-rot" id="stWysRotHandle">↻</div>
-            <div class="st-wys-handle-scale" id="stWysScaleHandle"></div>
-          </div>
+          <div style="font-size:10px;color:rgba(133,172,201,.32);line-height:1.45;margin-bottom:6px" id="stWysHint">Vorschau der Cover-Kachel. Aktiviere „Frei positionieren", um das Cover zu verschieben, zu skalieren und zu drehen — auch über die Kachelgrenzen hinaus.</div>
         </div>
-        <div style="font-size:10px;color:rgba(133,172,201,.32);line-height:1.45;margin-bottom:6px" id="stWysHint">Vorschau der Cover-Kachel. Aktiviere „Frei positionieren", um das Cover zu verschieben, zu skalieren und zu drehen — auch über die Kachelgrenzen hinaus.</div>
+
+        <!-- WYSIWYG Vinyl Preview — wird nur im Vinyl-Modus angezeigt -->
+        <div id="stWysVinylBlock" style="display:none">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Vinyl-Vorschau</div>
+          <div class="st-vinyl-wys-stage" id="stVinylWysStage">
+            <!-- Plattenspieler-Bild füllt die Kachel -->
+            <img class="st-vinyl-wys-deck" src="https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg" alt="" onerror="this.style.opacity='.2'">
+            <!-- Label-Kreis: positioniert über der weißen Fläche, zeigt das Motiv -->
+            <div class="st-vinyl-wys-label" id="stVinylWysLabel">
+              <img id="stVinylWysLabelImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">
+            </div>
+          </div>
+          <div style="font-size:10px;color:rgba(133,172,201,.28);line-height:1.5;margin-bottom:6px;text-align:center">Vorschau: Dein Motiv erscheint als Plattenlabel und dreht sich beim Abspielen mit 33⅓ RPM.</div>
+        </div>
+
       </div><!-- /stPanel2 -->
 
       <!-- ── SCHRITT 3: Songs ── -->
