@@ -162,9 +162,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-slide-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .st-slide-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
 .st-cover-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
-.st-cover-bg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-.st-cover-img{width:clamp(183px,57%,288px);height:clamp(183px,57%,288px);border-radius:6px;object-fit:cover;display:block;transform-origin:50% 50%}
-.st-cover-title{color:#fff;font-size:clamp(9px,1.8vw,13px);text-align:center;opacity:.8;padding:0 8px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-cover-bg{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
+.st-cover-img-wys{border-radius:3px}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.panorama-4x1 img{aspect-ratio:4/1}
@@ -6202,22 +6201,22 @@ function buildSlideshowEl(cell){
 }
 
 
-/* ── Silbertablett: rotierendes Cover + Album-Diashow — st-v20260526a ─────── */
+/* ── Silbertablett: Cover + Album-Diashow — st-v20260527a ─────── */
 function buildSilbertablettEl(cell){
   cell = cell || {};
   const bgColor        = cell.stBgColor      || '#000000';
   const coverPos       = cell.stCoverPos     || 'right';
-  const coverTitle     = cell.stCoverTitle   || '';
-  const showTitle      = cell.stShowTitle    === true || cell.stShowTitle === 'true';
-  const rotEnabled     = cell.stRotEnabled   === true || cell.stRotEnabled === 'true';
-  const rotDir         = cell.stRotDir       || 'cw';
-  const rotSpeed       = cell.stRotSpeed     || 'slow';
   const ssSpeed        = cell.stSsSpeed      || 'mid';
   const ssPlaylistSlug = cell.stPlaylistSlug || '';
   const staticImgUrl   = cell.stImageUrl     || cell.imageUrl || '';
 
-  const ROT_SECS = { slow:60, mid:30, fast:30 }; // fast=mid als Fallback
-  const SS_MS    = { slow:8000, mid:4000, fast:2000 };
+  // WYS cover placement
+  const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
+  const coverY   = cell.stCoverY   !== undefined ? cell.stCoverY   : 50;
+  const coverSz  = cell.stCoverSz  !== undefined ? cell.stCoverSz  : 57;
+  const coverRot = cell.stCoverRot !== undefined ? cell.stCoverRot : 0;
+
+  const SS_MS = { slow:8000, mid:4000, fast:2000 };
 
   function buildSlides(){
     // Custom Songs haben Vorrang (vom Admin manuell zusammengestellt)
@@ -6320,35 +6319,30 @@ function buildSilbertablettEl(cell){
 
   const coverBg = document.createElement('div');
   coverBg.className = 'st-cover-bg';
-
+  // WYS placement: position cover image using stored x/y/size/rot
   const coverImgEl = document.createElement('img');
-  coverImgEl.className = 'st-cover-img';
-  coverImgEl.alt = coverTitle||'';
+  coverImgEl.className = 'st-cover-img-wys';
+  coverImgEl.alt = '';
   const initCoverSrc = staticImgUrl || (slides.length ? slides[0].coverUrl : '');
   if(initCoverSrc) coverImgEl.src = initCoverSrc;
+  // Apply WYS transform
+  coverImgEl.style.cssText = [
+    'position:absolute',
+    'width:'+coverSz+'%',
+    'height:'+coverSz+'%',
+    'left:calc('+coverX+'% - '+coverSz/2+'%)',
+    'top:calc('+coverY+'% - '+coverSz/2+'%)',
+    'transform:rotate('+coverRot+'deg)',
+    'transform-origin:50% 50%',
+    'object-fit:cover',
+    'display:block',
+    'border-radius:3px',
+    'pointer-events:none',
+    'will-change:transform'
+  ].join(';');
+  coverImgEl.onerror = ()=>{ coverImgEl.style.opacity='.2'; };
   coverBg.appendChild(coverImgEl);
-
-  if(showTitle && coverTitle){
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'st-cover-title';
-    titleDiv.textContent = coverTitle;
-    coverBg.appendChild(titleDiv);
-  }
   coverTile.appendChild(coverBg);
-
-  let rotAngle = 0, rotAnimId = null, rotLastTs = null;
-  const rotMult = rotDir === 'ccw' ? -1 : 1;
-  const rotSec  = ROT_SECS[rotSpeed] || ROT_SECS.slow;
-
-  function rotStep(ts){
-    if(rotLastTs !== null){ rotAngle += rotMult * ((ts-rotLastTs)/1000) * (360/rotSec); }
-    rotLastTs = ts;
-    coverImgEl.style.transform = 'rotate('+rotAngle.toFixed(2)+'deg)';
-    rotAnimId = requestAnimationFrame(rotStep);
-  }
-  function startRot(){ if(rotAnimId) cancelAnimationFrame(rotAnimId); rotLastTs=null; rotAnimId=requestAnimationFrame(rotStep); }
-
-  if(rotEnabled) startRot();
 
   let stCoverCurrentMp3 = null;
   function getCoverSong(){

@@ -10238,7 +10238,8 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells[0] = {...row.cells[0], ...old0, type:'silbertablett',
       stBgColor:'#000000', stCoverPos:'right', stCoverTitle:'',
       stShowTitle:false, stRotEnabled:false, stRotDir:'cw',
-      stRotSpeed:'slow', stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:''
+      stRotSpeed:'slow', stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:'',
+      stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0
     };
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
 
@@ -10404,26 +10405,39 @@ function buildSilbertablettAdminRight(row, editing){
     if(al && al.cover_url) coverSrc = al.cover_url;
   }
 
+  // Cover mit WYS-Platzierung (oder zentriert als Standard)
+  const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
+  const coverY   = cell.stCoverY   !== undefined ? cell.stCoverY   : 50;
+  const coverSz  = cell.stCoverSz  !== undefined ? cell.stCoverSz  : 57;
+  const coverRot = cell.stCoverRot !== undefined ? cell.stCoverRot : 0;
+
   if(coverSrc){
+    // WYS image layer — position as percentages relative to tile
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'position:absolute;transform-origin:50% 50%;pointer-events:none';
     const img = document.createElement('img');
     img.src = coverSrc;
-    img.alt = cell.stCoverTitle || '';
-    img.style.cssText = 'width:35%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:3px';
-    if(cell.stRotEnabled) img.style.animation = 'stAdminSpin ' + ({slow:16,mid:8}[cell.stRotSpeed]||16) + 's linear infinite';
+    img.alt = '';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:3px';
     img.onerror = () => { img.style.opacity='.2'; };
-    el.appendChild(img);
+    imgWrap.appendChild(img);
+    // Apply transform after append so offsetWidth is available via % of parent
+    // Use CSS % positioning trick
+    const szPct = coverSz + '%';
+    imgWrap.style.width  = szPct;
+    imgWrap.style.height = szPct;
+    imgWrap.style.left   = 'calc(' + coverX + '% - ' + coverSz/2 + '%)';
+    imgWrap.style.top    = 'calc(' + coverY + '% - ' + coverSz/2 + '%)';
+    imgWrap.style.transform = 'rotate('+coverRot+'deg)';
+    el.style.alignItems = '';
+    el.style.justifyContent = '';
+    el.style.flexDirection = '';
+    el.appendChild(imgWrap);
   } else {
     const ph = document.createElement('div');
-    ph.style.cssText = 'width:35%;aspect-ratio:1/1;border-radius:3px;background:rgba(133,172,201,.15);display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4';
+    ph.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4;color:rgba(133,172,201,.5)';
     ph.textContent = '◎';
     el.appendChild(ph);
-  }
-
-  if(cell.stShowTitle && cell.stCoverTitle){
-    const t = document.createElement('div');
-    t.style.cssText = 'color:#fff;font-size:10px;opacity:.65;text-align:center;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    t.textContent = cell.stCoverTitle;
-    el.appendChild(t);
   }
 
   // Badge
@@ -10444,9 +10458,11 @@ function clearSilbertablett(rowId){
   if(!row) return;
   markHomeAction();
   row.cells[0] = {...emptyCell(), type:'silbertablett',
-    stBgColor:'#000000', stCoverPos:'right', stCoverTitle:'',
-    stShowTitle:false, stRotEnabled:false, stRotDir:'cw',
-    stRotSpeed:'slow', stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:''};
+    stBgColor:'#000000', stCoverPos:'right',
+    stCoverTitle:'', stShowTitle:false,
+    stRotEnabled:false, stRotDir:'cw', stRotSpeed:'slow',
+    stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:'',
+    stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0};
   renderHomeEditor();
 }
 
@@ -11455,65 +11471,162 @@ function closeSlideshowModal(){
   htmSlideshowRowId = null;
 }
 
-/* ══ SILBERTABLETT MODAL ══════════════════════════════════════════════════ */
-let stModalRowId = null;
+/* ══ SILBERTABLETT WIZARD ══════════════════════════════════════════════════ */
+let stModalRowId  = null;
+let stCurrentStep = 1;
+let stCoverFile   = null;
+let stCoverLocalUrl = '';
+let stSourceMode  = 'upload'; // 'upload' | 'album'
+let stSongListData = [];
+// WYSIWYG cover placement state (% of tile size, 0..1 = 0%..100%)
+let stWys = { x:50, y:50, size:57, rot:0, editing:false };
 
+/* ── Open / Close ── */
 function openSilbertablettModal(rowId){
-  stModalRowId = rowId;
+  stModalRowId  = rowId;
+  stCurrentStep = 1;
   const row  = rowById(rowId);
   const cell = row && row.cells ? row.cells[0] : null;
   const c = cell || {};
 
-  hjSetVal('stBgColor',       c.stBgColor      || '#000000');
-  // Radio-Buttons für Cover-Position
-  const stPos = c.stCoverPos || 'right';
-  const rRight = document.getElementById('stCoverPosRight');
-  const rLeft  = document.getElementById('stCoverPosLeft');
-  if(rRight) rRight.checked = stPos === 'right';
-  if(rLeft)  rLeft.checked  = stPos === 'left';
-  hjSetVal('stCoverTitle',    c.stCoverTitle   || '');
-  hjSetChecked('stShowTitle', !!c.stShowTitle);
-  hjSetChecked('stRotEnabled',!!c.stRotEnabled);
-  hjSetVal('stRotDir',        c.stRotDir       || 'cw');
-  hjSetVal('stRotSpeed',      c.stRotSpeed     || 'slow');
-  hjSetVal('stSsSpeed',       c.stSsSpeed      || 'mid');
-  hjSetVal('stPlaylistSlug',  c.stPlaylistSlug || '');
+  // Restore persisted WYS state
+  stWys = {
+    x:    (c.stCoverX  !== undefined ? c.stCoverX  : 50),
+    y:    (c.stCoverY  !== undefined ? c.stCoverY  : 50),
+    size: (c.stCoverSz !== undefined ? c.stCoverSz : 57),
+    rot:  (c.stCoverRot!== undefined ? c.stCoverRot: 0),
+    editing: false
+  };
 
+  // Step 2 fields
+  const bgColor = c.stBgColor || '#000000';
+  const bgEl = document.getElementById('stBgColor');
+  if(bgEl) bgEl.value = bgColor;
   stUpdateColorPreview();
-  stPopulatePlaylists();
-  // Cover-Upload zurücksetzen
-  stClearCoverFile();
-  // Gespeichertes stImageUrl anzeigen
+
+  const ssEl = document.getElementById('stSsSpeed');
+  if(ssEl) ssEl.value = c.stSsSpeed || 'mid';
+
+  stSetCoverPos(c.stCoverPos || 'right');
+
+  // Step 1 — decide mode
+  stCoverFile = null; stCoverLocalUrl = '';
+  const fileInput = document.getElementById('stCoverFileInput');
+  if(fileInput) fileInput.value = '';
+
   if(c.stImageUrl){
+    // Had a custom uploaded cover → show upload tab with preview
+    stSwitchSource('upload');
     const img = document.getElementById('stCoverPreviewImg');
-    const lbl = document.getElementById('stUploadLabel');
-    const clr = document.getElementById('stClearCoverBtn');
     if(img){ img.src = c.stImageUrl; img.style.display='block'; }
-    if(lbl) lbl.textContent = 'Eigenes Cover gesetzt';
-    if(clr) clr.style.display='block';
+    const ph = document.getElementById('stUploadPlaceholder');
+    if(ph) ph.style.display='none';
+    const clrBtn = document.getElementById('stClearUploadBtn');
+    if(clrBtn) clrBtn.style.display='';
+  } else if(c.stPlaylistSlug){
+    stSwitchSource('album');
+    stPopulatePlaylists(c.stPlaylistSlug);
+    stOnAlbumSelect(c.stPlaylistSlug);
+  } else {
+    stSwitchSource('upload');
+    stResetUploadPreview();
   }
-  // Song-Liste zurücksetzen
+
+  // Step 3 — songs
   stSongListData = [];
+  if(c.stCustomSongs && c.stCustomSongs.length){
+    stSongListData = c.stCustomSongs.map(s=>({slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3||'',cover:s.coverUrl||s.cover||''}));
+  }
   stRenderSongList();
   const srch = document.getElementById('stSongSearch');
   if(srch) srch.value='';
   const picker = document.getElementById('stSongPicker');
   if(picker) picker.innerHTML='';
 
-  const modal = document.getElementById('silbertablettModal');
-  if(modal) modal.style.display = 'flex';
+  const wiz = document.getElementById('stWizard');
+  if(wiz) wiz.style.display = 'flex';
+  stGotoStep(1);
 }
 
 function closeSilbertablettModal(){
-  const modal = document.getElementById('silbertablettModal');
-  if(modal) modal.style.display = 'none';
+  const wiz = document.getElementById('stWizard');
+  if(wiz) wiz.style.display = 'none';
   stModalRowId = null;
 }
 
-/* ── Silbertablett: Cover-Upload ── */
-let stCoverFile = null;
-let stCoverLocalUrl = '';
-let stSongListData = []; // [{slug,title,artist,mp3,cover}]
+/* ── Wizard navigation ── */
+const ST_LABELS = ['Motiv / Quelle','Layout & Vorschau','Songauswahl'];
+
+function stGotoStep(n){
+  stCurrentStep = n;
+  [1,2,3].forEach(i=>{
+    const panel = document.getElementById('stPanel'+i);
+    if(panel) panel.classList.toggle('active', i===n);
+    const dot = document.getElementById('stDot'+i);
+    if(dot){
+      dot.className = 'st-step-dot ' + (i<n?'done':i===n?'active':'pending');
+    }
+    if(i<3){
+      const line = document.getElementById('stLine'+i);
+      if(line) line.classList.toggle('done', i<n);
+    }
+  });
+  const lbl = document.getElementById('stStepLabel');
+  if(lbl) lbl.textContent = ST_LABELS[n-1];
+
+  const back = document.getElementById('stBtnBack');
+  const next = document.getElementById('stBtnNext');
+  if(back) back.style.display = n>1 ? '' : 'none';
+  if(next){
+    next.textContent = n===3 ? 'Übernehmen ✓' : 'Weiter →';
+    next.disabled = false;
+  }
+
+  if(n===2) stWysInit();
+}
+
+function stWizNext(){
+  if(stCurrentStep === 1){
+    if(!stStep1Valid()){ toast('Bitte zuerst ein Cover wählen oder hochladen.','warn'); return; }
+    stGotoStep(2);
+  } else if(stCurrentStep === 2){
+    stGotoStep(3);
+  } else {
+    saveSilbertablettTile();
+  }
+}
+
+function stWizBack(){
+  if(stCurrentStep > 1) stGotoStep(stCurrentStep - 1);
+}
+
+function stStep1Valid(){
+  if(stSourceMode === 'upload'){
+    const img = document.getElementById('stCoverPreviewImg');
+    return img && img.src && img.style.display !== 'none';
+  } else {
+    return !!((document.getElementById('stPlaylistSlug')||{}).value);
+  }
+}
+
+/* ── Step 1: Source switching ── */
+function stSwitchSource(mode){
+  stSourceMode = mode;
+  document.getElementById('stTabUpload').classList.toggle('active', mode==='upload');
+  document.getElementById('stTabAlbum').classList.toggle('active', mode==='album');
+  document.getElementById('stSrcUpload').classList.toggle('active', mode==='upload');
+  document.getElementById('stSrcAlbum').classList.toggle('active', mode==='album');
+  if(mode==='album') stPopulatePlaylists((document.getElementById('stPlaylistSlug')||{}).value||'');
+}
+
+function stResetUploadPreview(){
+  const img = document.getElementById('stCoverPreviewImg');
+  if(img){ img.src=''; img.style.display='none'; }
+  const ph = document.getElementById('stUploadPlaceholder');
+  if(ph) ph.style.display='';
+  const clrBtn = document.getElementById('stClearUploadBtn');
+  if(clrBtn) clrBtn.style.display='none';
+}
 
 function stOnCoverFile(input){
   const file = input.files && input.files[0];
@@ -11521,116 +11634,77 @@ function stOnCoverFile(input){
   stCoverFile = file;
   stCoverLocalUrl = URL.createObjectURL(file);
   const img = document.getElementById('stCoverPreviewImg');
-  const lbl = document.getElementById('stUploadLabel');
-  const clr = document.getElementById('stClearCoverBtn');
-  if(img){ img.src = stCoverLocalUrl; img.style.display = 'block'; }
-  if(lbl) lbl.textContent = file.name;
-  if(clr) clr.style.display = 'block';
+  if(img){ img.src = stCoverLocalUrl; img.style.display='block'; }
+  const ph = document.getElementById('stUploadPlaceholder');
+  if(ph) ph.style.display='none';
+  const clrBtn = document.getElementById('stClearUploadBtn');
+  if(clrBtn) clrBtn.style.display='';
+  stWysSetSrc(stCoverLocalUrl);
 }
 
 function stClearCoverFile(){
   stCoverFile = null; stCoverLocalUrl = '';
   const input = document.getElementById('stCoverFileInput');
-  if(input) input.value = '';
-  const img = document.getElementById('stCoverPreviewImg');
-  const lbl = document.getElementById('stUploadLabel');
-  const clr = document.getElementById('stClearCoverBtn');
-  if(img){ img.src = ''; img.style.display = 'none'; }
-  if(lbl) lbl.textContent = 'Bild hochladen (quadratisch) — oder Album-Cover verwenden';
-  if(clr) clr.style.display = 'none';
+  if(input) input.value='';
+  stResetUploadPreview();
+  stWysSetSrc('');
 }
 
-/* ── Song-Liste aus Album laden ── */
-async function stLoadAlbumSongs(){
-  const slug = (document.getElementById('stPlaylistSlug')||{}).value || '';
-  const listEl = document.getElementById('stSongList');
-  if(!slug){ if(listEl) listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Bitte zuerst ein Album wählen</div>'; return; }
-
-  if(listEl) listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Lädt…</div>';
-
-  // Tracks aus albumsData
-  const al = (typeof albumsData !== 'undefined') ? albumsData.find(a=>a.slug===slug) : null;
-  let tracks = al ? al.tracks : [];
-  if(!tracks.length && typeof loadPlaylists === 'function'){
-    await loadPlaylists();
-    const al2 = (typeof albumsData !== 'undefined') ? albumsData.find(a=>a.slug===slug) : null;
-    tracks = al2 ? al2.tracks : [];
+function stOnAlbumSelect(val){
+  const inp = document.getElementById('stPlaylistSlug');
+  if(inp) inp.value = val;
+  // Show album cover in 1:1 preview
+  const previewImg = document.getElementById('stAlbumPreviewImg');
+  const ph = document.getElementById('stAlbumPlaceholder');
+  let coverSrc = '';
+  if(val && typeof albumsData !== 'undefined'){
+    const al = albumsData.find(a=>a.slug===val);
+    if(al && al.cover_url) coverSrc = al.cover_url;
   }
+  if(previewImg){
+    if(coverSrc){ previewImg.src=coverSrc; previewImg.style.display='block'; }
+    else { previewImg.src=''; previewImg.style.display='none'; }
+  }
+  if(ph) ph.style.display = coverSrc ? 'none' : '';
+  if(coverSrc) stWysSetSrc(coverSrc);
+}
 
-  // Songs aus songsData oder SUPABASE_SONGS
-  stSongListData = tracks
-    .sort((a,b)=>(a.position||0)-(b.position||0))
-    .map(t=>{
-      const s = (typeof songsData !== 'undefined' ? songsData : []).find(x=>x.slug===t.song_slug) || {slug:t.song_slug,title:t.song_slug,mp3_url:'',cover_url:''};
-      return { slug:s.slug, title:s.title||s.slug, artist:s.artist||'', mp3:s.mp3_url||'', cover:s.cover_url||'' };
+function stPopulatePlaylists(currentVal){
+  const sel = document.getElementById('stPlaylistSlugSel');
+  if(!sel) return;
+  currentVal = currentVal || (document.getElementById('stPlaylistSlug')||{}).value || '';
+  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
+  if(typeof albumsData !== 'undefined' && albumsData.length){
+    const sorted = [...albumsData].sort((a,b)=>(a.title||'').localeCompare(b.title||'','de'));
+    sorted.forEach(al=>{
+      const opt = document.createElement('option');
+      opt.value = al.slug;
+      opt.textContent = al.title || al.slug;
+      opt.selected = al.slug === currentVal;
+      sel.appendChild(opt);
     });
-
-  stRenderSongList();
-}
-
-function stRenderSongList(){
-  const listEl = document.getElementById('stSongList');
-  if(!listEl) return;
-  if(!stSongListData.length){
-    listEl.innerHTML = '<div style="font-size:12px;color:#555;text-align:center;padding:12px">Keine Songs gefunden</div>';
-    return;
+    if(currentVal){ stOnAlbumSelect(currentVal); }
+  } else {
+    if(typeof loadPlaylists === 'function'){
+      loadPlaylists().then(()=>stPopulatePlaylists(currentVal)).catch(()=>{});
+    }
   }
-  listEl.innerHTML = '';
-  stSongListData.forEach((s,i) => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:#2a2a2a;font-size:12px;color:#ccc';
-    const num = document.createElement('span');
-    num.style.cssText = 'color:#555;min-width:18px;text-align:right;font-size:11px';
-    num.textContent = String(i+1).padStart(2,'0');
-    const title = document.createElement('span');
-    title.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    title.textContent = s.title + (s.artist ? ' · ' + s.artist : '');
-    const del = document.createElement('button');
-    del.textContent = '×';
-    del.style.cssText = 'background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0';
-    del.onclick = () => { stSongListData.splice(i,1); stRenderSongList(); };
-    row.appendChild(num); row.appendChild(title); row.appendChild(del);
-    listEl.appendChild(row);
-  });
 }
 
-/* ── Song-Picker (Suche + Hinzufügen) ── */
-function stRenderSongPicker(){
-  const q = ((document.getElementById('stSongSearch')||{}).value||'').toLowerCase().trim();
-  const pickerEl = document.getElementById('stSongPicker');
-  if(!pickerEl) return;
-  if(!q){ pickerEl.innerHTML = ''; return; }
-  const source = typeof songsData !== 'undefined' ? songsData : [];
-  const matches = source.filter(s=>{
-    const t = ((s.title||'')+(s.artist||'')+(s.slug||'')).toLowerCase();
-    return t.includes(q);
-  }).slice(0,12);
-  pickerEl.innerHTML = '';
-  matches.forEach(s=>{
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-bottom:1px solid #222;font-size:12px;color:#ccc';
-    row.onmouseenter = ()=>row.style.background='#2a2a2a';
-    row.onmouseleave = ()=>row.style.background='';
-    const title = document.createElement('span');
-    title.style.flex = '1';
-    title.textContent = s.title + (s.artist ? ' · ' + s.artist : '');
-    const add = document.createElement('button');
-    add.textContent = '+ hinzufügen';
-    add.style.cssText = 'background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0';
-    add.onclick = ()=>{
-      const already = stSongListData.find(x=>x.slug===s.slug);
-      if(!already){
-        stSongListData.push({ slug:s.slug, title:s.title||s.slug, artist:s.artist||'', mp3:s.mp3_url||'', cover:s.cover_url||'' });
-        stRenderSongList();
-      }
-      document.getElementById('stSongSearch').value='';
-      pickerEl.innerHTML='';
-    };
-    row.appendChild(title); row.appendChild(add);
-    pickerEl.appendChild(row);
-  });
+/* ── Step 2: Layout controls ── */
+function stSetCoverPos(pos){
+  document.getElementById('stPosRight').classList.toggle('active', pos==='right');
+  document.getElementById('stPosLeft').classList.toggle('active', pos==='left');
+  document.getElementById('stPosRight').dataset.val = 'right';
+  document.getElementById('stPosLeft').dataset.val  = 'left';
+  // store on element for easy read
+  document.getElementById('stPosRight')._selected = pos==='right';
+  document.getElementById('stPosLeft')._selected  = pos==='left';
 }
 
+function stGetCoverPos(){
+  return document.getElementById('stPosLeft').classList.contains('active') ? 'left' : 'right';
+}
 
 function stUpdateColorPreview(){
   const val = (document.getElementById('stBgColor')||{}).value || '#000000';
@@ -11638,33 +11712,10 @@ function stUpdateColorPreview(){
   if(prev) prev.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
 }
 
-function stOnPlaylistSelect(val){
-  const inp = document.getElementById('stPlaylistSlug');
-  if(inp) inp.value = val;
-}
-
-function stPopulatePlaylists(){
-  const sel = document.getElementById('stPlaylistSlugSel');
-  if(!sel) return;
-  const currentVal = (document.getElementById('stPlaylistSlug')||{}).value || '';
-  sel.innerHTML = '<option value="">— Album / Playlist wählen —</option>';
-
-  // Priorität: albumsData (echte Supabase-Daten, laden falls nötig)
-  if(typeof albumsData !== 'undefined' && albumsData.length){
-    const sorted = [...albumsData].sort((a,b)=>(a.title||'').localeCompare(b.title||'','de'));
-    sorted.forEach(al => {
-      const opt = document.createElement('option');
-      opt.value = al.slug;
-      opt.textContent = al.title || al.slug;
-      opt.selected = al.slug === currentVal;
-      sel.appendChild(opt);
-    });
-  } else {
-    // Noch nicht geladen: nachladen und dann nochmal aufrufen
-    if(typeof loadPlaylists === 'function'){
-      loadPlaylists().then(() => stPopulatePlaylists()).catch(()=>{});
-    }
-  }
+function stWysUpdateBg(){
+  const bg = document.getElementById('stWysBg');
+  const val = (document.getElementById('stBgColor')||{}).value || '#000000';
+  if(bg) bg.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
 }
 
 async function stTryEyedropper(){
@@ -11673,56 +11724,285 @@ async function stTryEyedropper(){
       const e = new EyeDropper();
       const r = await e.open();
       const inp = document.getElementById('stBgColor');
-      if(inp){ inp.value = r.sRGBHex; stUpdateColorPreview(); }
+      if(inp){ inp.value = r.sRGBHex; stUpdateColorPreview(); stWysUpdateBg(); }
     }catch(e){}
+  } else { toast('Pipette nur in Chrome/Edge verfügbar','warn'); }
+}
+
+/* ── Step 2: WYSIWYG Cover Tile ── */
+function stWysGetSrc(){
+  if(stSourceMode==='upload'){
+    const img = document.getElementById('stCoverPreviewImg');
+    return (img && img.src && img.style.display!=='none') ? img.src : '';
   } else {
-    toast('Pipette nur in Chrome/Edge verfügbar','warn');
+    const aImg = document.getElementById('stAlbumPreviewImg');
+    return (aImg && aImg.src && aImg.style.display!=='none') ? aImg.src : '';
   }
 }
 
+function stWysSetSrc(src){
+  const el = document.getElementById('stWysImgEl');
+  if(el) el.src = src || '';
+}
+
+function stWysApply(){
+  const stage = document.getElementById('stWysStage');
+  const imgDiv = document.getElementById('stWysImg');
+  const sel = document.getElementById('stWysSel');
+  if(!stage || !imgDiv) return;
+  const W = stage.offsetWidth || 1;
+  const px = (stWys.x / 100) * W;
+  const py = (stWys.y / 100) * W;
+  const sz = (stWys.size / 100) * W;
+  const r  = stWys.rot;
+  imgDiv.style.width  = sz + 'px';
+  imgDiv.style.height = sz + 'px';
+  imgDiv.style.left   = (px - sz/2) + 'px';
+  imgDiv.style.top    = (py - sz/2) + 'px';
+  imgDiv.style.transform = 'rotate('+r+'deg)';
+  if(sel && stWys.editing){
+    sel.style.width  = sz + 'px';
+    sel.style.height = sz + 'px';
+    sel.style.left   = (px - sz/2) + 'px';
+    sel.style.top    = (py - sz/2) + 'px';
+    sel.style.transform = 'rotate('+r+'deg)';
+  }
+}
+
+function stWysInit(){
+  const src = stWysGetSrc();
+  stWysSetSrc(src);
+  const bg = document.getElementById('stWysBg');
+  const val = (document.getElementById('stBgColor')||{}).value || '#000000';
+  if(bg) bg.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+  // reset edit mode checkbox
+  const chk = document.getElementById('stEditModeChk');
+  if(chk) chk.checked = stWys.editing;
+  const sel = document.getElementById('stWysSel');
+  if(sel) sel.style.display = stWys.editing ? '' : 'none';
+  requestAnimationFrame(()=>{ stWysApply(); if(stWys.editing) stWysBindHandles(); });
+}
+
+function stWysToggleEdit(on){
+  stWys.editing = on;
+  const sel = document.getElementById('stWysSel');
+  if(sel) sel.style.display = on ? '' : 'none';
+  if(on){ stWysApply(); stWysBindHandles(); }
+}
+
+function stWysReset(){
+  stWys.x=50; stWys.y=50; stWys.size=57; stWys.rot=0;
+  stWysApply();
+}
+
+function stWysBindHandles(){
+  const stage = document.getElementById('stWysStage');
+  const sel   = document.getElementById('stWysSel');
+  const rotH  = document.getElementById('stWysRotHandle');
+  const scaleH= document.getElementById('stWysScaleHandle');
+  if(!stage||!sel||!rotH||!scaleH) return;
+
+  /* ── Drag (move) ── */
+  let dragStart = null;
+  function onDragStart(e){
+    if(e.target!==sel && !sel.contains(e.target)) return;
+    if(e.target===scaleH||e.target===rotH) return;
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    dragStart = { cx:stWys.x, cy:stWys.y, mx:pt.clientX, my:pt.clientY };
+  }
+  function onDragMove(e){
+    if(!dragStart) return;
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    const W = stage.offsetWidth;
+    stWys.x = dragStart.cx + ((pt.clientX-dragStart.mx)/W)*100;
+    stWys.y = dragStart.cy + ((pt.clientY-dragStart.my)/W)*100;
+    stWysApply();
+  }
+  function onDragEnd(){ dragStart=null; }
+  sel.addEventListener('mousedown', onDragStart);
+  sel.addEventListener('touchstart', onDragStart, {passive:false});
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('touchmove', onDragMove, {passive:false});
+  window.addEventListener('mouseup',  onDragEnd);
+  window.addEventListener('touchend', onDragEnd);
+
+  /* ── Scale (bottom-right handle) ── */
+  let scaleStart = null;
+  scaleH.addEventListener('mousedown', e=>{ e.preventDefault(); e.stopPropagation();
+    const pt=e; scaleStart={sz:stWys.sz||stWys.size,mx:pt.clientX,my:pt.clientY}; });
+  scaleH.addEventListener('touchstart', e=>{ e.preventDefault(); e.stopPropagation();
+    const pt=e.touches[0]; scaleStart={sz:stWys.sz||stWys.size,mx:pt.clientX,my:pt.clientY}; },{passive:false});
+  window.addEventListener('mousemove', e=>{
+    if(!scaleStart) return;
+    const W=stage.offsetWidth; const d=Math.hypot(e.clientX-scaleStart.mx,e.clientY-scaleStart.my);
+    const dir=((e.clientX-scaleStart.mx)+(e.clientY-scaleStart.my)>0)?1:-1;
+    stWys.size = Math.max(10, Math.min(200, scaleStart.sz + dir*(d/W)*100));
+    stWysApply();
+  });
+  window.addEventListener('touchmove', e=>{
+    if(!scaleStart) return; e.preventDefault();
+    const pt=e.touches[0]; const W=stage.offsetWidth;
+    const d=Math.hypot(pt.clientX-scaleStart.mx,pt.clientY-scaleStart.my);
+    const dir=((pt.clientX-scaleStart.mx)+(pt.clientY-scaleStart.my)>0)?1:-1;
+    stWys.size = Math.max(10, Math.min(200, scaleStart.sz + dir*(d/W)*100));
+    stWysApply();
+  },{passive:false});
+  window.addEventListener('mouseup',  ()=>{ scaleStart=null; });
+  window.addEventListener('touchend', ()=>{ scaleStart=null; });
+
+  /* ── Rotate (top-center handle) ── */
+  let rotStart = null;
+  function getAngle(e){
+    const r=stage.getBoundingClientRect();
+    const cx=r.left + (stWys.x/100)*r.width;
+    const cy=r.top  + (stWys.y/100)*r.width;
+    const pt=e.touches?e.touches[0]:e;
+    return Math.atan2(pt.clientY-cy, pt.clientX-cx) * 180/Math.PI + 90;
+  }
+  rotH.addEventListener('mousedown', e=>{ e.preventDefault(); e.stopPropagation(); rotStart={baseRot:stWys.rot,startAngle:getAngle(e)}; });
+  rotH.addEventListener('touchstart', e=>{ e.preventDefault(); e.stopPropagation(); rotStart={baseRot:stWys.rot,startAngle:getAngle(e)}; },{passive:false});
+  window.addEventListener('mousemove', e=>{ if(!rotStart) return; stWys.rot=rotStart.baseRot+(getAngle(e)-rotStart.startAngle); stWysApply(); });
+  window.addEventListener('touchmove', e=>{ if(!rotStart) return; e.preventDefault(); stWys.rot=rotStart.baseRot+(getAngle(e)-rotStart.startAngle); stWysApply(); },{passive:false});
+  window.addEventListener('mouseup', ()=>{ rotStart=null; });
+  window.addEventListener('touchend',()=>{ rotStart=null; });
+}
+
+/* ── Step 3: Song list & picker ── */
+async function stLoadAlbumSongs(){
+  const slug = (document.getElementById('stPlaylistSlug')||{}).value || '';
+  const listEl = document.getElementById('stSongList');
+  if(!slug){ if(listEl) listEl.innerHTML='<div style="font-size:12px;color:#555;text-align:center;padding:12px">Bitte zuerst ein Album wählen</div>'; return; }
+  if(listEl) listEl.innerHTML='<div style="font-size:12px;color:#555;text-align:center;padding:12px">Lädt…</div>';
+  const al = (typeof albumsData!=='undefined') ? albumsData.find(a=>a.slug===slug) : null;
+  let tracks = al ? al.tracks : [];
+  if(!tracks.length && typeof loadPlaylists==='function'){
+    await loadPlaylists();
+    const al2=(typeof albumsData!=='undefined')?albumsData.find(a=>a.slug===slug):null;
+    tracks=al2?al2.tracks:[];
+  }
+  stSongListData = tracks
+    .sort((a,b)=>(a.position||0)-(b.position||0))
+    .map(t=>{
+      const s=(typeof songsData!=='undefined'?songsData:[]).find(x=>x.slug===t.song_slug)||{slug:t.song_slug,title:t.song_slug,mp3_url:'',cover_url:''};
+      return {slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3_url||'',cover:s.cover_url||''};
+    });
+  stRenderSongList();
+}
+
+function stRenderSongList(){
+  const listEl = document.getElementById('stSongList');
+  if(!listEl) return;
+  if(!stSongListData.length){
+    listEl.innerHTML='<div style="font-size:12px;color:#555;text-align:center;padding:12px">Noch keine Songs — aus Album laden oder suchen</div>';
+    return;
+  }
+  listEl.innerHTML='';
+  stSongListData.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='st-song-row';
+    const num=document.createElement('span'); num.className='st-song-num';
+    num.textContent=String(i+1).padStart(2,'0');
+    const title=document.createElement('span'); title.className='st-song-title';
+    title.textContent=s.title+(s.artist?' · '+s.artist:'');
+    const del=document.createElement('button'); del.className='st-song-del';
+    del.textContent='×';
+    del.onclick=()=>{ stSongListData.splice(i,1); stRenderSongList(); };
+    row.appendChild(num); row.appendChild(title); row.appendChild(del);
+    listEl.appendChild(row);
+  });
+}
+
+function stRenderSongPicker(){
+  const q=((document.getElementById('stSongSearch')||{}).value||'').toLowerCase().trim();
+  const pickerEl=document.getElementById('stSongPicker');
+  if(!pickerEl) return;
+  if(!q){ pickerEl.innerHTML=''; return; }
+  const source=typeof songsData!=='undefined'?songsData:[];
+  const matches=source.filter(s=>{
+    const t=((s.title||'')+(s.artist||'')+(s.slug||'')).toLowerCase();
+    return t.includes(q);
+  }).slice(0,12);
+  pickerEl.innerHTML='';
+  matches.forEach(s=>{
+    const item=document.createElement('div'); item.className='st-picker-item';
+    const title=document.createElement('span'); title.style.flex='1';
+    title.textContent=s.title+(s.artist?' · '+s.artist:'');
+    const add=document.createElement('button'); add.className='st-picker-add';
+    add.textContent='+ hinzufügen';
+    add.onclick=()=>{
+      if(!stSongListData.find(x=>x.slug===s.slug)){
+        stSongListData.push({slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3_url||'',cover:s.cover_url||''});
+        stRenderSongList();
+      }
+      document.getElementById('stSongSearch').value='';
+      pickerEl.innerHTML='';
+    };
+    item.appendChild(title); item.appendChild(add);
+    pickerEl.appendChild(item);
+  });
+}
+
+/* ── Save ── */
 async function saveSilbertablettTile(){
   const row = rowById(stModalRowId);
   if(!row) return;
   const cell = row.cells[0];
   markHomeAction();
+
   cell.stBgColor      = (document.getElementById('stBgColor')||{}).value || '#000000';
-  // Cover-Position aus Radio-Buttons lesen
-  const rChecked = document.querySelector('input[name="stCoverPos"]:checked');
-  cell.stCoverPos = rChecked ? rChecked.value : 'right';
-  cell.stCoverTitle   = (document.getElementById('stCoverTitle')||{}).value.trim() || '';
-  cell.stShowTitle    = !!(document.getElementById('stShowTitle')||{}).checked;
-  cell.stRotEnabled   = !!(document.getElementById('stRotEnabled')||{}).checked;
-  cell.stRotDir       = (document.getElementById('stRotDir')||{}).value || 'cw';
-  cell.stRotSpeed     = (document.getElementById('stRotSpeed')||{}).value || 'slow';
+  cell.stCoverPos     = stGetCoverPos();
   cell.stSsSpeed      = (document.getElementById('stSsSpeed')||{}).value || 'mid';
-  // Playlist: entweder aus Dropdown oder manuellem Slug-Feld
-  const selVal = (document.getElementById('stPlaylistSlugSel')||{}).value;
-  const manVal = (document.getElementById('stPlaylistSlug')||{}).value.trim();
-  cell.stPlaylistSlug = selVal || manVal || '';
-  // Song-Liste speichern (überschreibt Album-Standard-Reihenfolge wenn befüllt)
-  if(stSongListData.length){
-    cell.stCustomSongs = stSongListData.map(s=>({slug:s.slug,title:s.title,artist:s.artist,mp3:s.mp3,coverUrl:s.cover}));
+  // Compat fields (no longer in UI but kept for existing data)
+  cell.stCoverTitle   = '';
+  cell.stShowTitle    = false;
+  cell.stRotEnabled   = false;
+  cell.stRotDir       = 'cw';
+  cell.stRotSpeed     = 'slow';
+
+  // WYS placement
+  cell.stCoverX   = stWys.x;
+  cell.stCoverY   = stWys.y;
+  cell.stCoverSz  = stWys.size;
+  cell.stCoverRot = stWys.rot;
+
+  // Playlist
+  if(stSourceMode==='album'){
+    const selVal=(document.getElementById('stPlaylistSlugSel')||{}).value;
+    cell.stPlaylistSlug = selVal || '';
+    // don't override imageUrl if no upload
   } else {
-    cell.stCustomSongs = [];
+    cell.stPlaylistSlug = '';
   }
-  // Cover-Upload zu S3 wenn nötig
+
+  // Songs
+  cell.stCustomSongs = stSongListData.length
+    ? stSongListData.map(s=>({slug:s.slug,title:s.title,artist:s.artist,mp3:s.mp3,coverUrl:s.cover}))
+    : [];
+
+  // Cover upload to S3
   if(stCoverFile){
     try{
-      const ext = (stCoverFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-      const s3Key = 'artwork/st-cover-' + Date.now() + '.' + ext;
+      const ext=(stCoverFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+      const s3Key='artwork/st-cover-'+Date.now()+'.'+ext;
       cell.stImageUrl = await uploadToS3(stCoverFile, s3Key, null);
-      stCoverFile = null;
-    } catch(e){
-      toast('Cover-Upload fehlgeschlagen: '+e.message,'err'); return;
+      stCoverFile=null;
+    }catch(e){ toast('Cover-Upload fehlgeschlagen: '+e.message,'err'); return; }
+  } else if(stSourceMode==='album'){
+    // Use album cover as the static image URL
+    const slug=cell.stPlaylistSlug;
+    if(slug && typeof albumsData!=='undefined'){
+      const al=albumsData.find(a=>a.slug===slug);
+      cell.stImageUrl = (al&&al.cover_url) ? al.cover_url : (cell.stImageUrl||'');
     }
   }
+
   renderHomeEditor();
   try{
     await saveHomeLayout();
     toast('Silbertablett gespeichert ✓','ok');
-  }catch(e){
-    toast('Fehler beim Speichern: '+e.message,'err');
-  }
+  }catch(e){ toast('Fehler beim Speichern: '+e.message,'err'); }
   closeSilbertablettModal();
 }
 
@@ -12613,119 +12893,228 @@ async function restoreSnapshot(){
 
 
 <deepl-input-controller translate="no"></deepl-input-controller>
-<!-- ══ SILBERTABLETT MODAL ══════════════════════════════════════════════════ -->
-<div id="silbertablettModal" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:20px">
-  <div style="background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px">
-    <div style="font-size:15px;font-weight:700;color:#f1ecdf;margin-bottom:20px;letter-spacing:.05em">◎ SILBERTABLETT</div>
+<!-- ══ SILBERTABLETT WIZARD ══════════════════════════════════════════════════ -->
+<style>
+/* ── Silbertablett Wizard ── */
+#stWizard{display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0}
+#stWizard .st-sheet{background:#1a1a1a;border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:92vh;display:flex;flex-direction:column}
+#stWizard .st-head{padding:18px 20px 0;flex-shrink:0}
+#stWizard .st-title{font-size:15px;font-weight:700;color:#f1ecdf;letter-spacing:.05em;margin-bottom:14px}
+/* Step indicators */
+#stWizard .st-steps{display:flex;align-items:center;gap:0;margin-bottom:16px}
+#stWizard .st-step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:background .2s,color .2s,border-color .2s}
+#stWizard .st-step-dot.done{background:#85ACC9;color:#06141F;border:2px solid #85ACC9}
+#stWizard .st-step-dot.active{background:#f1ecdf;color:#06141F;border:2px solid #f1ecdf}
+#stWizard .st-step-dot.pending{background:transparent;color:rgba(133,172,201,.4);border:2px solid rgba(133,172,201,.25)}
+#stWizard .st-step-line{flex:1;height:2px;background:rgba(133,172,201,.15);margin:0 4px}
+#stWizard .st-step-line.done{background:#85ACC9}
+#stWizard .st-step-label{font-size:10px;color:rgba(133,172,201,.4);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;text-align:center}
+/* Body / Steps */
+#stWizard .st-body{flex:1;overflow-y:auto;padding:0 20px 8px;-webkit-overflow-scrolling:touch}
+#stWizard .st-body::-webkit-scrollbar{display:none}
+#stWizard .st-step-panel{display:none}
+#stWizard .st-step-panel.active{display:block}
+/* Footer */
+#stWizard .st-foot{padding:12px 20px 20px;flex-shrink:0;display:flex;gap:10px;border-top:1px solid rgba(133,172,201,.1)}
+#stWizard .st-btn-back{padding:12px 18px;border-radius:10px;background:#2a2a2a;color:#888;font-size:14px;border:1px solid #444;cursor:pointer;flex-shrink:0}
+#stWizard .st-btn-next{flex:1;padding:12px;border-radius:10px;background:#f1ecdf;color:#1a1a1a;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:opacity .15s}
+#stWizard .st-btn-next:disabled{opacity:.35;cursor:not-allowed}
 
-    <!-- Playlist -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Playlist / Album</div>
-      <select id="stPlaylistSlugSel" style="width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px" onchange="stOnPlaylistSelect(this.value)"></select>
-      <input id="stPlaylistSlug" type="hidden" value="">
+/* Step 1 — Motiv */
+.st-source-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.st-source-tab{padding:10px 12px;border-radius:10px;background:#2a2a2a;border:2px solid #444;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:border-color .15s,color .15s,background .15s}
+.st-source-tab.active{border-color:#85ACC9;color:#cfe5f5;background:rgba(133,172,201,.08)}
+.st-source-panel{display:none}.st-source-panel.active{display:block}
+/* 1:1 preview frame */
+.st-cover-frame{width:100%;max-width:240px;aspect-ratio:1/1;margin:0 auto 16px;border-radius:10px;background:#111;border:2px dashed #444;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;cursor:pointer;transition:border-color .15s}
+.st-cover-frame:hover{border-color:#85ACC9}
+.st-cover-frame img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px}
+.st-cover-frame .st-cover-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(133,172,201,.4);font-size:12px;pointer-events:none}
+.st-cover-frame .st-cover-placeholder svg{width:32px;height:32px;stroke:rgba(133,172,201,.3);stroke-width:1.5;fill:none}
+
+/* Step 2 — WYSIWYG Cover Tile */
+.st-wys-outer{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:visible;background:#111;touch-action:none;user-select:none;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.st-wys-bg{position:absolute;inset:0;border-radius:10px;overflow:hidden}
+.st-wys-img{position:absolute;transform-origin:50% 50%;will-change:transform}
+.st-wys-img img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px;pointer-events:none;draggable:false}
+/* drag box overlay */
+.st-wys-sel{position:absolute;transform-origin:50% 50%;border:2px solid #85ACC9;border-radius:3px;cursor:move;touch-action:none}
+.st-wys-handle-scale{position:absolute;width:20px;height:20px;border-radius:50%;background:#85ACC9;border:2px solid #06141F;right:-10px;bottom:-10px;cursor:nwse-resize;touch-action:none;box-shadow:0 2px 8px rgba(0,0,0,.55)}
+.st-wys-handle-rot{position:absolute;width:20px;height:20px;border-radius:50%;background:#0B2A42;border:2px solid #85ACC9;color:#85ACC9;left:50%;top:-30px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:grab;touch-action:none;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+/* edit toggle */
+.st-wys-edit-toggle{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;user-select:none}
+.st-wys-edit-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#85ACC9;cursor:pointer}
+.st-wys-edit-toggle span{font-size:13px;color:#aaa}
+.st-wys-reset{font-size:11px;color:rgba(133,172,201,.45);cursor:pointer;border:none;background:none;padding:0;margin-left:auto;text-decoration:underline}
+.st-wys-reset:hover{color:#85ACC9}
+/* layout row */
+.st-layout-row{display:flex;gap:8px;margin-bottom:12px}
+.st-layout-opt{flex:1;padding:9px 10px;border-radius:9px;background:#2a2a2a;border:2px solid #444;color:#aaa;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:border-color .15s,color .15s}
+.st-layout-opt.active{border-color:#85ACC9;color:#cfe5f5}
+/* color row */
+.st-color-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.st-color-swatch{width:28px;height:28px;border-radius:6px;border:1px solid #555;flex-shrink:0}
+.st-color-input{width:100px;padding:7px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px;font-family:monospace}
+.st-color-pip{padding:7px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:12px;cursor:pointer}
+/* ss speed */
+.st-speed-sel{width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px;margin-bottom:14px}
+
+/* Step 3 — Songs */
+.st-song-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;margin-bottom:8px;border-radius:6px}
+.st-song-list::-webkit-scrollbar{display:none}
+.st-song-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:#2a2a2a;font-size:12px;color:#ccc}
+.st-song-num{color:#555;min-width:18px;text-align:right;font-size:11px}
+.st-song-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-song-del{background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0}
+.st-picker-wrap{margin-top:8px}
+.st-picker-input{width:100%;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px;margin-bottom:4px}
+.st-picker-results{max-height:150px;overflow-y:auto;border-radius:6px;background:#111}
+.st-picker-results::-webkit-scrollbar{display:none}
+.st-picker-item{display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-bottom:1px solid #222;font-size:12px;color:#ccc}
+.st-picker-item:hover{background:#2a2a2a}
+.st-picker-item:last-child{border-bottom:none}
+.st-picker-add{background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0}
+.st-album-load-btn{padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer}
+</style>
+
+<div id="stWizard">
+  <div class="st-sheet">
+    <!-- Header -->
+    <div class="st-head">
+      <div class="st-title">◎ SILBERTABLETT</div>
+      <div class="st-steps">
+        <div class="st-step-dot active" id="stDot1">1</div>
+        <div class="st-step-line" id="stLine1"></div>
+        <div class="st-step-dot pending" id="stDot2">2</div>
+        <div class="st-step-line" id="stLine2"></div>
+        <div class="st-step-dot pending" id="stDot3">3</div>
+      </div>
+      <div class="st-step-label" id="stStepLabel">Motiv / Quelle</div>
     </div>
 
-    <!-- Layout -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Cover-Position</div>
-      <div style="display:flex;gap:8px">
-        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;cursor:pointer;font-size:13px;color:#ccc">
-          <input type="radio" name="stCoverPos" id="stCoverPosRight" value="right" style="accent-color:#f1ecdf"> Diashow links · Cover rechts
-        </label>
-        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;cursor:pointer;font-size:13px;color:#ccc">
-          <input type="radio" name="stCoverPos" id="stCoverPosLeft" value="left" style="accent-color:#f1ecdf"> Cover links · Diashow rechts
-        </label>
-      </div>
-    </div>
+    <!-- Body -->
+    <div class="st-body">
 
-    <!-- Hintergrundfarbe -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Hintergrundfarbe</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="stColorPreview" style="width:28px;height:28px;border-radius:6px;background:#000;border:1px solid #555;flex-shrink:0"></div>
-        <input id="stBgColor" value="#000000" maxlength="7" style="width:100px;padding:7px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px;font-family:monospace" oninput="stUpdateColorPreview()">
-        <button onclick="stTryEyedropper()" style="padding:7px 12px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:12px;cursor:pointer">🎨 Pipette</button>
-      </div>
-    </div>
-
-    <!-- Titeltext -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Titeltext unter Cover</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <input type="checkbox" id="stShowTitle" style="width:16px;height:16px">
-        <label for="stShowTitle" style="font-size:13px;color:#ccc">Titeltext einblenden</label>
-      </div>
-      <input id="stCoverTitle" placeholder="z. B. Brave New Songs" style="width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:13px">
-    </div>
-
-    <!-- Cover-Rotation -->
-    <div style="margin-bottom:14px;padding:14px;background:#222;border-radius:10px">
-      <div style="font-size:11px;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em">Cover-Rotation</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <input type="checkbox" id="stRotEnabled" style="width:16px;height:16px">
-        <label for="stRotEnabled" style="font-size:13px;color:#ccc">Rotation aktivieren</label>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:11px;color:#666;margin-bottom:4px">Richtung</div>
-          <select id="stRotDir" style="width:100%;padding:7px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
-            <option value="cw">↻ Rechts (CW)</option>
-            <option value="ccw">↺ Links (CCW)</option>
-          </select>
+      <!-- ── SCHRITT 1: Motiv / Quelle ── -->
+      <div class="st-step-panel active" id="stPanel1">
+        <div class="st-source-tabs">
+          <div class="st-source-tab active" id="stTabUpload" onclick="stSwitchSource('upload')">⬆ Upload</div>
+          <div class="st-source-tab" id="stTabAlbum" onclick="stSwitchSource('album')">≡ Album</div>
         </div>
-        <div>
-          <div style="font-size:11px;color:#666;margin-bottom:4px">Geschwindigkeit</div>
-          <select id="stRotSpeed" style="width:100%;padding:7px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
-            <option value="slow">Langsam (60s)</option>
-            <option value="mid">Mittel (30s)</option>
-          </select>
+
+        <!-- Upload Panel -->
+        <div class="st-source-panel active" id="stSrcUpload">
+          <div class="st-cover-frame" id="stUploadFrame" onclick="document.getElementById('stCoverFileInput').click()">
+            <img id="stCoverPreviewImg" src="" alt="" style="display:none">
+            <div class="st-cover-placeholder" id="stUploadPlaceholder">
+              <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              <span>PNG · JPG · WebP</span>
+            </div>
+            <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
+          </div>
+          <div style="text-align:center;margin-bottom:8px">
+            <button id="stClearUploadBtn" onclick="stClearCoverFile()" style="display:none;background:none;border:none;color:rgba(133,172,201,.45);font-size:11px;cursor:pointer;text-decoration:underline">× Bild entfernen</button>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Diashow-Geschwindigkeit -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Diashow-Wechsel</div>
-      <select id="stSsSpeed" style="padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px">
-        <option value="slow">Langsam (8s)</option>
-        <option value="mid">Mittel (4s)</option>
-        <option value="fast">Schnell (2s)</option>
-      </select>
-    </div>
+        <!-- Album Panel -->
+        <div class="st-source-panel" id="stSrcAlbum">
+          <div style="margin-bottom:10px">
+            <select id="stPlaylistSlugSel" style="width:100%;padding:8px 10px;border-radius:8px;background:#2a2a2a;border:1px solid #444;color:#f1ecdf;font-size:13px" onchange="stOnAlbumSelect(this.value)"></select>
+            <input id="stPlaylistSlug" type="hidden" value="">
+          </div>
+          <!-- 1:1 album cover preview -->
+          <div class="st-cover-frame" style="cursor:default;pointer-events:none">
+            <img id="stAlbumPreviewImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+            <div class="st-cover-placeholder" id="stAlbumPlaceholder">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>Album wählen</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /stPanel1 -->
 
-    <!-- Cover-Upload (eigenes 1:1 Motiv) -->
-    <div style="margin-bottom:14px;padding:14px;background:#222;border-radius:10px">
-      <div style="font-size:11px;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em">Eigenes Cover-Motiv (1:1)</div>
-      <div id="stUploadZone" onclick="document.getElementById('stCoverFileInput').click()"
-           style="border:1px dashed #444;border-radius:8px;padding:14px;text-align:center;cursor:pointer;position:relative;min-height:60px;display:flex;align-items:center;justify-content:center;gap:10px">
-        <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
-        <img id="stCoverPreviewImg" src="" alt="" style="display:none;width:48px;height:48px;object-fit:cover;border-radius:4px">
-        <span id="stUploadLabel" style="font-size:12px;color:#888">Bild hochladen (quadratisch) — oder Album-Cover verwenden</span>
-        <button id="stClearCoverBtn" onclick="event.stopPropagation();stClearCoverFile()" style="display:none;position:absolute;top:6px;right:8px;background:none;border:none;color:#888;font-size:16px;cursor:pointer">×</button>
-      </div>
-    </div>
+      <!-- ── SCHRITT 2: Layout & WYSIWYG ── -->
+      <div class="st-step-panel" id="stPanel2">
+        <!-- Cover-Position -->
+        <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Cover-Position</div>
+        <div class="st-layout-row" style="margin-bottom:14px">
+          <div class="st-layout-opt active" id="stPosRight" onclick="stSetCoverPos('right')">Diashow links · Cover rechts</div>
+          <div class="st-layout-opt" id="stPosLeft" onclick="stSetCoverPos('left')">Cover links · Diashow rechts</div>
+        </div>
 
-    <!-- Song-Liste der gewählten Playlist -->
-    <div style="margin-bottom:20px;padding:14px;background:#222;border-radius:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em">Songs der Diashow</div>
-        <button onclick="stLoadAlbumSongs()" style="padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer">↻ Aus Album laden</button>
-      </div>
-      <div id="stSongList" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;margin-bottom:8px">
-        <div style="font-size:12px;color:#555;text-align:center;padding:12px">Wähle ein Album und klicke „Aus Album laden"</div>
-      </div>
-      <!-- Song-Suche hinzufügen -->
-      <div style="display:flex;gap:6px;margin-top:8px">
-        <input id="stSongSearch" placeholder="Song suchen…" style="flex:1;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px" oninput="stRenderSongPicker()">
-      </div>
-      <div id="stSongPicker" style="max-height:150px;overflow-y:auto;margin-top:4px;border-radius:6px;background:#1a1a1a"></div>
-    </div>
+        <!-- Hintergrundfarbe -->
+        <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Hintergrundfarbe</div>
+        <div class="st-color-row">
+          <div class="st-color-swatch" id="stColorPreview" style="background:#000"></div>
+          <input class="st-color-input" id="stBgColor" value="#000000" maxlength="7" oninput="stUpdateColorPreview();stWysUpdateBg()">
+          <button class="st-color-pip" onclick="stTryEyedropper()">🎨 Pipette</button>
+        </div>
 
-    <div style="display:flex;gap:10px">
-      <button onclick="saveSilbertablettTile()" style="flex:1;padding:12px;border-radius:10px;background:#f1ecdf;color:#1a1a1a;font-size:14px;font-weight:700;border:none;cursor:pointer">Übernehmen</button>
-      <button onclick="closeSilbertablettModal()" style="padding:12px 18px;border-radius:10px;background:#2a2a2a;color:#888;font-size:14px;border:1px solid #444;cursor:pointer">Abbrechen</button>
+        <!-- Diashow-Geschwindigkeit -->
+        <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Diashow-Wechsel</div>
+        <select class="st-speed-sel" id="stSsSpeed">
+          <option value="slow">Langsam (8s)</option>
+          <option value="mid" selected>Mittel (4s)</option>
+          <option value="fast">Schnell (2s)</option>
+        </select>
+
+        <!-- WYSIWYG Cover Tile -->
+        <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Cover-Platzierung</div>
+        <div style="display:flex;align-items:center;margin-bottom:8px;gap:8px">
+          <label class="st-wys-edit-toggle">
+            <input type="checkbox" id="stEditModeChk" onchange="stWysToggleEdit(this.checked)">
+            <span>Frei positionieren &amp; skalieren</span>
+          </label>
+          <button class="st-wys-reset" onclick="stWysReset()">Zurücksetzen</button>
+        </div>
+        <!-- The WYSIWYG stage — square representing the cover tile -->
+        <div class="st-wys-outer" id="stWysStage">
+          <div class="st-wys-bg" id="stWysBg">
+            <!-- cover image layer -->
+            <div class="st-wys-img" id="stWysImg">
+              <img id="stWysImgEl" src="" alt="" draggable="false">
+            </div>
+          </div>
+          <!-- drag/resize/rotate handle (only visible in edit mode) -->
+          <div class="st-wys-sel" id="stWysSel" style="display:none">
+            <div class="st-wys-handle-rot" id="stWysRotHandle">↻</div>
+            <div class="st-wys-handle-scale" id="stWysScaleHandle"></div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:rgba(133,172,201,.32);line-height:1.45;margin-bottom:6px" id="stWysHint">Vorschau der Cover-Kachel. Aktiviere „Frei positionieren", um das Cover zu verschieben, zu skalieren und zu drehen — auch über die Kachelgrenzen hinaus.</div>
+      </div><!-- /stPanel2 -->
+
+      <!-- ── SCHRITT 3: Songs ── -->
+      <div class="st-step-panel" id="stPanel3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em">Songs der Diashow</div>
+          <button class="st-album-load-btn" id="stAlbumLoadBtn" onclick="stLoadAlbumSongs()">↻ Aus Album laden</button>
+        </div>
+        <div class="st-song-list" id="stSongList">
+          <div style="font-size:12px;color:#555;text-align:center;padding:12px">Noch keine Songs</div>
+        </div>
+        <div class="st-picker-wrap">
+          <input class="st-picker-input" id="stSongSearch" placeholder="Song suchen und hinzufügen…" oninput="stRenderSongPicker()">
+          <div class="st-picker-results" id="stSongPicker"></div>
+        </div>
+      </div><!-- /stPanel3 -->
+
+    </div><!-- /st-body -->
+
+    <!-- Footer -->
+    <div class="st-foot">
+      <button class="st-btn-back" id="stBtnBack" onclick="stWizBack()" style="display:none">← Zurück</button>
+      <button class="st-btn-next" id="stBtnNext" onclick="stWizNext()">Weiter →</button>
     </div>
   </div>
 </div>
+
+<!-- hidden: keep stCoverTitle/stShowTitle/stRotEnabled data fields for save-compat (not shown in UI) -->
+<input id="stCoverTitle" type="hidden" value="">
+<input id="stShowTitle" type="hidden" value="false">
+<input id="stRotEnabled" type="hidden" value="false">
+<input id="stRotDir" type="hidden" value="cw">
+<input id="stRotSpeed" type="hidden" value="slow">
 
 </body></html>
