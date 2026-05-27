@@ -6345,11 +6345,18 @@ function buildSilbertablettEl(cell){
   coverTile.appendChild(coverBg);
 
   let stCoverCurrentMp3 = null;
+  // Keep a live reference to custom songs for click handler
+  const stSongListLive = (cell.stCustomSongs && cell.stCustomSongs.length)
+    ? cell.stCustomSongs.map(s=>({slug:s.slug,title:s.title||'',artist:s.artist||'',mp3:s.mp3||s.mp3_url||'',coverUrl:s.coverUrl||s.cover||''}))
+    : [];
   function getCoverSong(){
-    if(!ssPlaylistSlug) return null;
-    const albumKey = resolveAlbumKey(ssPlaylistSlug);
-    if(albumKey && ALBUMS[albumKey] && ALBUMS[albumKey].songs && ALBUMS[albumKey].songs[0]) return ALBUMS[albumKey].songs[0];
-    if(slides.length) return hjFindLiveSong(slides[0]);
+    // Prefer first custom song, then album song, then first slide
+    if(stSongListLive.length) return hjFindLiveSong(stSongListLive[0]) || stSongListLive[0];
+    if(ssPlaylistSlug){
+      const albumKey = resolveAlbumKey(ssPlaylistSlug);
+      if(albumKey && ALBUMS[albumKey] && ALBUMS[albumKey].songs && ALBUMS[albumKey].songs[0]) return ALBUMS[albumKey].songs[0];
+    }
+    if(slides.length) return hjFindLiveSong(slides[0]) || slides[0];
     return null;
   }
 
@@ -6384,12 +6391,17 @@ function buildSilbertablettEl(cell){
   if(coverPos === 'left'){ wrap.appendChild(coverTile); wrap.appendChild(slideTile); }
   else { wrap.appendChild(slideTile); wrap.appendChild(coverTile); }
 
-  if(!slides.length && ssPlaylistSlug){
+  if(!slides.length && (ssPlaylistSlug || (cell.stCustomSongs && cell.stCustomSongs.length))){
     window.addEventListener('hj:albums-ready', ()=>{
       slides = buildSlides(); renderSlideCovers();
       if(slides.length > 1) startSsTimer();
       if(!staticImgUrl && slides[0]) coverImgEl.src = slides[0].coverUrl;
     }, {once:true});
+  }
+  // Also immediately try to render if SUPABASE_SONGS already loaded
+  if(!slides.length){
+    slides = buildSlides();
+    if(slides.length){ renderSlideCovers(); if(slides.length>1) startSsTimer(); if(!staticImgUrl && slides[0]) coverImgEl.src = slides[0].coverUrl; }
   }
 
   return wrap;
