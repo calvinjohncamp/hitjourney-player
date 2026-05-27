@@ -161,17 +161,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-slide-covers img.active{opacity:1}
 .st-slide-covers .ft-blank{display:none}
 .st-slide-tile.st-playing::after,.st-cover-tile.st-playing::after{content:none!important;display:none!important}
-/* Silbertablett v203: niemals grauen Browser-/Playing-Schleier auf der Kachel zeigen */
-.st-wrap,.st-wrap *{-webkit-tap-highlight-color:transparent!important}
-.st-wrap:active,.st-wrap:focus,.st-wrap.st-playing,.st-wrap.playing,
-.st-slide-tile:active,.st-slide-tile:focus,.st-slide-tile.st-playing,.st-slide-tile.playing,
-.st-cover-tile:active,.st-cover-tile:focus,.st-cover-tile.st-playing,.st-cover-tile.playing{
-  opacity:1!important;filter:none!important;mix-blend-mode:normal!important;background-blend-mode:normal!important;outline:none!important;
-}
-.st-slide-tile.st-playing::before,.st-cover-tile.st-playing::before,
-.st-slide-tile.playing::before,.st-cover-tile.playing::before,
-.st-wrap.st-playing::before,.st-wrap.playing::before,
-.st-wrap.st-playing::after,.st-wrap.playing::after{content:none!important;display:none!important}
 .st-vinyl-pin-img{position:absolute;left:50%;top:50%;width:3.2%;height:3.2%;transform:translate(-50%,-50%);z-index:30;pointer-events:none;object-fit:contain;filter:none}
 .st-cover-bg{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
 .st-cover-img-wys{border-radius:3px}
@@ -6217,7 +6206,6 @@ function buildSlideshowEl(cell){
 
 /* ── Silbertablett helpers v200 ───────────────────────────────────────── */
 function hjStartArchiveRandomFromSilbertablett(){
-  hjResetSilbertablettVisualState();
   if(!ALL_SONGS || !ALL_SONGS.length) return false;
   if(window._hjHomeCardActive && window._hjHomeCardActive.el){ window._hjHomeCardActive.el.classList.remove('playing'); }
   document.querySelectorAll('.st-cover-tile.playing,.st-cover-tile.st-playing,.st-slide-tile.playing,.st-slide-tile.st-playing').forEach(el=>el.classList.remove('playing','st-playing'));
@@ -6233,17 +6221,13 @@ function hjStartArchiveRandomFromSilbertablett(){
   // Silbertablett bleibt bewusst schlicht: keine schmale Player-Bar einblenden.
   if(playerBar) playerBar.classList.remove('visible','minimized');
   setTimeout(()=>{ if(playerBar) playerBar.classList.remove('visible','minimized'); }, 0);
-  setTimeout(()=>{ if(playerBar) playerBar.classList.remove('visible','minimized'); hjResetSilbertablettVisualState(); }, 250);
-  setTimeout(()=>{ hjResetSilbertablettVisualState(); }, 650);
+  setTimeout(()=>{ if(playerBar) playerBar.classList.remove('visible','minimized'); }, 250);
   return true;
 }
 function hjToggleOrStartRandomFromSilbertablett(){
   if(audio && audio.src){
-    hjResetSilbertablettVisualState();
     if(audio.paused){ audio.play().catch(()=>{}); }
     else { audio.pause(); }
-    setTimeout(()=>hjResetSilbertablettVisualState(),0);
-    setTimeout(()=>hjResetSilbertablettVisualState(),250);
     return true;
   }
   return hjStartArchiveRandomFromSilbertablett();
@@ -6255,31 +6239,6 @@ function hjIsSilbertablettButtonClick(tile, ev){
   const y = (ev.clientY - r.top) / r.height;
   /* großer silberner Button links unten am Plattenspieler */
   return x >= 0.055 && x <= 0.205 && y >= 0.765 && y <= 0.935;
-}
-
-
-function hjResetSilbertablettVisualState(opts){
-  opts = opts || {};
-  const keepPlayingOn = opts.keepPlayingOn || null;
-  document.querySelectorAll('.st-wrap,.st-slide-tile,.st-cover-tile').forEach(el=>{
-    if(el !== keepPlayingOn){ el.classList.remove('playing','st-playing','active','paused'); }
-    el.style.opacity = '';
-    el.style.filter = '';
-    el.style.mixBlendMode = '';
-    el.style.backgroundBlendMode = '';
-    el.style.outline = '';
-    if(el.blur) { try{ el.blur(); }catch(e){} }
-  });
-  document.querySelectorAll('.st-wrap [style]').forEach(el=>{
-    if(el.classList && (el.classList.contains('st-cover-img-wys') || el.classList.contains('st-slide-covers'))) return;
-    if(el.style){
-      el.style.opacity = el.style.opacity === '0' ? el.style.opacity : '';
-      el.style.filter = '';
-      el.style.mixBlendMode = '';
-      el.style.backgroundBlendMode = '';
-    }
-  });
-  if(document.activeElement && document.activeElement.blur){ try{ document.activeElement.blur(); }catch(e){} }
 }
 
 /* ── Silbertablett: Cover-Kachel + Diashow-Kachel — st-v20260527c ─────── */
@@ -6515,14 +6474,11 @@ function buildSilbertablettEl(cell){
     coverTile.addEventListener('click', (ev)=>{
       ev.preventDefault();
       ev.stopImmediatePropagation();
-      hjResetSilbertablettVisualState();
       if(hjIsSilbertablettButtonClick(coverTile, ev)){
         hjStartArchiveRandomFromSilbertablett();
       } else {
         hjToggleOrStartRandomFromSilbertablett();
       }
-      setTimeout(()=>hjResetSilbertablettVisualState(),0);
-      setTimeout(()=>hjResetSilbertablettVisualState(),300);
     }, true);
 
     // Spin control
