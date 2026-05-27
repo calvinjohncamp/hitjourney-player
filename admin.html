@@ -11521,6 +11521,13 @@ function openSilbertablettModal(rowId){
 
   // Restore upload mode (standard / vinyl) — sets frame shape
   const savedMode = c.stUploadMode || 'standard';
+  // Restore vinyl placement
+  stVinyl = {
+    x:    c.stVinylX    !== undefined ? c.stVinylX    : 50,
+    y:    c.stVinylY    !== undefined ? c.stVinylY    : 50,
+    size: c.stVinylSize !== undefined ? c.stVinylSize : 23,
+  };
+  _stVinylHandlesBound = false; // allow re-binding on next stWysInit
   stSetUploadMode(savedMode);
 
   // Restore image preview
@@ -11802,7 +11809,11 @@ function stWysInit(){
   if(chk) chk.checked = stWys.editing;
   const sel = document.getElementById('stWysSel');
   if(sel) sel.style.display = stWys.editing ? '' : 'none';
-  requestAnimationFrame(()=>{ stWysApply(); if(stWys.editing) stWysBindHandles(); });
+  requestAnimationFrame(()=>{
+    stWysApply();
+    if(stWys.editing) stWysBindHandles();
+    if(stUploadMode === 'vinyl'){ stVinylApply(); stVinylBindHandles(); }
+  });
 }
 
 function stWysToggleEdit(on){
@@ -12029,7 +12040,108 @@ function stWysShowCorrectBlock(){
     const stage = document.getElementById('stVinylWysStage');
     const val = (document.getElementById('stBgColor')||{}).value || '#000000';
     if(stage) stage.style.background = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+    stVinylApply();
+    stVinylBindHandles();
   }
+}
+
+/* ── Vinyl Interactive Editor ──────────────────────────────────────────────
+   stVinyl: x, y = Mittelpunkt in % der Stage-Breite
+            size = Durchmesser in % der Stage-Breite
+   Default: exakt auf weißem Label-Kreis (50%/50%, 23%)
+   ─────────────────────────────────────────────────────────────────────── */
+let stVinyl = { x: 50, y: 50, size: 23 };
+let _stVinylHandlesBound = false;
+
+function stVinylApply(){
+  const drag = document.getElementById('stVinylLabelDrag');
+  const stage = document.getElementById('stVinylWysStage');
+  if(!drag || !stage) return;
+  const W = stage.offsetWidth || 1;
+  const sz = (stVinyl.size / 100) * W;
+  const px = (stVinyl.x / 100) * W - sz / 2;
+  const py = (stVinyl.y / 100) * W - sz / 2;
+  drag.style.width  = sz + 'px';
+  drag.style.height = sz + 'px';
+  drag.style.left   = px + 'px';
+  drag.style.top    = py + 'px';
+}
+
+function stVinylReset(){
+  stVinyl = { x: 50, y: 50, size: 23 };
+  stVinylApply();
+}
+
+function stVinylBindHandles(){
+  if(_stVinylHandlesBound) return;
+  _stVinylHandlesBound = true;
+
+  const stage   = document.getElementById('stVinylWysStage');
+  const drag    = document.getElementById('stVinylLabelDrag');
+  const scaleH  = document.getElementById('stVinylScaleHandle');
+  if(!stage || !drag || !scaleH) return;
+
+  /* ── DRAG ── */
+  let dragStart = null;
+  function pt(e){ return e.touches ? e.touches[0] : e; }
+
+  function onDragDown(e){
+    if(e.target === scaleH || scaleH.contains(e.target)) return;
+    e.preventDefault();
+    const p = pt(e);
+    dragStart = { cx: stVinyl.x, cy: stVinyl.y, mx: p.clientX, my: p.clientY };
+  }
+  function onDragMove(e){
+    if(!dragStart) return;
+    e.preventDefault();
+    const p = pt(e);
+    const W = stage.offsetWidth;
+    stVinyl.x = dragStart.cx + ((p.clientX - dragStart.mx) / W) * 100;
+    stVinyl.y = dragStart.cy + ((p.clientY - dragStart.my) / W) * 100;
+    // clamp so label stays fully inside stage
+    const half = stVinyl.size / 2;
+    stVinyl.x = Math.max(half, Math.min(100 - half, stVinyl.x));
+    stVinyl.y = Math.max(half, Math.min(100 - half, stVinyl.y));
+    stVinylApply();
+  }
+  function onDragUp(){ dragStart = null; }
+
+  drag.addEventListener('mousedown',  onDragDown, {passive:false});
+  drag.addEventListener('touchstart', onDragDown, {passive:false});
+  window.addEventListener('mousemove',  onDragMove);
+  window.addEventListener('touchmove',  onDragMove, {passive:false});
+  window.addEventListener('mouseup',    onDragUp);
+  window.addEventListener('touchend',   onDragUp);
+
+  /* ── SCALE ── */
+  let scaleStart = null;
+  function onScaleDown(e){
+    e.preventDefault(); e.stopPropagation();
+    const p = pt(e);
+    scaleStart = { sz: stVinyl.size, mx: p.clientX, my: p.clientY };
+  }
+  function onScaleMove(e){
+    if(!scaleStart) return;
+    e.preventDefault();
+    const p = pt(e);
+    const W = stage.offsetWidth;
+    const dx = p.clientX - scaleStart.mx;
+    const dy = p.clientY - scaleStart.my;
+    const delta = (dx + dy) / W * 100; // combined diagonal
+    stVinyl.size = Math.max(5, Math.min(80, scaleStart.sz + delta));
+    stVinylApply();
+  }
+  function onScaleUp(){ scaleStart = null; }
+
+  scaleH.addEventListener('mousedown',  onScaleDown, {passive:false});
+  scaleH.addEventListener('touchstart', onScaleDown, {passive:false});
+  window.addEventListener('mousemove',  onScaleMove);
+  window.addEventListener('touchmove',  onScaleMove, {passive:false});
+  window.addEventListener('mouseup',    onScaleUp);
+  window.addEventListener('touchend',   onScaleUp);
+
+  // Also re-apply on resize
+  window.addEventListener('resize', stVinylApply);
 }
 
 /* ── Save ── */
@@ -12051,6 +12163,9 @@ async function saveSilbertablettTile(){
 
   // Vinyl mode
   cell.stUploadMode   = stUploadMode;
+  cell.stVinylX       = stVinyl.x;
+  cell.stVinylY       = stVinyl.y;
+  cell.stVinylSize    = stVinyl.size;
 
   // WYS placement
   cell.stCoverX   = stWys.x;
@@ -13077,7 +13192,7 @@ async function restoreSnapshot(){
 .st-cover-frame.vinyl-mode{border-radius:50%}
 .st-cover-frame.vinyl-mode img{border-radius:50%}
 
-/* ── Vinyl WYSIWYG Preview in Step 2 ── */
+/* ── Vinyl WYSIWYG Stage ── */
 .st-vinyl-wys-stage{
   position:relative;
   width:100%;
@@ -13087,31 +13202,55 @@ async function restoreSnapshot(){
   background:#111;
   margin-bottom:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.4);
+  touch-action:none;
+  user-select:none;
 }
 .st-vinyl-wys-deck{
   position:absolute;inset:0;
   width:100%;height:100%;
   object-fit:cover;display:block;
   pointer-events:none;
+  user-select:none;
 }
-/* Label zone: pixelgenau gemessen aus Plattenspieler.jpg (2048x2048):
-   Weißer Kreis-Mittelpunkt exakt bei 50%/50%, Diameter 23% der Bildbreite.
-   Label wird leicht kleiner als der weiße Kreis gesetzt (21%), damit der
-   silberne Edelstahlpin in der Mitte des Originals sichtbar bleibt. */
-.st-vinyl-wys-label{
+
+/* ── Draggable Label ── */
+.st-vinyl-label-drag{
   position:absolute;
-  left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  width:21%; padding-bottom:21%;
   border-radius:50%;
-  overflow:hidden;
-  pointer-events:none;
+  overflow:visible;   /* wichtig: Scale-Handle darf über den Kreis hinausragen */
+  cursor:grab;
+  touch-action:none;
+  /* default: Mitte 50%/50%, Diameter 23% — wird per JS gesetzt */
 }
-.st-vinyl-wys-label img{
-  position:absolute;inset:0;
+.st-vinyl-label-drag:active{cursor:grabbing}
+.st-vinyl-label-drag > img{
+  border-radius:50%;
   width:100%;height:100%;
   object-fit:cover;
+  display:block;
+  pointer-events:none;
+}
+/* Scale-Handle: kleines Quadrat rechts unten */
+.st-vinyl-scale-handle{
+  position:absolute;
+  width:18px;height:18px;
+  right:-9px;bottom:-9px;
   border-radius:50%;
+  background:#85ACC9;
+  border:2.5px solid #06141F;
+  cursor:nwse-resize;
+  touch-action:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.6);
+  z-index:10;
+}
+
+/* ── Pin SVG — immer fix über allem ── */
+.st-vinyl-pin-svg{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:20;
 }
 </style>
 
@@ -13231,18 +13370,45 @@ async function restoreSnapshot(){
           <div style="font-size:10px;color:rgba(133,172,201,.32);line-height:1.45;margin-bottom:6px" id="stWysHint">Vorschau der Cover-Kachel. Aktiviere „Frei positionieren", um das Cover zu verschieben, zu skalieren und zu drehen — auch über die Kachelgrenzen hinaus.</div>
         </div>
 
-        <!-- WYSIWYG Vinyl Preview — wird nur im Vinyl-Modus angezeigt -->
+        <!-- WYSIWYG Vinyl Preview — interaktiv: Drag + Scale -->
         <div id="stWysVinylBlock" style="display:none">
-          <div style="font-size:11px;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Vinyl-Vorschau</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em">Vinyl-Platzierung</div>
+            <button class="st-wys-reset" onclick="stVinylReset()">Zurücksetzen</button>
+          </div>
           <div class="st-vinyl-wys-stage" id="stVinylWysStage">
             <!-- Plattenspieler-Bild füllt die Kachel -->
             <img class="st-vinyl-wys-deck" src="https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg" alt="" onerror="this.style.opacity='.2'">
-            <!-- Label-Kreis: 21% Durchmesser, 50%/50% — Pin des Originals bleibt sichtbar -->
-            <div class="st-vinyl-wys-label" id="stVinylWysLabel">
-              <img id="stVinylWysLabelImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">
+
+            <!-- Draggable Label-Kreis -->
+            <div class="st-vinyl-label-drag" id="stVinylLabelDrag">
+              <img id="stVinylWysLabelImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;pointer-events:none;user-select:none">
+              <!-- Scale Handle -->
+              <div class="st-vinyl-scale-handle" id="stVinylScaleHandle"></div>
             </div>
+
+            <!-- Pin + Schatten SVG — immer fix über allem, nie verschiebbar -->
+            <svg class="st-vinyl-pin-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none">
+              <defs>
+                <radialGradient id="pinShadowGrad" cx="42%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#000" stop-opacity="0.38"/>
+                  <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="pinBodyGrad" cx="35%" cy="30%" r="65%">
+                  <stop offset="0%" stop-color="#e8e8e8"/>
+                  <stop offset="40%" stop-color="#aaa"/>
+                  <stop offset="100%" stop-color="#555"/>
+                </radialGradient>
+              </defs>
+              <!-- Schatten: liegt links vom Pin, fällt leicht auf das Label -->
+              <ellipse cx="49.5" cy="50.5" rx="4.5" ry="4.5" fill="url(#pinShadowGrad)" opacity="0.7"/>
+              <!-- Pin-Körper: Kreis mit Metallic-Gradient -->
+              <circle cx="50" cy="50" r="2.2" fill="url(#pinBodyGrad)" stroke="#333" stroke-width="0.4"/>
+              <!-- Highlight -->
+              <circle cx="49.3" cy="49.2" r="0.6" fill="white" opacity="0.85"/>
+            </svg>
           </div>
-          <div style="font-size:10px;color:rgba(133,172,201,.28);line-height:1.5;margin-bottom:6px;text-align:center">Dein Motiv erscheint als Plattenlabel · dreht sich beim Abspielen mit 33⅓ RPM.<br>Position &amp; Größe werden automatisch auf die weiße Label-Fläche gesetzt.</div>
+          <div style="font-size:10px;color:rgba(133,172,201,.28);line-height:1.5;margin-bottom:6px;text-align:center">Motiv verschieben · Ecke ziehen zum Skalieren · dreht sich beim Abspielen mit 33⅓ RPM</div>
         </div>
 
       </div><!-- /stPanel2 -->

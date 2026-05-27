@@ -6211,8 +6211,11 @@ function buildSilbertablettEl(cell){
   const ssSpeed        = cell.stSsSpeed      || '3';
   const staticImgUrl   = cell.stImageUrl     || cell.imageUrl || '';
   const uploadMode     = cell.stUploadMode   || 'standard';
-  const vinylPos       = cell.stVinylPos     || 'left';
-  const vinylLabelUrl  = cell.stVinylLabelUrl || '';
+  const vinylLabelUrl  = cell.stImageUrl     || ''; // label = das hochgeladene Motiv
+  // Vinyl placement (saved from interactive editor)
+  const vinylX    = cell.stVinylX    !== undefined ? cell.stVinylX    : 50;
+  const vinylY    = cell.stVinylY    !== undefined ? cell.stVinylY    : 50;
+  const vinylSize = cell.stVinylSize !== undefined ? cell.stVinylSize : 23;
 
   // WYS cover placement
   const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
@@ -6348,51 +6351,40 @@ function buildSilbertablettEl(cell){
   if(coverPos === 'left'){ wrap.appendChild(coverTile); wrap.appendChild(slideTile); }
   else { wrap.appendChild(slideTile); wrap.appendChild(coverTile); }
 
-  // ── VINYL MODE: override cover tile ──────────────────────────────────
+  // ── VINYL MODE: Plattenspieler-Kachel ────────────────────────────────
   if(uploadMode === 'vinyl'){
-    // Replace cover tile content with Plattenspieler layout
     coverTile.innerHTML = '';
-    coverTile.style.background = bgColor;
-    coverTile.style.position = 'relative';
-    coverTile.style.overflow = 'hidden';
-    coverTile.style.display  = 'flex';
-    coverTile.style.alignItems = 'center';
-    coverTile.style.justifyContent = 'center';
+    coverTile.style.cssText += ';background:'+bgColor+';position:relative;overflow:hidden';
 
-    // The deck image (fills the tile)
+    // Deck image (fills tile)
     const deckImg = document.createElement('img');
     deckImg.src = 'https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg';
     deckImg.alt = '';
-    deckImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none';
-    deckImg.onerror = ()=>{ deckImg.style.opacity = '.15'; };
+    deckImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none';
+    deckImg.onerror = ()=>{ deckImg.style.opacity='.15'; };
 
-    // The spinning label — a circle at the center of the white area.
-    // Pixelgenau gemessen: Mittelpunkt exakt 50%/50%, Diameter 23% der Bildbreite.
-    // Wir setzen 21% damit der silberne Pin-Punkt in der Mitte sichtbar bleibt.
+    // Spinning label — positioned using saved x/y/size
     const labelWrap = document.createElement('div');
+    // We use offsetWidth-based positioning after mount via ResizeObserver
     labelWrap.style.cssText = [
       'position:absolute',
-      'left:50%', 'top:50%',
-      'transform:translate(-50%,-50%)',
-      'width:21%', 'padding-bottom:21%',
       'border-radius:50%',
       'overflow:hidden',
       'pointer-events:none',
+      'transform-origin:50% 50%',
     ].join(';');
 
     const labelImg = document.createElement('img');
     labelImg.alt = '';
     labelImg.draggable = false;
     labelImg.style.cssText = [
-      'position:absolute', 'inset:0',
-      'width:100%', 'height:100%',
+      'width:100%','height:100%',
       'object-fit:cover',
       'border-radius:50%',
       'display:block',
       'transform-origin:50% 50%',
-      // Start paused — will animate when playing
       'animation-name:vinyl-spin',
-      'animation-duration:1.8s',   // 33⅓ RPM = 1.8s per revolution
+      'animation-duration:1.8s',
       'animation-timing-function:linear',
       'animation-iteration-count:infinite',
       'animation-play-state:paused',
@@ -6401,39 +6393,66 @@ function buildSilbertablettEl(cell){
     if(vinylLabelUrl){
       labelImg.src = vinylLabelUrl;
     } else {
-      // Blank label — dark circle with subtle grooves
-      labelImg.style.background = 'radial-gradient(circle, #222 30%, #111 100%)';
+      labelImg.style.background = 'radial-gradient(circle,#333 30%,#111 100%)';
+    }
+    labelWrap.appendChild(labelImg);
+
+    // Pin + Schatten als SVG — exakt über dem Label-Mittelpunkt, fix positioniert
+    const pinSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    pinSvg.setAttribute('viewBox','0 0 100 100');
+    pinSvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:20';
+    pinSvg.innerHTML = `
+      <defs>
+        <radialGradient id="vPinShad" cx="40%" cy="50%" r="55%">
+          <stop offset="0%" stop-color="#000" stop-opacity="0.42"/>
+          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="vPinBody" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#e8e8e8"/>
+          <stop offset="45%" stop-color="#aaa"/>
+          <stop offset="100%" stop-color="#555"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="${vinylX-0.6}" cy="${vinylY+0.4}" rx="${vinylSize*0.22}" ry="${vinylSize*0.22}"
+               fill="url(#vPinShad)" opacity="0.75"/>
+      <circle cx="${vinylX}" cy="${vinylY}" r="${vinylSize*0.1}"
+              fill="url(#vPinBody)" stroke="#2a2a2a" stroke-width="0.5"/>
+      <circle cx="${vinylX-0.35}" cy="${vinylY-0.38}" r="${vinylSize*0.03}"
+              fill="white" opacity="0.9"/>`;
+
+    // Position label after tile has rendered dimensions
+    function positionLabel(){
+      const W = coverTile.offsetWidth;
+      if(!W) return;
+      const sz = (vinylSize/100)*W;
+      labelWrap.style.width  = sz+'px';
+      labelWrap.style.height = sz+'px';
+      labelWrap.style.left   = ((vinylX/100)*W - sz/2)+'px';
+      labelWrap.style.top    = ((vinylY/100)*W - sz/2)+'px';
     }
 
-    labelWrap.appendChild(labelImg);
     coverTile.appendChild(deckImg);
     coverTile.appendChild(labelWrap);
+    coverTile.appendChild(pinSvg);
 
-    // Spin control: listen to the audio element
-    function startSpin(){ labelImg.style.animationPlayState = 'running'; }
-    function stopSpin(){  labelImg.style.animationPlayState = 'paused';  }
+    requestAnimationFrame(positionLabel);
+    const ro = new ResizeObserver(positionLabel);
+    ro.observe(coverTile);
 
-    // We tap into existing audio element and st-playing class changes
-    const observer = new MutationObserver(()=>{
-      if(coverTile.classList.contains('st-playing')) startSpin();
-      else stopSpin();
+    // Spin control
+    function startSpin(){ labelImg.style.animationPlayState='running'; }
+    function stopSpin(){  labelImg.style.animationPlayState='paused';  }
+
+    const mo = new MutationObserver(()=>{
+      coverTile.classList.contains('st-playing') ? startSpin() : stopSpin();
     });
-    observer.observe(coverTile, { attributes:true, attributeFilter:['class'] });
+    mo.observe(coverTile,{attributes:true,attributeFilter:['class']});
 
-    // Also watch the global audio element directly
-    const globalAudio = document.getElementById('audioEl') || document.querySelector('audio');
-    if(globalAudio){
-      globalAudio.addEventListener('play',  startSpin);
-      globalAudio.addEventListener('pause', stopSpin);
-      globalAudio.addEventListener('ended', stopSpin);
-    }
-
-    // Override position: vinyl position uses its own left/right
-    if(vinylPos === 'left'){
-      wrap.insertBefore(coverTile, wrap.firstChild);
-      if(wrap.contains(slideTile) && slideTile !== wrap.lastChild){
-        wrap.appendChild(slideTile);
-      }
+    const ga = document.getElementById('audioEl') || document.querySelector('audio');
+    if(ga){
+      ga.addEventListener('play',  startSpin);
+      ga.addEventListener('pause', stopSpin);
+      ga.addEventListener('ended', stopSpin);
     }
   }
 
