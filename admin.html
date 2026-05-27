@@ -11583,6 +11583,7 @@ function stGotoStep(n){
   }
 
   if(n===2) stWysInit();
+  if(n===3) stFillAllSongsDrop();
 }
 
 function stWizNext(){
@@ -11914,7 +11915,27 @@ function stRenderSongList(){
   });
 }
 
-function stRenderSongPicker(){
+function stFillAllSongsDrop(){
+  const sel = document.getElementById('stAllSongsDrop');
+  if(!sel) return;
+  const source = typeof songsData !== 'undefined' ? songsData : [];
+  const sorted = [...source].sort((a,b)=>(a.title||a.slug||'').localeCompare(b.title||b.slug||'','de'));
+  sel.innerHTML = sorted.map(s=>`<option value="${(s.slug||'').replace(/"/g,'&quot;')}">${s.title||s.slug}${s.artist?' · '+s.artist:''}</option>`).join('');
+}
+
+function stAddFromDrop(sel){
+  const slug = sel.value;
+  if(!slug) return;
+  const source = typeof songsData !== 'undefined' ? songsData : [];
+  const s = source.find(x=>x.slug===slug);
+  if(!s) return;
+  if(!stSongListData.find(x=>x.slug===slug)){
+    stSongListData.push({slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3_url||'',cover:s.cover_url||''});
+    stRenderSongList();
+  }
+  // Reset selection so same item can be re-selected
+  sel.selectedIndex = -1;
+}
   const q=((document.getElementById('stSongSearch')||{}).value||'').toLowerCase().trim();
   const pickerEl=document.getElementById('stSongPicker');
   if(!pickerEl) return;
@@ -13054,9 +13075,9 @@ async function restoreSnapshot(){
         <!-- Diashow-Geschwindigkeit -->
         <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Diashow-Wechsel</div>
         <select class="st-speed-sel" id="stSsSpeed">
-          <option value="slow">Langsam (8s)</option>
-          <option value="mid" selected>Mittel (4s)</option>
           <option value="fast">Schnell (2s)</option>
+          <option value="mid" selected>Mittel (3s)</option>
+          <option value="slow">Langsam (4s)</option>
         </select>
 
         <!-- WYSIWYG Cover Tile -->
@@ -13095,8 +13116,11 @@ async function restoreSnapshot(){
           <div style="font-size:12px;color:#555;text-align:center;padding:12px">Noch keine Songs</div>
         </div>
         <div class="st-picker-wrap">
-          <input class="st-picker-input" id="stSongSearch" placeholder="Song suchen und hinzufügen…" oninput="stRenderSongPicker()">
+          <input class="st-picker-input" id="stSongSearch" placeholder="Song suchen…" oninput="stRenderSongPicker()">
           <div class="st-picker-results" id="stSongPicker"></div>
+          <div style="margin-top:8px;font-size:10px;color:rgba(133,172,201,.35);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px">Alle Songs</div>
+          <select id="stAllSongsDrop" size="6" style="width:100%;background:#111;border:1px solid #333;border-radius:6px;color:#ccc;font-size:12px;padding:2px 0" onchange="stAddFromDrop(this)">
+          </select>
         </div>
       </div><!-- /stPanel3 -->
 
