@@ -164,8 +164,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-cover-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
 .st-cover-bg{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
 .st-cover-img-wys{border-radius:3px}
-/* Vinyl spin: 33⅓ RPM = 1 revolution per 1.8s */
-@keyframes vinyl-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.panorama-4x1 img{aspect-ratio:4/1}
@@ -6210,9 +6208,6 @@ function buildSilbertablettEl(cell){
   const coverPos       = cell.stCoverPos     || 'right';
   const ssSpeed        = cell.stSsSpeed      || '3';
   const staticImgUrl   = cell.stImageUrl     || cell.imageUrl || '';
-  const uploadMode     = cell.stUploadMode   || 'standard';
-  const vinylPos       = cell.stVinylPos     || 'left';
-  const vinylLabelUrl  = cell.stVinylLabelUrl || '';
 
   // WYS cover placement
   const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
@@ -6347,94 +6342,6 @@ function buildSilbertablettEl(cell){
 
   if(coverPos === 'left'){ wrap.appendChild(coverTile); wrap.appendChild(slideTile); }
   else { wrap.appendChild(slideTile); wrap.appendChild(coverTile); }
-
-  // ── VINYL MODE: override cover tile ──────────────────────────────────
-  if(uploadMode === 'vinyl'){
-    // Replace cover tile content with Plattenspieler layout
-    coverTile.innerHTML = '';
-    coverTile.style.background = bgColor;
-    coverTile.style.position = 'relative';
-    coverTile.style.overflow = 'hidden';
-    coverTile.style.display  = 'flex';
-    coverTile.style.alignItems = 'center';
-    coverTile.style.justifyContent = 'center';
-
-    // The deck image (fills the tile)
-    const deckImg = document.createElement('img');
-    deckImg.src = 'https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg';
-    deckImg.alt = '';
-    deckImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none';
-    deckImg.onerror = ()=>{ deckImg.style.opacity = '.15'; };
-
-    // The spinning label — a circle at the center of the white area
-    // White label center is at ~50% x, ~47% y of the deck image
-    const labelWrap = document.createElement('div');
-    labelWrap.style.cssText = [
-      'position:absolute',
-      'left:50%', 'top:47%',
-      'transform:translate(-50%,-50%)',
-      'width:38%', 'padding-bottom:38%',
-      'border-radius:50%',
-      'overflow:hidden',
-      'pointer-events:none',
-    ].join(';');
-
-    const labelImg = document.createElement('img');
-    labelImg.alt = '';
-    labelImg.draggable = false;
-    labelImg.style.cssText = [
-      'position:absolute', 'inset:0',
-      'width:100%', 'height:100%',
-      'object-fit:cover',
-      'border-radius:50%',
-      'display:block',
-      'transform-origin:50% 50%',
-      // Start paused — will animate when playing
-      'animation-name:vinyl-spin',
-      'animation-duration:1.8s',   // 33⅓ RPM = 1.8s per revolution
-      'animation-timing-function:linear',
-      'animation-iteration-count:infinite',
-      'animation-play-state:paused',
-    ].join(';');
-
-    if(vinylLabelUrl){
-      labelImg.src = vinylLabelUrl;
-    } else {
-      // Blank label — dark circle with subtle grooves
-      labelImg.style.background = 'radial-gradient(circle, #222 30%, #111 100%)';
-    }
-
-    labelWrap.appendChild(labelImg);
-    coverTile.appendChild(deckImg);
-    coverTile.appendChild(labelWrap);
-
-    // Spin control: listen to the audio element
-    function startSpin(){ labelImg.style.animationPlayState = 'running'; }
-    function stopSpin(){  labelImg.style.animationPlayState = 'paused';  }
-
-    // We tap into existing audio element and st-playing class changes
-    const observer = new MutationObserver(()=>{
-      if(coverTile.classList.contains('st-playing')) startSpin();
-      else stopSpin();
-    });
-    observer.observe(coverTile, { attributes:true, attributeFilter:['class'] });
-
-    // Also watch the global audio element directly
-    const globalAudio = document.getElementById('audioEl') || document.querySelector('audio');
-    if(globalAudio){
-      globalAudio.addEventListener('play',  startSpin);
-      globalAudio.addEventListener('pause', stopSpin);
-      globalAudio.addEventListener('ended', stopSpin);
-    }
-
-    // Override position: vinyl position uses its own left/right
-    if(vinylPos === 'left'){
-      wrap.insertBefore(coverTile, wrap.firstChild);
-      if(wrap.contains(slideTile) && slideTile !== wrap.lastChild){
-        wrap.appendChild(slideTile);
-      }
-    }
-  }
 
   return wrap;
 }

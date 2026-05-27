@@ -11516,56 +11516,26 @@ function openSilbertablettModal(rowId){
 
   // Step 1 — decide mode
   stCoverFile = null; stCoverLocalUrl = '';
-  stVinylFile = null;
   const fileInput = document.getElementById('stCoverFileInput');
   if(fileInput) fileInput.value = '';
-  const vinylInput = document.getElementById('stVinylFileInput');
-  if(vinylInput) vinylInput.value = '';
 
-  // Restore vinyl mode state
-  const savedMode = c.stUploadMode || 'standard';
-  stSetUploadMode(savedMode);
-  stSetVinylPos(c.stVinylPos || 'left');
-  // Restore vinyl label preview if exists
-  if(c.stVinylLabelUrl){
-    const img = document.getElementById('stVinylLabelImg');
-    if(img){ img.src=c.stVinylLabelUrl; img.style.display='block'; }
-    const ph = document.getElementById('stVinylLabelPlaceholder');
+  if(c.stImageUrl){
+    // Had a custom uploaded cover → show upload tab with preview
+    stSwitchSource('upload');
+    const img = document.getElementById('stCoverPreviewImg');
+    if(img){ img.src = c.stImageUrl; img.style.display='block'; }
+    const ph = document.getElementById('stUploadPlaceholder');
     if(ph) ph.style.display='none';
-    const lz = document.getElementById('stVinylLabelZone');
-    if(lz) lz.classList.add('has-label');
-    const clrBtn = document.getElementById('stClearVinylBtn');
+    const clrBtn = document.getElementById('stClearUploadBtn');
     if(clrBtn) clrBtn.style.display='';
+  } else if(c.stPlaylistSlug){
+    stSwitchSource('album');
+    stPopulatePlaylists(c.stPlaylistSlug);
+    stOnAlbumSelect(c.stPlaylistSlug);
   } else {
-    const img = document.getElementById('stVinylLabelImg');
-    if(img){ img.src=''; img.style.display='none'; }
-    const ph = document.getElementById('stVinylLabelPlaceholder');
-    if(ph) ph.style.display='';
-    const lz = document.getElementById('stVinylLabelZone');
-    if(lz) lz.classList.remove('has-label');
-    const clrBtn = document.getElementById('stClearVinylBtn');
-    if(clrBtn) clrBtn.style.display='none';
+    stSwitchSource('upload');
+    stResetUploadPreview();
   }
-
-  if(savedMode === 'standard'){
-    if(c.stImageUrl){
-      // Had a custom uploaded cover → show upload tab with preview
-      stSwitchSource('upload');
-      const img = document.getElementById('stCoverPreviewImg');
-      if(img){ img.src = c.stImageUrl; img.style.display='block'; }
-      const ph = document.getElementById('stUploadPlaceholder');
-      if(ph) ph.style.display='none';
-      const clrBtn = document.getElementById('stClearUploadBtn');
-      if(clrBtn) clrBtn.style.display='';
-    } else if(c.stPlaylistSlug){
-      stSwitchSource('album');
-      stPopulatePlaylists(c.stPlaylistSlug);
-      stOnAlbumSelect(c.stPlaylistSlug);
-    } else {
-      stSwitchSource('upload');
-      stResetUploadPreview();
-    }
-  } // end savedMode === 'standard'
 
   // Step 3 — songs
   stSongListData = [];
@@ -11638,10 +11608,6 @@ function stWizBack(){
 
 function stStep1Valid(){
   if(stSourceMode === 'upload'){
-    if(stUploadMode === 'vinyl'){
-      // Vinyl mode: label is optional (can use blank center), always valid if mode selected
-      return true;
-    }
     const img = document.getElementById('stCoverPreviewImg');
     return img && img.src && img.style.display !== 'none';
   } else {
@@ -12011,62 +11977,6 @@ function stAddFromDropdown(sel){
 }
 
 
-/* ── Vinyl Mode State ── */
-let stUploadMode = 'standard'; // 'standard' | 'vinyl'
-let stVinylFile = null;        // the round PNG file object
-let stVinylPos  = 'left';      // 'left' | 'right'
-
-function stCheckNextBtn(){
-  const next = document.getElementById('stBtnNext');
-  if(!next) return;
-  next.disabled = (stCurrentStep === 1 && !stStep1Valid());
-}
-
-function stSetUploadMode(mode){
-  stUploadMode = mode;
-  document.getElementById('stModeStd').classList.toggle('active', mode==='standard');
-  document.getElementById('stModeVinyl').classList.toggle('active', mode==='vinyl');
-  document.getElementById('stStdPanel').style.display   = mode==='standard' ? '' : 'none';
-  document.getElementById('stVinylPanel').style.display = mode==='vinyl'    ? '' : 'none';
-  stCheckNextBtn();
-}
-
-function stSetVinylPos(pos){
-  stVinylPos = pos;
-  document.getElementById('stVinylPosLeft').classList.toggle('active',  pos==='left');
-  document.getElementById('stVinylPosRight').classList.toggle('active', pos==='right');
-}
-
-function stOnVinylFile(input){
-  const file = input.files[0];
-  if(!file) return;
-  stVinylFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('stVinylLabelImg');
-    img.src = e.target.result;
-    img.style.display = 'block';
-    document.getElementById('stVinylLabelPlaceholder').style.display = 'none';
-    document.getElementById('stVinylLabelZone').classList.add('has-label');
-    document.getElementById('stClearVinylBtn').style.display = '';
-    // Start spin-preview in admin for fun
-    img.style.animation = '';
-  };
-  reader.readAsDataURL(file);
-  stCheckNextBtn();
-}
-
-function stClearVinylFile(){
-  stVinylFile = null;
-  const img = document.getElementById('stVinylLabelImg');
-  img.src=''; img.style.display='none';
-  document.getElementById('stVinylLabelPlaceholder').style.display='';
-  document.getElementById('stVinylLabelZone').classList.remove('has-label');
-  document.getElementById('stClearVinylBtn').style.display='none';
-  document.getElementById('stVinylFileInput').value='';
-  stCheckNextBtn();
-}
-
 /* ── Save ── */
 async function saveSilbertablettTile(){
   const row = rowById(stModalRowId);
@@ -12083,10 +11993,6 @@ async function saveSilbertablettTile(){
   cell.stRotEnabled   = false;
   cell.stRotDir       = 'cw';
   cell.stRotSpeed     = 'slow';
-
-  // Vinyl mode
-  cell.stUploadMode   = stUploadMode;
-  cell.stVinylPos     = stVinylPos;
 
   // WYS placement
   cell.stCoverX   = stWys.x;
@@ -12123,15 +12029,6 @@ async function saveSilbertablettTile(){
       const al=albumsData.find(a=>a.slug===slug);
       cell.stImageUrl = (al&&al.cover_url) ? al.cover_url : (cell.stImageUrl||'');
     }
-  }
-
-  // Vinyl label upload to S3
-  if(stVinylFile){
-    try{
-      const s3Key='artwork/st-vinyl-'+Date.now()+'.png';
-      cell.stVinylLabelUrl = await uploadToS3(stVinylFile, s3Key, null);
-      stVinylFile = null;
-    }catch(e){ toast('Vinyl-Label-Upload fehlgeschlagen: '+e.message,'err'); return; }
   }
 
   renderHomeEditor();
@@ -13112,38 +13009,6 @@ async function restoreSnapshot(){
 .st-picker-add{background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0}
 .st-picker-all-dropdown{width:100%;margin-top:6px;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px;cursor:pointer}
 .st-album-load-btn{padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer}
-
-/* ── Vinyl Upload Mode Toggle ── */
-.st-mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.st-mode-btn{padding:10px 12px;border-radius:10px;background:#2a2a2a;border:2px solid #444;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:border-color .15s,color .15s,background .15s}
-.st-mode-btn.active{border-color:#85ACC9;color:#cfe5f5;background:rgba(133,172,201,.08)}
-
-/* ── Vinyl Stage ── */
-.st-vinyl-frame-wrap{display:flex;flex-direction:column;align-items:center}
-.st-vinyl-stage{position:relative;width:100%;max-width:260px;margin:0 auto}
-.st-vinyl-deck{width:100%;height:auto;display:block;border-radius:10px;user-select:none;-webkit-user-drag:none}
-/* Label zone: positioned over the white circle on the vinyl image.
-   The white label center is roughly at 50% x, 47% y of the image,
-   with a radius of about 19% of the image width. */
-.st-vinyl-label-zone{
-  position:absolute;
-  left:50%; top:47%;
-  transform:translate(-50%,-50%);
-  width:38%; padding-bottom:38%;
-  border-radius:50%;
-  overflow:hidden;
-  cursor:pointer;
-  border:2px dashed rgba(133,172,201,.35);
-  background:rgba(6,20,32,.2);
-  transition:border-color .2s,background .2s;
-}
-.st-vinyl-label-zone:hover{border-color:#85ACC9;background:rgba(133,172,201,.1)}
-.st-vinyl-label-zone.has-label{border-style:solid;border-color:rgba(133,172,201,.5)}
-.st-vinyl-label-placeholder{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;pointer-events:none;
-}
 </style>
 
 <div id="stWizard">
@@ -13173,59 +13038,17 @@ async function restoreSnapshot(){
 
         <!-- Upload Panel -->
         <div class="st-source-panel active" id="stSrcUpload">
-
-          <!-- Mode Toggle: Standard | Vinyl -->
-          <div class="st-mode-toggle" id="stModeToggle">
-            <div class="st-mode-btn active" id="stModeStd" onclick="stSetUploadMode('standard')">◻ Standard</div>
-            <div class="st-mode-btn" id="stModeVinyl" onclick="stSetUploadMode('vinyl')">◎ Vinyl</div>
+          <div class="st-cover-frame" id="stUploadFrame" onclick="document.getElementById('stCoverFileInput').click()">
+            <img id="stCoverPreviewImg" src="" alt="" style="display:none">
+            <div class="st-cover-placeholder" id="stUploadPlaceholder">
+              <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              <span>PNG · JPG · WebP</span>
+            </div>
+            <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
           </div>
-
-          <!-- STANDARD: 1:1 frame -->
-          <div id="stStdPanel">
-            <div class="st-cover-frame" id="stUploadFrame" onclick="document.getElementById('stCoverFileInput').click()">
-              <img id="stCoverPreviewImg" src="" alt="" style="display:none">
-              <div class="st-cover-placeholder" id="stUploadPlaceholder">
-                <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                <span>PNG · JPG · WebP</span>
-              </div>
-              <input id="stCoverFileInput" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none" onchange="stOnCoverFile(this)">
-            </div>
-            <div style="text-align:center;margin-bottom:8px">
-              <button id="stClearUploadBtn" onclick="stClearCoverFile()" style="display:none;background:none;border:none;color:rgba(133,172,201,.45);font-size:11px;cursor:pointer;text-decoration:underline">× Bild entfernen</button>
-            </div>
+          <div style="text-align:center;margin-bottom:8px">
+            <button id="stClearUploadBtn" onclick="stClearCoverFile()" style="display:none;background:none;border:none;color:rgba(133,172,201,.45);font-size:11px;cursor:pointer;text-decoration:underline">× Bild entfernen</button>
           </div>
-
-          <!-- VINYL: Plattenspieler-Frame -->
-          <div id="stVinylPanel" style="display:none">
-            <!-- Cover-Position: Links oder Rechts -->
-            <div style="font-size:10px;color:rgba(133,172,201,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Plattenspieler-Position auf der Kachel</div>
-            <div class="st-layout-row" style="margin-bottom:14px">
-              <div class="st-layout-opt active" id="stVinylPosLeft" onclick="stSetVinylPos('left')">◁ Links</div>
-              <div class="st-layout-opt" id="stVinylPosRight" onclick="stSetVinylPos('right')">Rechts ▷</div>
-            </div>
-
-            <!-- The vinyl frame: Plattenspieler-Grafik mit klickbarem Label-Circle -->
-            <div class="st-vinyl-frame-wrap">
-              <!-- Plattenspieler-Bild als Hintergrund -->
-              <div class="st-vinyl-stage" id="stVinylStage">
-                <img class="st-vinyl-deck" src="https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg" alt="Plattenspieler" onerror="this.style.display='none'">
-                <!-- Kreis-Label-Zone (klickbar) — positioniert über der weißen Fläche -->
-                <div class="st-vinyl-label-zone" id="stVinylLabelZone" onclick="document.getElementById('stVinylFileInput').click()" title="PNG-Motiv hochladen">
-                  <img id="stVinylLabelImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
-                  <div class="st-vinyl-label-placeholder" id="stVinylLabelPlaceholder">
-                    <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:rgba(133,172,201,.5);stroke-width:1.5;fill:none"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                    <span style="font-size:9px;color:rgba(133,172,201,.4);text-transform:uppercase;letter-spacing:.07em;text-align:center;line-height:1.4">Rundes<br>PNG</span>
-                  </div>
-                </div>
-                <input id="stVinylFileInput" type="file" accept="image/png" style="display:none" onchange="stOnVinylFile(this)">
-              </div>
-              <div style="text-align:center;margin-top:6px">
-                <button id="stClearVinylBtn" onclick="stClearVinylFile()" style="display:none;background:none;border:none;color:rgba(133,172,201,.45);font-size:11px;cursor:pointer;text-decoration:underline">× Label entfernen</button>
-              </div>
-              <div style="font-size:10px;color:rgba(133,172,201,.28);text-align:center;margin-top:4px;line-height:1.5">Rundes PNG-Motiv wird als Plattenlabel angezeigt.<br>Dreht sich beim Abspielen mit 33⅓ RPM.</div>
-            </div>
-          </div>
-
         </div>
 
         <!-- Album Panel -->
