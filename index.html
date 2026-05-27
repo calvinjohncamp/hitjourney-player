@@ -6042,8 +6042,12 @@ function buildHomeCard(cell, extraClass){
     }
     if(cell.fn === 'link'){
       if(cell.url === '#archive'){ showArchive(); return; }
-      if(cell.url === '#mrdj'){ showMrDJ(); return; }
+      if(cell.url === '#mrdj' || cell.url === 'mrdj' || cell.url === 'mr-dj'){ showMrDJ(); return; }
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
+    }
+    if(cell.fn === 'subpage'){
+      const u = String(cell.url || cell.slug || '').toLowerCase().trim();
+      if(u === '#mrdj' || u === 'mrdj' || u === 'mr-dj'){ showMrDJ(); return; }
     }
 
     // Home-Sonderfall: einzelne Audio-Teaser wie oben „Tante Paula“
@@ -7058,7 +7062,7 @@ function resolveAlbumKey(slug){
 function playSongOrAlbum(cell){
   if(cell.fn === 'link'){
     if(cell.url === '#archive'){ showArchive(); return; }
-    if(cell.url === '#mrdj'){ showMrDJ(); return; }
+    if(cell.url === '#mrdj' || cell.url === 'mrdj' || cell.url === 'mr-dj'){ showMrDJ(); return; }
     if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
   }
   const albumKey = resolveAlbumKey(cell.slug);

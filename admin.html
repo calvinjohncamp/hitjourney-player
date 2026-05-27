@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260527-silbertablett-pin-songs-fix -->
+<!-- Version: admin-v20260527-mrdj-admin-link-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -7772,6 +7772,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-action-icon">↗</span>
           <span class="htm-action-label">Unterseite gestalten</span>
         </button>
+        <button class="htm-action-btn" data-action="mrdj" onclick="htmSetAction('mrdj',this)">
+          <span class="htm-action-icon">🎧</span>
+          <span class="htm-action-label">Mr. DJ öffnen</span>
+        </button>
       </div>
 
       <!-- Song wählen (action=play) -->
@@ -10507,7 +10511,7 @@ let htmAlbumMotifFile = null;
 let htmAlbumMotifUrl  = '';
 let htmCurrentStep  = 1;
 let htmChosenType   = '';    // '1x1','2x1','4x1','1x2','trio','language','slideshow'
-let htmChosenAction = '';    // 'play','lyrics','album','link'
+let htmChosenAction = '';    // 'play','lyrics','album','link','subpage','mrdj'
 let htmChosenSource = 'upload'; // 'upload','song','album'
 
 /* ── Step navigation ── */
@@ -11125,7 +11129,7 @@ function openHomeTileModal(rowId, cellIdx){
   const cell = row && row.cells[cellIdx];
   if(cell){
     htmChosenType   = cell.type || '';
-    htmChosenAction = cell.fn==='link' ? 'link' : cell.fn==='subpage' ? 'subpage' : cell.fn==='album' ? 'album' : 'play';
+    htmChosenAction = (cell.fn==='link' && cell.url==='#mrdj') ? 'mrdj' : cell.fn==='link' ? 'link' : cell.fn==='subpage' ? 'subpage' : cell.fn==='album' ? 'album' : 'play';
     // Restore action-level song/album selections from existing cell
     if(cell.slug && (cell.fn==='play'||!cell.fn)){
       htmActionSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl||'', cover21Url:cell.cover21Url||cell.imageUrl||''};
@@ -11283,7 +11287,12 @@ async function saveHomeTile(){
   const lyricsCb = document.getElementById('htmLyricsCycleCheck');
   updatedCell.lyricsCycle = htmChosenAction === 'play' && lyricsCb && lyricsCb.checked;
 
-  if(htmChosenAction === 'subpage'){
+  if(htmChosenAction === 'mrdj'){
+    updatedCell.fn   = 'link';
+    updatedCell.url  = '#mrdj';
+    updatedCell.slug = '';
+    updatedCell.alt  = updatedCell.alt || 'Mr. DJ';
+  } else if(htmChosenAction === 'subpage'){
     updatedCell.fn   = 'subpage';
     updatedCell.url  = document.getElementById('htmSubpageUrl')?.value?.trim() || '';
     updatedCell.slug = '';
@@ -11316,7 +11325,7 @@ async function saveHomeTile(){
 
   // Badge / label
   const isLyrics = updatedCell.lyricsCycle;
-  const badgeMap = {play: isLyrics ? 'Song ♪' : 'Song', album:'Album', link:'Link', subpage:'Unterseite', playlist:'Playlist'};
+  const badgeMap = {play: isLyrics ? 'Song ♪' : 'Song', album:'Album', link:'Link', subpage:'Unterseite', mrdj:'Mr. DJ', playlist:'Playlist'};
   updatedCell._badge = badgeMap[htmChosenAction] || 'Song';
 
   closeHomeTileModal();
