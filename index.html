@@ -6366,14 +6366,15 @@ function buildSilbertablettEl(cell){
     deckImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none';
     deckImg.onerror = ()=>{ deckImg.style.opacity = '.15'; };
 
-    // The spinning label — a circle at the center of the white area
-    // White label center is at ~50% x, ~47% y of the deck image
+    // The spinning label — a circle at the center of the white area.
+    // Pixelgenau gemessen: Mittelpunkt exakt 50%/50%, Diameter 23% der Bildbreite.
+    // Wir setzen 21% damit der silberne Pin-Punkt in der Mitte sichtbar bleibt.
     const labelWrap = document.createElement('div');
     labelWrap.style.cssText = [
       'position:absolute',
-      'left:50%', 'top:47%',
+      'left:50%', 'top:50%',
       'transform:translate(-50%,-50%)',
-      'width:38%', 'padding-bottom:38%',
+      'width:21%', 'padding-bottom:21%',
       'border-radius:50%',
       'overflow:hidden',
       'pointer-events:none',

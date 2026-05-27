@@ -11554,6 +11554,7 @@ function openSilbertablettModal(rowId){
 
   const wiz = document.getElementById('stWizard');
   if(wiz) wiz.style.display = 'flex';
+  stPopulateAllSongsDropdown(); // sofort befüllen, nicht erst auf Schritt 3 warten
   stGotoStep(1);
 }
 
@@ -13093,14 +13094,15 @@ async function restoreSnapshot(){
   object-fit:cover;display:block;
   pointer-events:none;
 }
-/* Label zone: weiße Fläche des Plattenspielers.
-   Gemessen an der Grafik: Mittelpunkt bei ~50% x / ~46.5% y,
-   Durchmesser ca. 38.5% der Bildbreite. */
+/* Label zone: pixelgenau gemessen aus Plattenspieler.jpg (2048x2048):
+   Weißer Kreis-Mittelpunkt exakt bei 50%/50%, Diameter 23% der Bildbreite.
+   Label wird leicht kleiner als der weiße Kreis gesetzt (21%), damit der
+   silberne Edelstahlpin in der Mitte des Originals sichtbar bleibt. */
 .st-vinyl-wys-label{
   position:absolute;
-  left:50%; top:46.5%;
+  left:50%; top:50%;
   transform:translate(-50%,-50%);
-  width:38.5%; padding-bottom:38.5%;
+  width:21%; padding-bottom:21%;
   border-radius:50%;
   overflow:hidden;
   pointer-events:none;
@@ -13235,12 +13237,12 @@ async function restoreSnapshot(){
           <div class="st-vinyl-wys-stage" id="stVinylWysStage">
             <!-- Plattenspieler-Bild füllt die Kachel -->
             <img class="st-vinyl-wys-deck" src="https://hitjourney.s3.eu-west-1.amazonaws.com/assets/Plattenspieler.jpg" alt="" onerror="this.style.opacity='.2'">
-            <!-- Label-Kreis: positioniert über der weißen Fläche, zeigt das Motiv -->
+            <!-- Label-Kreis: 21% Durchmesser, 50%/50% — Pin des Originals bleibt sichtbar -->
             <div class="st-vinyl-wys-label" id="stVinylWysLabel">
               <img id="stVinylWysLabelImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">
             </div>
           </div>
-          <div style="font-size:10px;color:rgba(133,172,201,.28);line-height:1.5;margin-bottom:6px;text-align:center">Vorschau: Dein Motiv erscheint als Plattenlabel und dreht sich beim Abspielen mit 33⅓ RPM.</div>
+          <div style="font-size:10px;color:rgba(133,172,201,.28);line-height:1.5;margin-bottom:6px;text-align:center">Dein Motiv erscheint als Plattenlabel · dreht sich beim Abspielen mit 33⅓ RPM.<br>Position &amp; Größe werden automatisch auf die weiße Label-Fläche gesetzt.</div>
         </div>
 
       </div><!-- /stPanel2 -->
