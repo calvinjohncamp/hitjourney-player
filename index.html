@@ -6290,24 +6290,13 @@ function buildSilbertablettEl(cell){
   coverBg.appendChild(coverImgEl);
   coverTile.appendChild(coverBg);
 
-  // Cover-Kachel: 2x Klick = Start/Stopp
-  let stCoverLastClickTime = 0;
+  // Cover-Kachel: Klick = nächster Song (bei laufender Wiedergabe), sonst ersten starten.
+  // Toggle: nochmal klicken auf denselben Song → pause/play.
   let stCoverCurrentIdx = 0;
+  let stCoverCurrentMp3 = null;
   coverTile.addEventListener('click', ()=>{
-    const now = Date.now();
-    const isDbl = (now - stCoverLastClickTime) < 400;
-    stCoverLastClickTime = now;
-
-    if(isDbl){
-      // Doppelklick → Stop
-      audio.pause();
-      coverTile.classList.remove('st-playing');
-      return;
-    }
-
-    // Einfachklick → nächster Song in Playlist (zyklisch)
     if(!slides.length) return;
-    // Wenn gerade dieser Cover-Kontext spielt → nächsten Song
+    // Wenn schon spielt → nächsten Song
     if(coverTile.classList.contains('st-playing')){
       stCoverCurrentIdx = (stCoverCurrentIdx + 1) % slides.length;
     }
@@ -6315,27 +6304,39 @@ function buildSilbertablettEl(cell){
     if(!s) return;
     const song = hjFindLiveSong(s) || (s.mp3 ? s : null);
     if(!song || !song.mp3) return;
+
+    // Toggle: gleicher Song → pause/play
+    if(stCoverCurrentMp3 === song.mp3){
+      if(audio.paused){ audio.play().catch(()=>{}); coverTile.classList.add('st-playing'); }
+      else            { audio.pause();               coverTile.classList.remove('st-playing'); }
+      return;
+    }
+
     window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch',{detail:{source:'silbertablett-cover'}}));
     featuredMode = true;
+    stCoverCurrentMp3 = song.mp3;
     playerBar.classList.remove('visible');
     audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
     coverTile.classList.add('st-playing');
   });
 
   window.addEventListener('hj:teaser-audio-switch', e=>{
-    if(e.detail && e.detail.source !== 'silbertablett-cover'){ coverTile.classList.remove('st-playing'); }
+    if(e.detail && e.detail.source !== 'silbertablett-cover'){
+      stCoverCurrentMp3 = null;
+      coverTile.classList.remove('st-playing');
+    }
   });
   audio.addEventListener('ended', ()=>{
-    if(coverTile.classList.contains('st-playing')){
-      // Auto-next
-      stCoverCurrentIdx = (stCoverCurrentIdx + 1) % slides.length;
-      const s = slides[stCoverCurrentIdx];
-      const song = s && (hjFindLiveSong(s) || (s.mp3 ? s : null));
-      if(song && song.mp3){
-        audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
-      } else {
-        coverTile.classList.remove('st-playing');
-      }
+    if(!coverTile.classList.contains('st-playing')) return;
+    stCoverCurrentIdx = (stCoverCurrentIdx + 1) % slides.length;
+    const s = slides[stCoverCurrentIdx];
+    const song = s && (hjFindLiveSong(s) || (s.mp3 ? s : null));
+    if(song && song.mp3){
+      stCoverCurrentMp3 = song.mp3;
+      audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
+    } else {
+      stCoverCurrentMp3 = null;
+      coverTile.classList.remove('st-playing');
     }
   });
 
@@ -6354,78 +6355,72 @@ function initStSlideshow(id, slides, bgColor, intervalMs){
   const imgs   = Array.from(covers.querySelectorAll('img:not(.ft-blank)'));
   imgs.forEach(img=>hjBindCoverFallback(img));
 
+  // cur ist die EINZIGE Quelle der Wahrheit: welches Cover gerade sichtbar ist.
+  // Click und Audio-Ende lesen immer cur — kein zweiter Zähler.
   let cur = 0;
   let timer = null;
-  let stSlideCurrentIdx = 0; // tracks which song is playing in this slideshow
+  let stSlideCurrentMp3 = null;
 
   function goTo(idx){
     cur = ((idx % slides.length) + slides.length) % slides.length;
     imgs.forEach((img,i)=> img.classList.toggle('active', i===cur));
   }
 
+  function stopTimer(){ clearInterval(timer); timer = null; }
   function startTimer(){
-    if(timer) clearInterval(timer);
+    stopTimer();
     if(slides.length < 2) return;
-    timer = setInterval(()=>goTo(cur+1), intervalMs);
+    timer = setInterval(()=> goTo(cur + 1), intervalMs);
   }
 
   goTo(0);
   startTimer();
 
-  // Diashow-Kachel: 2x Klick = Start/Stopp, einfach Klick = nächster Song
-  let stSlideLastClickTime = 0;
+  // Click → spielt den aktuell sichtbaren Song (cur) — identisch zu initDynamicSlideshow
   wrap.addEventListener('click', ()=>{
-    const now = Date.now();
-    const isDbl = (now - stSlideLastClickTime) < 400;
-    stSlideLastClickTime = now;
-
-    if(isDbl){
-      // Doppelklick → Stop
-      audio.pause();
-      wrap.classList.remove('st-playing');
-      return;
-    }
-
-    // Einfachklick → nächster Song (wenn schon spielt), sonst aktuellen Song starten
-    if(!slides.length) return;
-    if(wrap.classList.contains('st-playing')){
-      stSlideCurrentIdx = (stSlideCurrentIdx + 1) % slides.length;
-      // Auch das Bild mitschalten
-      goTo(stSlideCurrentIdx);
-      if(timer) clearInterval(timer);
-      startTimer();
-    }
-    const slide = slides[stSlideCurrentIdx];
+    const slide = slides[cur];
     if(!slide) return;
     let song = hjFindLiveSong(slide);
     if(!song || !song.mp3) song = slide.mp3 ? slide : null;
     if(!song || !song.mp3) return;
+
+    // Toggle: gleicher Song → pause/play
+    if(stSlideCurrentMp3 === song.mp3){
+      if(audio.paused){ audio.play().catch(()=>{}); wrap.classList.add('st-playing'); }
+      else            { audio.pause();               wrap.classList.remove('st-playing'); }
+      return;
+    }
+
+    // Neuer Song (anderes Cover angeklickt)
     window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch',{detail:{source:'silbertablett-slide'}}));
     featuredMode = true;
+    stSlideCurrentMp3 = song.mp3;
     playerBar.classList.remove('visible');
     audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
     wrap.classList.add('st-playing');
   });
 
-  window.addEventListener('hj:teaser-audio-switch', e=>{
-    if(e.detail && e.detail.source !== 'silbertablett-slide'){ wrap.classList.remove('st-playing'); }
+  // Song endet → automatisch nächsten Song in Playlist starten (cur weiterschieben)
+  audio.addEventListener('ended', ()=>{
+    if(!wrap.classList.contains('st-playing')) return;
+    goTo(cur + 1);          // cur ist jetzt der nächste Index
+    stopTimer(); startTimer();
+    const slide = slides[cur];
+    let song = slide && hjFindLiveSong(slide);
+    if(!song || !song.mp3) song = (slide && slide.mp3) ? slide : null;
+    if(song && song.mp3){
+      stSlideCurrentMp3 = song.mp3;
+      audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
+    } else {
+      stSlideCurrentMp3 = null;
+      wrap.classList.remove('st-playing');
+    }
   });
 
-  audio.addEventListener('ended', ()=>{
-    if(wrap.classList.contains('st-playing')){
-      // Auto-next
-      stSlideCurrentIdx = (stSlideCurrentIdx + 1) % slides.length;
-      goTo(stSlideCurrentIdx);
-      if(timer) clearInterval(timer);
-      startTimer();
-      const slide = slides[stSlideCurrentIdx];
-      let song = slide && hjFindLiveSong(slide);
-      if(!song || !song.mp3) song = (slide && slide.mp3) ? slide : null;
-      if(song && song.mp3){
-        audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
-      } else {
-        wrap.classList.remove('st-playing');
-      }
+  window.addEventListener('hj:teaser-audio-switch', e=>{
+    if(e.detail && e.detail.source !== 'silbertablett-slide'){
+      stSlideCurrentMp3 = null;
+      wrap.classList.remove('st-playing');
     }
   });
 }
