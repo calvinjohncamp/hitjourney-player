@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v198-language-ipad-button-alignment-fix -->
+<!-- Version: v199-silbertablett-pin-songs-fix -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -162,6 +162,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-slide-covers .ft-blank{display:none}
 .st-slide-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
 .st-cover-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
+.st-vinyl-pin-img{position:absolute;left:50%;top:50%;width:8.8%;height:8.8%;transform:translate(-50%,-50%);z-index:30;pointer-events:none;object-fit:contain;filter:drop-shadow(-2px 1px 3px rgba(0,0,0,.35))}
 .st-cover-bg{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
 .st-cover-img-wys{border-radius:3px}
 /* Vinyl spin: 33⅓ RPM = 1 revolution per 1.8s */
@@ -6397,28 +6398,12 @@ function buildSilbertablettEl(cell){
     }
     labelWrap.appendChild(labelImg);
 
-    // Pin + Schatten als SVG — exakt über dem Label-Mittelpunkt, fix positioniert
-    const pinSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    pinSvg.setAttribute('viewBox','0 0 100 100');
-    pinSvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:20';
-    pinSvg.innerHTML = `
-      <defs>
-        <radialGradient id="vPinShad" cx="40%" cy="50%" r="55%">
-          <stop offset="0%" stop-color="#000" stop-opacity="0.42"/>
-          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="vPinBody" cx="35%" cy="30%" r="65%">
-          <stop offset="0%" stop-color="#e8e8e8"/>
-          <stop offset="45%" stop-color="#aaa"/>
-          <stop offset="100%" stop-color="#555"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="${vinylX-0.6}" cy="${vinylY+0.4}" rx="${vinylSize*0.22}" ry="${vinylSize*0.22}"
-               fill="url(#vPinShad)" opacity="0.75"/>
-      <circle cx="${vinylX}" cy="${vinylY}" r="${vinylSize*0.1}"
-              fill="url(#vPinBody)" stroke="#2a2a2a" stroke-width="0.5"/>
-      <circle cx="${vinylX-0.35}" cy="${vinylY-0.38}" r="${vinylSize*0.03}"
-              fill="white" opacity="0.9"/>`;
+    // Edelstahl-Pin aus der Original-Schallplatte, inklusive leichtem Schatten
+    const pinImg = document.createElement('img');
+    pinImg.className = 'st-vinyl-pin-img';
+    pinImg.alt = '';
+    pinImg.setAttribute('aria-hidden','true');
+    pinImg.src = 'data:image/png;base64,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';
 
     // Position label after tile has rendered dimensions
     function positionLabel(){
@@ -6433,7 +6418,7 @@ function buildSilbertablettEl(cell){
 
     coverTile.appendChild(deckImg);
     coverTile.appendChild(labelWrap);
-    coverTile.appendChild(pinSvg);
+    coverTile.appendChild(pinImg);
 
     requestAnimationFrame(positionLabel);
     const ro = new ResizeObserver(positionLabel);
