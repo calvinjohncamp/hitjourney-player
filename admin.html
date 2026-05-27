@@ -10238,7 +10238,7 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells[0] = {...row.cells[0], ...old0, type:'silbertablett',
       stBgColor:'#000000', stCoverPos:'right', stCoverTitle:'',
       stShowTitle:false, stRotEnabled:false, stRotDir:'cw',
-      stRotSpeed:'slow', stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:'',
+      stRotSpeed:'slow', stSsSpeed:'3', stPlaylistSlug:'', stImageUrl:'',
       stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0
     };
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
@@ -10461,7 +10461,7 @@ function clearSilbertablett(rowId){
     stBgColor:'#000000', stCoverPos:'right',
     stCoverTitle:'', stShowTitle:false,
     stRotEnabled:false, stRotDir:'cw', stRotSpeed:'slow',
-    stSsSpeed:'mid', stPlaylistSlug:'', stImageUrl:'',
+    stSsSpeed:'3', stPlaylistSlug:'', stImageUrl:'',
     stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0};
   renderHomeEditor();
 }
@@ -11505,7 +11505,12 @@ function openSilbertablettModal(rowId){
   stUpdateColorPreview();
 
   const ssEl = document.getElementById('stSsSpeed');
-  if(ssEl) ssEl.value = c.stSsSpeed || 'mid';
+  if(ssEl){
+    // Compat: alte Werte 'slow'→4, 'mid'→3, 'fast'→2
+    const legacyMap = {slow:'4', mid:'3', fast:'2'};
+    const raw = c.stSsSpeed || '3';
+    ssEl.value = legacyMap[raw] || raw;
+  }
 
   stSetCoverPos(c.stCoverPos || 'right');
 
@@ -11583,7 +11588,7 @@ function stGotoStep(n){
   }
 
   if(n===2) stWysInit();
-  if(n===3) stFillAllSongsDrop();
+  if(n===3) stPopulateAllSongsDropdown();
 }
 
 function stWizNext(){
@@ -11915,27 +11920,7 @@ function stRenderSongList(){
   });
 }
 
-function stFillAllSongsDrop(){
-  const sel = document.getElementById('stAllSongsDrop');
-  if(!sel) return;
-  const source = typeof songsData !== 'undefined' ? songsData : [];
-  const sorted = [...source].sort((a,b)=>(a.title||a.slug||'').localeCompare(b.title||b.slug||'','de'));
-  sel.innerHTML = sorted.map(s=>`<option value="${(s.slug||'').replace(/"/g,'&quot;')}">${s.title||s.slug}${s.artist?' · '+s.artist:''}</option>`).join('');
-}
-
-function stAddFromDrop(sel){
-  const slug = sel.value;
-  if(!slug) return;
-  const source = typeof songsData !== 'undefined' ? songsData : [];
-  const s = source.find(x=>x.slug===slug);
-  if(!s) return;
-  if(!stSongListData.find(x=>x.slug===slug)){
-    stSongListData.push({slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3_url||'',cover:s.cover_url||''});
-    stRenderSongList();
-  }
-  // Reset selection so same item can be re-selected
-  sel.selectedIndex = -1;
-}
+function stRenderSongPicker(){
   const q=((document.getElementById('stSongSearch')||{}).value||'').toLowerCase().trim();
   const pickerEl=document.getElementById('stSongPicker');
   if(!pickerEl) return;
@@ -11965,6 +11950,33 @@ function stAddFromDrop(sel){
   });
 }
 
+function stPopulateAllSongsDropdown(){
+  const sel = document.getElementById('stSongAllDropdown');
+  if(!sel) return;
+  const source = typeof songsData !== 'undefined' ? songsData : [];
+  const sorted = [...source].sort((a,b)=>(a.title||'').localeCompare(b.title||'','de'));
+  sel.innerHTML = '<option value="">— Alle Songs (alphabetisch) —</option>';
+  sorted.forEach(s=>{
+    const opt = document.createElement('option');
+    opt.value = s.slug;
+    opt.textContent = s.title + (s.artist ? ' · ' + s.artist : '');
+    sel.appendChild(opt);
+  });
+}
+
+function stAddFromDropdown(sel){
+  const slug = sel.value;
+  if(!slug){ return; }
+  const source = typeof songsData !== 'undefined' ? songsData : [];
+  const s = source.find(x=>x.slug===slug);
+  if(s && !stSongListData.find(x=>x.slug===s.slug)){
+    stSongListData.push({slug:s.slug,title:s.title||s.slug,artist:s.artist||'',mp3:s.mp3_url||'',cover:s.cover_url||''});
+    stRenderSongList();
+  }
+  sel.value = '';
+}
+
+
 /* ── Save ── */
 async function saveSilbertablettTile(){
   const row = rowById(stModalRowId);
@@ -11974,7 +11986,7 @@ async function saveSilbertablettTile(){
 
   cell.stBgColor      = (document.getElementById('stBgColor')||{}).value || '#000000';
   cell.stCoverPos     = stGetCoverPos();
-  cell.stSsSpeed      = (document.getElementById('stSsSpeed')||{}).value || 'mid';
+  cell.stSsSpeed      = (document.getElementById('stSsSpeed')||{}).value || '3';
   // Compat fields (no longer in UI but kept for existing data)
   cell.stCoverTitle   = '';
   cell.stShowTitle    = false;
@@ -12995,6 +13007,7 @@ async function restoreSnapshot(){
 .st-picker-item:hover{background:#2a2a2a}
 .st-picker-item:last-child{border-bottom:none}
 .st-picker-add{background:none;border:1px solid #444;border-radius:4px;color:#888;font-size:11px;cursor:pointer;padding:2px 7px;flex-shrink:0}
+.st-picker-all-dropdown{width:100%;margin-top:6px;padding:7px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #333;color:#f1ecdf;font-size:12px;cursor:pointer}
 .st-album-load-btn{padding:4px 10px;border-radius:6px;background:#2a2a2a;border:1px solid #444;color:#aaa;font-size:11px;cursor:pointer}
 </style>
 
@@ -13075,9 +13088,9 @@ async function restoreSnapshot(){
         <!-- Diashow-Geschwindigkeit -->
         <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Diashow-Wechsel</div>
         <select class="st-speed-sel" id="stSsSpeed">
-          <option value="fast">Schnell (2s)</option>
-          <option value="mid" selected>Mittel (3s)</option>
-          <option value="slow">Langsam (4s)</option>
+          <option value="2">2 Sekunden</option>
+          <option value="3" selected>3 Sekunden</option>
+          <option value="4">4 Sekunden</option>
         </select>
 
         <!-- WYSIWYG Cover Tile -->
@@ -13116,10 +13129,10 @@ async function restoreSnapshot(){
           <div style="font-size:12px;color:#555;text-align:center;padding:12px">Noch keine Songs</div>
         </div>
         <div class="st-picker-wrap">
-          <input class="st-picker-input" id="stSongSearch" placeholder="Song suchen…" oninput="stRenderSongPicker()">
+          <input class="st-picker-input" id="stSongSearch" placeholder="Song suchen und hinzufügen…" oninput="stRenderSongPicker()">
           <div class="st-picker-results" id="stSongPicker"></div>
-          <div style="margin-top:8px;font-size:10px;color:rgba(133,172,201,.35);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px">Alle Songs</div>
-          <select id="stAllSongsDrop" size="6" style="width:100%;background:#111;border:1px solid #333;border-radius:6px;color:#ccc;font-size:12px;padding:2px 0" onchange="stAddFromDrop(this)">
+          <select class="st-picker-all-dropdown" id="stSongAllDropdown" onchange="stAddFromDropdown(this)">
+            <option value="">— Alle Songs (alphabetisch) —</option>
           </select>
         </div>
       </div><!-- /stPanel3 -->
