@@ -157,9 +157,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-slide-tile,.st-cover-tile{position:relative;aspect-ratio:1/1;overflow:hidden;cursor:pointer;border-radius:8px;background:#000;transition:opacity .13s}
 .st-slide-tile:active,.st-cover-tile:active{opacity:.85}
 .st-slide-covers{position:absolute;inset:0}
-.st-slide-cover{position:absolute;inset:0;opacity:0;transition:opacity .7s ease;background:#000}
-.st-slide-cover.st-active{opacity:1}
-.st-slide-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.st-slide-covers img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .7s ease}
+.st-slide-covers img.active{opacity:1}
+.st-slide-covers .ft-blank{display:none}
 .st-slide-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
 .st-cover-tile.st-playing::after{content:'';position:absolute;inset:0;border:2px solid rgba(133,172,201,.55);border-radius:8px;pointer-events:none;animation:hcPulse 2s ease-in-out infinite}
 .st-cover-bg{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
@@ -6201,13 +6201,12 @@ function buildSlideshowEl(cell){
 }
 
 
-/* ── Silbertablett: Cover + Album-Diashow — st-v20260527a ─────── */
+/* ── Silbertablett: Cover-Kachel + Diashow-Kachel — st-v20260527b ─────── */
 function buildSilbertablettEl(cell){
   cell = cell || {};
   const bgColor        = cell.stBgColor      || '#000000';
   const coverPos       = cell.stCoverPos     || 'right';
   const ssSpeed        = cell.stSsSpeed      || 'mid';
-  const ssPlaylistSlug = cell.stPlaylistSlug || '';
   const staticImgUrl   = cell.stImageUrl     || cell.imageUrl || '';
 
   // WYS cover placement
@@ -6218,150 +6217,85 @@ function buildSilbertablettEl(cell){
 
   const SS_MS = { slow:8000, mid:4000, fast:2000 };
 
+  // ── Slides: identisch zu buildSlideshowEl — aus stCustomSongs ──────────
+  // stCustomSongs wird vom Admin immer gespeichert (entweder Album-Tracks oder manuell)
   function buildSlides(){
-    // Custom Songs haben Vorrang (vom Admin manuell zusammengestellt)
     if(cell.stCustomSongs && cell.stCustomSongs.length){
       return cell.stCustomSongs.map(s=>({
-        slug:s.slug, title:s.title||'', artist:s.artist||'',
-        coverUrl:s.coverUrl||s.cover||'', mp3:s.mp3||''
-      })).filter(s=>s.coverUrl||s.mp3);
+        slug:     s.slug      || '',
+        title:    s.title     || s.slug || '',
+        artist:   s.artist    || '',
+        coverUrl: s.coverUrl  || s.cover || '',
+        mp3:      s.mp3       || s.mp3_url || ''
+      }));
     }
-    if(!ssPlaylistSlug) return [];
-    const albumKey = resolveAlbumKey(ssPlaylistSlug);
-    if(albumKey && ALBUMS[albumKey] && ALBUMS[albumKey].songs){
-      return ALBUMS[albumKey].songs
-        .filter(s => s && (s.cover || s.cover_url))
-        .map(s => ({ slug:s.slug, title:s.title||'', artist:s.artist||'', coverUrl:s.cover||s.cover_url||'', mp3:s.mp3||s.mp3_url||'' }));
-    }
-    const tracks = (window._supabasePlaylistTracks||[])
-      .filter(t => t.playlist_slug === ssPlaylistSlug)
-      .sort((a,b)=>(a.position||0)-(b.position||0));
-    return tracks.map(t=>{
-      const song = (SUPABASE_SONGS||[]).find(s=>s.slug===t.song_slug)||{};
-      return { slug:song.slug||t.song_slug, title:song.title||'', artist:song.artist||'', coverUrl:song.cover||song.cover_url||'', mp3:song.mp3||song.mp3_url||'' };
-    }).filter(s=>s.coverUrl);
+    return [];
   }
-
-  let slides = buildSlides();
+  const slides = buildSlides();
 
   const wrap = document.createElement('div');
   wrap.className = 'st-wrap';
 
+  // ── DIASHOW-KACHEL — baut identisch zu buildSlideshowEl ────────────────
+  const slideTileId = 'stSlide_' + (cell.id || Math.random().toString(36).slice(2,8));
+  function escAttr(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function slideImgTag(s, i){
+    const c = hjCoverCandidatesFor(s);
+    const src = c[0] || '';
+    const live = hjFindLiveSong(s);
+    const slug = s.slug || (live && live.slug) || '';
+    const title = s.title || (live && live.title) || '';
+    return `<img loading="${i===0?'eager':'lazy'}" decoding="async" src="${escAttr(src)}" data-srcs="${escAttr(c.join('||'))}" data-slide-slug="${escAttr(slug)}" data-slide-title="${escAttr(title)}">`;
+  }
+
   const slideTile = document.createElement('div');
   slideTile.className = 'st-slide-tile';
-  const coversEl = document.createElement('div');
-  coversEl.className = 'st-slide-covers';
-  slideTile.appendChild(coversEl);
+  slideTile.id = slideTileId;
+  slideTile.style.background = bgColor;
+  slideTile.innerHTML = `
+    <div class="st-slide-covers" id="ftCovers_${slideTileId}">
+      <img class="ft-blank" src="">
+      ${slides.map((s,i)=>slideImgTag(s,i)).join('')}
+    </div>`;
 
-  function renderSlideCovers(){
-    coversEl.innerHTML = '';
-    if(!slides.length){ coversEl.style.background = bgColor; return; }
-    slides.forEach((s,i)=>{
-      const div = document.createElement('div');
-      div.className = 'st-slide-cover' + (i===0 ? ' st-active' : '');
-      div.style.background = bgColor;
-      if(s.coverUrl){
-        const img = document.createElement('img');
-        img.src = s.coverUrl; img.alt = s.title||'';
-        img.loading = i===0 ? 'eager' : 'lazy';
-        div.appendChild(img);
-      }
-      coversEl.appendChild(div);
-    });
-  }
-  renderSlideCovers();
+  // Dot/text overlays not needed for Silbertablett slide tile — simpler display
+  requestAnimationFrame(()=> initStSlideshow(slideTileId, slides, bgColor, SS_MS[ssSpeed]||4000));
 
-  let stSlideCurrentMp3 = null;
-  let stCurIdx = 0;
-  let ssTimer = null;
-
-  function getCoverDivs(){ return Array.from(coversEl.querySelectorAll('.st-slide-cover')); }
-
-  function goToSlide(idx){
-    const divs = getCoverDivs();
-    if(!divs.length) return;
-    stCurIdx = ((idx % divs.length) + divs.length) % divs.length;
-    divs.forEach((d,i) => d.classList.toggle('st-active', i===stCurIdx));
-  }
-
-  function startSsTimer(){
-    if(ssTimer) clearInterval(ssTimer);
-    if(slides.length < 2) return;
-    ssTimer = setInterval(()=>goToSlide(stCurIdx+1), SS_MS[ssSpeed]||SS_MS.mid);
-  }
-
-  if(slides.length > 1) startSsTimer();
-
-  slideTile.addEventListener('click', ()=>{
-    const slide = slides[stCurIdx];
-    if(!slide) return;
-    let song = hjFindLiveSong(slide);
-    if(!song) song = { mp3:slide.mp3, title:slide.title };
-    if(!song || !song.mp3) return;
-    if(stSlideCurrentMp3 === song.mp3){
-      if(audio.paused){ audio.play().catch(()=>{}); slideTile.classList.add('st-playing'); }
-      else { audio.pause(); slideTile.classList.remove('st-playing'); }
-      return;
-    }
-    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch',{detail:{source:'silbertablett-slide'}}));
-    featuredMode = true;
-    stSlideCurrentMp3 = song.mp3;
-    playerBar.classList.remove('visible');
-    audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
-    slideTile.classList.add('st-playing');
-    coverTile.classList.remove('st-playing');
-    stCoverCurrentMp3 = null;
-  });
-
+  // ── COVER-KACHEL ────────────────────────────────────────────────────────
   const coverTile = document.createElement('div');
   coverTile.className = 'st-cover-tile';
   coverTile.style.background = bgColor;
 
   const coverBg = document.createElement('div');
   coverBg.className = 'st-cover-bg';
-  // WYS placement: position cover image using stored x/y/size/rot
+
   const coverImgEl = document.createElement('img');
-  coverImgEl.className = 'st-cover-img-wys';
   coverImgEl.alt = '';
-  const initCoverSrc = staticImgUrl || (slides.length ? slides[0].coverUrl : '');
+  const initCoverSrc = staticImgUrl || (slides.length ? (hjCoverCandidatesFor(slides[0])[0]||slides[0].coverUrl||'') : '');
   if(initCoverSrc) coverImgEl.src = initCoverSrc;
-  // Apply WYS transform
   coverImgEl.style.cssText = [
     'position:absolute',
     'width:'+coverSz+'%',
     'height:'+coverSz+'%',
-    'left:calc('+coverX+'% - '+coverSz/2+'%)',
-    'top:calc('+coverY+'% - '+coverSz/2+'%)',
+    'left:calc('+coverX+'% - '+(coverSz/2)+'%)',
+    'top:calc('+coverY+'% - '+(coverSz/2)+'%)',
     'transform:rotate('+coverRot+'deg)',
     'transform-origin:50% 50%',
     'object-fit:cover',
     'display:block',
     'border-radius:3px',
-    'pointer-events:none',
-    'will-change:transform'
+    'pointer-events:none'
   ].join(';');
   coverImgEl.onerror = ()=>{ coverImgEl.style.opacity='.2'; };
   coverBg.appendChild(coverImgEl);
   coverTile.appendChild(coverBg);
 
+  // Cover-Kachel Click → spielt ersten Song der Playlist
   let stCoverCurrentMp3 = null;
-  // Keep a live reference to custom songs for click handler
-  const stSongListLive = (cell.stCustomSongs && cell.stCustomSongs.length)
-    ? cell.stCustomSongs.map(s=>({slug:s.slug,title:s.title||'',artist:s.artist||'',mp3:s.mp3||s.mp3_url||'',coverUrl:s.coverUrl||s.cover||''}))
-    : [];
-  function getCoverSong(){
-    // Prefer first custom song, then album song, then first slide
-    if(stSongListLive.length) return hjFindLiveSong(stSongListLive[0]) || stSongListLive[0];
-    if(ssPlaylistSlug){
-      const albumKey = resolveAlbumKey(ssPlaylistSlug);
-      if(albumKey && ALBUMS[albumKey] && ALBUMS[albumKey].songs && ALBUMS[albumKey].songs[0]) return ALBUMS[albumKey].songs[0];
-    }
-    if(slides.length) return hjFindLiveSong(slides[0]) || slides[0];
-    return null;
-  }
-
   coverTile.addEventListener('click', ()=>{
-    const song = getCoverSong();
+    const s = slides[0];
+    if(!s) return;
+    const song = hjFindLiveSong(s) || (s.mp3 ? s : null);
     if(!song || !song.mp3) return;
     if(stCoverCurrentMp3 === song.mp3){
       if(audio.paused){ audio.play().catch(()=>{}); coverTile.classList.add('st-playing'); }
@@ -6374,37 +6308,69 @@ function buildSilbertablettEl(cell){
     playerBar.classList.remove('visible');
     audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
     coverTile.classList.add('st-playing');
-    slideTile.classList.remove('st-playing');
-    stSlideCurrentMp3 = null;
   });
 
   window.addEventListener('hj:teaser-audio-switch', e=>{
-    const src = e.detail && e.detail.source;
-    if(src !== 'silbertablett-slide'){ stSlideCurrentMp3=null; slideTile.classList.remove('st-playing'); }
-    if(src !== 'silbertablett-cover'){ stCoverCurrentMp3=null; coverTile.classList.remove('st-playing'); }
+    if(e.detail && e.detail.source !== 'silbertablett-cover'){ stCoverCurrentMp3=null; coverTile.classList.remove('st-playing'); }
   });
-  audio.addEventListener('ended', ()=>{
-    stSlideCurrentMp3=null; stCoverCurrentMp3=null;
-    slideTile.classList.remove('st-playing'); coverTile.classList.remove('st-playing');
-  });
+  audio.addEventListener('ended', ()=>{ stCoverCurrentMp3=null; coverTile.classList.remove('st-playing'); });
 
   if(coverPos === 'left'){ wrap.appendChild(coverTile); wrap.appendChild(slideTile); }
   else { wrap.appendChild(slideTile); wrap.appendChild(coverTile); }
 
-  if(!slides.length && (ssPlaylistSlug || (cell.stCustomSongs && cell.stCustomSongs.length))){
-    window.addEventListener('hj:albums-ready', ()=>{
-      slides = buildSlides(); renderSlideCovers();
-      if(slides.length > 1) startSsTimer();
-      if(!staticImgUrl && slides[0]) coverImgEl.src = slides[0].coverUrl;
-    }, {once:true});
-  }
-  // Also immediately try to render if SUPABASE_SONGS already loaded
-  if(!slides.length){
-    slides = buildSlides();
-    if(slides.length){ renderSlideCovers(); if(slides.length>1) startSsTimer(); if(!staticImgUrl && slides[0]) coverImgEl.src = slides[0].coverUrl; }
+  return wrap;
+}
+
+/* ── Silbertablett Diashow-Engine (vereinfacht, ohne Dots/Text-Overlays) ── */
+function initStSlideshow(id, slides, bgColor, intervalMs){
+  const wrap   = document.getElementById(id);
+  if(!wrap || !slides.length) return;
+  const covers = wrap.querySelector('.st-slide-covers');
+  if(!covers) return;
+  const imgs   = Array.from(covers.querySelectorAll('img:not(.ft-blank)'));
+  imgs.forEach(img=>hjBindCoverFallback(img));
+
+  let cur = 0;
+  let timer = null;
+
+  function goTo(idx){
+    cur = ((idx % slides.length) + slides.length) % slides.length;
+    imgs.forEach((img,i)=> img.classList.toggle('active', i===cur));
   }
 
-  return wrap;
+  function startTimer(){
+    if(timer) clearInterval(timer);
+    if(slides.length < 2) return;
+    timer = setInterval(()=>goTo(cur+1), intervalMs);
+  }
+
+  goTo(0);
+  startTimer();
+
+  // Click → spielt aktuellen Song
+  let stSlideCurrentMp3 = null;
+  wrap.addEventListener('click', ()=>{
+    const slide = slides[cur];
+    if(!slide) return;
+    let song = hjFindLiveSong(slide);
+    if(!song || !song.mp3) song = slide.mp3 ? slide : null;
+    if(!song || !song.mp3) return;
+    if(stSlideCurrentMp3 === song.mp3){
+      if(audio.paused){ audio.play().catch(()=>{}); wrap.classList.add('st-playing'); }
+      else { audio.pause(); wrap.classList.remove('st-playing'); }
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch',{detail:{source:'silbertablett-slide'}}));
+    featuredMode = true;
+    stSlideCurrentMp3 = song.mp3;
+    playerBar.classList.remove('visible');
+    audio.src = song.mp3; audio.load(); audio.play().catch(()=>{});
+    wrap.classList.add('st-playing');
+  });
+  window.addEventListener('hj:teaser-audio-switch', e=>{
+    if(e.detail && e.detail.source !== 'silbertablett-slide'){ stSlideCurrentMp3=null; wrap.classList.remove('st-playing'); }
+  });
+  audio.addEventListener('ended', ()=>{ stSlideCurrentMp3=null; wrap.classList.remove('st-playing'); });
 }
 
 /* v164 – Fit the slide cover layer into the transparent PNG window.
