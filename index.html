@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v202-silbertablett-pin-editor-no-grey-veil -->
+<!-- Version: v203-mr-dj-stage1 -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -2742,6 +2742,36 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .language-play-btn{grid-column:2;}
 }
 
+
+
+/* ══ MR. DJ – Stage 1 ═════════════════════════════════════════════════════ */
+#screenMrDJ{padding:12px 14px 120px;background:rgba(6,20,32,1)}
+.mrdj-shell{max-width:1180px;margin:0 auto;width:100%;display:grid;grid-template-columns:minmax(320px,1.15fr) minmax(280px,.85fr);gap:18px;align-items:start}
+.mrdj-left{display:flex;flex-direction:column;gap:10px}
+.mrdj-deck-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.mrdj-turntable{position:relative;aspect-ratio:1/1;border-radius:8px;background:linear-gradient(145deg,#333,#202020);overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.42);cursor:pointer}
+.mrdj-record{position:absolute;left:50%;top:50%;width:74%;height:74%;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 50% 50%,#111 0 19%,#050505 20% 62%,#1a1a1a 63% 100%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),inset 0 0 0 12px rgba(255,255,255,.02)}
+.mrdj-record.spinning{animation:vinyl-spin 1.8s linear infinite}
+.mrdj-label{position:absolute;left:50%;top:50%;width:30%;height:30%;border-radius:50%;transform:translate(-50%,-50%);object-fit:cover;background:#111;z-index:5}
+.mrdj-pin{position:absolute;left:50%;top:50%;width:4.1%;height:4.1%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#f5f5f5 0 20%,#9da4aa 45%,#4d555c 100%);box-shadow:0 1px 3px rgba(0,0,0,.5);z-index:8}
+.mrdj-arm{position:absolute;right:9%;top:9%;width:7%;height:66%;background:linear-gradient(90deg,#bbb,#f4f4f4,#777);border-radius:999px;transform:rotate(32deg);transform-origin:50% 10%;box-shadow:0 2px 8px rgba(0,0,0,.45);z-index:7}
+.mrdj-cover{position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:#0B2A42;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+.mrdj-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.mrdj-cover-info{position:absolute;left:0;right:0;bottom:0;padding:42px 16px 14px;background:linear-gradient(transparent,rgba(6,20,32,.92));color:#f1ecdf}
+.mrdj-deck-kicker{font-size:11px;color:#85ACC9;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin-bottom:4px}
+.mrdj-song-title{font-size:20px;font-weight:800;line-height:1.1}.mrdj-song-artist{font-size:13px;color:rgba(207,229,245,.7);margin-top:4px}
+.mrdj-progress{height:5px;border-radius:999px;background:rgba(133,172,201,.22);overflow:hidden;margin:8px 12px}.mrdj-progress-fill{height:100%;width:0;background:#85ACC9;border-radius:999px}
+.mrdj-controls{display:flex;align-items:center;justify-content:center;gap:32px;padding:14px 0 12px}
+.mrdj-fade-btn{width:82px;height:82px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#ff5c5c,#bf0707 70%);box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 0 0 4px rgba(255,255,255,.08);cursor:pointer;color:#050505;display:flex;align-items:center;justify-content:center}.mrdj-fade-btn span{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:30px solid #050505;transform:translateY(-3px)}
+.mrdj-play-btn,.mrdj-shuffle-btn{width:62px;height:62px;border-radius:50%;border:0;background:#85ACC9;color:#06141F;font-size:28px;font-weight:900;cursor:pointer}.mrdj-shuffle-btn{background:rgba(133,172,201,.13);border:1px solid rgba(133,172,201,.24);color:#85ACC9;font-size:30px}.mrdj-shuffle-btn.active{background:#123654;color:#cfe5f5}
+.mrdj-right{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mrdj-panel{background:rgba(11,42,66,.32);border:1px solid rgba(133,172,201,.1);border-radius:10px;overflow:hidden;min-height:340px}.mrdj-panel.next{border-color:rgba(133,172,201,.35);box-shadow:0 0 0 1px rgba(133,172,201,.06)}
+.mrdj-panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}.mrdj-panel-title{font-size:24px;line-height:1;font-weight:900;color:#85ACC9}.mrdj-mini{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:800}
+.mrdj-search{margin:0 10px 8px;background:rgba(6,20,32,.65);border:1px solid rgba(133,172,201,.18);border-radius:10px;padding:10px 12px;color:#f1ecdf;font-size:14px;width:calc(100% - 20px);outline:none}
+.mrdj-list{max-height:520px;overflow:auto}.mrdj-list::-webkit-scrollbar{display:none}.mrdj-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid rgba(133,172,201,.06);cursor:pointer}.mrdj-row:hover{background:rgba(133,172,201,.07)}.mrdj-row img{width:42px;height:42px;border-radius:5px;object-fit:cover;background:rgba(133,172,201,.1);flex:0 0 auto}.mrdj-num{width:20px;text-align:right;color:rgba(133,172,201,.55);font-size:12px;font-weight:800}.mrdj-row-info{min-width:0;flex:1}.mrdj-row-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:13px}.mrdj-row-artist{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:rgba(207,229,245,.55);margin-top:1px}
+.mrdj-hint{padding:16px;color:rgba(133,172,201,.45);font-size:13px;line-height:1.45}.mrdj-drop{outline:2px dashed rgba(133,172,201,.65);outline-offset:-6px;background:rgba(133,172,201,.08)}
+@media(max-width:820px){.mrdj-shell{grid-template-columns:1fr}.mrdj-right{grid-template-columns:1fr}.mrdj-panel{min-height:240px}.mrdj-list{max-height:360px}.mrdj-song-title{font-size:17px}}
+@media(max-width:520px){.mrdj-deck-row{grid-template-columns:1fr}.mrdj-controls{gap:18px}.mrdj-fade-btn{width:72px;height:72px}.mrdj-play-btn,.mrdj-shuffle-btn{width:56px;height:56px}}
+
 </style>
 </head>
 <body>
@@ -3636,6 +3666,37 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 <div class="swf-bottom-pad"></div>
 </div>
+
+<!-- MR. DJ -->
+<div class="screen" id="screenMrDJ">
+  <div class="mrdj-shell">
+    <div class="mrdj-left">
+      <div class="mrdj-deck-row">
+        <div class="mrdj-turntable" id="mrdjDeckA" title="Deck A Play/Pause">
+          <div class="mrdj-record" id="mrdjRecordA"><img class="mrdj-label" id="mrdjLabelA" alt=""/><div class="mrdj-pin"></div></div><div class="mrdj-arm"></div>
+        </div>
+        <div class="mrdj-cover" id="mrdjCoverBoxA"><img id="mrdjCoverA" alt=""/><div class="mrdj-cover-info"><div class="mrdj-deck-kicker">Deck A</div><div class="mrdj-song-title" id="mrdjTitleA">Bereit</div><div class="mrdj-song-artist" id="mrdjArtistA">Song aus Search anklicken</div></div></div>
+      </div>
+      <div class="mrdj-progress"><div class="mrdj-progress-fill" id="mrdjProgress"></div></div>
+      <div class="mrdj-deck-row">
+        <div class="mrdj-turntable" id="mrdjDeckB" title="Deck B Play/Pause">
+          <div class="mrdj-record" id="mrdjRecordB"><img class="mrdj-label" id="mrdjLabelB" alt=""/><div class="mrdj-pin"></div></div><div class="mrdj-arm"></div>
+        </div>
+        <div class="mrdj-cover" id="mrdjCoverBoxB"><img id="mrdjCoverB" alt=""/><div class="mrdj-cover-info"><div class="mrdj-deck-kicker">Deck B</div><div class="mrdj-song-title" id="mrdjTitleB">Wartet</div><div class="mrdj-song-artist" id="mrdjArtistB">Next Nr. 1 landet hier</div></div></div>
+      </div>
+      <div class="mrdj-controls">
+        <button class="mrdj-fade-btn" id="mrdjFadeBtn" aria-label="Überblenden"><span></span></button>
+        <button class="mrdj-play-btn" id="mrdjPlayBtn" aria-label="Play Pause">▶</button>
+        <button class="mrdj-shuffle-btn" id="mrdjShuffleBtn" aria-label="Next zufällig">⚂</button>
+      </div>
+    </div>
+    <div class="mrdj-right">
+      <div class="mrdj-panel next" id="mrdjNextDrop"><div class="mrdj-panel-head"><div class="mrdj-panel-title">Next</div><div class="mrdj-mini">Queue</div></div><div class="mrdj-list" id="mrdjNextList"><div class="mrdj-hint">Songs aus Search hier ablegen oder anklicken. Nr. 1 wird automatisch auf das wartende Deck gelegt.</div></div></div>
+      <div class="mrdj-panel"><div class="mrdj-panel-head"><input class="mrdj-search" id="mrdjSearch" placeholder="Song suchen …"/><div class="mrdj-panel-title">Search</div></div><div class="mrdj-list" id="mrdjSearchList"></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- ARCHIVE -->
 <div class="screen" id="screenArchive">
 <div class="arc-sticky">
@@ -3964,6 +4025,7 @@ const screenSwf  = document.getElementById('screenSongwritersFavorites');
 const screenLangDe = document.getElementById('screenLanguageGerman');
 const screenLangEn = document.getElementById('screenLanguageEnglish');
 const screenAbout = document.getElementById('screenAbout');
+const screenMrDJ = document.getElementById('screenMrDJ');
 const aboutFinalArt = document.getElementById('aboutFinalArt');
 const aboutArtLightbox = document.getElementById('aboutArtLightbox');
 const homeInfoBtn = document.getElementById('homeInfoBtn');
@@ -4363,6 +4425,7 @@ function showKursNordwest(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenSwf) screenSwf.style.display='none';
@@ -4387,6 +4450,7 @@ function showSongwritersFavorites(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
@@ -4411,6 +4475,7 @@ function showAbout(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
@@ -4429,8 +4494,10 @@ function showHome(){
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   screenHome.classList.add('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(aboutArtLightbox) aboutArtLightbox.classList.remove('open');
@@ -4472,6 +4539,7 @@ function showAlbum(key){
   screenHome.classList.remove('active');
   screenNP.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   hideLanguageScreens();
   screenTL.classList.add('active');
@@ -4521,12 +4589,131 @@ function hideNowPlaying(){
   screenNP.classList.remove('active');
   if(prevScreen==='home'){ screenHome.classList.add('active'); }
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
+  else if(prevScreen==='mrdj'){ if(screenMrDJ) screenMrDJ.classList.add('active'); }
   else if(prevScreen==='kursNordwest'){ if(screenKnw) screenKnw.style.display='block'; }
   else if(prevScreen==='songwritersFavorites'){ if(screenSwf) screenSwf.style.display='block'; }
   else if(prevScreen==='languageGerman'){ if(screenLangDe) screenLangDe.classList.add('active'); updateLanguageHighlight(); }
   else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); updateLanguageHighlight(); }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
 }
+
+
+// ══ MR. DJ – Stage 1 ═══════════════════════════════════════════════════════
+const djAudioA = new Audio();
+const djAudioB = new Audio();
+let djActiveDeck = 'A';
+let djFadeRunning = false;
+let djShuffle = false;
+let djNext = [];
+const djState = {A:null,B:null};
+[djAudioA,djAudioB].forEach(a=>{ a.preload='metadata'; a.crossOrigin='anonymous'; });
+function djAudio(deck){ return deck==='A' ? djAudioA : djAudioB; }
+function djOther(deck){ return deck==='A' ? 'B' : 'A'; }
+function djAllSongs(){ return (SUPABASE_SONGS && SUPABASE_SONGS.length ? SUPABASE_SONGS : ALL_SONGS).filter(s=>s && s.mp3); }
+function djCoverUrls(s){ return getImgUrls ? getImgUrls(s,'cover') : [s && s.cover].filter(Boolean); }
+function djSetDeck(deck, song, autoplay){
+  if(!song || !song.mp3) return;
+  djState[deck]=song;
+  const a=djAudio(deck); a.src=song.mp3; a.load(); a.volume = autoplay ? 1 : 0;
+  ['Cover','Label'].forEach(kind=>{ const img=document.getElementById('mrdj'+kind+deck); if(img) setImgSrcWithFallback(img, djCoverUrls(song)); });
+  const t=document.getElementById('mrdjTitle'+deck), ar=document.getElementById('mrdjArtist'+deck);
+  if(t) t.textContent=song.title||'Ohne Titel'; if(ar) ar.textContent=song.artist||'';
+  if(autoplay){ djActiveDeck=deck; a.play().catch(()=>{}); }
+  djUpdateUi();
+}
+function djPrepareWaiting(){
+  const wait=djOther(djActiveDeck);
+  if(djNext[0] && (!djState[wait] || djState[wait].mp3 !== djNext[0].mp3)) djSetDeck(wait, djNext[0], false);
+}
+function djRow(song, idx, numbered){
+  const row=document.createElement('div'); row.className='mrdj-row'; row.draggable=true;
+  row.innerHTML=(numbered?'<div class="mrdj-num">'+(idx+1)+'</div>':'')+'<img alt=""><div class="mrdj-row-info"><div class="mrdj-row-title"></div><div class="mrdj-row-artist"></div></div>';
+  setImgSrcWithFallback(row.querySelector('img'), djCoverUrls(song));
+  row.querySelector('.mrdj-row-title').textContent=song.title||''; row.querySelector('.mrdj-row-artist').textContent=song.artist||'';
+  row.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', song.slug || song.mp3); window._mrdjDragSong=song; });
+  row.addEventListener('click',()=>{ djAddNext(song, true); });
+  return row;
+}
+function djRenderSearch(){
+  const list=document.getElementById('mrdjSearchList'); if(!list) return;
+  const q=(document.getElementById('mrdjSearch')?.value||'').toLowerCase().trim();
+  const songs=djAllSongs().filter(s=>!q || (s.title||'').toLowerCase().includes(q) || (s.artist||'').toLowerCase().includes(q)).slice(0,80);
+  list.innerHTML=''; songs.forEach((s,i)=>list.appendChild(djRow(s,i,false)));
+}
+function djRenderNext(){
+  const list=document.getElementById('mrdjNextList'); if(!list) return; list.innerHTML='';
+  if(!djNext.length){ list.innerHTML='<div class="mrdj-hint">Songs aus Search hier ablegen oder anklicken. Nr. 1 wird automatisch auf das wartende Deck gelegt.</div>'; return; }
+  djNext.forEach((s,i)=>list.appendChild(djRow(s,i,true)));
+}
+function djAddNext(song, makeFirst){
+  if(!song) return;
+  djNext = djNext.filter(s=>s.mp3 !== song.mp3);
+  if(makeFirst) djNext.unshift(song); else djNext.push(song);
+  djRenderNext(); djPrepareWaiting();
+}
+function djUpdateUi(){
+  ['A','B'].forEach(d=>{
+    const rec=document.getElementById('mrdjRecord'+d);
+    const playing = d===djActiveDeck && !djAudio(d).paused;
+    if(rec) rec.classList.toggle('spinning', playing);
+  });
+  const btn=document.getElementById('mrdjPlayBtn'); if(btn) btn.textContent = djAudio(djActiveDeck).paused ? '▶' : 'Ⅱ';
+  const sh=document.getElementById('mrdjShuffleBtn'); if(sh) sh.classList.toggle('active', djShuffle);
+}
+function djTogglePlay(){
+  const a=djAudio(djActiveDeck);
+  if(!djState[djActiveDeck]){ const first=djAllSongs()[0]; if(first) djSetDeck('A', first, true); return; }
+  if(a.paused){ a.volume=1; a.play().catch(()=>{}); } else { a.pause(); } djUpdateUi();
+}
+function djFadeToWaiting(){
+  if(djFadeRunning) return;
+  const from=djActiveDeck, to=djOther(from);
+  if(!djState[to]) djPrepareWaiting();
+  if(!djState[to]) return;
+  djFadeRunning=true; const aFrom=djAudio(from), aTo=djAudio(to);
+  aTo.currentTime=0; aTo.volume=0; aTo.play().catch(()=>{});
+  const dur=5000, start=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-start)/dur); aFrom.volume=1-p; aTo.volume=p;
+    if(p<1) requestAnimationFrame(step); else {
+      aFrom.pause(); aFrom.currentTime=0; aFrom.volume=1; aTo.volume=1; djActiveDeck=to; djFadeRunning=false;
+      if(djNext[0] && djState[to] && djNext[0].mp3===djState[to].mp3) djNext.shift();
+      djRenderNext(); djPrepareWaiting(); djUpdateUi();
+    }
+  }
+  requestAnimationFrame(step);
+}
+function djAutoEnded(){ djFadeToWaiting(); }
+function djUpdateProgress(){
+  const a=djAudio(djActiveDeck), fill=document.getElementById('mrdjProgress');
+  if(fill && a.duration && isFinite(a.duration)) fill.style.width=(a.currentTime/a.duration*100)+'%';
+  if(a.duration && isFinite(a.duration) && a.duration-a.currentTime<8 && !djFadeRunning && djState[djOther(djActiveDeck)]) djFadeToWaiting();
+}
+function showMrDJ(){
+  try{ audio.pause(); }catch(e){} playerBar.classList.remove('visible'); featuredMode=true;
+  screenHome.classList.remove('active'); screenTL.classList.remove('active'); screenArchive.classList.remove('active'); screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active'); if(screenKnw) screenKnw.style.display='none'; if(screenSwf) screenSwf.style.display='none'; hideLanguageScreens();
+  if(screenMrDJ) screenMrDJ.classList.add('active'); backBtn.classList.add('visible'); logoHome.style.display='none'; makingWaves.style.display='none'; headerRight.textContent='Mr. DJ'; mainHeader.style.display=''; prevScreen='mrdj';
+  if(!djState.A){ const first=djAllSongs()[0]; if(first) djSetDeck('A', first, false); }
+  djRenderSearch(); djRenderNext(); djUpdateUi();
+}
+function initMrDJ(){
+  const search=document.getElementById('mrdjSearch'); if(search) search.addEventListener('input', djRenderSearch);
+  document.getElementById('mrdjPlayBtn')?.addEventListener('click', djTogglePlay);
+  document.getElementById('mrdjFadeBtn')?.addEventListener('click', djFadeToWaiting);
+  document.getElementById('mrdjShuffleBtn')?.addEventListener('click',()=>{ djShuffle=!djShuffle; if(djShuffle) djNext=shuffleArr(djNext); djRenderNext(); djPrepareWaiting(); djUpdateUi(); });
+  ['A','B'].forEach(d=>{
+    const bindDeckDrop = el => { if(!el) return; ['dragenter','dragover'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.add('mrdj-drop');})); ['dragleave','drop'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.remove('mrdj-drop');})); el.addEventListener('drop',e=>{ const song=window._mrdjDragSong; if(song) djSetDeck(d,song,false); }); };
+    const deckEl=document.getElementById('mrdjDeck'+d), coverEl=document.getElementById('mrdjCoverBox'+d);
+    deckEl?.addEventListener('click',()=>{ djActiveDeck=d; djTogglePlay(); });
+    coverEl?.addEventListener('click',()=>{ djActiveDeck=d; djTogglePlay(); });
+    bindDeckDrop(deckEl); bindDeckDrop(coverEl);
+  });
+  const drop=document.getElementById('mrdjNextDrop');
+  if(drop){ ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('mrdj-drop');})); ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('mrdj-drop');})); drop.addEventListener('drop',e=>{ const song=window._mrdjDragSong; if(song) djAddNext(song,true); }); }
+  [djAudioA,djAudioB].forEach(a=>{ a.addEventListener('play',djUpdateUi); a.addEventListener('pause',djUpdateUi); a.addEventListener('ended',djAutoEnded); a.addEventListener('timeupdate',djUpdateProgress); });
+}
+initMrDJ();
 
 
 // ── German / English chapter ──
@@ -4583,6 +4770,7 @@ function showLanguage(lang){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
@@ -5854,6 +6042,7 @@ function buildHomeCard(cell, extraClass){
     }
     if(cell.fn === 'link'){
       if(cell.url === '#archive'){ showArchive(); return; }
+      if(cell.url === '#mrdj'){ showMrDJ(); return; }
       if(cell.url){ window.open(cell.url, '_blank', 'noopener'); return; }
     }
 
@@ -5882,6 +6071,7 @@ function buildHomeCard(cell, extraClass){
     const specialSlug = (cell.slug || '').toLowerCase();
     if(specialSlug === 'kurs-nordwest'){ showKursNordwest(); return; }
     if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
+    if(specialSlug === 'mr-dj' || specialSlug === 'mrdj'){ showMrDJ(); return; }
 
     if(albumKey) showAlbum(albumKey);
     else if(cell.slug) toggleHomeCardPlay(cell, el);
@@ -6868,6 +7058,7 @@ function resolveAlbumKey(slug){
 function playSongOrAlbum(cell){
   if(cell.fn === 'link'){
     if(cell.url === '#archive'){ showArchive(); return; }
+    if(cell.url === '#mrdj'){ showMrDJ(); return; }
     if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
   }
   const albumKey = resolveAlbumKey(cell.slug);
@@ -7278,6 +7469,7 @@ function showArchive(){
   screenTL.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
+  if(screenMrDJ) screenMrDJ.classList.remove('active');
   screenArchive.classList.add('active');
   backBtn.classList.add('visible');
   logoHome.style.display='none';
