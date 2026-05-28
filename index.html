@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
 <!-- Version: v199-dj-subpage-routing -->
-<!-- Version: v198-language-ipad-button-alignment-fix -->
+<!-- Version: v199b-free-fullwidth-teaser -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -156,6 +156,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.panorama-4x1 img{aspect-ratio:4/1}
+.home-card.free-full{grid-column:1/-1;background:#050505}
+.home-card.free-full img{aspect-ratio:auto;width:100%;height:auto;object-fit:contain}
 .home-card.square img{aspect-ratio:1/1}
 .home-bottom-pad{height:210px}
 
@@ -5644,11 +5646,11 @@ function renderHomeLayout(){
     }
 
     // ── volle Breite: 2:1 oder echtes 4:1 Panorama ─────────────────
-    if(t0 === 'span-4' || t0 === 'lyrics21' || t0 === '4x1'){
+    if(t0 === 'span-4' || t0 === 'lyrics21' || t0 === '4x1' || t0 === 'free-full'){
       const cell = cells[0];
       if(isFinalJustThisDanceCell(cell)) return;
       if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, t0 === '4x1' ? 'wide panorama-4x1' : 'wide');
+      const el = buildHomeCard(cell, t0 === '4x1' ? 'wide panorama-4x1' : (t0 === 'free-full' ? 'wide free-full' : 'wide'));
       grid.appendChild(el);
       return;
     }

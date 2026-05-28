@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
-<!-- Version: admin-v20260525-panorama-4x1-album-target-robust-fix -->
+<!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -123,6 +123,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .upload-zone.sq{aspect-ratio:1/1}
 .upload-zone.wide{aspect-ratio:2/1}
 .upload-zone.panorama{aspect-ratio:4/1}
+.upload-zone.free-full{aspect-ratio:auto;min-height:110px}
+.upload-zone.free-full .zone-preview{position:static;width:100%;height:auto;object-fit:contain;background:#050505}
 .upload-zone.mp3-zone{height:72px}
 .upload-zone-icon{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .upload-zone-icon svg{width:22px;height:22px;stroke:rgba(133,172,201,.4);stroke-width:1.5;fill:none}
@@ -360,6 +362,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.span-4{grid-column:1/-1;aspect-ratio:2/1}
 /* echtes Panorama 4:1: volle Breite, aber deutlich flacher */
 .he-cell.panorama-4x1{grid-column:1/-1;aspect-ratio:4/1}
+.he-cell.free-full{grid-column:1/-1;aspect-ratio:auto;min-height:80px;background:#050505}
+.he-cell.free-full img.he-cell-img{position:static;width:100%;height:auto;object-fit:contain;display:block}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
@@ -587,6 +591,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* ══ NEW LAYOUT GRID TYPES ════════════════════════════════════════════════ */
 
 /* 2:1 ganze Breite */
+.he-row-grid.layout-freefull{display:grid;grid-template-columns:1fr}
 .he-row-grid.layout-2x1full{display:grid;grid-template-columns:1fr}
 .he-cell.cell-2x1full{aspect-ratio:4/2;width:100%}
 
@@ -7881,6 +7886,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">4:1 Panorama<br>Volle Breite</div>
       </div>
 
+      <!-- Freies Vollbreiten-Motiv -->
+      <div class="lpm-option" data-layout="free-full" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq w4" style="aspect-ratio:3/1.35"></div>
+        </div>
+        <div class="lpm-label">Freies Motiv<br>Volle Breite</div>
+      </div>
+
       <!-- 3× 1:1,5 Trio -->
       <div class="lpm-option" data-layout="3x1x15" onclick="lpmPick(this)">
         <div class="lpm-option-preview">
@@ -9769,6 +9782,10 @@ function buildCells(row, grid){
   } else if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
 
+  } else if(t0 === 'free-full'){
+    grid.classList.add('layout-freefull');
+    grid.appendChild(buildCell(row, 0, 'free-full', editing));
+
   } else if(t0 === '4x1'){
     // echtes 4:1 Panorama — nicht als 2:1 span-4 rendern
     grid.appendChild(buildCell(row, 0, 'panorama-4x1', editing));
@@ -10028,6 +10045,7 @@ const LPM_TYPE_MAP = {
   '1x2x1-full': '4x1-wide',   // 2:1 full width (maps to span-4 with 2:1 aspect)
   '2x2x1-half': '2x2half',    // 2× 2:1 side by side
   '1x4x1':      '4x1',        // 4:1 panorama
+  'free-full':    'free-full',   // freie Vollbreite: natürliche Bildhöhe
   '3x1x15':     'trio',
   '1x2x1-plus2':'2x1plus2',   // 2:1 half + 2×1:1
   'slideshow':   'slideshow',
@@ -10146,6 +10164,15 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old[0], type:'2x1-half'};
     row.cells[1] = {...row.cells[1], ...old[1], type:'2x1-half'};
+    row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+
+  } else if(type === 'free-full'){
+    // Freies Vollbreiten-Motiv — natürliche Bildhöhe, kein Frame/kein Crop
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'free-full'};
+    row.cells[1].type = 'hidden';
     row.cells[2].type = 'hidden';
     row.cells[3].type = 'hidden';
 
@@ -10381,7 +10408,7 @@ function htmSaveLanguageTeaser(){
 // Types where Song/Album cover makes sense (1:1 aspect ratio)
 const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','trio-a','trio-b','trio-c','span-2']);
 // Types with 2:1 aspect ratio
-const HTM_WIDE_TYPES = new Set(['2x1-half','2x1-full','span-4','4x1','lyrics21']);
+const HTM_WIDE_TYPES = new Set(['2x1-half','2x1-full','span-4','4x1','lyrics21','free-full']);
 
 function htmInitStep2(){
   // Populate song list on first open
@@ -10411,9 +10438,11 @@ function htmInitStep2(){
   const uploadZone = document.getElementById('zHtmMotif');
   if(uploadZone){
     const isPanorama = htmChosenType === '4x1';
+    const isFreeFull = htmChosenType === 'free-full';
     uploadZone.classList.toggle('sq', isSquare);
-    uploadZone.classList.toggle('wide', !isSquare && !isPanorama);
+    uploadZone.classList.toggle('wide', !isSquare && !isPanorama && !isFreeFull);
     uploadZone.classList.toggle('panorama', isPanorama);
+    uploadZone.classList.toggle('free-full', isFreeFull);
   }
 }
 
@@ -10893,7 +10922,7 @@ function htmResetUploadUi(){
   });
   ['zHtmMotif','zHtmAlbumMotif'].forEach(id=>{
     const el = document.getElementById(id);
-    if(el) el.classList.remove('has-file','dragover');
+    if(el) el.classList.remove('has-file','dragover','sq','wide','panorama','free-full');
   });
   ['progHtmMotif','progHtmAlbumMotif'].forEach(id=>{
     const el = document.getElementById(id);
