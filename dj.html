@@ -4,8 +4,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
-<!-- Version v20: zentrierter Edelstahl-Pin + Lyrics-Sheet über roten Signature-Punkt -->
-<!-- Version v18-pin-fix: Tonarm-Punkt entfernt, Edelstahl-Pin als einziges zentriertes Overlay auf Plattenmitte -->
+<!-- Version v28: Cover-Clean-Fix + Tonarm 110 Prozent -->
+<!-- Version v24: Tonarm läuft bis 100% Innenweg Richtung Mittel-Pin -->
 <!-- Version v17: Startzustand Top100 Search + Songwriters Picks Queue/Deck-Cues ohne Autoplay -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link crossorigin="" rel="preconnect" href="https://fonts.gstatic.com"/>
@@ -13,9 +13,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#06141F;color:#d8e9f7;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;user-select:none}
-:root{--bg:#06141F;--panel:#06141F;--line:#83ABD0;--muted:#85ACC9;--light:#cfe5f5;--accent:#C90019;--soft:rgba(131,171,208,.22)}
-#app{height:100dvh;width:100vw;display:grid;grid-template-columns:auto minmax(54px,5fr) minmax(0,21fr) minmax(0,25fr) minmax(0,21fr);gap:1.15vw;padding:1.2vh 1.15vw;background:#06141F;overflow:hidden}
+html,body{width:100%;height:100%;overflow:hidden;background:#071826;color:#d8e9f7;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;user-select:none}
+:root{--bg:#071826;--panel:#071826;--line:#83ABD0;--muted:#8DB7DA;--light:#d9edf9;--accent:#C90019;--soft:rgba(131,171,208,.22)}
+#app{height:100dvh;width:100vw;display:grid;grid-template-columns:auto minmax(54px,5fr) minmax(0,21fr) minmax(0,25fr) minmax(0,21fr);gap:1.15vw;padding:1.2vh 1.15vw;background:#071826;overflow:hidden}
 /* decks panel: two square decks + progress row */
 .decks-panel{
   display:grid;grid-template-rows:1fr 36px 1fr;gap:0;border:none;overflow:hidden;position:relative;
@@ -29,17 +29,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#06141F;color:#d8e9f
 .clear-queue{font-size:clamp(11px,.82vw,15px);color:#C90019;cursor:pointer;opacity:.85;font-weight:600;letter-spacing:.01em;line-height:1}
 .clear-queue:hover{opacity:1}
 /* decks */
+/* v25: Cover-Artworks werden bewusst ohne milchigen Overlay-Schleier gezeigt. */
 .deck{position:relative;background:#000;border:2px solid var(--line);overflow:hidden;min-height:0;aspect-ratio:1;width:100%}
 
-.deck::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 43% 44%,rgba(141,183,218,.08) 0%,rgba(0,0,0,0) 44%,rgba(0,0,0,.55) 100%);z-index:0;pointer-events:none}
+.deck::before{content:none!important;display:none!important;background:none!important}
 .deck-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;pointer-events:none;display:none}
-.deck-cover-wrap{position:absolute;left:7.6%;top:8.4%;width:74.8%;aspect-ratio:1;border-radius:50%;overflow:hidden;z-index:2;background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 16px 34px rgba(0,0,0,.42)}
+.deck-cover-wrap{position:absolute;left:7.6%;top:8.4%;width:74.8%;aspect-ratio:1;border-radius:50%;overflow:hidden;z-index:2;background:#000;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
 .deck-cover-inner{width:100%;height:100%;position:relative;transform-origin:50% 50%}
 .deck.is-playing .deck-cover-inner{animation:coverSpin 3.70s linear infinite}
 @keyframes coverSpin{to{transform:rotate(360deg)}}
-.deck-cover-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;opacity:0;transition:opacity .25s}
+.deck-cover-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;opacity:0;transition:opacity .25s;filter:brightness(1.10) contrast(1.14) saturate(1.12);backface-visibility:hidden}
 .deck-cover-img.loaded{opacity:1}
-.deck-cover-ph{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#111 0%,#020202 100%)}
+.deck-cover-ph{position:absolute;inset:0;border-radius:50%;background:#000}
 .deck-center-pin{
 position:absolute;
 /* exakt Zentrum des runden Cover-/Vinyl-Motivs: .deck-cover-wrap left/top + halbe Breite */
@@ -55,7 +56,8 @@ pointer-events:none;
 box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 }
 
-.deck-tonearm{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:4;pointer-events:none;opacity:1}
+.deck-tonearm{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:4;pointer-events:none;opacity:1;transform-origin:79.6% 24.1%;transform:rotate(var(--arm-rot,-8deg));transition:transform .28s linear;will-change:transform}
+.deck:not(.is-playing) .deck-tonearm{transition:transform .45s ease}
 
 
 .deck-red-btn{position:absolute;right:9.8%;bottom:16.1%;width:8.4%;aspect-ratio:1;border:0;border-radius:50%;background:#C90019;z-index:8;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 2px 8px rgba(0,0,0,.35)}
@@ -233,6 +235,32 @@ function other(d){return d==='A'?'B':'A'}
 let _tt;
 function toast(msg,dur=2200){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),dur)}
 
+// Tonarm: fester Drehpunkt rechts oben, Bewegung ausschließlich über Rotation.
+// 0% Songfortschritt = außen am Plattenrand.
+// 100% Songfortschritt = ca. 90% der Strecke Richtung weißem Mittel-Pin.
+const TONEARM_START_DEG=-9.5;
+/* v23: größerer Innenwinkel. Die Nadel läuft sichtbar weiter nach links
+   Richtung weißem Mittel-Pin, bleibt aber bewusst kurz davor. */
+const TONEARM_END_DEG=29.0;
+const TONEARM_END_AT=1.00; // 100% Songfortschritt = 110% des bisherigen Innenlaufs
+function updateTonearm(id){
+  const d=DECKS[id];
+  if(!d||!d.el)return;
+  const a=d.audio;
+  let p=0;
+  if(a&&isFinite(a.duration)&&a.duration>0&&isFinite(a.currentTime)){
+    p=Math.max(0,Math.min(a.currentTime/a.duration,1));
+  }
+  const armP=Math.min(p/TONEARM_END_AT,1);
+  const rot=TONEARM_START_DEG+(TONEARM_END_DEG-TONEARM_START_DEG)*armP;
+  d.el.style.setProperty('--arm-rot',rot.toFixed(3)+'deg');
+}
+function resetTonearm(id){
+  const d=DECKS[id];
+  if(!d||!d.el)return;
+  d.el.style.setProperty('--arm-rot',TONEARM_START_DEG+'deg');
+}
+
 async function loadData(){
   const [sr,pr,tr]=await Promise.all([
     fetch(SB_URL+'/rest/v1/songs?select=slug,title,artist,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title',{headers:HDR}),
@@ -261,6 +289,7 @@ function loadDeck(id,song){
   const d=DECKS[id];
   d.song=song;d.audio.pause();d.audio.src=song.mp3||'';d.audio.load();d.playing=false;
   d.dt.textContent=song.title||'';d.da.textContent=song.artist||'';d.pf.style.width='0%';
+  resetTonearm(id);
   if(song.cover){
     d.cov.src=song.cover;
     d.cov.onload=()=>d.cov.classList.add('loaded');
@@ -276,6 +305,7 @@ function loadDeck(id,song){
 function clearDeck(id){
   const d=DECKS[id];d.song=null;d.audio.pause();d.audio.src='';d.playing=false;
   d.dt.textContent='— nächsten Track laden —';d.da.textContent='';d.pf.style.width='0%';
+  resetTonearm(id);
   d.cov.src='';d.cov.classList.remove('loaded');d.ph.style.display='flex';
   d.el.classList.remove('is-playing','is-cued','is-active');
 }
@@ -342,7 +372,7 @@ function doFade(auto=false){
       const freeDeck=other(activeDeck);
       if(djQueue.length){loadDeck(freeDeck,djQueue.shift());renderQueue();}
       else{DECKS[freeDeck].song=null;DECKS[freeDeck].audio.pause();DECKS[freeDeck].audio.src='';
-           DECKS[freeDeck].playing=false;DECKS[freeDeck].el.classList.remove('is-playing','is-active');
+           DECKS[freeDeck].playing=false;resetTonearm(freeDeck);DECKS[freeDeck].el.classList.remove('is-playing','is-active');
            DECKS[freeDeck].el.classList.add('is-cued');}
       _fadeActive=false;
     }
@@ -369,6 +399,8 @@ setInterval(()=>{
   tProgCur.textContent=fmt(cur);tProgRem.textContent='-'+fmt(rem);
   progFill.style.width=p+'%';tEl.textContent=fmt(cur);tRem.textContent='-'+fmt(rem);
   DECKS[activeDeck].pf.style.width=p+'%';
+  updateTonearm('A');
+  updateTonearm('B');
   // Auto-crossfade trigger: 8s before end
   if(!_fadeActive&&!_autoFadeScheduled&&rem<=8&&rem>0&&DECKS[activeDeck].playing){
     _autoFadeScheduled=true;
@@ -381,6 +413,7 @@ setInterval(()=>{
 deckProgBar.addEventListener('click',e=>{
   const a=DECKS[activeDeck].audio;if(!a.duration)return;
   const r=deckProgBar.getBoundingClientRect();a.currentTime=a.duration*(e.clientX-r.left)/r.width;
+  updateTonearm(activeDeck);
 });
 
 function addToQueue(song){
