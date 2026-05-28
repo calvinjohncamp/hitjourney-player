@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
-<!-- Version v16: quadratischer Player mit großem, rundem Covermotiv ohne weißen Deck-Rahmen -->
+<!-- Version v17: Startzustand Top100 Search + Songwriters Picks Queue/Deck-Cues ohne Autoplay -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link crossorigin="" rel="preconnect" href="https://fonts.gstatic.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -381,6 +381,65 @@ function shuffleNext(){
   if(djQueue.length<2){toast('Next ist noch zu kurz');return;}
   djQueue=sArr(djQueue); renderQueue(); toast('Next zufällig sortiert');
 }
+
+function hasAnyDeckPlaying(){
+  return !!(DECKS.A.playing || DECKS.B.playing);
+}
+
+function startDeckFromCue(id){
+  const d=DECKS[id];
+  if(!d.song)return;
+  const wasSilent=!hasAnyDeckPlaying();
+  activeDeck=id;
+  DECKS.A.el.classList.toggle('is-active',id==='A');
+  DECKS.B.el.classList.toggle('is-active',id==='B');
+  DECKS.A.el.classList.toggle('is-cued',id!=='A');
+  DECKS.B.el.classList.toggle('is-cued',id!=='B');
+  playDeck(id);
+  if(wasSilent){
+    const second=other(id);
+    if(DECKS[second].song)toast('»'+d.song.title+'« startet · Deck '+second+' ist als zweiter Track bereit');
+  }
+}
+
+function setupDefaultStartState(){
+  // Search zeigt beim Öffnen immer Top 100 in der Playlist-Reihenfolge.
+  if(ALBUMS.top100){
+    currentSearchSource={type:'album',key:'top100',title:ALBUMS.top100.title};
+  }else{
+    currentSearchSource={type:'all'};
+  }
+  abcFilter=null;
+  searchQ='';
+  if(searchInp)searchInp.value='';
+
+  // Next wird mit Songwriters Picks / Top 50 vorbereitet.
+  const picks=(ALBUMS.top50&&ALBUMS.top50.songs&&ALBUMS.top50.songs.length) ? ALBUMS.top50.songs.slice() : ALL_SONGS.slice(0,50);
+  if(!picks.length)return;
+
+  // Zwei zufällige Songwriters-Picks werden nur als Cue in die Decks geladen — kein Autoplay.
+  const shuffled=sArr(picks);
+  const cueA=shuffled[0];
+  const cueB=shuffled[1]||shuffled[0];
+  if(cueA)loadDeck('A',cueA);
+  if(cueB)loadDeck('B',cueB);
+
+  // Queue bleibt in der originalen Top-50-Reihenfolge; die beiden Deck-Cues werden herausgenommen, damit nichts doppelt direkt erneut kommt.
+  const used=new Set([cueA&&cueA.slug,cueB&&cueB.slug].filter(Boolean));
+  djQueue=picks.filter(s=>!used.has(s.slug));
+
+  activeDeck='A';
+  DECKS.A.el.classList.add('is-active');
+  DECKS.B.el.classList.add('is-cued');
+  DECKS.A.el.classList.remove('is-playing');
+  DECKS.B.el.classList.remove('is-playing');
+  DECKS.A.playing=false;
+  DECKS.B.playing=false;
+  icPause.style.display='none';
+  icPlay.style.display='';
+  btnPause.classList.add('paused');
+}
+
 function renderQueue(){
   nqEmpty.style.display=djQueue.length?'none':'flex';
   Array.from(nextList.children).forEach(c=>{if(c!==nqEmpty)c.remove()});
@@ -462,9 +521,22 @@ document.getElementById('btnShuffle').addEventListener('click',()=>{shuffleOn=!s
 document.getElementById('btnClear').addEventListener('click',()=>{djQueue=[];renderQueue();toast('Queue geleert');});
 document.getElementById('btnClearQueue').addEventListener('click',()=>{djQueue=[];renderQueue();toast('Queue geleert');});
 document.getElementById('btnAutoLoad').addEventListener('click',()=>{if(!ALL_SONGS.length)return;djQueue=sArr(ALL_SONGS).slice(0,20);renderQueue();toast('20 zufällige Songs in Queue');});
-document.getElementById('deckA').addEventListener('click',e=>{if(e.target.closest('.deck-red-btn'))return;if(activeDeck==='A'&&DECKS.A.song)togglePause();});
-document.getElementById('deckB').addEventListener('click',e=>{if(e.target.closest('.deck-red-btn'))return;if(activeDeck==='B'&&DECKS.B.song)togglePause();});
-document.querySelectorAll('.deck-red-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const id=btn.dataset.deck;if(id===activeDeck)togglePause();else{activeDeck=id;playDeck(id);}}));
+document.getElementById('deckA').addEventListener('click',e=>{
+  if(e.target.closest('.deck-red-btn'))return;
+  if(activeDeck==='A'&&DECKS.A.song&&DECKS.A.playing)togglePause();
+  else startDeckFromCue('A');
+});
+document.getElementById('deckB').addEventListener('click',e=>{
+  if(e.target.closest('.deck-red-btn'))return;
+  if(activeDeck==='B'&&DECKS.B.song&&DECKS.B.playing)togglePause();
+  else startDeckFromCue('B');
+});
+document.querySelectorAll('.deck-red-btn').forEach(btn=>btn.addEventListener('click',e=>{
+  e.stopPropagation();
+  const id=btn.dataset.deck;
+  if(id===activeDeck&&DECKS[id].playing)togglePause();
+  else startDeckFromCue(id);
+}));
 const colNext=document.getElementById('colNext');
 let dragSrcSlug='',dragSrcAlbum='';
 // Next-Liste: Song an beliebige Position droppen
@@ -532,10 +604,11 @@ async function init(){
     await loadData();
     if(!ALL_SONGS.length || !Object.keys(ALBUMS).length) installDemoData();
     connDot.style.background='#4ecf7a';connDot.style.boxShadow='0 0 6px #4ecf7a';
-    renderAlbums();renderABC();renderSearch();renderQueue();
+    setupDefaultStartState();renderAlbums();renderABC();renderSearch();renderQueue();
   }catch(e){
     console.error(e);connDot.style.background='#E8303A';
     installDemoData();
+    setupDefaultStartState();renderAlbums();renderABC();renderSearch();renderQueue();
     toast('Lokaler Testmodus: Demo-Inhalte geladen');
   }
   if(ov){ov.classList.add('out');setTimeout(()=>ov.style.display='none',600);}
