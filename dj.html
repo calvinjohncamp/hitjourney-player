@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
-<!-- Version v18: Lyrics-Sheet über roten Signature-Punkt im ABC-Feld -->
+<!-- Version v19: Lyrics-Sheet clean ohne zusätzliche Bildunterschrift -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link crossorigin="" rel="preconnect" href="https://fonts.gstatic.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet"/>
@@ -120,7 +120,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#06141F;color:#d8e9f
 .lyrics-overlay img{width:100%;height:100%;object-fit:contain;display:block;background:#050505}
 .lyrics-close{position:absolute;top:.55vw;right:.55vw;width:clamp(26px,2.2vw,40px);height:clamp(26px,2.2vw,40px);border-radius:50%;border:1px solid rgba(207,229,245,.35);background:rgba(6,20,32,.78);color:#cfe5f5;z-index:35;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,1.5vw,26px);font-weight:800;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .lyrics-close:active{transform:scale(.92)}
-.lyrics-caption{position:absolute;left:.7vw;bottom:.55vw;right:3.2vw;z-index:34;color:rgba(207,229,245,.86);font-size:clamp(10px,.72vw,14px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px #000;pointer-events:none}
 .lyrics-overlay.expanded{position:fixed;top:1.2vh;right:1.15vw;bottom:auto;left:auto;width:calc(100dvh - 2.4vh);height:calc(100dvh - 2.4vh);border:2px solid var(--line);z-index:120;box-shadow:0 0 0 9999px rgba(6,20,31,.38),0 20px 80px rgba(0,0,0,.55);cursor:zoom-out}
 .lyrics-overlay.loading::after{content:'Lyrics werden geladen';position:absolute;color:rgba(207,229,245,.55);font-size:clamp(12px,.9vw,16px);letter-spacing:.04em}
 
@@ -414,10 +413,8 @@ function showLyricsForDeck(id){
   const ov=document.createElement('div');
   ov.id='lyricsOverlay';
   ov.className='lyrics-overlay loading';
-  ov.innerHTML='<button class="lyrics-close" aria-label="Lyrics schließen" title="Schließen">×</button><img alt=""/><div class="lyrics-caption"></div>';
+  ov.innerHTML='<button class="lyrics-close" aria-label="Lyrics schließen" title="Schließen">×</button><img alt=""/>';
   const img=ov.querySelector('img');
-  const cap=ov.querySelector('.lyrics-caption');
-  cap.textContent=(song.title||'Lyrics')+(song.artist?' · '+song.artist:'');
   let idx=0;
   const tryLoad=()=>{
     if(idx>=urls.length){ov.classList.remove('loading');toast('Lyrics-Sheet nicht gefunden');closeLyricsSheet();return;}
