@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
-<!-- Version: admin-v20260529g-silbertablett-admin-wysiwyg-firstcover -->
+<!-- Version: admin-v20260529h-silbertablett-admin-orderfix -->
 <!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -9799,8 +9799,10 @@ function buildCells(row, grid){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
     grid.classList.add('layout-silbertablett');
     const _stCell = c[0];
-    const stLeft  = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminRight(row, editing) : buildSilbertablettAdminLeft(row, editing);
-    const stRight = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminLeft(row, editing)  : buildSilbertablettAdminRight(row, editing);
+    // Admin-WYSIWYG: stCoverPos beschreibt die Position des Cover-/Teaser-Bildes.
+    // Also: cover left => links Cover, rechts Diashow. cover right => links Diashow, rechts Cover.
+    const stLeft  = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminLeft(row, editing)  : buildSilbertablettAdminRight(row, editing);
+    const stRight = _stCell.stCoverPos === 'left' ? buildSilbertablettAdminRight(row, editing) : buildSilbertablettAdminLeft(row, editing);
     stLeft.className  = stLeft.className.replace('cell-2x1half','cell-st-square');
     stRight.className = stRight.className.replace('cell-2x1half','cell-st-square');
     grid.appendChild(stLeft);
