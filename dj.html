@@ -1703,4 +1703,49 @@ function goHome(){
   }
 }
 </style>
+
+
+<style>
+/* === v61: iPhone Portrait · unteren Raum besser nutzen ===
+   Oben bleibt unverändert. Der bislang verschenkte Raum unter dem Branding
+   wird auf iPhone-Portrait genutzt: weniger Bottom-Padding, Branding tiefer,
+   Next- und Album-Scrollbereich wachsen nach unten.
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  #app{
+    grid-template-rows:auto 18px auto minmax(0,1fr) 42px!important;
+    padding-bottom:max(2px, env(safe-area-inset-bottom,0px))!important;
+  }
+  .mobile-brand{
+    align-items:flex-end!important;
+    padding:0!important;
+    margin:0!important;
+    transform:translateY(3px)!important;
+  }
+  .mobile-hj-logo{
+    padding:0 12px 0!important;
+    line-height:.96!important;
+  }
+  .mobile-making{
+    padding:0 12px 1px!important;
+    line-height:1!important;
+  }
+  .next-panel,.library-panel{
+    min-height:0!important;
+  }
+  .next-list{
+    height:calc(100% - 49px)!important;
+    padding-bottom:2px!important;
+  }
+  .album-grid{
+    height:100%!important;
+    max-height:100%!important;
+    padding-bottom:2px!important;
+  }
+  .mobile-stage{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 48px)!important;
+  }
+}
+</style>
+
 </body></html>
