@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
-<!-- Version: admin-v20260529f-silbertablett-clean-prod-defaultfill -->
+<!-- Version: admin-v20260529g-silbertablett-admin-wysiwyg-firstcover -->
 <!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -10356,6 +10356,33 @@ function openCellEdit(rowId, cellIdx){
   }
 }
 
+
+function stAdminFirstSongCover(cell){
+  if(!cell) return '';
+  if(Array.isArray(cell.stCustomSongs) && cell.stCustomSongs.length){
+    const s = cell.stCustomSongs.find(x => x && (x.coverUrl || x.cover || x.cover_url));
+    if(s) return s.coverUrl || s.cover || s.cover_url || '';
+  }
+  const slug = cell.stPlaylistSlug || cell.playlistSlug || cell.slug || '';
+  if(slug && typeof albumsData !== 'undefined' && Array.isArray(albumsData)){
+    const al = albumsData.find(a => a && (a.slug === slug || a.id === slug));
+    if(al){
+      if(Array.isArray(al.songs) && al.songs.length){
+        const s = al.songs.find(x => x && (x.cover_url || x.coverUrl || x.cover));
+        if(s) return s.cover_url || s.coverUrl || s.cover || '';
+      }
+      // Fallback nur, wenn keine Songliste verfügbar ist.
+      return al.cover_url || al.coverUrl || al.cover || '';
+    }
+  }
+  return '';
+}
+
+function stAdminUploadedCover(cell){
+  if(!cell) return '';
+  return cell.stImageUrl || cell.imageUrl || '';
+}
+
 function buildSilbertablettAdminLeft(row, editing){
   const cell = row.cells[0];
   const el = document.createElement('div');
@@ -10363,43 +10390,44 @@ function buildSilbertablettAdminLeft(row, editing){
   el.dataset.rowId  = row.id;
   el.dataset.cellIdx = 0;
 
-  // Vorschau-Cover: erstes Cover aus der konfigurierten Playlist
-  let previewSrc = '';
-  const slug = cell.stPlaylistSlug || '';
-  if(slug && typeof albumsData !== 'undefined'){
-    const al = albumsData.find(a => a.slug === slug);
-    if(al && al.cover_url) previewSrc = al.cover_url;
-  }
-
-  // Innenlayout: kleine Cover-Strips simulieren
   el.style.position = 'relative';
   el.style.overflow = 'hidden';
   el.style.background = cell.stBgColor || '#000';
 
-  if(previewSrc){
+  // Cover-Kachel: hochgeladenes Silbertablett-Motiv, standardmäßig voll 1:1 gefüllt.
+  let coverSrc = stAdminUploadedCover(cell) || stAdminFirstSongCover(cell);
+  const free = cell.stCoverFree === true || cell.stCoverFree === 'true';
+  const coverX   = free && cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
+  const coverY   = free && cell.stCoverY   !== undefined ? cell.stCoverY   : 50;
+  const coverSz  = free && cell.stCoverSz  !== undefined ? cell.stCoverSz  : 100;
+  const coverRot = free && cell.stCoverRot !== undefined ? cell.stCoverRot : 0;
+
+  if(coverSrc){
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'position:absolute;transform-origin:50% 50%;pointer-events:none';
+    imgWrap.style.width  = coverSz + '%';
+    imgWrap.style.height = coverSz + '%';
+    imgWrap.style.left   = 'calc(' + coverX + '% - ' + coverSz/2 + '%)';
+    imgWrap.style.top    = 'calc(' + coverY + '% - ' + coverSz/2 + '%)';
+    imgWrap.style.transform = 'rotate('+coverRot+'deg)';
     const img = document.createElement('img');
-    img.className = 'he-cell-img';
-    img.src = previewSrc;
-    img.alt = slug;
-    img.onerror = () => { img.style.opacity = '.15'; };
-    el.appendChild(img);
+    img.src = coverSrc;
+    img.alt = '';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:0';
+    img.onerror = () => { img.style.opacity='.2'; };
+    imgWrap.appendChild(img);
+    el.appendChild(imgWrap);
   } else {
-    // Placeholder: 3 schmale Streifen
     const ph = document.createElement('div');
-    ph.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;opacity:.25';
-    [0,1,2].forEach(i => {
-      const bar = document.createElement('div');
-      bar.style.cssText = 'flex:1;height:70%;background:rgba(133,172,201,.4);border-radius:3px';
-      ph.appendChild(bar);
-    });
+    ph.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4;color:rgba(133,172,201,.5)';
+    ph.textContent = '◎';
     el.appendChild(ph);
   }
 
-  // Badge + Edit-Overlay
   const ov = document.createElement('div');
   ov.className = 'he-cell-overlay always-edit';
   ov.innerHTML = `
-    <span class="he-cell-badge badge-silbertablett">◈ Diashow</span>
+    <span class="he-cell-badge badge-silbertablett">◎ Cover</span>
     <div class="he-cell-acts">
       <button class="he-cell-act-btn" onclick="openSilbertablettModal('${row.id}')">✎ Bearbeiten</button>
       ${editing ? `<button class="he-cell-act-btn del" onclick="clearSilbertablett('${row.id}')">×</button>` : ''}
@@ -10416,9 +10444,6 @@ function buildSilbertablettAdminLeft(row, editing){
 /* ── Silbertablett Admin-Vorschau: rechte Kachel (Cover + Rotation) ── */
 function buildSilbertablettAdminRight(row, editing){
   const cell = row.cells[0];
-  const pos  = cell.stCoverPos || 'right';
-  // Wenn Cover links konfiguriert: Kacheln tauschen (linke Fn zeigt Diashow, rechte Cover)
-  // Für Admin-Vorschau immer: linke Fn = Diashow, rechte = Cover — Tausch nur visuell
   const el = document.createElement('div');
   el.className = 'he-cell cell-st-square' + (editing ? ' editing-mode' : '');
   el.dataset.rowId  = row.id;
@@ -10427,58 +10452,27 @@ function buildSilbertablettAdminRight(row, editing){
   el.style.position = 'relative';
   el.style.overflow = 'hidden';
   el.style.background = cell.stBgColor || '#000';
-  el.style.display = 'flex';
-  el.style.alignItems = 'center';
-  el.style.justifyContent = 'center';
-  el.style.flexDirection = 'column';
-  el.style.gap = '6px';
 
-  // Cover-Bild: eigenes Upload oder erstes Playlist-Cover
-  let coverSrc = cell.stImageUrl || '';
-  if(!coverSrc && cell.stPlaylistSlug && typeof albumsData !== 'undefined'){
-    const al = albumsData.find(a => a.slug === cell.stPlaylistSlug);
-    if(al && al.cover_url) coverSrc = al.cover_url;
-  }
-
-  // Cover mit WYS-Platzierung (oder zentriert als Standard)
-  const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
-  const coverY   = cell.stCoverY   !== undefined ? cell.stCoverY   : 50;
-  const coverSz  = cell.stCoverSz  !== undefined ? cell.stCoverSz  : 100;
-  const coverRot = cell.stCoverRot !== undefined ? cell.stCoverRot : 0;
-
-  if(coverSrc){
-    // WYS image layer — position as percentages relative to tile
-    const imgWrap = document.createElement('div');
-    imgWrap.style.cssText = 'position:absolute;transform-origin:50% 50%;pointer-events:none';
+  // Diashow-Kachel: WYSIWYG direkt mit dem ersten gewählten Plattencover statt leerer Platzhalter.
+  const firstCover = stAdminFirstSongCover(cell);
+  if(firstCover){
     const img = document.createElement('img');
-    img.src = coverSrc;
+    img.className = 'he-cell-img';
+    img.src = firstCover;
     img.alt = '';
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:3px';
-    img.onerror = () => { img.style.opacity='.2'; };
-    imgWrap.appendChild(img);
-    // Apply transform after append so offsetWidth is available via % of parent
-    // Use CSS % positioning trick
-    const szPct = coverSz + '%';
-    imgWrap.style.width  = szPct;
-    imgWrap.style.height = szPct;
-    imgWrap.style.left   = 'calc(' + coverX + '% - ' + coverSz/2 + '%)';
-    imgWrap.style.top    = 'calc(' + coverY + '% - ' + coverSz/2 + '%)';
-    imgWrap.style.transform = 'rotate('+coverRot+'deg)';
-    el.style.alignItems = '';
-    el.style.justifyContent = '';
-    el.style.flexDirection = '';
-    el.appendChild(imgWrap);
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border-radius:0';
+    img.onerror = () => { img.style.opacity = '.18'; };
+    el.appendChild(img);
   } else {
     const ph = document.createElement('div');
     ph.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4;color:rgba(133,172,201,.5)';
-    ph.textContent = '◎';
+    ph.textContent = '◈';
     el.appendChild(ph);
   }
 
-  // Badge
   const ov = document.createElement('div');
   ov.className = 'he-cell-overlay always-edit';
-  ov.innerHTML = `<span class="he-cell-badge badge-silbertablett">◎ Cover</span>
+  ov.innerHTML = `<span class="he-cell-badge badge-silbertablett">◈ Diashow</span>
     <div class="he-cell-acts">
       <button class="he-cell-act-btn" onclick="openSilbertablettModal('${row.id}')">✎ Bearbeiten</button>
     </div>`;

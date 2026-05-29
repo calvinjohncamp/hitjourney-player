@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v201-silbertablett-clean-square-renderer -->
+<!-- Version: v202-silbertablett-no-blank-loop -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
@@ -6517,11 +6517,12 @@ function initDynamicSlideshow(id, slides){
   // bei Ladefehler automatisch die nächste echte Cover-URL.
   imgs.forEach(img=>hjBindCoverFallback(img));
 
-  let cur = -1; // -1 = Startbild/Frame ohne Dia; bleibt genauso lange stehen wie jedes Dia
+  const isSilbertablettClean = wrap.classList.contains('st-square-slideshow');
+  let cur = isSilbertablettClean ? 0 : -1; // Silbertablett startet direkt mit Cover 1; normale Diashow behält Frame-Start
   let featuredCurrentMp3 = null;
   let timer = null;
   const intervalMs = Math.max(1000, parseInt(wrap.dataset.intervalMs || '4000', 10) || 4000);
-  const initialDelayMs = intervalMs; // v193: Start-JPG/Frame bleibt genauso lange sichtbar wie jedes Cover
+  const initialDelayMs = isSilbertablettClean ? 0 : intervalMs; // Silbertablett ohne Uni-/Blank-Pause
 
   // Build dots
   if(dotsEl){
@@ -6535,7 +6536,9 @@ function initDynamicSlideshow(id, slides){
   }
 
   function goTo(idx){
-    // v193: Nach dem letzten Song kommt bewusst wieder der reine JPG-Frame
+    // Silbertablett: nahtlose Endlosschleife 1 → 2 → ... → 1, ohne Blank-/Frame-Zustand.
+    if(isSilbertablettClean && slides.length){ idx = ((idx % slides.length) + slides.length) % slides.length; }
+    // Normale Diashow: Nach dem letzten Song kommt bewusst wieder der reine JPG-Frame
     // ohne Cover-Ebene. Dieser Blank-State dauert exakt so lange wie jedes Dia.
     if(idx < 0 || idx >= slides.length){
       cur = -1;
@@ -6568,16 +6571,16 @@ function initDynamicSlideshow(id, slides){
   function startRotation(){
     stopRotation();
     timer = setTimeout(()=>{
-      goTo(cur < 0 ? 0 : cur+1);
-      timer = setInterval(()=>goTo(cur < 0 ? 0 : cur+1), intervalMs);
+      goTo(isSilbertablettClean ? cur+1 : (cur < 0 ? 0 : cur+1));
+      timer = setInterval(()=>goTo(isSilbertablettClean ? cur+1 : (cur < 0 ? 0 : cur+1)), intervalMs);
     }, cur < 0 ? initialDelayMs : intervalMs);
   }
   function stopRotation(){ clearTimeout(timer); clearInterval(timer); timer = null; }
 
-  goTo(-1);
-  // Erstes echtes Cover bewusst vorladen; danach startet die Diashow automatisch nach kurzer Hex-/Startfarben-Pause.
+  goTo(isSilbertablettClean ? 0 : -1);
+  // Erstes echtes Cover bewusst vorladen; danach startet die Diashow automatisch.
   // v174: Nicht endlos auf ein langsam ladendes/fehlendes erstes Cover warten.
-  // Nach einer vollen Dia-Länge startet die Diashow zuverlässig automatisch — der reine Frame ist das erste Dia.
+  // Nach kurzer Fallback-Zeit startet die Diashow zuverlässig automatisch.
   let autoStarted = false;
   function safeStart(){ if(autoStarted) return; autoStarted = true; startRotation(); }
   const startFallback = setTimeout(safeStart, 900);
