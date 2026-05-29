@@ -14,6 +14,7 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v57: iPhone/AirPods WebAudio Equal-Power Crossfade 6s -->
 <!-- Version v56: iPhone Portrait finale Stage-Korrektur, alte nachgelagerte CSS-Blöcke entfernt -->
 <!-- Version v53: iPhone Portrait Stage höher, Albumtap nur Queue, Outside-Tap schließt Stage -->
 <!-- Version v52: iPhone Portrait Overlay deutlich höher, Decknummern und ABC weiter links -->
@@ -873,7 +874,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   <section class="library-panel"><div class="album-grid" id="albumGrid"></div><div class="abc-section" id="abcSection"></div></section>
   <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
-<audio id="audA" preload="none"></audio><audio id="audB" preload="none"></audio>
+<audio id="audA" preload="none" crossorigin="anonymous"></audio><audio id="audB" preload="none" crossorigin="anonymous"></audio>
 <script>
 'use strict';
 const SB_URL  = 'https://hioaqcwqzeqcvvikollq.supabase.co';
@@ -896,6 +897,57 @@ const DECKS={
   A:{audio:audA,el:document.getElementById('deckA'),cov:document.getElementById('covA'),ph:document.getElementById('phA'),dt:document.getElementById('dtA'),da:document.getElementById('daA'),pf:document.getElementById('pfA'),song:null,playing:false},
   B:{audio:audB,el:document.getElementById('deckB'),cov:document.getElementById('covB'),ph:document.getElementById('phB'),dt:document.getElementById('dtB'),da:document.getElementById('daB'),pf:document.getElementById('pfB'),song:null,playing:false}
 };
+
+/* v57: Robuste Audio-Engine für iPhone/AirPods.
+   Primär: WebAudio GainNodes, damit die Lautstärke auch auf iOS sauber geregelt wird.
+   Fallback: klassische audio.volume-Regelung, falls WebAudio/CORS auf einem Gerät nicht greift. */
+audA.crossOrigin='anonymous';
+audB.crossOrigin='anonymous';
+let audioCtx=null;
+let deckGains={A:null,B:null};
+let audioEngineReady=false;
+function initAudioEngine(){
+  if(audioEngineReady)return true;
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)return false;
+  try{
+    audioCtx=audioCtx||new Ctx();
+    ['A','B'].forEach(id=>{
+      if(deckGains[id])return;
+      const src=audioCtx.createMediaElementSource(DECKS[id].audio);
+      const gain=audioCtx.createGain();
+      gain.gain.value=1;
+      src.connect(gain).connect(audioCtx.destination);
+      deckGains[id]=gain;
+    });
+    audioEngineReady=true;
+    return true;
+  }catch(e){
+    console.warn('WebAudio GainNode nicht verfügbar, fallback auf audio.volume',e);
+    audioEngineReady=false;
+    return false;
+  }
+}
+async function resumeAudioEngine(){
+  const ok=initAudioEngine();
+  if(ok&&audioCtx&&audioCtx.state==='suspended'){
+    try{await audioCtx.resume();}catch(e){}
+  }
+  return ok&&audioCtx&&audioCtx.state!=='closed';
+}
+function setDeckGain(id,value){
+  const v=Math.max(0,Math.min(1,value));
+  const g=deckGains[id];
+  if(g&&audioCtx){
+    try{g.gain.setValueAtTime(v,audioCtx.currentTime);}catch(e){g.gain.value=v;}
+  }
+  // Fallback bleibt aktiv; auf iOS ggf. wirkungslos, schadet aber nicht.
+  try{DECKS[id].audio.volume=v;}catch(e){}
+}
+function restoreDeckGain(id){setDeckGain(id,1);}
+function equalPowerOut(t){return Math.cos(t*Math.PI/2);}
+function equalPowerIn(t){return Math.sin(t*Math.PI/2);}
+
 const progFill=document.getElementById('progFill'),tEl=document.getElementById('tEl'),tRem=document.getElementById('tRem');
 const nextList=document.getElementById('nextList'),nqEmpty=document.getElementById('nqEmpty');
 const albumGrid=document.getElementById('albumGrid'),searchInp=document.getElementById('searchInp'),srList=document.getElementById('srList'),abcSection=document.getElementById('abcSection');
@@ -960,6 +1012,7 @@ async function loadData(){
 
 function loadDeck(id,song){
   const d=DECKS[id];
+  restoreDeckGain(id);
   d.song=song;d.audio.pause();d.audio.src=song.mp3||'';d.audio.load();d.playing=false;
   d.dt.textContent=song.title||'';d.da.textContent=song.artist||'';d.pf.style.width='0%';
   resetTonearm(id);
@@ -976,14 +1029,16 @@ function loadDeck(id,song){
   d.el.classList.toggle('is-cued',id!==activeDeck);
 }
 function clearDeck(id){
-  const d=DECKS[id];d.song=null;d.audio.pause();d.audio.src='';d.playing=false;
+  const d=DECKS[id];restoreDeckGain(id);d.song=null;d.audio.pause();d.audio.src='';d.playing=false;
   d.dt.textContent='— nächsten Track laden —';d.da.textContent='';d.pf.style.width='0%';
   resetTonearm(id);
   d.cov.src='';d.cov.classList.remove('loaded');d.ph.style.display='flex';
   d.el.classList.remove('is-playing','is-cued','is-active');
 }
-function playDeck(id){
+async function playDeck(id){
   const d=DECKS[id];if(!d.song||!d.audio.src)return;
+  await resumeAudioEngine();
+  restoreDeckGain(id);
   d.audio.play().catch(()=>{});d.playing=true;
   d.el.classList.add('is-playing');d.el.classList.remove('is-cued');
   icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
@@ -1000,11 +1055,13 @@ function togglePause(){
   else playDeck(activeDeck);
 }
 let _fadeActive=false;
-const FADE_TOTAL=4000; // 4 seconds linear crossfade
+const FADE_TOTAL=6000; // v57: 6 Sekunden, musikalisch weicher als 4s
+const AUTO_FADE_LEAD=9; // v57: etwas früher laden/starten, damit das Outro nicht hart wirkt
 const btnFadeEl=document.getElementById('btnFade');
 
-function doFade(auto=false){
+async function doFade(auto=false){
   if(_fadeActive)return;
+  await resumeAudioEngine();
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(!d.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
   if(!d.song){if(!auto)toast('Kein Song in Deck '+nxt+' — Queue befüllen.');return;}
@@ -1015,8 +1072,9 @@ function doFade(auto=false){
   const toDeck=DECKS[nxt];
   fromDeck.el.classList.add('is-fading-out');
 
-  // Start Song B silently
-  toDeck.audio.volume=0;
+  // Start Song B wirklich leise: GainNode + volume-Fallback.
+  setDeckGain(nxt,0);
+  restoreDeckGain(fromId);
   toDeck.audio.play().catch(()=>{});
   toDeck.playing=true;
   toDeck.el.classList.add('is-playing');
@@ -1024,11 +1082,26 @@ function doFade(auto=false){
   let uiSwitched=false;
   const startT=performance.now();
 
+  function finishFade(){
+    fromDeck.audio.pause();
+    restoreDeckGain(fromId);
+    fromDeck.playing=false;
+    fromDeck.el.classList.remove('is-playing','is-fading-out');
+    restoreDeckGain(nxt);
+    const freeDeck=other(activeDeck);
+    if(djQueue.length){loadDeck(freeDeck,djQueue.shift());renderQueue();}
+    else{restoreDeckGain(freeDeck);DECKS[freeDeck].song=null;DECKS[freeDeck].audio.pause();DECKS[freeDeck].audio.src='';
+         DECKS[freeDeck].playing=false;resetTonearm(freeDeck);DECKS[freeDeck].el.classList.remove('is-playing','is-active');
+         DECKS[freeDeck].el.classList.add('is-cued');}
+    _fadeActive=false;
+  }
+
   function step(now){
     const elapsed=now-startT;
     const t=Math.min(elapsed/FADE_TOTAL,1);
-    fromDeck.audio.volume=1-t;
-    toDeck.audio.volume=t;
+    // Equal-Power-Kurve: weniger Lautheitsloch, natürlicheres Ausblenden.
+    setDeckGain(fromId,equalPowerOut(t));
+    setDeckGain(nxt,equalPowerIn(t));
 
     // UI switch at midpoint — only visual, never touch audio
     if(!uiSwitched && t>=0.5){
@@ -1039,21 +1112,7 @@ function doFade(auto=false){
       icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
     }
 
-    if(t<1){
-      requestAnimationFrame(step);
-    } else {
-      fromDeck.audio.pause();
-      fromDeck.audio.volume=1;
-      fromDeck.playing=false;
-      fromDeck.el.classList.remove('is-playing','is-fading-out');
-      toDeck.audio.volume=1;
-      const freeDeck=other(activeDeck);
-      if(djQueue.length){loadDeck(freeDeck,djQueue.shift());renderQueue();}
-      else{DECKS[freeDeck].song=null;DECKS[freeDeck].audio.pause();DECKS[freeDeck].audio.src='';
-           DECKS[freeDeck].playing=false;resetTonearm(freeDeck);DECKS[freeDeck].el.classList.remove('is-playing','is-active');
-           DECKS[freeDeck].el.classList.add('is-cued');}
-      _fadeActive=false;
-    }
+    if(t<1){requestAnimationFrame(step);} else {finishFade();}
   }
   requestAnimationFrame(step);
 }
@@ -1079,15 +1138,15 @@ setInterval(()=>{
   DECKS[activeDeck].pf.style.width=p+'%';
   updateTonearm('A');
   updateTonearm('B');
-  // Auto-crossfade trigger: 8s before end
-  if(!_fadeActive&&!_autoFadeScheduled&&rem<=8&&rem>0&&DECKS[activeDeck].playing){
+  // v57 Auto-crossfade trigger: passend zur 6s-Blende etwas früher starten
+  if(!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
     _autoFadeScheduled=true;
     const nxt=other(activeDeck);
     if(!DECKS[nxt].song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
     if(!DECKS[nxt].song&&shuffleOn&&ALL_SONGS.length){loadDeck(nxt,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);}
     doFade(true);
   }
-  if(cur<dur-8)_autoFadeScheduled=false;},400);
+  if(cur<dur-AUTO_FADE_LEAD)_autoFadeScheduled=false;},400);
 deckProgBar.addEventListener('click',e=>{
   const a=DECKS[activeDeck].audio;if(!a.duration)return;
   const r=deckProgBar.getBoundingClientRect();a.currentTime=a.duration*(e.clientX-r.left)/r.width;
@@ -1467,9 +1526,10 @@ function loadAlbumForMobile(key){
   return true;
 }
 if('mediaSession' in navigator){
-  try{navigator.mediaSession.setActionHandler('nexttrack',()=>doFade(false));navigator.mediaSession.setActionHandler('previoustrack',()=>doFade(false));navigator.mediaSession.setActionHandler('play',()=>{if(!DECKS[activeDeck].playing)playDeck(activeDeck)});navigator.mediaSession.setActionHandler('pause',()=>{if(DECKS[activeDeck].playing)togglePause()});}catch(e){}
+  try{navigator.mediaSession.setActionHandler('nexttrack',()=>doFade(false));navigator.mediaSession.setActionHandler('previoustrack',()=>doFade(false));navigator.mediaSession.setActionHandler('play',()=>{resumeAudioEngine();if(!DECKS[activeDeck].playing)playDeck(activeDeck)});navigator.mediaSession.setActionHandler('pause',()=>{if(DECKS[activeDeck].playing)togglePause()});}catch(e){}
 }
 window.addEventListener('resize',ensureMobileChrome);
+document.addEventListener('pointerdown',()=>{resumeAudioEngine();},{once:true,passive:true});
 ensureMobileChrome();
 
 
