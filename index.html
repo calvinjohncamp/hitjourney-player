@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v200-silbertablett-live-renderer -->
+<!-- Version: v201-silbertablett-clean-square-renderer -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
@@ -1004,6 +1004,21 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .st-live-cover-imgwrap{position:absolute;transform-origin:50% 50%;pointer-events:none}
 .st-live-cover-imgwrap img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px}
 @media(max-width:599px){.home-silbertablett{gap:10px}}
+
+/* === v201 Silbertablett clean mode: rechte Kachel ist reine 1:1-Cover-Diashow ohne alten Frame/Kreis === */
+.home-silbertablett .st-square-slideshow .ft-circle,
+.home-silbertablett .st-square-slideshow .ft-text,
+.home-silbertablett .st-square-slideshow .ft-song-name,
+.home-silbertablett .st-square-slideshow .ft-dots{display:none!important}
+.home-silbertablett .st-square-slideshow .ft-covers{
+  inset:0!important;top:0!important;left:0!important;width:100%!important;height:100%!important;
+  aspect-ratio:1/1!important;transform:none!important;border-radius:0!important;overflow:hidden!important;z-index:2!important;
+}
+.home-silbertablett .st-square-slideshow .ft-covers img{
+  border-radius:0!important;object-fit:cover!important;width:100%!important;height:100%!important;
+}
+.home-silbertablett .st-live-cover-imgwrap img{border-radius:0!important}
+
 
 /* ══ FEATURED TEASER ══ */
 .featured-teaser {
@@ -6068,7 +6083,8 @@ function buildSilbertablettEl(cell){
     startColor:bg,
     showSongTitle:false,
     showSongNumber:false,
-    showProgressDots:true,
+    showProgressDots:false,
+    stSsSpeed: cell.stSsSpeed || cell.ssSpeed || '3',
     slides
   };
 
@@ -6076,6 +6092,7 @@ function buildSilbertablettEl(cell){
   slideBox.className = 'st-live-cell st-live-slideshow';
   slideBox.style.background = bg;
   const ss = buildSlideshowEl(slideCell);
+  ss.classList.add('st-square-slideshow');
   slideBox.appendChild(ss);
 
   const coverBox = document.createElement('div');
@@ -6087,10 +6104,12 @@ function buildSilbertablettEl(cell){
   if(!coverSrc && songs[0] && songs[0].cover) coverSrc = songs[0].cover;
 
   if(coverSrc){
-    const x = Number.isFinite(parseFloat(cell.stCoverX)) ? parseFloat(cell.stCoverX) : 50;
-    const y = Number.isFinite(parseFloat(cell.stCoverY)) ? parseFloat(cell.stCoverY) : 50;
-    const sz = Number.isFinite(parseFloat(cell.stCoverSz)) ? parseFloat(cell.stCoverSz) : 57;
-    const rot = Number.isFinite(parseFloat(cell.stCoverRot)) ? parseFloat(cell.stCoverRot) : 0;
+    const free = cell.stCoverFree === true || cell.stCoverFree === 'true';
+    const x = free && Number.isFinite(parseFloat(cell.stCoverX)) ? parseFloat(cell.stCoverX) : 50;
+    const y = free && Number.isFinite(parseFloat(cell.stCoverY)) ? parseFloat(cell.stCoverY) : 50;
+    let sz = free && Number.isFinite(parseFloat(cell.stCoverSz)) ? parseFloat(cell.stCoverSz) : 100;
+    if(!free && Math.abs(sz - 57) < 0.01) sz = 100;
+    const rot = free && Number.isFinite(parseFloat(cell.stCoverRot)) ? parseFloat(cell.stCoverRot) : 0;
     const imgWrap = document.createElement('div');
     imgWrap.className = 'st-live-cover-imgwrap';
     imgWrap.style.width = sz + '%';
@@ -6306,6 +6325,8 @@ function buildSlideshowEl(cell){
   wrap.dataset.coverFitTop = String(coverFitTop);
   wrap.dataset.coverFitWidth = String(coverFitWidth);
   wrap.dataset.coverFitHeight = String(coverFitHeight);
+  const speedVal = parseFloat(cell.stSsSpeed ?? cell.ssSpeed ?? cell.slideSpeed ?? '');
+  if(Number.isFinite(speedVal) && speedVal > 0) wrap.dataset.intervalMs = String(Math.max(1000, speedVal * 1000));
   wrap.style.cursor = 'pointer';
   wrap.style.setProperty('--ft-start-color', startColor);
   wrap.style.setProperty('--ft-song-title-color', titleColor);
@@ -6499,7 +6520,7 @@ function initDynamicSlideshow(id, slides){
   let cur = -1; // -1 = Startbild/Frame ohne Dia; bleibt genauso lange stehen wie jedes Dia
   let featuredCurrentMp3 = null;
   let timer = null;
-  const intervalMs = 4000;
+  const intervalMs = Math.max(1000, parseInt(wrap.dataset.intervalMs || '4000', 10) || 4000);
   const initialDelayMs = intervalMs; // v193: Start-JPG/Frame bleibt genauso lange sichtbar wie jedes Cover
 
   // Build dots

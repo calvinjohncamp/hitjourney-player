@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
-<!-- Version: admin-v20260529e-silbertablett-local-cover-testmode -->
+<!-- Version: admin-v20260529f-silbertablett-clean-prod-defaultfill -->
 <!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -10272,7 +10272,7 @@ function applyType(rowId, cellIdx, type, pos){
       stBgColor:'#000000', stCoverPos:'right', stCoverTitle:'',
       stShowTitle:false, stRotEnabled:false, stRotDir:'cw',
       stRotSpeed:'slow', stSsSpeed:'3', stPlaylistSlug:'', stImageUrl:'',
-      stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0
+      stCoverX:50, stCoverY:50, stCoverSz:100, stCoverRot:0
     };
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
 
@@ -10443,7 +10443,7 @@ function buildSilbertablettAdminRight(row, editing){
   // Cover mit WYS-Platzierung (oder zentriert als Standard)
   const coverX   = cell.stCoverX   !== undefined ? cell.stCoverX   : 50;
   const coverY   = cell.stCoverY   !== undefined ? cell.stCoverY   : 50;
-  const coverSz  = cell.stCoverSz  !== undefined ? cell.stCoverSz  : 57;
+  const coverSz  = cell.stCoverSz  !== undefined ? cell.stCoverSz  : 100;
   const coverRot = cell.stCoverRot !== undefined ? cell.stCoverRot : 0;
 
   if(coverSrc){
@@ -10500,7 +10500,7 @@ function clearSilbertablett(rowId){
     stCoverTitle:'', stShowTitle:false,
     stRotEnabled:false, stRotDir:'cw', stRotSpeed:'slow',
     stSsSpeed:'3', stPlaylistSlug:'', stImageUrl:'',
-    stCoverX:50, stCoverY:50, stCoverSz:57, stCoverRot:0};
+    stCoverX:50, stCoverY:50, stCoverSz:100, stCoverRot:0};
   renderHomeEditor();
 }
 
@@ -11542,9 +11542,9 @@ function openSilbertablettModal(rowId){
   stWys = {
     x:    (c.stCoverX  !== undefined ? c.stCoverX  : 50),
     y:    (c.stCoverY  !== undefined ? c.stCoverY  : 50),
-    size: (c.stCoverSz !== undefined ? c.stCoverSz : 57),
+    size: (c.stCoverSz !== undefined ? c.stCoverSz : 100),
     rot:  (c.stCoverRot!== undefined ? c.stCoverRot: 0),
-    editing: false
+    editing: !!c.stCoverFree
   };
 
   // Step 2 fields
@@ -11883,7 +11883,7 @@ function stWysToggleEdit(on){
 }
 
 function stWysReset(){
-  stWys.x=50; stWys.y=50; stWys.size=57; stWys.rot=0;
+  stWys.x=50; stWys.y=50; stWys.size=100; stWys.rot=0;
   stWysApply();
 }
 
@@ -12344,10 +12344,11 @@ async function saveSilbertablettTile(){
   cell.stPinSize      = stPin.size;
 
   // WYS placement
-  cell.stCoverX   = stWys.x;
-  cell.stCoverY   = stWys.y;
-  cell.stCoverSz  = stWys.size;
-  cell.stCoverRot = stWys.rot;
+  cell.stCoverFree = !!stWys.editing;
+  cell.stCoverX   = stWys.editing ? stWys.x : 50;
+  cell.stCoverY   = stWys.editing ? stWys.y : 50;
+  cell.stCoverSz  = stWys.editing ? stWys.size : 100;
+  cell.stCoverRot = stWys.editing ? stWys.rot : 0;
 
   // Playlist
   if(stSourceMode==='album'){
