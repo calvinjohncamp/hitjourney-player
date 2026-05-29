@@ -4,6 +4,18 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
+<!-- Version v29: iPad-Landscape-Layout + 2-spaltige Albumcover -->
+<!-- Version v30: iPad feste Quadrat-Decks + 2-Zeilen-Controlbereich -->
+<!-- Version v33: iPad Feintuning Controls + Search/Next Align + Album Grid -->
+<!-- Version v32: iPad square deck column + 50/50 library + smaller covers -->
+<!-- Version v31: iPad frozen landscape + aligned square decks/controls -->
+<!-- Version v35: iPad Search-Inhalt nach unten versetzt, Titel auf Next-Höhe -->
+<!-- Version v39: Albumcover iPad 10-15 Prozent groesser, 5x2 bleibt sichtbar -->
+<!-- Version v38: Next-X horizontal mit Next + Albumgrid 5x2 -->
+<!-- Version v37: Next-X unten bündig mit Next + hitjourney vollständig sichtbar -->
+<!-- Version v36: Next-X 25% kleiner + Branding links voll sichtbar -->
+<!-- Version v35: iPad Search-Titel auf Next-Hoehe abgesenkt -->
+<!-- Version v34: Spaltenbreite + Controls unten + Albumcover groesser -->
 <!-- Version v28: Cover-Clean-Fix + Tonarm 110 Prozent -->
 <!-- Version v24: Tonarm läuft bis 100% Innenweg Richtung Mittel-Pin -->
 <!-- Version v17: Startzustand Top100 Search + Songwriters Picks Queue/Deck-Cues ohne Autoplay -->
@@ -111,8 +123,8 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .nq-empty svg{display:none}
 /* albums + ABC */
 .library-panel{display:grid;grid-template-rows:1fr 1fr;gap:1.25vh;border:none;min-height:0;overflow:hidden}
-.album-grid{border:2px solid var(--line);padding:.85vw;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(0,1fr);gap:.72vw;align-content:center;overflow:hidden;min-height:0}
-.al-item{width:100%;height:100%;overflow:hidden;cursor:pointer;background:#0b1e2d;position:relative}
+.album-grid{border:2px solid var(--line);padding:.85vw;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;gap:.72vw;align-content:start;overflow-y:auto;min-height:0}
+.al-item{width:100%;height:auto;aspect-ratio:1/1;overflow:hidden;cursor:pointer;background:#0b1e2d;position:relative}
 .al-item img{width:100%;height:100%;object-fit:cover;display:block}
 .al-cap{position:absolute;inset:0;display:flex;align-items:flex-end;padding:.35vw;background:linear-gradient(transparent 55%,rgba(0,0,0,.75));opacity:0;transition:opacity .15s}
 .al-item:hover .al-cap{opacity:1}
@@ -147,7 +159,537 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .col-hdr,.ctrl-section,#overlay{display:none!important}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(40px);background:rgba(13,36,55,.96);border:1px solid rgba(133,172,201,.3);border-radius:10px;padding:8px 15px;font-size:13px;color:#e8f3fa;opacity:0;transition:.22s;z-index:50}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (max-aspect-ratio: 1.55/1){#app{grid-template-columns:auto minmax(50px,5fr) minmax(0,21fr) minmax(0,24fr) minmax(0,20fr);gap:.85vw;padding:1vh .85vw}.decks-panel{width:calc((100dvh - 2vh - 36px) / 2)}.title{font-size:clamp(24px,2.2vw,36px)}.abc-l{font-size:clamp(26px,2.75vw,42px)}}
+@media (max-aspect-ratio: 1.55/1){
+  :root{--ipad-controls-h:clamp(122px,15.2vh,150px);--ipad-progress-h:30px}
+  #app{
+    grid-template-columns:minmax(244px,22fr) minmax(176px,18fr) minmax(336px,34fr) minmax(184px,19fr);
+    grid-template-rows:minmax(0,1fr) var(--ipad-controls-h);
+    grid-template-areas:
+      "decks next library search"
+      "controls next library search";
+    gap:.85vw;
+    padding:1vh .85vw;
+    align-items:stretch;
+  }
+  .decks-panel{
+    grid-area:decks;
+    width:100%;
+    height:100%;
+    min-height:0;
+    display:grid;
+    grid-template-rows:auto var(--ipad-progress-h) auto;
+    align-content:start;
+    justify-items:center;
+  }
+  .deck{
+    width:min(100%, calc((100dvh - 2vh - var(--ipad-controls-h) - var(--ipad-progress-h) - 10px) / 2));
+    height:auto;
+    aspect-ratio:1/1;
+    justify-self:center;
+    align-self:start;
+  }
+  .deck-progress-wrap{height:var(--ipad-progress-h);width:min(100%, calc((100dvh - 2vh - var(--ipad-controls-h) - var(--ipad-progress-h) - 10px) / 2));padding:0 .55vw}
+  .dj-controls{
+    grid-area:controls;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-rows:1fr auto;
+    align-items:center;
+    justify-items:center;
+    column-gap:.7vw;
+    row-gap:.4vh;
+    min-width:0;
+    min-height:0;
+    padding:.35vh .2vw .55vh;
+    overflow:hidden;
+  }
+  .hj-brand{height:auto;min-height:0;width:100%;margin:0!important;justify-content:center;overflow:hidden;align-self:end}
+  .hj-brand:first-child{grid-column:1/2;grid-row:2;justify-content:start;padding-left:.35vw}
+  .hj-brand:last-child{grid-column:2/4;grid-row:2;justify-content:end;padding-right:.35vw}
+  .hj-logo-vert,.hj-making-vert{position:static;transform:none;white-space:nowrap;line-height:1;text-align:center}
+  .hj-logo-vert{font-size:clamp(18px,2.08vw,26px);letter-spacing:.012em}
+  .hj-making-vert{font-size:clamp(7px,.82vw,10px);letter-spacing:.31em;padding-bottom:.12em}
+  .dj-btns{grid-column:1/4;grid-row:1;width:100%;height:100%;flex:0;flex-direction:row;justify-content:space-around;align-items:center;gap:0}
+  .round-btn{width:clamp(34px,4.05vw,48px);height:clamp(34px,4.05vw,48px)}
+  .next-panel{grid-area:next;min-width:0;min-height:0}
+  .library-panel{grid-area:library;grid-template-rows:minmax(0,1fr) minmax(0,.82fr);gap:1.05vh;min-width:0;min-height:0}
+  .search-panel{grid-area:search;min-width:0;min-height:0}
+  .album-grid{
+    grid-template-columns:repeat(2,minmax(0,min(44%,132px)));
+    grid-auto-rows:auto;
+    justify-content:center;
+    gap:.85vw;
+    padding:.9vw;
+    align-content:start;
+    overflow-y:auto;
+  }
+  .al-item{width:100%;height:auto!important;aspect-ratio:1/1!important}
+  .al-item img{width:100%;height:100%;object-fit:cover}
+  .al-name{font-size:.95vw}
+  .abc-section{gap:2.3vh;padding:1.2vw .9vw}
+  .abc-row{gap:1.85vw}
+  .abc-row:nth-child(2),.abc-row:nth-child(4){gap:1.05vw}
+  .abc-l{font-size:clamp(34px,3.55vw,55px);min-width:2.15vw}
+  .title{font-size:clamp(25px,2.7vw,38px);padding:1.25vw 1.15vw .8vw}
+  .title-row{padding:1.25vw 1.15vw .8vw}
+  .btn-clear-q{width:clamp(34px,3.8vw,48px);height:clamp(34px,3.8vw,48px)}
+  .nq-item,.sr-item{gap:.75vw;padding:.55vw .25vw}
+  .nq-cov,.sr-cov{width:clamp(38px,3.7vw,54px);height:clamp(38px,3.7vw,54px)}
+  .nq-title,.sr-title{font-size:clamp(13px,1.25vw,18px)}
+  .nq-artist,.sr-artist{font-size:clamp(10px,.92vw,13px)}
+  .lyrics-overlay.expanded{width:calc(100dvh - 2vh);height:calc(100dvh - 2vh);top:1vh;right:.85vw}
+}
+
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  :root{--ipad-controls-h:clamp(116px,14.6vh,140px)}
+  #app{grid-template-columns:minmax(238px,22fr) minmax(160px,17fr) minmax(328px,34fr) minmax(170px,18fr)}
+  .round-btn{width:clamp(32px,3.9vw,44px);height:clamp(32px,3.9vw,44px)}
+  .hj-logo-vert{font-size:clamp(17px,1.98vw,24px)}
+  .hj-making-vert{font-size:clamp(6.5px,.78vw,9.5px);letter-spacing:.29em}
+}
+
+/* Mr. DJ bleibt auf mobilen Geräten im optimierten Querformat eingefroren. */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse){
+  html,body{width:100vw;height:100vh;overflow:hidden}
+  #app{
+    width:100dvh;
+    height:100dvw;
+    transform:rotate(90deg) translateY(-100%);
+    transform-origin:top left;
+  }
+}
+
+
+
+/* === v32 Feinschliff iPad/Mac: echte Quadrat-Decks, 50/50 Library, kleinere Cover === */
+@media (max-aspect-ratio: 1.55/1){
+  :root{
+    --ipad-controls-h:clamp(92px,11.5vh,112px);
+    --ipad-progress-h:26px;
+  }
+  #app{
+    grid-template-columns:minmax(280px,28fr) minmax(186px,19fr) minmax(336px,35fr) minmax(198px,21fr);
+    grid-template-rows:minmax(0,1fr) var(--ipad-controls-h);
+    gap:.78vw;
+    padding:1vh .85vw;
+  }
+  .decks-panel{
+    align-content:start;
+    justify-items:start;
+    grid-template-rows:auto var(--ipad-progress-h) auto;
+    width:100%;
+    height:100%;
+  }
+  .deck{
+    width:100%;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    max-height:none!important;
+    justify-self:start;
+    align-self:start;
+  }
+  .deck-progress-wrap{
+    width:100%;
+    height:var(--ipad-progress-h);
+    padding:0 .45vw;
+  }
+
+  /* Control-Bereich unter den Decks: kleiner, mittig, Branding sauber getrennt */
+  .dj-controls{
+    padding:.15vh .2vw .45vh;
+    grid-template-rows:minmax(36px,1fr) 26px;
+    row-gap:.25vh;
+  }
+  .round-btn{
+    width:clamp(28px,3.1vw,38px)!important;
+    height:clamp(28px,3.1vw,38px)!important;
+  }
+  .dj-btns{
+    justify-content:space-evenly;
+    align-items:center;
+    height:100%;
+  }
+  .hj-brand{
+    height:26px;
+    align-self:end;
+    min-width:0;
+    overflow:hidden;
+  }
+  .hj-brand:first-child{justify-content:start;padding-left:.15vw;grid-column:1/2;grid-row:2;}
+  .hj-brand:last-child{justify-content:end;padding-right:.15vw;grid-column:2/4;grid-row:2;}
+  .hj-logo-vert{
+    font-size:clamp(14px,1.55vw,19px)!important;
+    letter-spacing:.002em;
+    max-width:100%;
+  }
+  .hj-making-vert{
+    font-size:clamp(5.8px,.64vw,8px)!important;
+    letter-spacing:.26em;
+    padding-bottom:.16em;
+    max-width:100%;
+  }
+
+  /* Next exakt wie Search von oben / Schriftgrößen */
+  .title,.title-row .title{font-size:clamp(25px,2.7vw,38px)!important;}
+  .title{padding:1.15vw 1vw .65vw!important;}
+  .title-row{padding:1.15vw 1vw .65vw!important;align-items:center;}
+  .next-list,.sr-list{padding-top:.22vw;}
+
+  /* Cover + ABC exakt 50/50 */
+  .library-panel{
+    grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:.78vh;
+  }
+  .album-grid{
+    grid-template-columns:repeat(2,70px)!important;
+    grid-auto-rows:70px!important;
+    justify-content:center;
+    align-content:start;
+    gap:10px 16px!important;
+    padding:12px!important;
+    overflow-y:auto;
+  }
+  .al-item{
+    width:70px!important;
+    height:70px!important;
+    aspect-ratio:1/1!important;
+  }
+  .al-item img{width:100%;height:100%;object-fit:cover;}
+  .abc-section{
+    gap:2.0vh;
+    padding:.9vw .8vw;
+  }
+  .abc-l{font-size:clamp(32px,3.35vw,52px);}
+}
+
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  :root{--ipad-controls-h:clamp(88px,11vh,106px)}
+  #app{grid-template-columns:minmax(270px,28fr) minmax(176px,18fr) minmax(320px,34fr) minmax(188px,20fr)!important;}
+  .album-grid{grid-template-columns:repeat(2,68px)!important;grid-auto-rows:68px!important;gap:9px 15px!important;}
+  .al-item{width:68px!important;height:68px!important;}
+}
+
+
+
+/* === v33 Feintuning: Controls + Branding größer, höher; Album-Grid nutzt 50%-Fläche; Search/Next gleich === */
+@media (max-aspect-ratio: 1.55/1){
+  :root{
+    --ipad-controls-h:clamp(102px,12.8vh,124px);
+    --album-sz:clamp(50px,5.35vh,58px);
+  }
+  .dj-controls{
+    padding:0 .18vw .35vh!important;
+    transform:translateY(-18px);
+    overflow:visible!important;
+  }
+  .dj-btns{
+    align-self:stretch;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:clamp(28px,4.3vw,56px)!important;
+    transform:translateY(-2px);
+  }
+  .round-btn{
+    width:clamp(36px,4.05vw,50px)!important;
+    height:clamp(36px,4.05vw,50px)!important;
+  }
+  .hj-brand{
+    height:32px!important;
+    overflow:visible!important;
+    align-items:flex-end!important;
+  }
+  .hj-brand:first-child{padding-left:.35vw!important;justify-content:flex-start!important;}
+  .hj-brand:last-child{padding-right:.35vw!important;justify-content:flex-end!important;}
+  .hj-logo-vert{
+    font-size:clamp(18px,2.02vw,25px)!important;
+    letter-spacing:.003em!important;
+  }
+  .hj-making-vert{
+    font-size:clamp(7.5px,.83vw,10.5px)!important;
+    letter-spacing:.27em!important;
+    padding-bottom:.30em!important;
+  }
+
+  .title,.title-row .title{font-size:clamp(25px,2.7vw,38px)!important;line-height:1!important;}
+  .title,.search-panel>.title{padding:1.15vw 1vw .78vw!important;}
+  .title-row{padding:1.15vw 1vw .78vw!important;min-height:0!important;}
+  .search-wrap{
+    margin:0 1vw 1.05vw!important;
+    padding:.68vw .85vw!important;
+  }
+  .sr-list{padding-top:.30vw!important;}
+  .next-list{padding-top:.30vw!important;}
+
+  .library-panel{
+    grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:.78vh!important;
+  }
+  .album-grid{
+    grid-template-columns:repeat(2,var(--album-sz))!important;
+    grid-auto-rows:var(--album-sz)!important;
+    justify-content:center!important;
+    align-content:space-evenly!important;
+    gap:clamp(10px,1.25vh,15px) clamp(16px,2.1vw,28px)!important;
+    padding:8px 10px!important;
+    overflow:hidden!important;
+  }
+  .al-item{
+    width:var(--album-sz)!important;
+    height:var(--album-sz)!important;
+    aspect-ratio:1/1!important;
+  }
+  .al-item img{width:100%!important;height:100%!important;object-fit:cover!important;}
+}
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  :root{--album-sz:clamp(48px,5.1vh,55px);--ipad-controls-h:clamp(100px,12.4vh,120px);}
+  .round-btn{width:clamp(35px,3.95vw,48px)!important;height:clamp(35px,3.95vw,48px)!important;}
+  .hj-logo-vert{font-size:clamp(17.5px,1.94vw,24px)!important;}
+  .hj-making-vert{font-size:clamp(7.2px,.78vw,10px)!important;}
+}
+
+
+/* === v34: Controls/Branding nach unten, Library 25% schmaler, Next/Search breiter, Albumcover 50% groesser === */
+@media (max-aspect-ratio: 1.55/1){
+  :root{
+    --ipad-controls-h:clamp(102px,12.8vh,124px);
+    --album-sz:clamp(75px,8.0vh,87px);
+  }
+
+  /* Spalten: Library ca. 25% schmaler, gewonnene Breite auf Next und Search verteilt */
+  #app{
+    grid-template-columns:minmax(270px,28fr) minmax(210px,23fr) minmax(250px,26fr) minmax(220px,25fr)!important;
+    gap:.78vw!important;
+  }
+
+  /* Controls und Branding nach unten: keine Aufwaertsverschiebung mehr */
+  .dj-controls{
+    transform:none!important;
+    padding:.2vh .18vw 0!important;
+    grid-template-rows:minmax(44px,1fr) 34px!important;
+    row-gap:.15vh!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .dj-btns{
+    transform:none!important;
+    align-self:stretch!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:clamp(30px,4.6vw,60px)!important;
+  }
+  .round-btn{
+    width:clamp(36px,4.05vw,50px)!important;
+    height:clamp(36px,4.05vw,50px)!important;
+  }
+  .hj-brand{
+    height:34px!important;
+    align-self:end!important;
+    align-items:flex-end!important;
+    overflow:hidden!important;
+  }
+  .hj-brand:first-child{padding-left:.35vw!important;justify-content:flex-start!important;}
+  .hj-brand:last-child{padding-right:.35vw!important;justify-content:flex-end!important;}
+  .hj-logo-vert{
+    font-size:clamp(18px,2.02vw,25px)!important;
+    letter-spacing:.003em!important;
+    line-height:1!important;
+  }
+  .hj-making-vert{
+    font-size:clamp(7.5px,.83vw,10.5px)!important;
+    letter-spacing:.27em!important;
+    line-height:1!important;
+    padding-bottom:.18em!important;
+  }
+
+  /* Next und Search optisch exakt auf eine gemeinsame Titel-Linie */
+  .title,.title-row .title{
+    font-size:clamp(25px,2.7vw,38px)!important;
+    line-height:1!important;
+  }
+  .title-row, .search-panel>.title{
+    min-height:clamp(55px,5.2vw,66px)!important;
+    padding:1.15vw 1vw .78vw!important;
+    display:flex!important;
+    align-items:flex-start!important;
+  }
+  .title-row{justify-content:space-between!important;}
+  .search-wrap{
+    margin:0 1vw 1.12vw!important;
+    padding:.68vw .85vw!important;
+  }
+  .sr-list,.next-list{padding-top:.30vw!important;}
+
+  /* Library bleibt 50/50; Albumcover deutlich groesser, weiterhin quadratisch */
+  .library-panel{
+    grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:.78vh!important;
+  }
+  .album-grid{
+    grid-template-columns:repeat(2,var(--album-sz))!important;
+    grid-auto-rows:var(--album-sz)!important;
+    justify-content:center!important;
+    align-content:space-evenly!important;
+    gap:clamp(10px,1.25vh,15px) clamp(14px,1.8vw,24px)!important;
+    padding:8px 8px!important;
+    overflow:hidden!important;
+  }
+  .al-item{
+    width:var(--album-sz)!important;
+    height:var(--album-sz)!important;
+    aspect-ratio:1/1!important;
+  }
+  .al-item img{width:100%!important;height:100%!important;object-fit:cover!important;}
+}
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  :root{--album-sz:clamp(72px,7.65vh,82px);--ipad-controls-h:clamp(100px,12.4vh,120px);}
+  #app{grid-template-columns:minmax(268px,28fr) minmax(202px,23fr) minmax(238px,26fr) minmax(212px,25fr)!important;}
+  .round-btn{width:clamp(35px,3.95vw,48px)!important;height:clamp(35px,3.95vw,48px)!important;}
+  .hj-logo-vert{font-size:clamp(17.5px,1.94vw,24px)!important;}
+  .hj-making-vert{font-size:clamp(7.2px,.78vw,10px)!important;}
+}
+
+
+/* === v35: iPad Search-Spalte: Inhalt nach unten, Rahmen bleibt unveraendert === */
+@media (max-aspect-ratio: 1.55/1){
+  .search-panel{
+    padding-top:clamp(10px,1.25vh,16px)!important;
+  }
+}
+
+
+/* === v36: Next-Funktionsbutton kleiner + sauber auf Next-Zeile, Branding links komplett sichtbar === */
+@media (max-aspect-ratio: 1.55/1){
+  .title-row{
+    align-items:center!important;
+  }
+  .btn-clear-q{
+    width:clamp(26px,2.85vw,36px)!important;
+    height:clamp(26px,2.85vw,36px)!important;
+    align-self:center!important;
+    transform:translateY(-1px);
+  }
+  .btn-clear-q svg{
+    width:56%!important;
+    height:56%!important;
+    stroke-width:3.8!important;
+  }
+  .hj-brand{
+    overflow:visible!important;
+  }
+  .hj-brand:first-child{
+    padding-left:.12vw!important;
+    justify-content:flex-start!important;
+    z-index:3;
+  }
+  .hj-logo-vert{
+    font-size:clamp(17px,1.88vw,23px)!important;
+    max-width:none!important;
+    overflow:visible!important;
+    white-space:nowrap!important;
+  }
+}
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  .btn-clear-q{
+    width:clamp(25px,2.75vw,34px)!important;
+    height:clamp(25px,2.75vw,34px)!important;
+  }
+  .hj-logo-vert{
+    font-size:clamp(16px,1.78vw,22px)!important;
+  }
+}
+
+
+/* === v37: Next-X unten bündig zum Next-Text + hitjourney ohne abgeschnittenes y === */
+@media (max-aspect-ratio: 1.55/1){
+  .title-row{
+    align-items:flex-end!important;
+  }
+  .btn-clear-q{
+    align-self:flex-end!important;
+    transform:none!important;
+    margin-bottom:0!important;
+  }
+
+  /* Unteres Branding bekommt sichtbar mehr Luft nach unten, damit das y nicht aus dem Bild rutscht. */
+  .dj-controls{
+    overflow:visible!important;
+    padding:.2vh .18vw .35vh!important;
+    grid-template-rows:minmax(44px,1fr) 38px!important;
+  }
+  .hj-brand{
+    height:38px!important;
+    align-items:center!important;
+    overflow:visible!important;
+    padding-bottom:4px!important;
+  }
+  .hj-brand:first-child{
+    padding-left:.16vw!important;
+    padding-bottom:4px!important;
+  }
+  .hj-logo-vert{
+    line-height:1.12!important;
+    padding-bottom:2px!important;
+    display:inline-block!important;
+  }
+}
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  .dj-controls{
+    grid-template-rows:minmax(42px,1fr) 38px!important;
+    padding:.2vh .18vw .4vh!important;
+  }
+  .hj-brand{
+    height:38px!important;
+    padding-bottom:5px!important;
+  }
+}
+
+
+/* === v39: Albumcover 10-15% groesser, 10 Cover weiterhin als 5x2 sichtbar === */
+@media (max-aspect-ratio: 1.55/1){
+  /* X-Button nicht mehr unten am Titelblock, sondern optisch auf der Next-Zeile */
+  .title-row{
+    align-items:flex-start!important;
+  }
+  .btn-clear-q{
+    align-self:flex-start!important;
+    margin-top:clamp(2px,.28vw,5px)!important;
+    margin-bottom:0!important;
+    transform:none!important;
+  }
+
+  /* 10 Albumcover elegant als 5 Zeilen à 2 quadratische Motive sichtbar halten */
+  :root{
+    --album-sz:clamp(64px,7.25vh,80px);
+  }
+  .album-grid{
+    grid-template-columns:repeat(2,var(--album-sz))!important;
+    grid-template-rows:repeat(5,var(--album-sz))!important;
+    grid-auto-rows:var(--album-sz)!important;
+    align-content:center!important;
+    justify-content:center!important;
+    gap:clamp(3px,.42vh,5px) clamp(10px,1.35vw,18px)!important;
+    padding:clamp(4px,.50vh,6px) 7px!important;
+    overflow:hidden!important;
+  }
+  .al-item{
+    width:var(--album-sz)!important;
+    height:var(--album-sz)!important;
+    aspect-ratio:1/1!important;
+  }
+}
+@media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
+  :root{
+    --album-sz:clamp(62px,7.0vh,74px);
+  }
+  .btn-clear-q{
+    margin-top:clamp(2px,.25vw,4px)!important;
+  }
+  .album-grid{
+    gap:clamp(3px,.38vh,5px) clamp(9px,1.2vw,15px)!important;
+    padding:clamp(3px,.45vh,5px) 6px!important;
+  }
+}
+
 </style>
 </head>
 <body>
