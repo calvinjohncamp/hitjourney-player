@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v200-silbertablett-live-renderer -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
@@ -974,6 +975,35 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
+
+
+/* === v200 Silbertablett live renderer === */
+.home-silbertablett{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  width:100%;
+}
+.home-silbertablett .st-live-cell{
+  position:relative;
+  aspect-ratio:1/1;
+  border-radius:8px;
+  overflow:hidden;
+  background:#000;
+  min-width:0;
+}
+.home-silbertablett .featured-teaser{
+  grid-column:auto!important;
+  width:100%;
+  height:100%;
+  aspect-ratio:1/1!important;
+  border-radius:8px;
+}
+.st-live-cover{cursor:pointer}
+.st-live-cover-imgwrap{position:absolute;transform-origin:50% 50%;pointer-events:none}
+.st-live-cover-imgwrap img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px}
+@media(max-width:599px){.home-silbertablett{gap:10px}}
 
 /* ══ FEATURED TEASER ══ */
 .featured-teaser {
@@ -5637,6 +5667,15 @@ function renderHomeLayout(){
       return;
     }
 
+
+    // ── Silbertablett: zwei quadratische Live-Kacheln ───────────────
+    if(t0 === 'silbertablett'){
+      const cell = cells[0];
+      const el = buildSilbertablettEl(cell);
+      grid.appendChild(el);
+      return;
+    }
+
     // ── Slideshow ──────────────────────────────────────────────────
     if(t0 === 'slideshow'){
       const cell = cells[0];
@@ -5977,6 +6016,112 @@ if(!window._hjStandaloneHomeTeaserListeners){
     const st = window._hjStandaloneHomeTeaser;
     if(st && st.el) st.el.classList.remove('playing');
   });
+}
+
+
+/* ── Build Silbertablett live block: left/right square pair ── */
+function buildSilbertablettEl(cell){
+  const wrap = document.createElement('div');
+  wrap.className = 'home-silbertablett';
+
+  const bg = cell.stBgColor || '#000000';
+  const coverPos = (cell.stCoverPos || 'right').toLowerCase();
+  const playlistSlug = cell.stPlaylistSlug || cell.playlistSlug || cell.slug || '';
+  const albumKey = resolveAlbumKey(playlistSlug);
+  const album = albumKey && ALBUMS[albumKey] ? ALBUMS[albumKey] : null;
+
+  let songs = [];
+  if(Array.isArray(cell.stCustomSongs) && cell.stCustomSongs.length){
+    songs = cell.stCustomSongs.map(s => ({
+      slug: s.slug || s.song_slug || '',
+      title: s.title || '',
+      artist: s.artist || '',
+      mp3: s.mp3 || s.mp3_url || '',
+      cover: s.coverUrl || s.cover || s.cover_url || ''
+    })).filter(s => s.slug || s.title || s.cover);
+  } else if(album && Array.isArray(album.songs)) {
+    songs = album.songs.map(s => ({
+      slug: s.slug || '',
+      title: s.title || '',
+      artist: s.artist || '',
+      mp3: s.mp3 || '',
+      cover: s.cover || s.cover_url || ''
+    }));
+  }
+
+  const slides = songs.map(s => ({
+    slug: s.slug,
+    title: s.title,
+    artist: s.artist,
+    cover: s.cover,
+    coverUrl: s.cover,
+    focusUrl: s.cover
+  }));
+
+  const slideCell = {
+    type:'slideshow',
+    fn:'play',
+    slug: playlistSlug,
+    alt: cell.alt || cell.stCoverTitle || '',
+    imageUrl:'',
+    bgUrl:'',
+    startColor:bg,
+    showSongTitle:false,
+    showSongNumber:false,
+    showProgressDots:true,
+    slides
+  };
+
+  const slideBox = document.createElement('div');
+  slideBox.className = 'st-live-cell st-live-slideshow';
+  slideBox.style.background = bg;
+  const ss = buildSlideshowEl(slideCell);
+  slideBox.appendChild(ss);
+
+  const coverBox = document.createElement('div');
+  coverBox.className = 'st-live-cell st-live-cover';
+  coverBox.style.background = bg;
+
+  let coverSrc = cell.stImageUrl || cell.imageUrl || '';
+  if(!coverSrc && album && album.cover) coverSrc = album.cover;
+  if(!coverSrc && songs[0] && songs[0].cover) coverSrc = songs[0].cover;
+
+  if(coverSrc){
+    const x = Number.isFinite(parseFloat(cell.stCoverX)) ? parseFloat(cell.stCoverX) : 50;
+    const y = Number.isFinite(parseFloat(cell.stCoverY)) ? parseFloat(cell.stCoverY) : 50;
+    const sz = Number.isFinite(parseFloat(cell.stCoverSz)) ? parseFloat(cell.stCoverSz) : 57;
+    const rot = Number.isFinite(parseFloat(cell.stCoverRot)) ? parseFloat(cell.stCoverRot) : 0;
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'st-live-cover-imgwrap';
+    imgWrap.style.width = sz + '%';
+    imgWrap.style.height = sz + '%';
+    imgWrap.style.left = 'calc(' + x + '% - ' + (sz/2) + '%)';
+    imgWrap.style.top  = 'calc(' + y + '% - ' + (sz/2) + '%)';
+    imgWrap.style.transform = 'rotate(' + rot + 'deg)';
+    const img = document.createElement('img');
+    img.src = coverSrc;
+    img.alt = cell.alt || '';
+    img.loading = 'lazy';
+    imgWrap.appendChild(img);
+    coverBox.appendChild(imgWrap);
+  }
+
+  coverBox.addEventListener('click', () => {
+    if(albumKey && ALBUMS[albumKey]) { showAlbum(albumKey); return; }
+    if(songs[0] && songs[0].slug){
+      playSongBySlug(songs[0].slug);
+      return;
+    }
+  });
+
+  if(coverPos === 'left'){
+    wrap.appendChild(coverBox);
+    wrap.appendChild(slideBox);
+  } else {
+    wrap.appendChild(slideBox);
+    wrap.appendChild(coverBox);
+  }
+  return wrap;
 }
 
 /* ── Build a slideshow (featured-teaser style) ── */
