@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
-<!-- Version: admin-v20260529h-silbertablett-admin-orderfix -->
+<!-- Version: admin-v20260529i-silbertablett-song-drag-reorder -->
 <!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -12030,13 +12030,48 @@ function stRenderSongList(){
   stSongListData.forEach((s,i)=>{
     const row=document.createElement('div');
     row.className='st-song-row';
+    row.draggable = true;
+    row.dataset.index = String(i);
+    row.title = 'Song anfassen und verschieben';
+
+    row.addEventListener('dragstart', (e)=>{
+      stSongDragIndex = i;
+      row.classList.add('dragging');
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(i));
+      }
+    });
+    row.addEventListener('dragend', ()=>{
+      stSongDragIndex = null;
+      document.querySelectorAll('.st-song-row').forEach(r=>r.classList.remove('dragging','drag-over'));
+    });
+    row.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('.st-song-row.drag-over').forEach(r=>{ if(r!==row) r.classList.remove('drag-over'); });
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', ()=>row.classList.remove('drag-over'));
+    row.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const from = (stSongDragIndex !== null && stSongDragIndex !== undefined) ? stSongDragIndex : parseInt((e.dataTransfer||{}).getData?.('text/plain'),10);
+      const to = i;
+      if(Number.isNaN(from) || from === to) return;
+      const moved = stSongListData.splice(from,1)[0];
+      stSongListData.splice(to,0,moved);
+      stSongDragIndex = null;
+      stRenderSongList();
+    });
+
     const num=document.createElement('span'); num.className='st-song-num';
     num.textContent=String(i+1).padStart(2,'0');
     const title=document.createElement('span'); title.className='st-song-title';
     title.textContent=s.title+(s.artist?' · '+s.artist:'');
     const del=document.createElement('button'); del.className='st-song-del';
     del.textContent='×';
-    del.onclick=()=>{ stSongListData.splice(i,1); stRenderSongList(); };
+    del.onclick=(ev)=>{ ev.stopPropagation(); stSongListData.splice(i,1); stRenderSongList(); };
     row.appendChild(num); row.appendChild(title); row.appendChild(del);
     listEl.appendChild(row);
   });
@@ -13342,7 +13377,10 @@ async function restoreSnapshot(){
 /* Step 3 — Songs */
 .st-song-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;margin-bottom:8px;border-radius:6px}
 .st-song-list::-webkit-scrollbar{display:none}
-.st-song-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:#2a2a2a;font-size:12px;color:#ccc}
+.st-song-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:#2a2a2a;font-size:12px;color:#ccc;cursor:grab;user-select:none}
+.st-song-row:active{cursor:grabbing}
+.st-song-row.dragging{opacity:.42}
+.st-song-row.drag-over{outline:1px solid #85ACC9;background:#333}
 .st-song-num{color:#555;min-width:18px;text-align:right;font-size:11px}
 .st-song-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .st-song-del{background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0}
