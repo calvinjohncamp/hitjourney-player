@@ -10,6 +10,11 @@
 <!-- Version v32: iPad square deck column + 50/50 library + smaller covers -->
 <!-- Version v31: iPad frozen landscape + aligned square decks/controls -->
 <!-- Version v35: iPad Search-Inhalt nach unten versetzt, Titel auf Next-Höhe -->
+<!-- Version v44: Search startet mit TOP 100 in Original-Reihenfolge; ABC sortiert erst nach Klick -->
+<!-- Version v43: Album-Klick in Search bleibt Original-Reihenfolge; erster ABC-Klick sortiert A-Z -->
+<!-- Version v42: Album-Drop nach Next bleibt Original-Reihenfolge; erster ABC-Klick sortiert A-Z -->
+<!-- Version v41: Mr. DJ komplett in Next + ABC startet A-Z -->
+<!-- Version v40: Mr. DJ Default + ABC Sort-Buttons in Next/Search -->
 <!-- Version v39: Albumcover iPad 10-15 Prozent groesser, 5x2 bleibt sichtbar -->
 <!-- Version v38: Next-X horizontal mit Next + Albumgrid 5x2 -->
 <!-- Version v37: Next-X unten bündig mit Next + hitjourney vollständig sichtbar -->
@@ -38,6 +43,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#071826;color:#d8e9f
 .title{font-family:'Anton',sans-serif;color:#8DB7DA;font-size:clamp(26px,2.25vw,43px);letter-spacing:.02em;line-height:1;padding:1.15vw 1.15vw .65vw}
 .title-row{display:flex;align-items:center;justify-content:space-between;padding:1.15vw 1.15vw .65vw}
 .title-row .title{padding:0}
+.title-actions{display:flex;align-items:center;gap:.55vw;flex-shrink:0}
 .clear-queue{font-size:clamp(11px,.82vw,15px);color:#C90019;cursor:pointer;opacity:.85;font-weight:600;letter-spacing:.01em;line-height:1}
 .clear-queue:hover{opacity:1}
 /* decks */
@@ -105,9 +111,10 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .round-btn.shuffle img{width:64%;height:64%;object-fit:contain;filter:brightness(.35) saturate(.5)}
 .round-btn.on{box-shadow:0 0 0 1px rgba(255,255,255,.07), inset 0 -5px 9px rgba(0,0,0,.08)}
 .next-panel{display:flex;flex-direction:column}
-.btn-clear-q{width:min(2.53vw,4vh);height:min(2.53vw,4vh);border-radius:50%;border:0;background:#86B1D1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 -5px 9px rgba(0,0,0,.08);flex-shrink:0}
-.btn-clear-q:active{transform:scale(.92)}
+.btn-clear-q,.btn-sort-abc{width:min(2.53vw,4vh);height:min(2.53vw,4vh);border-radius:50%;border:0;background:#86B1D1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 -5px 9px rgba(0,0,0,.08);flex-shrink:0}
+.btn-clear-q:active,.btn-sort-abc:active{transform:scale(.92)}
 .btn-clear-q svg{width:58%;height:58%;stroke:#06141F;stroke-width:3.8;stroke-linecap:round}
+.btn-sort-abc{font-family:'Anton',sans-serif;color:#06141F;font-size:clamp(10px,.82vw,15px);letter-spacing:.02em;line-height:1;padding-top:.04em}
 .next-list,.sr-list{flex:1;min-height:0;overflow-y:auto;padding:.25vw .35vw .8vw}
 .nq-item,.sr-item{display:flex;align-items:center;gap:.68vw;padding:.48vw .2vw;border-bottom:1px solid rgba(131,171,208,.13);cursor:pointer}
 .nq-item:hover,.sr-item:hover{background:rgba(131,171,208,.07)}
@@ -232,7 +239,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   .abc-l{font-size:clamp(34px,3.55vw,55px);min-width:2.15vw}
   .title{font-size:clamp(25px,2.7vw,38px);padding:1.25vw 1.15vw .8vw}
   .title-row{padding:1.25vw 1.15vw .8vw}
-  .btn-clear-q{width:clamp(34px,3.8vw,48px);height:clamp(34px,3.8vw,48px)}
+  .btn-clear-q,.btn-sort-abc{width:clamp(34px,3.8vw,48px);height:clamp(34px,3.8vw,48px)}
   .nq-item,.sr-item{gap:.75vw;padding:.55vw .25vw}
   .nq-cov,.sr-cov{width:clamp(38px,3.7vw,54px);height:clamp(38px,3.7vw,54px)}
   .nq-title,.sr-title{font-size:clamp(13px,1.25vw,18px)}
@@ -562,12 +569,13 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   .title-row{
     align-items:center!important;
   }
-  .btn-clear-q{
+  .btn-clear-q,.btn-sort-abc{
     width:clamp(26px,2.85vw,36px)!important;
     height:clamp(26px,2.85vw,36px)!important;
     align-self:center!important;
     transform:translateY(-1px);
   }
+  .btn-sort-abc{font-size:clamp(9px,.82vw,13px)!important;}
   .btn-clear-q svg{
     width:56%!important;
     height:56%!important;
@@ -589,7 +597,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   }
 }
 @media (max-aspect-ratio: 1.55/1) and (max-width:1180px){
-  .btn-clear-q{
+  .btn-clear-q,.btn-sort-abc{
     width:clamp(25px,2.75vw,34px)!important;
     height:clamp(25px,2.75vw,34px)!important;
   }
@@ -604,7 +612,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   .title-row{
     align-items:flex-end!important;
   }
-  .btn-clear-q{
+  .btn-clear-q,.btn-sort-abc{
     align-self:flex-end!important;
     transform:none!important;
     margin-bottom:0!important;
@@ -650,7 +658,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   .title-row{
     align-items:flex-start!important;
   }
-  .btn-clear-q{
+  .btn-clear-q,.btn-sort-abc{
     align-self:flex-start!important;
     margin-top:clamp(2px,.28vw,5px)!important;
     margin-bottom:0!important;
@@ -681,7 +689,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   :root{
     --album-sz:clamp(62px,7.0vh,74px);
   }
-  .btn-clear-q{
+  .btn-clear-q,.btn-sort-abc{
     margin-top:clamp(2px,.25vw,4px)!important;
   }
   .album-grid{
@@ -738,9 +746,9 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
     <div class="hj-brand" aria-label="Making Waves" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-making-vert">Making Waves</div></div>
   </section>
 
-  <section class="panel next-panel" id="colNext"><div class="title-row"><div class="title">Next</div><button class="btn-clear-q" id="btnClearQueue" title="Playlist leeren"><svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="next-list" id="nextList"><div class="nq-empty" id="nqEmpty"><svg></svg><span>Queue leer<br/>Songs oder Alben hineinziehen</span></div></div></section>
+  <section class="panel next-panel" id="colNext"><div class="title-row"><div class="title">Next</div><div class="title-actions"><button class="btn-sort-abc" id="btnSortNext" title="Next alphabetisch sortieren">ABC</button><button class="btn-clear-q" id="btnClearQueue" title="Playlist leeren"><svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div><div class="next-list" id="nextList"><div class="nq-empty" id="nqEmpty"><svg></svg><span>Queue leer<br/>Songs oder Alben hineinziehen</span></div></div></section>
   <section class="library-panel"><div class="album-grid" id="albumGrid"></div><div class="abc-section" id="abcSection"></div></section>
-  <section class="panel search-panel"><div class="title">Search</div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
+  <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
 <audio id="audA" preload="none"></audio><audio id="audB" preload="none"></audio>
 <script>
@@ -758,7 +766,7 @@ const PLAYLIST_MAP = {
   'top-100':{key:'top100',title:'Top 100',meta:'100 Songs',cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg'},
 };
 const ALBUM_ORDER=['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'];
-let ALL_SONGS=[],ALBUMS={},djQueue=[],shuffleOn=false,activeDeck='A',abcFilter=null,searchQ='',currentSearchSource={type:'all'};
+let ALL_SONGS=[],ALBUMS={},djQueue=[],shuffleOn=false,activeDeck='A',abcFilter=null,searchQ='',currentSearchSource={type:'all'},nextSortAsc=true,searchSortAsc=true,searchSortMode='original';
 
 const audA=document.getElementById('audA'),audB=document.getElementById('audB');
 const DECKS={
@@ -974,6 +982,8 @@ function showAlbumInSearch(key){
   abcFilter=null; searchQ=''; searchInp.value='';
   document.querySelectorAll('.abc-l').forEach(x=>x.classList.remove('active'));
   currentSearchSource={type:'album',key:key,title:al.title};
+  searchSortMode='original';
+  searchSortAsc=true;
   renderSearch();
   toast('Search: '+al.title);
 }
@@ -1034,6 +1044,31 @@ function hasAnyDeckPlaying(){
   return !!(DECKS.A.playing || DECKS.B.playing);
 }
 
+function sortSongsByTitle(arr,asc=true){
+  return arr.slice().sort((a,b)=>{
+    const c=(a.title||'').localeCompare(b.title||'','de',{sensitivity:'base'});
+    return asc?c:-c;
+  });
+}
+function findMrDjAlbumKey(){
+  const keys=Object.keys(ALBUMS);
+  return keys.find(k=>/^(mr[-_ ]?dj|mrdj)$/i.test(k))
+      || keys.find(k=>/mr\.?\s*dj/i.test(ALBUMS[k].title||''))
+      || keys.find(k=>/mr[-_ ]?dj/i.test(ALBUMS[k].slug||''))
+      || keys.find(k=>/dj/i.test(ALBUMS[k].title||''))
+      || null;
+}
+function findSongInList(list,title){
+  const norm=String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();
+  return (list||[]).find(s=>String(s.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim()===norm)
+      || (list||[]).find(s=>String(s.title||'').toLowerCase().includes(String(title||'').toLowerCase()));
+}
+
+function getDefaultSearchSource(){
+  if(ALBUMS.top100)return {type:'album',key:'top100',title:ALBUMS.top100.title||'Top 100'};
+  return {type:'all',title:'Alle Songs'};
+}
+
 function startDeckFromCue(id){
   const d=DECKS[id];
   if(!d.song)return;
@@ -1051,31 +1086,39 @@ function startDeckFromCue(id){
 }
 
 function setupDefaultStartState(){
-  // Search zeigt beim Öffnen immer Top 100 in der Playlist-Reihenfolge.
-  if(ALBUMS.top100){
-    currentSearchSource={type:'album',key:'top100',title:ALBUMS.top100.title};
-  }else{
-    currentSearchSource={type:'all'};
-  }
+  const mrKey=findMrDjAlbumKey();
+  const defaultAlbum=mrKey&&ALBUMS[mrKey] ? ALBUMS[mrKey] : (ALBUMS.top50||ALBUMS.top100||null);
+
   abcFilter=null;
   searchQ='';
   if(searchInp)searchInp.value='';
+  nextSortAsc=true;
+  searchSortAsc=true;
+  searchSortMode='original';
 
-  // Next wird mit Songwriters Picks / Top 50 vorbereitet.
-  const picks=(ALBUMS.top50&&ALBUMS.top50.songs&&ALBUMS.top50.songs.length) ? ALBUMS.top50.songs.slice() : ALL_SONGS.slice(0,50);
-  if(!picks.length)return;
+  // Search startet bewusst mit TOP 100 in kuratierter Playlist-Reihenfolge.
+  // ABC greift erst nach einem Klick auf den ABC-Button.
+  currentSearchSource=getDefaultSearchSource();
 
-  // Zwei zufällige Songwriters-Picks werden nur als Cue in die Decks geladen — kein Autoplay.
-  const shuffled=sArr(picks);
-  const cueA=shuffled[0];
-  const cueB=shuffled[1]||shuffled[0];
-  if(cueA)loadDeck('A',cueA);
-  if(cueB)loadDeck('B',cueB);
+  if(defaultAlbum){
+    const original=defaultAlbum.songs.slice();
 
-  // Queue bleibt in der originalen Top-50-Reihenfolge; die beiden Deck-Cues werden herausgenommen, damit nichts doppelt direkt erneut kommt.
-  const used=new Set([cueA&&cueA.slug,cueB&&cueB.slug].filter(Boolean));
-  djQueue=picks.filter(s=>!used.has(s.slug));
+    const cueA=findSongInList(original,'Just this Dance') || original[0];
+    const cueB=findSongInList(original,'What if tonight') || original[1] || original[0];
+    if(cueA)loadDeck('A',cueA);
+    if(cueB)loadDeck('B',cueB);
 
+    // Next zeigt bewusst das komplette Mr.-DJ-Album inklusive der beiden Songs, die in den Decks vorliegen — in Original-Reihenfolge.
+    djQueue=original.slice();
+  }else{
+    const original=(ALBUMS.top100&&ALBUMS.top100.songs&&ALBUMS.top100.songs.length) ? ALBUMS.top100.songs.slice() : ALL_SONGS.slice();
+    const cueA=original[0], cueB=original[1]||original[0];
+    if(cueA)loadDeck('A',cueA);
+    if(cueB)loadDeck('B',cueB);
+    djQueue=original.slice();
+  }
+
+  document.querySelectorAll('.abc-l').forEach(x=>x.classList.remove('active'));
   activeDeck='A';
   DECKS.A.el.classList.add('is-active');
   DECKS.B.el.classList.add('is-cued');
@@ -1129,7 +1172,7 @@ function renderABC(){
       const span=document.createElement('span');span.className='abc-l'+(avail.has(l)?'':' dim');span.textContent=l;
       span.addEventListener('click',()=>{
         if(abcFilter===l){abcFilter=null;span.classList.remove('active');}
-        else{abcFilter=l;searchInp.value='';searchQ='';currentSearchSource={type:'letter',letter:l};document.querySelectorAll('.abc-l').forEach(x=>x.classList.remove('active'));span.classList.add('active');}
+        else{abcFilter=l;searchInp.value='';searchQ='';currentSearchSource={type:'letter',letter:l};searchSortMode='asc';searchSortAsc=false;document.querySelectorAll('.abc-l').forEach(x=>x.classList.remove('active'));span.classList.add('active');}
         renderSearch();
       });
       rowEl.appendChild(span);
@@ -1142,6 +1185,9 @@ function renderSearch(){
   if(currentSearchSource.type==='album' && ALBUMS[currentSearchSource.key]) res=ALBUMS[currentSearchSource.key].songs.slice();
   if(abcFilter)res=ALL_SONGS.filter(s=>s.title[0]?.toUpperCase()===abcFilter);
   if(searchQ){const q=searchQ.toLowerCase();res=ALL_SONGS.filter(s=>s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));}
+  if(searchSortMode==='asc')res=sortSongsByTitle(res,true);
+  else if(searchSortMode==='desc')res=sortSongsByTitle(res,false);
+  else if(abcFilter || searchQ)res=sortSongsByTitle(res,true);
   srList.innerHTML='';
   if(!res.length){srList.innerHTML='<div style="padding:16px 12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs</div>';return;}
   res.slice(0,150).forEach(song=>{
@@ -1159,7 +1205,7 @@ function renderSearch(){
 }
 searchInp.addEventListener('input',()=>{
   searchQ=searchInp.value.trim();
-  if(searchQ){abcFilter=null;currentSearchSource={type:'query'};document.querySelectorAll('.abc-l').forEach(b=>b.classList.remove('active'));} else {currentSearchSource={type:'all'};}
+  if(searchQ){abcFilter=null;currentSearchSource={type:'query'};searchSortMode='asc';document.querySelectorAll('.abc-l').forEach(b=>b.classList.remove('active'));} else {currentSearchSource=getDefaultSearchSource();searchSortMode='original';searchSortAsc=true;}
   renderSearch();
 });
 
@@ -1168,6 +1214,20 @@ document.getElementById('btnFade').addEventListener('click',()=>doFade(false));
 document.getElementById('btnShuffle').addEventListener('click',()=>{shuffleOn=!shuffleOn;document.getElementById('btnShuffle').classList.toggle('on',shuffleOn);shuffleNext();});
 document.getElementById('btnClear').addEventListener('click',()=>{djQueue=[];renderQueue();toast('Queue geleert');});
 document.getElementById('btnClearQueue').addEventListener('click',()=>{djQueue=[];renderQueue();toast('Queue geleert');});
+document.getElementById('btnSortNext').addEventListener('click',()=>{
+  const asc=nextSortAsc;
+  djQueue=sortSongsByTitle(djQueue,asc);
+  renderQueue();
+  toast('Next '+(asc?'A–Z':'Z–A'));
+  nextSortAsc=!nextSortAsc;
+});
+document.getElementById('btnSortSearch').addEventListener('click',()=>{
+  const asc=searchSortAsc;
+  searchSortMode=asc?'asc':'desc';
+  renderSearch();
+  toast('Search '+(asc?'A–Z':'Z–A'));
+  searchSortAsc=!searchSortAsc;
+});
 document.getElementById('btnAutoLoad').addEventListener('click',()=>{if(!ALL_SONGS.length)return;djQueue=sArr(ALL_SONGS).slice(0,20);renderQueue();toast('20 zufällige Songs in Queue');});
 document.getElementById('deckA').addEventListener('click',e=>{
   if(e.target.closest('.deck-red-btn'))return;
@@ -1208,7 +1268,7 @@ colNext.addEventListener('drop',e=>{
   const k=e.dataTransfer.getData('dj-album');
   const slug=e.dataTransfer.getData('dj-song');
   const idx=getNqDropIndex(e);
-  if(k){const al=ALBUMS[k];if(!al)return;const songs=shuffleOn?sArr(al.songs):al.songs.slice();djQueue.splice(idx,0,...songs);renderQueue();toast(songs.length+' Songs von »'+al.title+'« → Next');}
+  if(k){const al=ALBUMS[k];if(!al)return;const songs=shuffleOn?sArr(al.songs):al.songs.slice();nextSortAsc=true;djQueue.splice(idx,0,...songs);renderQueue();toast(songs.length+' Songs von »'+al.title+'« → Next');}
   else if(slug){const s=ALL_SONGS.find(x=>x.slug===slug);if(s){djQueue.splice(idx,0,s);renderQueue();toast('»'+s.title+'« → Next');}}
 });
 // Deck-Drop: Song UND Album auf inaktives Deck
@@ -1221,7 +1281,7 @@ colNext.addEventListener('drop',e=>{
     const slug=e.dataTransfer.getData('dj-song');
     const k=e.dataTransfer.getData('dj-album');
     if(slug){const s=ALL_SONGS.find(x=>x.slug===slug);if(s){if(id===activeDeck&&!DECKS[id].playing){loadDeck(id,s);playDeck(id);}else if(id!==activeDeck){loadDeck(id,s);if(!DECKS[activeDeck].playing)playDeck(id);}}}
-    else if(k){const al=ALBUMS[k];if(!al)return;const songs=shuffleOn?sArr(al.songs):al.songs.slice();if(songs.length){loadDeck(id,songs[0]);if(!DECKS[activeDeck].playing)playDeck(id);const rest=songs.slice(1);djQueue.splice(0,0,...rest);renderQueue();}}
+    else if(k){const al=ALBUMS[k];if(!al)return;const songs=shuffleOn?sArr(al.songs):al.songs.slice();if(songs.length){loadDeck(id,songs[0]);if(!DECKS[activeDeck].playing)playDeck(id);const rest=songs.slice(1);nextSortAsc=true;djQueue.splice(0,0,...rest);renderQueue();}}
   });
 });
 
