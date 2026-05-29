@@ -10,6 +10,14 @@
 <!-- Version v32: iPad square deck column + 50/50 library + smaller covers -->
 <!-- Version v31: iPad frozen landscape + aligned square decks/controls -->
 <!-- Version v35: iPad Search-Inhalt nach unten versetzt, Titel auf Next-Höhe -->
+<!-- Version v47: iPhone Portrait Deck-Zentrierung, Decknummern, Albumscroll und vertikales Feintuning -->
+<!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
+<!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
+<!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v56: iPhone Portrait finale Stage-Korrektur, alte nachgelagerte CSS-Blöcke entfernt -->
+<!-- Version v53: iPhone Portrait Stage höher, Albumtap nur Queue, Outside-Tap schließt Stage -->
+<!-- Version v52: iPhone Portrait Overlay deutlich höher, Decknummern und ABC weiter links -->
+<!-- Version v49: iPhone Portrait Feinschliff Player/Stage -->
 <!-- Version v44: Search startet mit TOP 100 in Original-Reihenfolge; ABC sortiert erst nach Klick -->
 <!-- Version v43: Album-Klick in Search bleibt Original-Reihenfolge; erster ABC-Klick sortiert A-Z -->
 <!-- Version v42: Album-Drop nach Next bleibt Original-Reihenfolge; erster ABC-Klick sortiert A-Z -->
@@ -698,7 +706,122 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   }
 }
 
+
+
+/* === v45: iPhone Portrait · radikal verschlankte Mr.-DJ-Mobile-Ansicht === */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  html,body{width:100vw!important;height:100dvh!important;overflow:hidden!important;background:#071826!important}
+  #app{
+    width:100vw!important;height:100dvh!important;transform:none!important;transform-origin:initial!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto 18px auto minmax(0,1fr) 54px!important;
+    grid-template-areas:
+      "decks decks"
+      "progress progress"
+      "controls controls"
+      "next albums"
+      "brand brand"!important;
+    gap:8px!important;
+    padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 8px)!important;
+    background:#071826!important;overflow:hidden!important;
+  }
+  .decks-panel{grid-area:decks!important;width:100%!important;height:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:auto!important;column-gap:8px!important;overflow:visible!important;align-items:start!important;justify-items:center!important;transform:translateX(8px)!important}
+  #deckA{grid-column:1!important;grid-row:1!important}.deck-progress-wrap{grid-area:progress!important;width:100%!important;height:18px!important;padding:0!important;background:#071826!important}.deck-progress-time{display:none!important}.deck-progress-bar{height:3px!important;background:rgba(133,172,201,.25)!important}.deck-progress-fill{background:#85ACC9!important}
+  #deckB{grid-column:2!important;grid-row:1!important}
+  .deck{width:94%!important;height:auto!important;aspect-ratio:1/1!important;border:none!important;background:#000!important;overflow:visible!important;animation:none!important;box-shadow:none!important}
+  .deck-cover-wrap{left:50%!important;top:6%!important;width:78%!important;transform:translateX(-50%)!important}.deck-center-pin{left:50%!important;top:45%!important;width:3.8%!important}.deck-red-btn{display:none!important}.deck-info{left:8px!important;right:22px!important;bottom:4px!important;min-height:20px!important}.deck-info::after{position:absolute;right:-8px;bottom:0;font-weight:900;font-size:20px;line-height:1;color:#fff;opacity:.98;text-shadow:none}.deck-title{font-size:10px!important}.deck-artist{font-size:8px!important}.deck-tonearm{z-index:7!important}#deckA .deck-info::after{content:'1'}#deckB .deck-info::after{content:'2'}
+  .dj-controls{grid-area:controls!important;display:block!important;padding:0!important;transform:translateY(-26px)!important;min-height:72px!important;overflow:visible!important}.dj-btns{height:72px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:0!important;width:100%!important}.round-btn{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important}.round-btn.mobile-lyrics-btn{display:flex!important;background:#C90019!important;color:#06141F!important}.round-btn.mobile-lyrics-btn svg{display:none!important}.hj-brand{display:none!important}
+  .next-panel{grid-area:next!important;border:none!important;background:#06141F!important;min-height:0!important;overflow:hidden!important;transform:translateY(-8px)!important}.library-panel{grid-area:albums!important;border:none!important;display:block!important;min-height:0!important;overflow:hidden!important;transform:translateY(-8px)!important}.search-panel,.abc-section{display:none!important}
+  .title-row{padding:7px 0 8px!important;min-height:0!important;align-items:center!important}.title{font-size:34px!important;padding:0!important;line-height:.95!important}.title-actions{gap:8px!important}.btn-clear-q,.btn-sort-abc{width:34px!important;height:34px!important;font-size:12px!important}
+  .next-list{height:calc(100% - 49px)!important;padding:0!important;overflow-y:auto!important;background:#06141F!important}.nq-item{gap:7px!important;padding:8px 7px 8px 0!important}.nq-num{font-size:12px!important;width:28px!important;text-align:left!important;padding-left:8px!important}.nq-cov{width:36px!important;height:36px!important}.nq-title{font-size:13px!important}.nq-artist{font-size:10px!important}.nq-rm{font-size:16px!important}.nq-empty{font-size:12px!important;padding:12px!important}
+  .album-grid{height:100%!important;max-height:100%!important;border:none!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:auto!important;gap:12px!important;padding:0 0 42px 0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;align-content:start!important;scrollbar-width:none!important}.al-item{width:100%!important;height:auto!important;aspect-ratio:1/1!important;display:block!important;border-radius:0!important;margin:0!important}.al-cap{display:none!important}.al-item img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+  .mobile-brand{grid-area:brand!important;display:flex!important;align-items:end!important;justify-content:space-between!important;gap:14px!important}.mobile-hj-logo{background:transparent;color:#e8f3fa;font-weight:900;font-size:28px;line-height:1;padding:10px 12px 9px;letter-spacing:-.02em}.mobile-hj-logo .journey{color:#85ACC9}.mobile-hj-logo .dot{display:inline-block;width:.32em;height:.32em;border-radius:50%;background:#C90019;margin-left:.08em;vertical-align:-.04em}.mobile-making{background:transparent;color:#9FBFDA;font-weight:900;font-size:13px;letter-spacing:.34em;text-transform:uppercase;padding:11px 12px 10px;line-height:1;white-space:nowrap}
+  .mobile-stage{position:fixed;z-index:200;left:12px;right:12px;top:61dvh;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);height:auto;background:#06141F;border:2px solid #83ABD0;display:none;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}.mobile-stage.show{display:flex}.mobile-stage img{max-width:100%;max-height:100%;object-fit:contain;display:block}.mobile-stage .mobile-stage-text{font-size:14px;color:#85ACC9;text-align:center;padding:18px}.mobile-stage-close{display:none!important}
+}
+@media (min-width:701px){.mobile-stage,.mobile-brand,.mobile-lyrics-btn{display:none!important}}
+
 </style>
+
+<style>
+/* === v52: echte iPhone-Portrait-Korrektur
+   - Cover/Lyrics-Bühne ca. 0,6 cm höher und minimal breiter
+   - Decknummern 1/2 ca. 0,2 cm weiter links
+   - ABC-Button im Next-Kopf ca. 0,2 cm weiter links, mittiger unter dem Würfel-Button
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-stage{
+    left:4px!important;
+    right:4px!important;
+    top:34dvh!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 60px)!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  .mobile-stage img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+  }
+  .deck-info::after{
+    right:-5px!important;
+  }
+  #colNext .title-actions{
+    transform:translateX(-8px)!important;
+  }
+}
+
+
+/* === v53: iPhone Portrait · Cover/Lyrics-Bühne verdeckt rechte Spalte sauberer === */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-stage{
+    top:calc(34dvh - 24px)!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 60px)!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+}
+</style>
+
+
+<style>
+/* === v54: iPhone Portrait · Cover/Lyrics-Stage wirklich vor Next + Albumkopf ===
+   Die spätere v50-Regel hatte v53 wieder überschrieben.
+   Diese finale Regel steht deshalb ganz am Ende und zieht den blauen Rahmen
+   deutlich nach oben, ohne Cover/Lyrics selbst zu vergrößern.
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-stage{
+    position:fixed!important;
+    z-index:9999!important;
+    left:6px!important;
+    right:6px!important;
+    top:calc(39dvh - 48px)!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 60px)!important;
+    width:auto!important;
+    height:auto!important;
+    max-width:none!important;
+    background:#06141F!important;
+    border:2px solid #83ABD0!important;
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+  }
+  .mobile-stage.show{display:flex!important;}
+  .mobile-stage img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    display:block!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -867,8 +990,13 @@ function playDeck(id){
 }
 function pauseDeck(id){DECKS[id].audio.pause();DECKS[id].playing=false;DECKS[id].el.classList.remove('is-playing')}
 function togglePause(){
-  const d=DECKS[activeDeck];if(!d.song)return;
-  if(d.playing){pauseDeck(activeDeck);icPause.style.display='none';icPlay.style.display='';btnPause.classList.add('paused');}
+  const d=DECKS[activeDeck];
+  if(!d.song && djQueue.length){
+    loadDeck(activeDeck,djQueue.shift());
+    renderQueue();
+  }
+  if(!DECKS[activeDeck].song)return;
+  if(DECKS[activeDeck].playing){pauseDeck(activeDeck);icPause.style.display='none';icPlay.style.display='';btnPause.classList.add('paused');}
   else playDeck(activeDeck);
 }
 let _fadeActive=false;
@@ -1071,6 +1199,10 @@ function getDefaultSearchSource(){
 
 function startDeckFromCue(id){
   const d=DECKS[id];
+  if(!d.song && djQueue.length){
+    loadDeck(id,djQueue.shift());
+    renderQueue();
+  }
   if(!d.song)return;
   const wasSilent=!hasAnyDeckPlaying();
   activeDeck=id;
@@ -1156,7 +1288,7 @@ function renderAlbums(){
     const al=ALBUMS[key];if(!al)return;
     const div=document.createElement('div');div.className='al-item';div.draggable=true;
     div.innerHTML=`<img src="${esc(al.cover||'')}" alt="${esc(al.title)}" loading="lazy" onerror="this.style.opacity=0"/><div class="al-cap"><div class="al-name">${esc(al.title)}</div><div class="al-meta">${esc(al.meta)}</div></div>`;
-    div.addEventListener('click',()=>showAlbumInSearch(key));
+    div.addEventListener('click',()=>{ if(isMobilePortraitDJ() && loadAlbumForMobile(key)) return; showAlbumInSearch(key); });
     div.addEventListener('dragstart',e=>{e.dataTransfer.setData('dj-album',key);e.dataTransfer.effectAllowed='copy';});
     albumGrid.appendChild(div);
   });
@@ -1286,6 +1418,61 @@ colNext.addEventListener('drop',e=>{
 });
 
 
+/* === v45 iPhone Portrait helpers === */
+function isMobilePortraitDJ(){return window.matchMedia('(max-width:700px) and (orientation:portrait)').matches || window.matchMedia('(orientation:portrait) and (hover:none) and (pointer:coarse)').matches;}
+function ensureMobileChrome(){
+  if(document.getElementById('mobileBrand'))return;
+  const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
+  brand.innerHTML='<div class="mobile-hj-logo"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making">Making Waves</div>';
+  document.getElementById('app').appendChild(brand);
+  const b=document.createElement('button');b.className='round-btn mobile-lyrics-btn';b.id='btnMobileLyrics';b.title='Cover / Lyrics';
+  b.innerHTML='';
+  const btns=document.querySelector('.dj-btns'); if(btns)btns.appendChild(b);
+  const st=document.createElement('div');st.id='mobileStage';st.className='mobile-stage';st.innerHTML='<div class="mobile-stage-text">Cover / Lyrics</div>';
+  document.body.appendChild(st);
+  st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
+  b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
+}
+document.addEventListener('click',e=>{
+  const st=document.getElementById('mobileStage');
+  if(!st||!st.classList.contains('show'))return;
+  if(e.target.closest('#mobileStage,#btnMobileLyrics'))return;
+  hideMobileStage();
+});
+let mobileStageMode=0;
+function getActiveSong(){return DECKS[activeDeck]&&DECKS[activeDeck].song?DECKS[activeDeck].song:null;}
+function hideMobileStage(){const st=document.getElementById('mobileStage'); if(st)st.classList.remove('show'); mobileStageMode=0;}
+function cycleMobileStage(){
+  const song=getActiveSong(); if(!song){toast('Kein Song aktiv');return;}
+  mobileStageMode=(mobileStageMode+1)%3;
+  const st=document.getElementById('mobileStage'); if(!st)return;
+  if(mobileStageMode===0){hideMobileStage();return;}
+  st.classList.add('show');
+  if(mobileStageMode===1){st.innerHTML='<img alt="Cover" src="'+esc(song.cover||'')+'" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'mobile-stage-text\',textContent:\'Kein Cover gefunden\'}))">';return;}
+  const urls=getLyricsCandidates(song); let idx=0;
+  st.innerHTML='<div class="mobile-stage-text">Lyrics werden geladen</div>';
+  const img=document.createElement('img');
+  const tryLoad=()=>{ if(idx>=urls.length){st.querySelector('.mobile-stage-text').textContent='Kein Lyrics-Sheet gefunden';return;} img.src=urls[idx++]; };
+  img.onload=()=>{const old=st.querySelector('.mobile-stage-text'); if(old)old.remove(); st.appendChild(img);};
+  img.onerror=tryLoad; tryLoad();
+}
+function loadAlbumForMobile(key){
+  const al=ALBUMS[key]; if(!al)return false;
+  const songs=shuffleOn?sArr(al.songs):al.songs.slice(); if(!songs.length)return true;
+  nextSortAsc=true;
+  djQueue=songs.slice();
+  renderQueue();
+  hideMobileStage();
+  toast('Album: '+al.title+' → Next');
+  return true;
+}
+if('mediaSession' in navigator){
+  try{navigator.mediaSession.setActionHandler('nexttrack',()=>doFade(false));navigator.mediaSession.setActionHandler('previoustrack',()=>doFade(false));navigator.mediaSession.setActionHandler('play',()=>{if(!DECKS[activeDeck].playing)playDeck(activeDeck)});navigator.mediaSession.setActionHandler('pause',()=>{if(DECKS[activeDeck].playing)togglePause()});}catch(e){}
+}
+window.addEventListener('resize',ensureMobileChrome);
+ensureMobileChrome();
+
+
 function installDemoData(){
   const covers=[
     'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Real%20Talk%20-%20Cover.jpg',
@@ -1330,4 +1517,105 @@ function goHome(){
   }
 }
 </script>
+
+
+<style>
+/* === v55: iPhone Portrait · finale Overlay-Korrektur
+   Wichtig: Diese Regel steht NACH v50 und überschreibt deshalb alle früheren
+   mobile-stage-Positionen. Der blaue Rahmen wird deutlich nach oben gezogen,
+   damit Next- und Album-Bereich komplett vom dunklen Stage-Hintergrund verdeckt
+   werden. Cover und Lyrics bleiben darin zentriert und unverzerrt.
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-stage{
+    position:fixed!important;
+    z-index:99999!important;
+    left:6px!important;
+    right:6px!important;
+    top:calc(31dvh - 18px)!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 60px)!important;
+    width:auto!important;
+    height:auto!important;
+    max-width:none!important;
+    max-height:none!important;
+    background:#06141F!important;
+    border:2px solid #83ABD0!important;
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    cursor:pointer!important;
+  }
+  .mobile-stage.show{display:flex!important;}
+  .mobile-stage img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center center!important;
+    display:block!important;
+    background:#06141F!important;
+  }
+  .mobile-stage .mobile-stage-text{
+    width:100%!important;
+    height:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+}
+</style>
+
+
+
+<style>
+/* === v56: iPhone Portrait · finale, wirksame Stage-Korrektur ===
+   Die alten nach </html> angehängten v48/v50-CSS-Blöcke wurden entfernt.
+   Diese Regel steht jetzt regulär im Dokument und ist die letzte wirksame iPhone-Regel.
+   Ziel: Den blauen Cover/Lyrics-Rahmen nach oben verlängern, damit Next/Albumcover darunter verdeckt werden,
+   während Cover/Lyrics im Rahmen zentriert bleiben und nicht künstlich beschnitten werden.
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-stage{
+    position:fixed!important;
+    z-index:99999!important;
+    left:6px!important;
+    right:6px!important;
+    /* v61: Rahmen ~0,3cm höher gezogen, deckt Albummotive ab, klar unter den Buttons */
+    top:36dvh!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 60px)!important;
+    width:auto!important;
+    height:auto!important;
+    max-width:none!important;
+    background:#06141F!important;
+    border:2px solid #83ABD0!important;
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:hidden!important;
+    box-shadow:none!important;
+  }
+  .mobile-stage.show{display:flex!important;}
+  .mobile-stage img{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center center!important;
+    display:block!important;
+    background:#06141F!important;
+  }
+  .mobile-stage .mobile-stage-text{
+    width:100%!important;
+    height:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+}
+</style>
 </body></html>
