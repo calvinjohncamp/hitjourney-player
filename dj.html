@@ -14,7 +14,9 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v59: 5s Equal-Power Crossfade + Anti-Popp AirPods -->
 <!-- Version v57: iPhone/AirPods WebAudio Equal-Power Crossfade 6s -->
+<!-- Version v58: Anti-Plopp-Fade-Ende fuer iPhone AirPods -->
 <!-- Version v56: iPhone Portrait finale Stage-Korrektur, alte nachgelagerte CSS-Blöcke entfernt -->
 <!-- Version v53: iPhone Portrait Stage höher, Albumtap nur Queue, Outside-Tap schließt Stage -->
 <!-- Version v52: iPhone Portrait Overlay deutlich höher, Decknummern und ABC weiter links -->
@@ -1055,8 +1057,10 @@ function togglePause(){
   else playDeck(activeDeck);
 }
 let _fadeActive=false;
-const FADE_TOTAL=6000; // v57: 6 Sekunden, musikalisch weicher als 4s
-const AUTO_FADE_LEAD=9; // v57: etwas früher laden/starten, damit das Outro nicht hart wirkt
+const FADE_TOTAL=5000; // v59: 5 Sekunden Sweet Spot, kürzer als 6s, weiterhin weich
+const AUTO_FADE_LEAD=8; // v59: passend zur 5s-Blende, mit genug Luft fürs weiche Outro
+const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen AirPods-Ploppen
+const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
 
 async function doFade(auto=false){
@@ -1083,17 +1087,38 @@ async function doFade(auto=false){
   const startT=performance.now();
 
   function finishFade(){
-    fromDeck.audio.pause();
-    restoreDeckGain(fromId);
-    fromDeck.playing=false;
-    fromDeck.el.classList.remove('is-playing','is-fading-out');
+    /* v58 Anti-Plopp-Schleuse:
+       Das alte Audio-Element wird am Ende nicht sofort bei Gain=0 pausiert/umgeladen.
+       Auf iPhone + AirPods kann genau dieser harte pause()/src-Wechsel ein leises Ploppen erzeugen.
+       Deshalb: erst auf nahezu stumm halten, kurz warten, dann pausieren, danach erst Deck freigeben. */
+    setDeckGain(fromId,GAIN_FLOOR);
     restoreDeckGain(nxt);
-    const freeDeck=other(activeDeck);
-    if(djQueue.length){loadDeck(freeDeck,djQueue.shift());renderQueue();}
-    else{restoreDeckGain(freeDeck);DECKS[freeDeck].song=null;DECKS[freeDeck].audio.pause();DECKS[freeDeck].audio.src='';
-         DECKS[freeDeck].playing=false;resetTonearm(freeDeck);DECKS[freeDeck].el.classList.remove('is-playing','is-active');
-         DECKS[freeDeck].el.classList.add('is-cued');}
-    _fadeActive=false;
+
+    window.setTimeout(()=>{
+      fromDeck.audio.pause();
+      fromDeck.playing=false;
+      fromDeck.el.classList.remove('is-playing','is-fading-out');
+
+      window.setTimeout(()=>{
+        const freeDeck=fromId;
+        if(djQueue.length){
+          loadDeck(freeDeck,djQueue.shift());
+          renderQueue();
+        } else {
+          setDeckGain(freeDeck,GAIN_FLOOR);
+          DECKS[freeDeck].song=null;
+          DECKS[freeDeck].audio.pause();
+          DECKS[freeDeck].audio.removeAttribute('src');
+          try{DECKS[freeDeck].audio.load();}catch(e){}
+          restoreDeckGain(freeDeck);
+          DECKS[freeDeck].playing=false;
+          resetTonearm(freeDeck);
+          DECKS[freeDeck].el.classList.remove('is-playing','is-active');
+          DECKS[freeDeck].el.classList.add('is-cued');
+        }
+        _fadeActive=false;
+      },80);
+    },ANTI_POP_MS);
   }
 
   function step(now){
@@ -1138,7 +1163,7 @@ setInterval(()=>{
   DECKS[activeDeck].pf.style.width=p+'%';
   updateTonearm('A');
   updateTonearm('B');
-  // v57 Auto-crossfade trigger: passend zur 6s-Blende etwas früher starten
+  // v59 Auto-crossfade trigger: passend zur 5s-Blende mit weicher Anti-Popp-Endphase
   if(!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
     _autoFadeScheduled=true;
     const nxt=other(activeDeck);
