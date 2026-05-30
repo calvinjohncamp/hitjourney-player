@@ -14,6 +14,8 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
+<!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
 <!-- Version v59: 5s Equal-Power Crossfade + Anti-Popp AirPods -->
@@ -741,7 +743,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   .title-row{padding:7px 0 8px!important;min-height:0!important;align-items:center!important}.title{font-size:34px!important;padding:0!important;line-height:.95!important}.title-actions{gap:8px!important}.btn-clear-q,.btn-sort-abc{width:34px!important;height:34px!important;font-size:12px!important}
   .next-list{height:calc(100% - 49px)!important;padding:0!important;overflow-y:auto!important;background:#06141F!important}.nq-item{gap:7px!important;padding:8px 7px 8px 0!important}.nq-num{font-size:12px!important;width:28px!important;text-align:left!important;padding-left:8px!important}.nq-cov{width:36px!important;height:36px!important}.nq-title{font-size:13px!important}.nq-artist{font-size:10px!important}.nq-rm{font-size:16px!important}.nq-empty{font-size:12px!important;padding:12px!important}
   .album-grid{height:100%!important;max-height:100%!important;border:none!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:auto!important;gap:12px!important;padding:0 0 42px 0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;align-content:start!important;scrollbar-width:none!important}.al-item{width:100%!important;height:auto!important;aspect-ratio:1/1!important;display:block!important;border-radius:0!important;margin:0!important}.al-cap{display:none!important}.al-item img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
-  .mobile-brand{grid-area:brand!important;display:flex!important;align-items:end!important;justify-content:space-between!important;gap:14px!important}.mobile-hj-logo{background:transparent;color:#e8f3fa;font-weight:900;font-size:28px;line-height:1;padding:10px 12px 9px;letter-spacing:-.02em}.mobile-hj-logo .journey{color:#85ACC9}.mobile-hj-logo .dot{display:inline-block;width:.32em;height:.32em;border-radius:50%;background:#C90019;margin-left:.08em;vertical-align:-.04em}.mobile-making{background:transparent;color:#9FBFDA;font-weight:900;font-size:13px;letter-spacing:.34em;text-transform:uppercase;padding:11px 12px 10px;line-height:1;white-space:nowrap}
+  .mobile-brand{grid-area:brand!important;display:flex!important;align-items:end!important;justify-content:space-between!important;gap:14px!important;cursor:pointer!important}.mobile-hj-logo{background:transparent;color:#e8f3fa;font-weight:900;font-size:28px;line-height:1;padding:10px 12px 9px;letter-spacing:-.02em}.mobile-hj-logo .journey{color:#85ACC9}.mobile-hj-logo .dot{display:inline-block;width:.32em;height:.32em;border-radius:50%;background:#C90019;margin-left:.08em;vertical-align:-.04em}.mobile-making{background:transparent;color:#9FBFDA;font-weight:900;font-size:13px;letter-spacing:.34em;text-transform:uppercase;padding:11px 12px 10px;line-height:1;white-space:nowrap}
   .mobile-stage{position:fixed;z-index:200;left:12px;right:12px;top:61dvh;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);height:auto;background:#06141F;border:2px solid #83ABD0;display:none;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}.mobile-stage.show{display:flex}.mobile-stage img{max-width:100%;max-height:100%;object-fit:contain;display:block}.mobile-stage .mobile-stage-text{font-size:14px;color:#85ACC9;text-align:center;padding:18px}.mobile-stage-close{display:none!important}
 }
 @media (min-width:701px){.mobile-stage,.mobile-brand,.mobile-lyrics-btn{display:none!important}}
@@ -1035,7 +1037,55 @@ const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen 
 const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
 
+
+let carPlayMode=false;
+function updateCarPlayButton(){
+  const b=document.getElementById('btnCarPlayMode');
+  if(!b)return;
+  b.classList.toggle('on',carPlayMode);
+  b.setAttribute('aria-pressed',carPlayMode?'true':'false');
+  b.title=carPlayMode?'CarPlay aktiv: Fade = Weiter':'CarPlay aus: normaler Fade';
+}
+async function doDirectNext(auto=false){
+  if(_fadeActive)return;
+  await resumeAudioEngine();
+  const fromId=activeDeck;
+  const nxt=other(activeDeck);
+  const fromDeck=DECKS[fromId];
+  const toDeck=DECKS[nxt];
+
+  if(!toDeck.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
+  if(!toDeck.song&&shuffleOn&&ALL_SONGS.length){loadDeck(nxt,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);}
+  if(!toDeck.song){if(!auto)toast('Kein nächster Song bereit.');return;}
+
+  setDeckGain(nxt,1);
+  restoreDeckGain(nxt);
+  try{fromDeck.audio.pause();}catch(e){}
+  fromDeck.playing=false;
+  fromDeck.el.classList.remove('is-playing','is-active','is-fading-out');
+  fromDeck.el.classList.add('is-cued');
+
+  activeDeck=nxt;
+  toDeck.el.classList.add('is-active','is-playing');
+  toDeck.el.classList.remove('is-cued');
+  try{toDeck.audio.currentTime=0;}catch(e){}
+  toDeck.audio.play().catch(()=>{});
+  toDeck.playing=true;
+  icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+
+  const freeDeck=fromId;
+  if(djQueue.length){
+    loadDeck(freeDeck,djQueue.shift());
+    renderQueue();
+  } else {
+    clearDeck(freeDeck);
+    DECKS[freeDeck].el.classList.remove('is-active');
+    DECKS[freeDeck].el.classList.add('is-cued');
+  }
+  if(!auto)toast('Weiter');
+}
 async function doFade(auto=false){
+  if(carPlayMode&&isMobilePortraitDJ())return doDirectNext(auto);
   if(_fadeActive)return;
   await resumeAudioEngine();
   const nxt=other(activeDeck),d=DECKS[nxt];
@@ -1114,6 +1164,7 @@ async function doFade(auto=false){
   requestAnimationFrame(step);
 }
 function autoAdvance(){
+  if(carPlayMode&&isMobilePortraitDJ()){doDirectNext(true);return;}
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(d.song){doFade(true);return;}
   if(djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();setTimeout(()=>doFade(true),80);}
@@ -1136,7 +1187,7 @@ setInterval(()=>{
   updateTonearm('A');
   updateTonearm('B');
   // v59 Auto-crossfade trigger: passend zur 5s-Blende mit weicher Anti-Popp-Endphase
-  if(!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
+  if(!carPlayMode&&!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
     _autoFadeScheduled=true;
     const nxt=other(activeDeck);
     if(!DECKS[nxt].song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
@@ -1479,13 +1530,19 @@ function isMobilePortraitDJ(){return window.matchMedia('(max-width:700px) and (o
 function ensureMobileChrome(){
   if(document.getElementById('mobileBrand'))return;
   const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
-  brand.innerHTML='<div class="mobile-hj-logo"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making">Making Waves</div>';
+  brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home">Making Waves</div>';
+  brand.addEventListener('click',e=>{e.stopPropagation();goHome();});
+  brand.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}});
   document.getElementById('app').appendChild(brand);
   const b=document.createElement('button');b.className='round-btn mobile-lyrics-btn';b.id='btnMobileLyrics';b.title='Cover / Lyrics';
   b.innerHTML='';
   const btns=document.querySelector('.dj-btns'); if(btns)btns.appendChild(b);
   const st=document.createElement('div');st.id='mobileStage';st.className='mobile-stage';st.innerHTML='<div class="mobile-stage-text">Cover / Lyrics</div>';
   document.body.appendChild(st);
+  const cp=document.createElement('button');cp.id='btnCarPlayMode';cp.className='mobile-cp-btn';cp.type='button';cp.textContent='CP';cp.setAttribute('aria-pressed','false');
+  const deckB=document.getElementById('deckB'); if(deckB)deckB.appendChild(cp);
+  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
+  updateCarPlayButton();
   st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
   b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
 }
@@ -1718,6 +1775,41 @@ function goHome(){
     bottom:calc(env(safe-area-inset-bottom,0px) + 48px)!important;
   }
 }
+
+
+/* === v62: iPhone Portrait · CarPlay-Button am zweiten Deck === */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-cp-btn{
+    position:absolute!important;
+    z-index:40!important;
+    top:4px!important;
+    right:-2px!important;
+    width:28px!important;
+    height:28px!important;
+    min-width:28px!important;
+    min-height:28px!important;
+    border-radius:999px!important;
+    border:1px solid rgba(133,172,201,.72)!important;
+    background:#0B2234!important;
+    color:#85ACC9!important;
+    font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    letter-spacing:.03em!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    box-shadow:0 4px 12px rgba(0,0,0,.30)!important;
+    cursor:pointer!important;
+  }
+  .mobile-cp-btn.on{
+    background:#86B1D1!important;
+    color:#06141F!important;
+    border-color:#d5ebfb!important;
+  }
+}
+@media (min-width:701px){.mobile-cp-btn{display:none!important}}
 </style>
 
 </body></html>
