@@ -18,6 +18,7 @@
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
+<!-- Version v68: CP-Schalter auf iPhone stummt WebAudio nicht mehr; vorhandener Audioweg bleibt aktiv -->
 <!-- Version v67: iPhone Normalmodus erzwingt WebAudio-Fade + CrossOrigin nur auf echten Touch-Portrait-Geräten -->
 <!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
@@ -940,9 +941,12 @@ function shouldUseWebAudioEngine(){
   return !carPlayMode && isRealTouchPortraitDevice();
 }
 function prepareDeckAudioForCurrentMode(audio){
-  // WebAudio mit S3 braucht auf iPhone zwingend CORS; Direkt/CarPlay soll ohne crossorigin bleiben.
+  // WebAudio mit S3 braucht auf iPhone zwingend CORS.
+  // v68: Wenn ein Deck bereits an WebAudio hängt, darf CP nicht nachträglich
+  // auf "ohne crossorigin" umstellen. Safari/iOS kann den laufenden MediaElement-
+  // Audioweg sonst stumm schalten. CP bedeutet dann nur: kein Crossfade, sondern Weiter.
   try{
-    if(shouldUseWebAudioEngine()) audio.crossOrigin='anonymous';
+    if(shouldUseWebAudioEngine() || audioEngineReady) audio.crossOrigin='anonymous';
     else audio.removeAttribute('crossorigin');
   }catch(e){}
 }
@@ -1119,7 +1123,10 @@ function updateCarPlayButton(){
 }
 async function doDirectNext(auto=false){
   if(_fadeActive)return;
-  // CarPlay-/Direktmodus: kein WebAudio starten, nur hart zum nächsten HTMLAudio-Track wechseln.
+  // v68: Im CP-Modus wird NICHT gefadet. Falls der iPhone-Normalmodus vorher
+  // bereits WebAudio initialisiert hat, bleibt dieser Audioweg aber aktiv und wird
+  // nur mit Gain=1 genutzt. Sonst bleibt es bei normalem HTMLAudio.
+  if(audioEngineReady){await resumeAudioEngine(true);restoreDeckGain('A');restoreDeckGain('B');}
 
   const fromId=activeDeck;
   const nxt=other(activeDeck);
@@ -1620,7 +1627,18 @@ function ensureMobileChrome(){
   document.body.appendChild(st);
   const cp=document.createElement('button');cp.id='btnCarPlayMode';cp.className='mobile-cp-btn';cp.type='button';cp.textContent='CP';cp.setAttribute('aria-pressed','false');
   const deckB=document.getElementById('deckB'); if(deckB)deckB.appendChild(cp);
-  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;_autoFadeScheduled=false;prepareDeckAudioForCurrentMode(DECKS.A.audio);prepareDeckAudioForCurrentMode(DECKS.B.audio);restoreDeckGain('A');restoreDeckGain('B');updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
+  cp.addEventListener('click',async e=>{
+    e.stopPropagation();
+    carPlayMode=!carPlayMode;
+    _autoFadeScheduled=false;
+    // v68: Beim Umschalten nicht den laufenden Audio-Element-Modus/CORS anfassen.
+    // Wenn WebAudio schon aktiv ist, bleibt es hörbar und wird nur auf volle Lautstärke gesetzt.
+    if(audioEngineReady){await resumeAudioEngine(true);}
+    restoreDeckGain('A');
+    restoreDeckGain('B');
+    updateCarPlayButton();
+    toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');
+  });
   updateCarPlayButton();
   st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
   b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
