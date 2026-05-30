@@ -14,6 +14,7 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v64-carplay-mode-test: v62 bleibt Standard; manueller CarPlay-Modus mit eigener Uebergangslogik -->
 <!-- Version v62-carplay-safe-real-fade: WebAudio deaktiviert, echter 5s Crossfade ueber HTMLAudio.volume -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
@@ -124,6 +125,8 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .round-btn.fade svg{fill:none;stroke:#06141F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:56%;height:56%}
 .round-btn.shuffle img{width:64%;height:64%;object-fit:contain;filter:brightness(.35) saturate(.5)}
 .round-btn.on{box-shadow:0 0 0 1px rgba(255,255,255,.07), inset 0 -5px 9px rgba(0,0,0,.08)}
+.round-btn.carplay{font-family:'Anton',sans-serif;font-size:clamp(10px,.86vw,15px);letter-spacing:.02em;line-height:1;color:#06141F;font-weight:900}
+.round-btn.carplay.on{background:#C90019;color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 16px rgba(201,0,25,.34),inset 0 -5px 9px rgba(0,0,0,.12)}
 .next-panel{display:flex;flex-direction:column}
 .btn-clear-q,.btn-sort-abc{width:min(2.53vw,4vh);height:min(2.53vw,4vh);border-radius:50%;border:0;background:#86B1D1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 -5px 9px rgba(0,0,0,.08);flex-shrink:0}
 .btn-clear-q:active,.btn-sort-abc:active{transform:scale(.92)}
@@ -866,6 +869,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
     <div class="hj-brand" aria-label="hitjourney" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-logo-vert"><span class="hit">hit</span><span class="journey">journey</span><span class="dot"></span></div></div>
     <div class="dj-btns">
       <button class="round-btn fade" id="btnFade" title="Überblenden"><svg viewBox="0 0 24 24" fill="none" stroke="#06141F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
+      <button class="round-btn carplay" id="btnCarPlay" title="CarPlay-Modus an/aus">CP</button>
       <button class="round-btn shuffle" id="btnShuffle" title="Next zufällig mischen"><img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" onerror="this.style.display='none'" alt=""/></button>
       <button class="round-btn pause" id="btnPause" title="Pause / Play">
         <svg viewBox="0 0 24 24" id="icPause"><rect x="5.5" y="4.5" width="4" height="15" rx="1.5" fill="#06141F"/><rect x="14.5" y="4.5" width="4" height="15" rx="1.5" fill="#06141F"/></svg>
@@ -1035,6 +1039,21 @@ const AUTO_FADE_LEAD=8; // v59: passend zur 5s-Blende, mit genug Luft fürs weic
 const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen AirPods-Ploppen
 const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
+const btnCarPlay=document.getElementById('btnCarPlay');
+let carPlayMode=false;
+function syncCarPlayButton(){
+  if(!btnCarPlay)return;
+  btnCarPlay.classList.toggle('on',carPlayMode);
+  btnCarPlay.title=carPlayMode?'CarPlay-Modus aktiv: eigener Auto-Übergang ohne WebAudio':'CarPlay-Modus aus: normaler v62-Fade';
+}
+function toggleCarPlayMode(){
+  carPlayMode=!carPlayMode;
+  try{localStorage.setItem('hj-dj-carplay-mode',carPlayMode?'1':'0');}catch(e){}
+  syncCarPlayButton();
+  toast(carPlayMode?'CarPlay-Modus aktiv':'Normaler DJ-Fade aktiv');
+}
+try{carPlayMode=localStorage.getItem('hj-dj-carplay-mode')==='1';}catch(e){}
+
 
 async function waitForDeckAudible(deck, timeout=1600){
   const a=deck.audio;
@@ -1060,7 +1079,96 @@ async function waitForDeckAudible(deck, timeout=1600){
   });
 }
 
+
+async function doCarPlayFade(auto=false){
+  if(_fadeActive)return;
+  const nxt=other(activeDeck),d=DECKS[nxt];
+  if(!d.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
+  if(!d.song){if(!auto)toast('Kein Song in Deck '+nxt+' — Queue befüllen.');return;}
+  _fadeActive=true;
+
+  const fromId=activeDeck;
+  const fromDeck=DECKS[fromId];
+  const toDeck=DECKS[nxt];
+  fromDeck.el.classList.add('is-fading-out');
+
+  /* v64 CarPlay-Modus:
+     Der Standard-v62-Fade bleibt vollständig unverändert.
+     Nur wenn CP aktiv ist, wird dieser alternative Übergang genutzt.
+     Idee: CarPlay bekommt keine WebAudio-Kette und keine harte Pseudo-Überblendung.
+     Stattdessen wird Deck B sicher vorgeladen/gestartet, dann werden über ca. 5s
+     langsamere, grobere volume-Schritte geschrieben. Einige CarPlay-Systeme übernehmen
+     solche weniger hektischen Änderungen eher als requestAnimationFrame-Rampen. */
+  setDeckGain(fromId,1);
+  setDeckGain(nxt,0);
+  try{toDeck.audio.preload='auto';}catch(e){}
+  let playOk=true;
+  try{
+    const pp=toDeck.audio.play();
+    if(pp&&typeof pp.then==='function')await pp;
+  }catch(e){playOk=false;}
+  if(playOk)await waitForDeckAudible(toDeck,1800);
+
+  toDeck.playing=true;
+  toDeck.el.classList.add('is-playing');
+
+  let uiSwitched=false;
+  const steps=40;
+  let i=0;
+  const stepMs=Math.round(FADE_TOTAL/steps);
+  const timer=window.setInterval(()=>{
+    i++;
+    const t=Math.min(i/steps,1);
+    const out=equalPowerOut(t);
+    const inn=equalPowerIn(t);
+
+    // Mehrfach setzen: auf CarPlay bewusst robust, auf Normalgeräten irrelevant.
+    setDeckGain(fromId,out);
+    setDeckGain(nxt,inn);
+    window.setTimeout(()=>{setDeckGain(fromId,out);setDeckGain(nxt,inn);},8);
+
+    if(!uiSwitched && t>=0.5){
+      uiSwitched=true;
+      activeDeck=nxt;
+      toDeck.el.classList.add('is-active');toDeck.el.classList.remove('is-cued');
+      fromDeck.el.classList.remove('is-active');fromDeck.el.classList.add('is-cued');
+      icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+    }
+
+    if(t>=1){
+      window.clearInterval(timer);
+      setDeckGain(fromId,GAIN_FLOOR);
+      setDeckGain(nxt,1);
+      window.setTimeout(()=>{
+        fromDeck.audio.pause();
+        fromDeck.playing=false;
+        fromDeck.el.classList.remove('is-playing','is-fading-out');
+        window.setTimeout(()=>{
+          const freeDeck=fromId;
+          if(djQueue.length){
+            loadDeck(freeDeck,djQueue.shift());
+            renderQueue();
+          } else {
+            setDeckGain(freeDeck,GAIN_FLOOR);
+            DECKS[freeDeck].song=null;
+            DECKS[freeDeck].audio.pause();
+            DECKS[freeDeck].audio.removeAttribute('src');
+            try{DECKS[freeDeck].audio.load();}catch(e){}
+            setDeckGain(freeDeck,1);
+            DECKS[freeDeck].playing=false;
+            resetTonearm(freeDeck);
+            DECKS[freeDeck].el.classList.remove('is-playing','is-active');
+            DECKS[freeDeck].el.classList.add('is-cued');
+          }
+          _fadeActive=false;
+        },80);
+      },ANTI_POP_MS);
+    }
+  },stepMs);
+}
+
 async function doFade(auto=false){
+  if(carPlayMode)return doCarPlayFade(auto);
   if(_fadeActive)return;
   await resumeAudioEngine();
   const nxt=other(activeDeck),d=DECKS[nxt];
@@ -1603,6 +1711,11 @@ function goHome(){
   }catch(e){
     window.location.assign('/');
   }
+}
+
+if(btnCarPlay){
+  syncCarPlayButton();
+  btnCarPlay.addEventListener('click',toggleCarPlayMode);
 }
 </script>
 
