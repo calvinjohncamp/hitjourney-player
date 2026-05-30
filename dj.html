@@ -4,6 +4,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
+<!-- Version v66: Desktop-schmal bleibt Direkt-Audio; WebAudio nur auf echtem iPhone/Touch-Portrait -->
+<!-- Version v65: Desktop/iPad Ton zurück auf Direkt-Audio; WebAudio nur noch iPhone-Normalmodus -->
 <!-- Version v29: iPad-Landscape-Layout + 2-spaltige Albumcover -->
 <!-- Version v30: iPad feste Quadrat-Decks + 2-Zeilen-Controlbereich -->
 <!-- Version v33: iPad Feintuning Controls + Search/Next Align + Album Grid -->
@@ -15,6 +17,7 @@
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
+<!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
 <!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
@@ -913,11 +916,70 @@ const DECKS={
    Wichtig: keine crossorigin-Attribute an den Audio-Elementen, weil Direkt-Audio sonst lokal/CarPlay stumm bleiben kann. */
 let audioCtx=null;
 let deckGains={A:null,B:null};
-let audioEngineReady=true;
-function initAudioEngine(){return true;}
-async function resumeAudioEngine(){return true;}
+let deckSources={A:null,B:null};
+let audioEngineReady=false;
+
+/* v64:
+   iPhone/Safari regelt audio.volume bei HTMLAudio oft nicht zuverlässig.
+   Genau deshalb startete der zweite Song dort im normalen iPhone-Modus sofort voll.
+   Lösung: Im normalen Modus wird die Lautstärke über WebAudio-GainNodes gefahren.
+   Wichtig für CarPlay: WebAudio wird nur bei Bedarf im normalen Modus initialisiert.
+   Wer im Auto direkt CP aktiviert, bleibt im reinen HTMLAudio-Direktbetrieb. */
+function isRealTouchPortraitDevice(){
+  const coarse=window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  const touch=('ontouchstart' in window) || (navigator.maxTouchPoints&&navigator.maxTouchPoints>0);
+  const portrait=window.matchMedia && window.matchMedia('(orientation:portrait)').matches;
+  return !!(coarse && touch && portrait);
+}
+function shouldUseWebAudioEngine(){
+  // Wichtig: Auf dem Desktop kann das schmale Testfenster ebenfalls die iPhone-CSS-Ansicht auslösen.
+  // Dort darf WebAudio NICHT aktiviert werden, weil cross-origin S3-Audio ohne crossorigin über
+  // createMediaElementSource stumm werden kann. Desktop-schmal bleibt daher Direkt-Audio.
+  // Nur echte Touch-/iPhone-Portrait-Geräte nutzen WebAudio für den sauberen Fade.
+  return !carPlayMode && isRealTouchPortraitDevice();
+}
+function initAudioEngine(force=false){
+  if(audioEngineReady)return true;
+  if(!shouldUseWebAudioEngine() && !force)return false;
+  if(carPlayMode&&!force)return false;
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return false;
+    audioCtx=audioCtx||new Ctx();
+    ['A','B'].forEach(id=>{
+      if(!deckSources[id])deckSources[id]=audioCtx.createMediaElementSource(DECKS[id].audio);
+      if(!deckGains[id]){
+        deckGains[id]=audioCtx.createGain();
+        deckGains[id].gain.value=1;
+        deckSources[id].connect(deckGains[id]).connect(audioCtx.destination);
+      }
+    });
+    audioEngineReady=true;
+    return true;
+  }catch(e){
+    console.warn('WebAudio nicht verfügbar, Fallback auf audio.volume',e);
+    audioEngineReady=false;
+    return false;
+  }
+}
+async function resumeAudioEngine(force=false){
+  if(carPlayMode&&!force)return true;
+  if(!shouldUseWebAudioEngine() && !force)return true;
+  initAudioEngine(force);
+  if(audioCtx&&audioCtx.state==='suspended'){
+    try{await audioCtx.resume();}catch(e){}
+  }
+  return true;
+}
 function setDeckGain(id,value){
   const v=Math.max(0,Math.min(1,value));
+  try{
+    if(deckGains[id]){
+      const g=deckGains[id].gain;
+      if(audioCtx&&typeof g.setTargetAtTime==='function')g.setTargetAtTime(v,audioCtx.currentTime,0.012);
+      else g.value=v;
+    }
+  }catch(e){}
   try{DECKS[id].audio.volume=v;}catch(e){}
 }
 function restoreDeckGain(id){setDeckGain(id,1);}
@@ -1048,7 +1110,8 @@ function updateCarPlayButton(){
 }
 async function doDirectNext(auto=false){
   if(_fadeActive)return;
-  await resumeAudioEngine();
+  // CarPlay-/Direktmodus: kein WebAudio starten, nur hart zum nächsten HTMLAudio-Track wechseln.
+
   const fromId=activeDeck;
   const nxt=other(activeDeck);
   const fromDeck=DECKS[fromId];
@@ -1087,7 +1150,7 @@ async function doDirectNext(auto=false){
 async function doFade(auto=false){
   if(carPlayMode&&isMobilePortraitDJ())return doDirectNext(auto);
   if(_fadeActive)return;
-  await resumeAudioEngine();
+  await resumeAudioEngine(shouldUseWebAudioEngine());
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(!d.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
   if(!d.song){if(!auto)toast('Kein Song in Deck '+nxt+' — Queue befüllen.');return;}
@@ -1532,6 +1595,7 @@ function ensureMobileChrome(){
   const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
   brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home">Making Waves</div>';
   brand.addEventListener('click',e=>{e.stopPropagation();goHome();});
+  brand.addEventListener('pointerup',e=>{e.stopPropagation();goHome();});
   brand.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}});
   document.getElementById('app').appendChild(brand);
   const b=document.createElement('button');b.className='round-btn mobile-lyrics-btn';b.id='btnMobileLyrics';b.title='Cover / Lyrics';
@@ -1541,7 +1605,7 @@ function ensureMobileChrome(){
   document.body.appendChild(st);
   const cp=document.createElement('button');cp.id='btnCarPlayMode';cp.className='mobile-cp-btn';cp.type='button';cp.textContent='CP';cp.setAttribute('aria-pressed','false');
   const deckB=document.getElementById('deckB'); if(deckB)deckB.appendChild(cp);
-  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
+  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;_autoFadeScheduled=false;restoreDeckGain('A');restoreDeckGain('B');updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
   updateCarPlayButton();
   st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
   b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
@@ -1625,9 +1689,9 @@ init();
 
 function goHome(){
   try{
-    window.location.href = '/';
+    window.location.href = window.location.origin + '/';
   }catch(e){
-    window.location.assign('/');
+    window.location.assign(window.location.origin + '/');
   }
 }
 </script>
