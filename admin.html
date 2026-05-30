@@ -13113,7 +13113,7 @@ document.getElementById('homeEditorWrap').addEventListener('click', function(e){
 });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html)
+   SNAPSHOT — Sicherheitskopie (ZIP: JSON + index.html + admin.html + dj.html)
    ══════════════════════════════════════════════════════════════════════════ */
 
 async function makeSnapshot(){
@@ -13162,7 +13162,7 @@ async function makeSnapshot(){
 
     const snapshot = {
       created: now.toISOString(),
-      version: 1,
+      version: 2,
       tables: { songs, playlists, playlist_tracks, home_layout }
     };
 
@@ -13175,6 +13175,7 @@ INHALT DIESES ORDNERS:
   snapshot.json  — alle Supabase-Daten (Songs, Alben, Playlists, Home-Layout)
   index.html     — Kopie der App (Stand heute)
   admin.html     — Kopie des Adminbereichs (Stand heute)
+  dj.html        — Kopie der Mr.-DJ-Unterseite (Stand heute)
 
 RESTORE (Daten wiederherstellen):
   1. admin.html lokal öffnen
@@ -13183,7 +13184,7 @@ RESTORE (Daten wiederherstellen):
   → Alle Supabase-Daten werden wiederhergestellt
 
 DATEIEN WIEDERHERSTELLEN:
-  index.html und admin.html aus diesem Ordner zu GitHub/Netlify pushen.
+  index.html, admin.html und dj.html aus diesem Ordner zu GitHub/Netlify pushen.
 
 DIESEN ORDNER BITTE VERSCHIEBEN NACH:
   Dropbox/hitjourney-backups/${folder}/
@@ -13206,15 +13207,25 @@ DIESEN ORDNER BITTE VERSCHIEBEN NACH:
     dir.file('snapshot.json',  JSON.stringify(snapshot, null, 2));
     dir.file('LIES_MICH.txt',  readmeText);
 
-    // index.html und admin.html von GitHub Raw holen
-    // (die aktuell deployte Version — nicht die lokale Datei)
+    // index.html, admin.html und dj.html sichern
+    // index.html / dj.html werden relativ zur aktuellen Domain geladen.
+    // admin.html ist die aktuell geöffnete Datei.
     try {
-      const idxRes = await fetch('index.html');
+      const idxRes = await fetch('index.html', {cache:'no-store'});
       if(idxRes.ok) dir.file('index.html', await idxRes.text());
       else dir.file('index.html', '<!-- konnte nicht geladen werden; bitte manuell kopieren -->');
     } catch(e) {
       dir.file('index.html', '<!-- konnte nicht geladen werden; bitte manuell kopieren -->');
     }
+
+    try {
+      const djRes = await fetch('dj.html', {cache:'no-store'});
+      if(djRes.ok) dir.file('dj.html', await djRes.text());
+      else dir.file('dj.html', '<!-- konnte nicht geladen werden; bitte manuell kopieren -->');
+    } catch(e) {
+      dir.file('dj.html', '<!-- konnte nicht geladen werden; bitte manuell kopieren -->');
+    }
+
     dir.file('admin.html', document.documentElement.outerHTML);
 
     const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
