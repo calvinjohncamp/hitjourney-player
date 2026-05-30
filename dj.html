@@ -18,6 +18,7 @@
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
+<!-- Version v69: CP-iPhone spielt alle Weiter/Auto-Wechsel stabil ueber das aktive Deck, ohne Crossfade-Deckwechsel -->
 <!-- Version v68: CP-Schalter auf iPhone stummt WebAudio nicht mehr; vorhandener Audioweg bleibt aktiv -->
 <!-- Version v67: iPhone Normalmodus erzwingt WebAudio-Fade + CrossOrigin nur auf echten Touch-Portrait-Geräten -->
 <!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
@@ -1123,10 +1124,55 @@ function updateCarPlayButton(){
 }
 async function doDirectNext(auto=false){
   if(_fadeActive)return;
-  // v68: Im CP-Modus wird NICHT gefadet. Falls der iPhone-Normalmodus vorher
-  // bereits WebAudio initialisiert hat, bleibt dieser Audioweg aber aktiv und wird
-  // nur mit Gain=1 genutzt. Sonst bleibt es bei normalem HTMLAudio.
   if(audioEngineReady){await resumeAudioEngine(true);restoreDeckGain('A');restoreDeckGain('B');}
+
+  /* v69 CP/iPhone-Fix:
+     Im CarPlay-Modus wird nicht mehr zwischen zwei Audio-Elementen hin- und hergeschaltet.
+     Safari/PWA auf iPhone verlor dabei nach dem ersten CP-Weiter oft den hörbaren Audiopfad.
+     Stattdessen bleibt der Direktmodus auf dem aktuell aktiven Deck: aktueller Song stoppen,
+     nächsten Song in dasselbe Audio-Element laden, spielen, anderes Deck nur optisch/als Cue neu befüllen. */
+  if(carPlayMode&&isMobilePortraitDJ()){
+    const id=activeDeck;
+    const cueId=other(id);
+    const cur=DECKS[id];
+    const cue=DECKS[cueId];
+    let nextSong=null;
+
+    if(cue.song) nextSong=cue.song;
+    else if(djQueue.length) nextSong=djQueue.shift();
+    else if(shuffleOn&&ALL_SONGS.length) nextSong=ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)];
+
+    if(!nextSong){if(!auto)toast('Kein nächster Song bereit.');return;}
+
+    try{cur.audio.pause();}catch(e){}
+    cur.playing=false;
+    restoreDeckGain(id);
+    loadDeck(id,nextSong);
+    activeDeck=id;
+    cur.el.classList.add('is-active');
+    cur.el.classList.remove('is-cued','is-fading-out');
+    try{cur.audio.currentTime=0;}catch(e){}
+    await resumeAudioEngine(true);
+    restoreDeckGain(id);
+    const playPromise=cur.audio.play();
+    if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>{});
+    cur.playing=true;
+    cur.el.classList.add('is-playing');
+    icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+
+    if(djQueue.length){
+      loadDeck(cueId,djQueue.shift());
+      renderQueue();
+    } else if(shuffleOn&&ALL_SONGS.length){
+      loadDeck(cueId,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);
+    } else {
+      clearDeck(cueId);
+    }
+    DECKS[cueId].el.classList.remove('is-active','is-playing');
+    DECKS[cueId].el.classList.add('is-cued');
+    if(!auto)toast('Weiter');
+    return;
+  }
 
   const fromId=activeDeck;
   const nxt=other(activeDeck);
@@ -1148,7 +1194,8 @@ async function doDirectNext(auto=false){
   toDeck.el.classList.add('is-active','is-playing');
   toDeck.el.classList.remove('is-cued');
   try{toDeck.audio.currentTime=0;}catch(e){}
-  toDeck.audio.play().catch(()=>{});
+  const playPromise=toDeck.audio.play();
+  if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>{});
   toDeck.playing=true;
   icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
 
