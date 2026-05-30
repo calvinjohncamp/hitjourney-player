@@ -14,6 +14,8 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
+<!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
 <!-- Version v59: 5s Equal-Power Crossfade + Anti-Popp AirPods -->
 <!-- Version v57: iPhone/AirPods WebAudio Equal-Power Crossfade 6s -->
 <!-- Version v58: Anti-Plopp-Fade-Ende fuer iPhone AirPods -->
@@ -876,7 +878,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
   <section class="library-panel"><div class="album-grid" id="albumGrid"></div><div class="abc-section" id="abcSection"></div></section>
   <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
-<audio id="audA" preload="none" crossorigin="anonymous"></audio><audio id="audB" preload="none" crossorigin="anonymous"></audio>
+<audio id="audA" preload="auto"></audio><audio id="audB" preload="auto"></audio>
 <script>
 'use strict';
 const SB_URL  = 'https://hioaqcwqzeqcvvikollq.supabase.co';
@@ -900,50 +902,20 @@ const DECKS={
   B:{audio:audB,el:document.getElementById('deckB'),cov:document.getElementById('covB'),ph:document.getElementById('phB'),dt:document.getElementById('dtB'),da:document.getElementById('daB'),pf:document.getElementById('pfB'),song:null,playing:false}
 };
 
-/* v57: Robuste Audio-Engine für iPhone/AirPods.
-   Primär: WebAudio GainNodes, damit die Lautstärke auch auf iOS sauber geregelt wird.
-   Fallback: klassische audio.volume-Regelung, falls WebAudio/CORS auf einem Gerät nicht greift. */
-audA.crossOrigin='anonymous';
-audB.crossOrigin='anonymous';
+/* v61 CarPlay-Safe-Test:
+   WebAudio/AudioContext ist hier bewusst deaktiviert.
+   Grund: Apple CarPlay produziert bei der DJ-Funktion sofort digitale Störgeräusche,
+   während normale HTMLAudio-Wiedergabe in der App sauber funktioniert.
+   Die komplette DJ-Optik, Queue-Logik und Fade-Logik bleibt erhalten;
+   die Deck-Lautstärke wird ausschließlich über audio.volume geregelt.
+   Wichtig: keine crossorigin-Attribute an den Audio-Elementen, weil Direkt-Audio sonst lokal/CarPlay stumm bleiben kann. */
 let audioCtx=null;
 let deckGains={A:null,B:null};
-let audioEngineReady=false;
-function initAudioEngine(){
-  if(audioEngineReady)return true;
-  const Ctx=window.AudioContext||window.webkitAudioContext;
-  if(!Ctx)return false;
-  try{
-    audioCtx=audioCtx||new Ctx();
-    ['A','B'].forEach(id=>{
-      if(deckGains[id])return;
-      const src=audioCtx.createMediaElementSource(DECKS[id].audio);
-      const gain=audioCtx.createGain();
-      gain.gain.value=1;
-      src.connect(gain).connect(audioCtx.destination);
-      deckGains[id]=gain;
-    });
-    audioEngineReady=true;
-    return true;
-  }catch(e){
-    console.warn('WebAudio GainNode nicht verfügbar, fallback auf audio.volume',e);
-    audioEngineReady=false;
-    return false;
-  }
-}
-async function resumeAudioEngine(){
-  const ok=initAudioEngine();
-  if(ok&&audioCtx&&audioCtx.state==='suspended'){
-    try{await audioCtx.resume();}catch(e){}
-  }
-  return ok&&audioCtx&&audioCtx.state!=='closed';
-}
+let audioEngineReady=true;
+function initAudioEngine(){return true;}
+async function resumeAudioEngine(){return true;}
 function setDeckGain(id,value){
   const v=Math.max(0,Math.min(1,value));
-  const g=deckGains[id];
-  if(g&&audioCtx){
-    try{g.gain.setValueAtTime(v,audioCtx.currentTime);}catch(e){g.gain.value=v;}
-  }
-  // Fallback bleibt aktiv; auf iOS ggf. wirkungslos, schadet aber nicht.
   try{DECKS[id].audio.volume=v;}catch(e){}
 }
 function restoreDeckGain(id){setDeckGain(id,1);}
