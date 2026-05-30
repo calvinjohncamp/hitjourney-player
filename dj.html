@@ -19,6 +19,7 @@
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
 <!-- Version v69: CP-iPhone spielt alle Weiter/Auto-Wechsel stabil ueber das aktive Deck, ohne Crossfade-Deckwechsel -->
+<!-- Version v70: iPhone-Querformat nutzt denselben WebAudio-Gain-Fade wie iPhone-Hochformat -->
 <!-- Version v68: CP-Schalter auf iPhone stummt WebAudio nicht mehr; vorhandener Audioweg bleibt aktiv -->
 <!-- Version v67: iPhone Normalmodus erzwingt WebAudio-Fade + CrossOrigin nur auf echten Touch-Portrait-Geräten -->
 <!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
@@ -937,9 +938,17 @@ function isRealTouchPortraitDevice(){
   // echtes Touch-Gerät + Portrait + schmale DJ-Ansicht. Desktop-schmal hat kein Touch und bleibt Direkt-Audio.
   return !!(touch && portrait && (coarse || narrowPortrait));
 }
+function isRealTouchPhoneDevice(){
+  const touch=('ontouchstart' in window) || (navigator.maxTouchPoints&&navigator.maxTouchPoints>0);
+  const coarse=window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse)').matches : true;
+  const shortSide=Math.min(window.innerWidth||0,window.innerHeight||0);
+  const longSide=Math.max(window.innerWidth||0,window.innerHeight||0);
+  // v70: iPhone-Querformat fällt nicht in die Portrait-Regel, iOS ignoriert dort audio.volume aber genauso.
+  // Deshalb bekommt jedes echte Phone-Layout denselben WebAudio-Gain-Fade; Desktop-schmal hat kein Touch und iPad bleibt außen vor.
+  return !!(touch && coarse && shortSide<=700 && longSide<=1100);
+}
 function shouldUseWebAudioEngine(){
-  // Desktop schmal bleibt Direkt-Audio; echtes iPhone-Portrait nutzt WebAudio-Gain, weil iOS audio.volume ignoriert.
-  return !carPlayMode && isRealTouchPortraitDevice();
+  return !carPlayMode && isRealTouchPhoneDevice();
 }
 function prepareDeckAudioForCurrentMode(audio){
   // WebAudio mit S3 braucht auf iPhone zwingend CORS.
@@ -1131,7 +1140,7 @@ async function doDirectNext(auto=false){
      Safari/PWA auf iPhone verlor dabei nach dem ersten CP-Weiter oft den hörbaren Audiopfad.
      Stattdessen bleibt der Direktmodus auf dem aktuell aktiven Deck: aktueller Song stoppen,
      nächsten Song in dasselbe Audio-Element laden, spielen, anderes Deck nur optisch/als Cue neu befüllen. */
-  if(carPlayMode&&isMobilePortraitDJ()){
+  if(carPlayMode&&isRealTouchPhoneDevice()){
     const id=activeDeck;
     const cueId=other(id);
     const cur=DECKS[id];
@@ -1211,7 +1220,7 @@ async function doDirectNext(auto=false){
   if(!auto)toast('Weiter');
 }
 async function doFade(auto=false){
-  if(carPlayMode&&isMobilePortraitDJ())return doDirectNext(auto);
+  if(carPlayMode&&isRealTouchPhoneDevice())return doDirectNext(auto);
   if(_fadeActive)return;
   const needsWA=shouldUseWebAudioEngine();
   if(needsWA){prepareDeckAudioForCurrentMode(DECKS.A.audio);prepareDeckAudioForCurrentMode(DECKS.B.audio);}
@@ -1296,7 +1305,7 @@ async function doFade(auto=false){
   requestAnimationFrame(step);
 }
 function autoAdvance(){
-  if(carPlayMode&&isMobilePortraitDJ()){doDirectNext(true);return;}
+  if(carPlayMode&&isRealTouchPhoneDevice()){doDirectNext(true);return;}
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(d.song){doFade(true);return;}
   if(djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();setTimeout(()=>doFade(true),80);}
