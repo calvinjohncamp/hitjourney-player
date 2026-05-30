@@ -14,6 +14,10 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v70-mobile-logo-home-fix: Nur iPhone-Mobile-Branding klickbar gemacht; Audio/Fade/CarPlay-Logik unveraendert gegen v69 tempo-brake. -->
+<!-- Version v69-carplay-tempo-brake: Normalmodus v62 unveraendert. CP-Modus = stufenloser playbackRate-Auslauf (Tempo-Fade statt Volume-Fade) mit Overlap-Drop des naechsten Titels. Kein WebAudio, keine currentTime-Spruenge. -->
+<!-- Version v68-carplay-beat-cue: Normalmodus v62 unveraendert, CP-Modus mit kurzem rhythmischem Beat-Cue-Drop ohne WebAudio -->
+<!-- Version v67-carplay-stutter-brake: Normalmodus v62 unveraendert, CP-Modus mit Stutter/Brake-Drop ohne Volume-Ramps -->
 <!-- Version v62-carplay-safe-real-fade: WebAudio deaktiviert, echter 5s Crossfade ueber HTMLAudio.volume -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
@@ -175,6 +179,12 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .lyrics-close:active{transform:scale(.92)}
 .lyrics-overlay.expanded{position:fixed;top:1.2vh;right:1.15vw;bottom:auto;left:auto;width:calc(100dvh - 2.4vh);height:calc(100dvh - 2.4vh);border:2px solid var(--line);z-index:120;box-shadow:0 0 0 9999px rgba(6,20,31,.38),0 20px 80px rgba(0,0,0,.55);cursor:zoom-out}
 .lyrics-overlay.loading::after{content:'Lyrics werden geladen';position:absolute;color:rgba(207,229,245,.55);font-size:clamp(12px,.9vw,16px);letter-spacing:.04em}
+
+
+/* v67 CP-Modus Button: nur Zusatz, Normalmodus bleibt unverändert */
+.cp-mode-btn{position:fixed;right:10px;top:10px;z-index:10000;width:44px;height:30px;border-radius:999px;border:1px solid rgba(131,171,208,.65);background:rgba(6,20,31,.82);color:#8DB7DA;font-weight:900;font-size:13px;letter-spacing:.04em;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.cp-mode-btn.on{background:#C90019;color:#fff;border-color:#C90019}
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){.cp-mode-btn{top:calc(env(safe-area-inset-top,0px) + 7px);right:7px;width:42px;height:28px;font-size:12px}}
 
 /* hidden previous */
 .col-hdr,.ctrl-section,#overlay{display:none!important}
@@ -830,6 +840,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 
 </head>
 <body>
+<button id="cpModeBtn" class="cp-mode-btn" title="CarPlay-Modus">CP</button>
 <div class="toast" id="toast"></div>
 <div id="overlay" style="display:none"><div id="ovMsg"></div></div>
 <div style="display:none">
@@ -1035,6 +1046,9 @@ const AUTO_FADE_LEAD=8; // v59: passend zur 5s-Blende, mit genug Luft fürs weic
 const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen AirPods-Ploppen
 const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
+let carPlayMode=false;
+const cpModeBtn=document.getElementById('cpModeBtn');
+if(cpModeBtn){cpModeBtn.addEventListener('click',()=>{carPlayMode=!carPlayMode;cpModeBtn.classList.toggle('on',carPlayMode);toast(carPlayMode?'CarPlay-Modus: Tempo-Brake':'CarPlay-Modus aus');});}
 
 async function waitForDeckAudible(deck, timeout=1600){
   const a=deck.audio;
@@ -1060,8 +1074,99 @@ async function waitForDeckAudible(deck, timeout=1600){
   });
 }
 
+
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+async function doCarPlayTransition(auto=false){
+  if(_fadeActive)return;
+  const fromId=activeDeck;
+  const nxt=other(activeDeck);
+  const fromDeck=DECKS[fromId];
+  const toDeck=DECKS[nxt];
+  if(!toDeck.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
+  if(!toDeck.song){if(!auto)toast('Kein Song in Deck '+nxt+' — Queue befüllen.');return;}
+  if(!fromDeck.song){activeDeck=nxt;await playDeck(nxt);return;}
+
+  _fadeActive=true;
+  fromDeck.el.classList.add('is-fading-out');
+
+  /* v69 CarPlay Tempo-Brake Crossfade:
+     Normalmodus bleibt v62 (echter volume-Crossfade) komplett unveraendert.
+     Auf CarPlay ignoriert iOS audio.volume und WebAudio knirscht -> ein echter
+     Lautstaerke-Fade ist dort technisch nicht moeglich. Die einzige Stellschraube,
+     die CarPlay sauber und STUFENLOS durchreicht, ist playbackRate.
+     Deshalb ersetzen wir den Volume-Fade durch einen Tempo-Fade:
+     Der laufende Track laeuft wie ein Plattenspieler beim Stromausfall weich aus
+     (Tempo und Tonhoehe sinken kontinuierlich gegen Null = Energie verschwindet),
+     und kurz vor dem Stillstand wird der naechste Titel schon eingeblendet (Overlap).
+     Kein Stottern, keine currentTime-Spruenge (die erzeugen genau die Klicks/Glitches),
+     sondern eine einzige weiche Geste per requestAnimationFrame. */
+
+  // Tonhoehe soll mitsinken -> echter Auslauf-Charakter statt nur "langsamer".
+  try{fromDeck.audio.preservesPitch=false;}catch(e){}
+  try{fromDeck.audio.mozPreservesPitch=false;}catch(e){}
+  try{fromDeck.audio.webkitPreservesPitch=false;}catch(e){}
+  try{fromDeck.audio.playbackRate=1;}catch(e){}
+  if(fromDeck.audio.paused){try{await fromDeck.audio.play();}catch(e){}}
+
+  // Ziel-Deck parallel und lautlos anwerfen, damit der Drop ohne Ladeloch sitzt.
+  // Bewusst NICHT awaiten: der Auslauf soll sofort beim Tastendruck beginnen.
+  try{toDeck.audio.preload='auto';}catch(e){}
+  try{toDeck.audio.currentTime=0;}catch(e){}
+  try{toDeck.audio.muted=true;}catch(e){}
+  setDeckGain(nxt,1);
+  try{const pp=toDeck.audio.play();if(pp&&typeof pp.catch==='function')pp.catch(()=>{});}catch(e){}
+
+  const BRAKE_MS = auto ? 1100 : 900; // Auslaufdauer; im Auto-Modus etwas laenger/weicher
+  const DROP_AT  = 0.70;  // ab hier kommt der neue Track schon herein (sanfter Overlap)
+  const MIN_RATE = 0.06;  // unterster Punkt knapp ueber 0 (echte 0 lehnt iOS ab)
+  let dropped=false;
+  const t0=performance.now();
+
+  function dropIn(){
+    if(dropped)return;
+    dropped=true;
+    activeDeck=nxt;
+    try{toDeck.audio.muted=false;}catch(e){}
+    if(toDeck.audio.paused){try{const p=toDeck.audio.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+    setDeckGain(nxt,1);
+    toDeck.playing=true;
+    toDeck.el.classList.add('is-playing','is-active');
+    toDeck.el.classList.remove('is-cued');
+    fromDeck.el.classList.remove('is-active');
+    icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+  }
+
+  function finish(){
+    try{fromDeck.audio.pause();}catch(e){}
+    try{fromDeck.audio.playbackRate=1;}catch(e){}
+    try{fromDeck.audio.preservesPitch=true;fromDeck.audio.mozPreservesPitch=true;fromDeck.audio.webkitPreservesPitch=true;}catch(e){}
+    fromDeck.playing=false;
+    fromDeck.el.classList.remove('is-playing','is-fading-out','is-active');
+    fromDeck.el.classList.add('is-cued');
+    window.setTimeout(()=>{
+      if(djQueue.length){loadDeck(fromId,djQueue.shift());renderQueue();}
+      else{clearDeck(fromId);DECKS[fromId].el.classList.add('is-cued');}
+      _fadeActive=false;
+    },120);
+  }
+
+  function step(now){
+    const t=Math.min((now-t0)/BRAKE_MS,1);
+    // ease-in (t^2): haelt zuerst noch Tempo, faellt dann zuegig ab -> "Strom weg"-Gefuehl.
+    const e=t*t;
+    const rate=Math.max(MIN_RATE, 1-(1-MIN_RATE)*e);
+    try{fromDeck.audio.playbackRate=rate;}catch(err){}
+    if(!dropped && t>=DROP_AT) dropIn();
+    if(t<1){requestAnimationFrame(step);}
+    else{ if(!dropped)dropIn(); finish(); }
+  }
+  requestAnimationFrame(step);
+}
+
 async function doFade(auto=false){
   if(_fadeActive)return;
+  if(carPlayMode){return doCarPlayTransition(auto);}
   await resumeAudioEngine();
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(!d.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
@@ -1510,7 +1615,13 @@ function isMobilePortraitDJ(){return window.matchMedia('(max-width:700px) and (o
 function ensureMobileChrome(){
   if(document.getElementById('mobileBrand'))return;
   const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
+  brand.setAttribute('role','button');
+  brand.setAttribute('tabindex','0');
+  brand.setAttribute('aria-label','Zur hitjourney Home-Seite');
   brand.innerHTML='<div class="mobile-hj-logo"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making">Making Waves</div>';
+  brand.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();goHome();});
+  brand.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();goHome();},{passive:false});
+  brand.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}});
   document.getElementById('app').appendChild(brand);
   const b=document.createElement('button');b.className='round-btn mobile-lyrics-btn';b.id='btnMobileLyrics';b.title='Cover / Lyrics';
   b.innerHTML='';
@@ -1747,6 +1858,25 @@ function goHome(){
   }
   .mobile-stage{
     bottom:calc(env(safe-area-inset-bottom,0px) + 48px)!important;
+  }
+}
+</style>
+
+
+
+<style>
+/* === v70: iPhone Portrait · hitjourney/Making-Waves-Mobile-Branding wieder klickbar === */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  .mobile-brand,
+  .mobile-hj-logo,
+  .mobile-making{
+    pointer-events:auto!important;
+    cursor:pointer!important;
+    position:relative!important;
+    z-index:100000!important;
+    touch-action:manipulation!important;
+    -webkit-user-select:none!important;
+    user-select:none!important;
   }
 }
 </style>
