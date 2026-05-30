@@ -18,6 +18,7 @@
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
+<!-- Version v67: iPhone Normalmodus erzwingt WebAudio-Fade + CrossOrigin nur auf echten Touch-Portrait-Geräten -->
 <!-- Version v63: iPhone Mobile-Branding hitjourney/Making Waves verlinkt wieder auf Home -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
@@ -926,17 +927,24 @@ let audioEngineReady=false;
    Wichtig für CarPlay: WebAudio wird nur bei Bedarf im normalen Modus initialisiert.
    Wer im Auto direkt CP aktiviert, bleibt im reinen HTMLAudio-Direktbetrieb. */
 function isRealTouchPortraitDevice(){
-  const coarse=window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches;
   const touch=('ontouchstart' in window) || (navigator.maxTouchPoints&&navigator.maxTouchPoints>0);
-  const portrait=window.matchMedia && window.matchMedia('(orientation:portrait)').matches;
-  return !!(coarse && touch && portrait);
+  const portrait=window.matchMedia ? window.matchMedia('(orientation:portrait)').matches : (window.innerHeight>=window.innerWidth);
+  const coarse=window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse)').matches : false;
+  const narrowPortrait=(window.innerWidth<=700 && portrait);
+  // v67: iPhone/Safari meldet pointer/hover nicht immer zuverlässig. Entscheidend ist:
+  // echtes Touch-Gerät + Portrait + schmale DJ-Ansicht. Desktop-schmal hat kein Touch und bleibt Direkt-Audio.
+  return !!(touch && portrait && (coarse || narrowPortrait));
 }
 function shouldUseWebAudioEngine(){
-  // Wichtig: Auf dem Desktop kann das schmale Testfenster ebenfalls die iPhone-CSS-Ansicht auslösen.
-  // Dort darf WebAudio NICHT aktiviert werden, weil cross-origin S3-Audio ohne crossorigin über
-  // createMediaElementSource stumm werden kann. Desktop-schmal bleibt daher Direkt-Audio.
-  // Nur echte Touch-/iPhone-Portrait-Geräte nutzen WebAudio für den sauberen Fade.
+  // Desktop schmal bleibt Direkt-Audio; echtes iPhone-Portrait nutzt WebAudio-Gain, weil iOS audio.volume ignoriert.
   return !carPlayMode && isRealTouchPortraitDevice();
+}
+function prepareDeckAudioForCurrentMode(audio){
+  // WebAudio mit S3 braucht auf iPhone zwingend CORS; Direkt/CarPlay soll ohne crossorigin bleiben.
+  try{
+    if(shouldUseWebAudioEngine()) audio.crossOrigin='anonymous';
+    else audio.removeAttribute('crossorigin');
+  }catch(e){}
 }
 function initAudioEngine(force=false){
   if(audioEngineReady)return true;
@@ -1050,6 +1058,7 @@ async function loadData(){
 
 function loadDeck(id,song){
   const d=DECKS[id];
+  prepareDeckAudioForCurrentMode(d.audio);
   restoreDeckGain(id);
   d.song=song;d.audio.pause();d.audio.src=song.mp3||'';d.audio.load();d.playing=false;
   d.dt.textContent=song.title||'';d.da.textContent=song.artist||'';d.pf.style.width='0%';
@@ -1150,7 +1159,13 @@ async function doDirectNext(auto=false){
 async function doFade(auto=false){
   if(carPlayMode&&isMobilePortraitDJ())return doDirectNext(auto);
   if(_fadeActive)return;
-  await resumeAudioEngine(shouldUseWebAudioEngine());
+  const needsWA=shouldUseWebAudioEngine();
+  if(needsWA){prepareDeckAudioForCurrentMode(DECKS.A.audio);prepareDeckAudioForCurrentMode(DECKS.B.audio);}
+  await resumeAudioEngine(needsWA);
+  if(needsWA && (!audioEngineReady || !deckGains.A || !deckGains.B)){
+    toast('iPhone-Fade konnte WebAudio nicht starten');
+    return doDirectNext(auto);
+  }
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(!d.song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
   if(!d.song){if(!auto)toast('Kein Song in Deck '+nxt+' — Queue befüllen.');return;}
@@ -1605,7 +1620,7 @@ function ensureMobileChrome(){
   document.body.appendChild(st);
   const cp=document.createElement('button');cp.id='btnCarPlayMode';cp.className='mobile-cp-btn';cp.type='button';cp.textContent='CP';cp.setAttribute('aria-pressed','false');
   const deckB=document.getElementById('deckB'); if(deckB)deckB.appendChild(cp);
-  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;_autoFadeScheduled=false;restoreDeckGain('A');restoreDeckGain('B');updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
+  cp.addEventListener('click',e=>{e.stopPropagation();carPlayMode=!carPlayMode;_autoFadeScheduled=false;prepareDeckAudioForCurrentMode(DECKS.A.audio);prepareDeckAudioForCurrentMode(DECKS.B.audio);restoreDeckGain('A');restoreDeckGain('B');updateCarPlayButton();toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');});
   updateCarPlayButton();
   st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
   b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
