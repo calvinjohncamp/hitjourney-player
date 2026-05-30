@@ -14,7 +14,6 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
-<!-- Version v62-carplay-safe-real-fade: WebAudio deaktiviert, echter 5s Crossfade ueber HTMLAudio.volume -->
 <!-- Version v61-carplay-safe-direct-audio: WebAudio deaktiviert, Audio direkt ohne crossorigin -->
 <!-- Fix: crossorigin an Audio-Elementen entfernt, damit lokale Browser-/CarPlay-Tests nicht stumm bleiben -->
 <!-- Version v59: 5s Equal-Power Crossfade + Anti-Popp AirPods -->
@@ -1036,30 +1035,6 @@ const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen 
 const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
 
-async function waitForDeckAudible(deck, timeout=1600){
-  const a=deck.audio;
-  if(!a)return false;
-  if(!a.paused && a.readyState>=2)return true;
-  return new Promise(resolve=>{
-    let done=false;
-    const finish=(ok)=>{
-      if(done)return;
-      done=true;
-      clearTimeout(to);
-      a.removeEventListener('playing',onOk);
-      a.removeEventListener('canplay',onOk);
-      a.removeEventListener('error',onErr);
-      resolve(ok);
-    };
-    const onOk=()=>finish(true);
-    const onErr=()=>finish(false);
-    const to=setTimeout(()=>finish(!a.paused),timeout);
-    a.addEventListener('playing',onOk,{once:true});
-    a.addEventListener('canplay',onOk,{once:true});
-    a.addEventListener('error',onErr,{once:true});
-  });
-}
-
 async function doFade(auto=false){
   if(_fadeActive)return;
   await resumeAudioEngine();
@@ -1073,21 +1048,10 @@ async function doFade(auto=false){
   const toDeck=DECKS[nxt];
   fromDeck.el.classList.add('is-fading-out');
 
-  /* v62 CarPlay-Safe Real Fade:
-     Kein AudioContext, kein GainNode. Der Fade läuft ausschließlich über
-     HTMLAudioElement.volume. Wichtig: Die eigentliche 5s-Blende startet erst,
-     wenn das Ziel-Deck wirklich hörbar/spielbereit läuft. Sonst fühlt sich der
-     Fade auf CarPlay wie ein harter Weiter-Button an. */
-  setDeckGain(fromId,1);
+  // Start Song B wirklich leise: GainNode + volume-Fallback.
   setDeckGain(nxt,0);
-  try{toDeck.audio.preload='auto';}catch(e){}
-  let playOk=true;
-  try{
-    const pp=toDeck.audio.play();
-    if(pp&&typeof pp.then==='function')await pp;
-  }catch(e){playOk=false;}
-  if(playOk)await waitForDeckAudible(toDeck,1600);
-
+  restoreDeckGain(fromId);
+  toDeck.audio.play().catch(()=>{});
   toDeck.playing=true;
   toDeck.el.classList.add('is-playing');
 
@@ -1095,8 +1059,12 @@ async function doFade(auto=false){
   const startT=performance.now();
 
   function finishFade(){
+    /* v58 Anti-Plopp-Schleuse:
+       Das alte Audio-Element wird am Ende nicht sofort bei Gain=0 pausiert/umgeladen.
+       Auf iPhone + AirPods kann genau dieser harte pause()/src-Wechsel ein leises Ploppen erzeugen.
+       Deshalb: erst auf nahezu stumm halten, kurz warten, dann pausieren, danach erst Deck freigeben. */
     setDeckGain(fromId,GAIN_FLOOR);
-    setDeckGain(nxt,1);
+    restoreDeckGain(nxt);
 
     window.setTimeout(()=>{
       fromDeck.audio.pause();
@@ -1114,7 +1082,7 @@ async function doFade(auto=false){
           DECKS[freeDeck].audio.pause();
           DECKS[freeDeck].audio.removeAttribute('src');
           try{DECKS[freeDeck].audio.load();}catch(e){}
-          setDeckGain(freeDeck,1);
+          restoreDeckGain(freeDeck);
           DECKS[freeDeck].playing=false;
           resetTonearm(freeDeck);
           DECKS[freeDeck].el.classList.remove('is-playing','is-active');
@@ -1128,10 +1096,11 @@ async function doFade(auto=false){
   function step(now){
     const elapsed=now-startT;
     const t=Math.min(elapsed/FADE_TOTAL,1);
-    // Equal-Power-Kurve direkt über audio.volume: weich, aber CarPlay-freundlich.
+    // Equal-Power-Kurve: weniger Lautheitsloch, natürlicheres Ausblenden.
     setDeckGain(fromId,equalPowerOut(t));
     setDeckGain(nxt,equalPowerIn(t));
 
+    // UI switch at midpoint — only visual, never touch audio
     if(!uiSwitched && t>=0.5){
       uiSwitched=true;
       activeDeck=nxt;
