@@ -16,6 +16,7 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v71: iPhone Portrait Startlayout nutzt Large Viewport, Branding von Anfang an unten -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
 <!-- Version v69: CP-iPhone spielt alle Weiter/Auto-Wechsel stabil ueber das aktive Deck, ohne Crossfade-Deckwechsel -->
@@ -832,6 +833,33 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
     max-height:100%!important;
     object-fit:contain!important;
     display:block!important;
+  }
+}
+</style>
+
+
+
+<style>
+/* === v71: iPhone Portrait Startlayout wie nach Querformat-Rückkehr ===
+   iOS/Safari/PWA liefert beim ersten Laden teils eine kleinere dynamische Höhe.
+   Nach Rotation/Playback wird die große Viewport-Höhe genutzt.
+   Für die Portrait-Startansicht erzwingen wir deshalb die Large-Viewport-Höhe,
+   damit hitjourney/Making Waves von Anfang an unten sitzt und Next/Alben mehr Raum bekommen.
+*/
+@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){
+  html,body{
+    height:100lvh!important;
+    min-height:100lvh!important;
+    max-height:100lvh!important;
+  }
+  #app{
+    height:100lvh!important;
+    min-height:100lvh!important;
+    max-height:100lvh!important;
+  }
+  .mobile-brand{
+    align-self:end!important;
+    margin-top:auto!important;
   }
 }
 </style>
