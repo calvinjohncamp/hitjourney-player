@@ -16,6 +16,7 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v73: CP-Modus immer echter Direkt-Weiter-Modus, auch in Browser-/Desktop-Simulation; Normal-Fade unverändert -->
 <!-- Version v72: CP-Safe-Mode nutzt eigenes Single-Audio-Element ohne WebAudio/Zwei-Deck-Audio; Normal-Fade unverändert -->
 <!-- Version v71: iPhone Portrait Startlayout nutzt Large Viewport, Branding von Anfang an unten -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
@@ -951,7 +952,7 @@ cpAudio.preload='none';
 cpAudio.setAttribute('playsinline','');
 cpAudio.style.display='none';
 document.body.appendChild(cpAudio);
-function isCpSafeMode(){return !!(carPlayMode&&isRealTouchPhoneDevice());}
+function isCpSafeMode(){return !!carPlayMode;}
 function clearNativeDeckAudio(id){
   const a=DECKS[id].audio;
   try{a.pause();}catch(e){}
@@ -1296,7 +1297,7 @@ async function doDirectNext(auto=false){
   if(!auto)toast('Weiter');
 }
 async function doFade(auto=false){
-  if(carPlayMode&&isRealTouchPhoneDevice())return doDirectNext(auto);
+  if(carPlayMode)return doDirectNext(auto);
   if(_fadeActive)return;
   const needsWA=shouldUseWebAudioEngine();
   if(needsWA){prepareDeckAudioForCurrentMode(DECKS.A.audio);prepareDeckAudioForCurrentMode(DECKS.B.audio);}
@@ -1381,7 +1382,7 @@ async function doFade(auto=false){
   requestAnimationFrame(step);
 }
 function autoAdvance(){
-  if(carPlayMode&&isRealTouchPhoneDevice()){doDirectNext(true);return;}
+  if(carPlayMode){doDirectNext(true);return;}
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(d.song){doFade(true);return;}
   if(djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();setTimeout(()=>doFade(true),80);}
@@ -1764,8 +1765,8 @@ function ensureMobileChrome(){
     e.stopPropagation();
     carPlayMode=!carPlayMode;
     _autoFadeScheduled=false;
-    if(carPlayMode&&isRealTouchPhoneDevice()){
-      // CP-Safe: sofort auf ein einziges, natives Audio-Element umschalten.
+    if(carPlayMode){
+      // CP-Safe: sofort auf ein einziges, natives Audio-Element umschalten — auch in Browser-/Desktop-Simulation.
       const cur=DECKS[activeDeck];
       const wasPlaying=!!cur.playing;
       let pos=0;
