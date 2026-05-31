@@ -16,6 +16,7 @@
 <!-- Version v46: iPhone Portrait Feinschliff rote Deck-Punkte entfernt, Controls höher, Albumgrid quadratisch -->
 <!-- Version v50: iPhone Portrait Fine-Tuning Decks, Controls und Cover/Lyrics-Stage -->
 <!-- Version v55: iPhone Portrait Stage final höher, verdeckt Next/Album-Bereich vollständig -->
+<!-- Version v72: CP-Safe-Mode nutzt eigenes Single-Audio-Element ohne WebAudio/Zwei-Deck-Audio; Normal-Fade unverändert -->
 <!-- Version v71: iPhone Portrait Startlayout nutzt Large Viewport, Branding von Anfang an unten -->
 <!-- Version v62-iPhone-CarPlay-Mode: CP-Button am zweiten Deck, Fade wird im CP-Modus zu normalem Weiter -->
 <!-- Version v64: iPhone Normalmodus nutzt WebAudio-Gain fuer echten Fade; CarPlay bleibt Direkt-Weiter ohne WebAudio-Start -->
@@ -939,6 +940,26 @@ const DECKS={
   B:{audio:audB,el:document.getElementById('deckB'),cov:document.getElementById('covB'),ph:document.getElementById('phB'),dt:document.getElementById('dtB'),da:document.getElementById('daB'),pf:document.getElementById('pfB'),song:null,playing:false}
 };
 
+/* v72 CP-Safe-Mode:
+   Der normale iPhone-/AirPods-/JBL-Fade bleibt komplett unverändert.
+   Nur im aktivierten CP-Modus läuft die echte Tonspur über genau EIN eigenes HTMLAudio-Element.
+   Die beiden Decks bleiben optisch erhalten, ihre Audio-Elemente werden im CP-Modus aber stumm/leer gehalten.
+   Dadurch sieht die iPhone-Seite gleich aus, aber BMW Wireless CarPlay bekommt keine WebAudio-/GainNode-/Zwei-Deck-Audio-Kette mehr. */
+const cpAudio=document.createElement('audio');
+cpAudio.id='cpSafeAudio';
+cpAudio.preload='none';
+cpAudio.setAttribute('playsinline','');
+cpAudio.style.display='none';
+document.body.appendChild(cpAudio);
+function isCpSafeMode(){return !!(carPlayMode&&isRealTouchPhoneDevice());}
+function clearNativeDeckAudio(id){
+  const a=DECKS[id].audio;
+  try{a.pause();}catch(e){}
+  try{a.removeAttribute('src');a.load();}catch(e){}
+  try{a.volume=1;}catch(e){}
+}
+function getActivePlaybackAudio(){return isCpSafeMode()?cpAudio:DECKS[activeDeck].audio;}
+
 /* v61 CarPlay-Safe-Test:
    WebAudio/AudioContext ist hier bewusst deaktiviert.
    Grund: Apple CarPlay produziert bei der DJ-Funktion sofort digitale Störgeräusche,
@@ -1059,7 +1080,7 @@ const TONEARM_END_AT=1.00; // 100% Songfortschritt = 110% des bisherigen Innenla
 function updateTonearm(id){
   const d=DECKS[id];
   if(!d||!d.el)return;
-  const a=d.audio;
+  const a=(isCpSafeMode()&&id===activeDeck)?cpAudio:d.audio;
   let p=0;
   if(a&&isFinite(a.duration)&&a.duration>0&&isFinite(a.currentTime)){
     p=Math.max(0,Math.min(a.currentTime/a.duration,1));
@@ -1102,7 +1123,14 @@ function loadDeck(id,song){
   const d=DECKS[id];
   prepareDeckAudioForCurrentMode(d.audio);
   restoreDeckGain(id);
-  d.song=song;d.audio.pause();d.audio.src=song.mp3||'';d.audio.load();d.playing=false;
+  d.song=song;
+  if(isCpSafeMode()){
+    // CP: Deck bleibt rein visuell. Die hörbare Tonspur liegt ausschließlich auf cpAudio.
+    clearNativeDeckAudio(id);
+  }else{
+    d.audio.pause();d.audio.src=song.mp3||'';d.audio.load();
+  }
+  d.playing=false;
   d.dt.textContent=song.title||'';d.da.textContent=song.artist||'';d.pf.style.width='0%';
   resetTonearm(id);
   if(song.cover){
@@ -1118,21 +1146,42 @@ function loadDeck(id,song){
   d.el.classList.toggle('is-cued',id!==activeDeck);
 }
 function clearDeck(id){
-  const d=DECKS[id];restoreDeckGain(id);d.song=null;d.audio.pause();d.audio.src='';d.playing=false;
+  const d=DECKS[id];restoreDeckGain(id);d.song=null;
+  if(isCpSafeMode()){clearNativeDeckAudio(id);if(id===activeDeck){try{cpAudio.pause();cpAudio.removeAttribute('src');cpAudio.load();}catch(e){}}}
+  else{d.audio.pause();d.audio.src='';}
+  d.playing=false;
   d.dt.textContent='— nächsten Track laden —';d.da.textContent='';d.pf.style.width='0%';
   resetTonearm(id);
   d.cov.src='';d.cov.classList.remove('loaded');d.ph.style.display='flex';
   d.el.classList.remove('is-playing','is-cued','is-active');
 }
 async function playDeck(id){
-  const d=DECKS[id];if(!d.song||!d.audio.src)return;
-  await resumeAudioEngine();
-  restoreDeckGain(id);
-  d.audio.play().catch(()=>{});d.playing=true;
+  const d=DECKS[id];if(!d.song)return;
+  if(isCpSafeMode()){
+    activeDeck=id;
+    DECKS.A.playing=false;DECKS.B.playing=false;
+    DECKS.A.el.classList.remove('is-playing');DECKS.B.el.classList.remove('is-playing');
+    clearNativeDeckAudio('A');clearNativeDeckAudio('B');
+    try{cpAudio.pause();}catch(e){}
+    if(cpAudio.src!==d.song.mp3)cpAudio.src=d.song.mp3||'';
+    try{cpAudio.currentTime=0;}catch(e){}
+    cpAudio.volume=1;
+    cpAudio.play().catch(()=>{});
+    d.playing=true;
+  }else{
+    if(!d.audio.src)return;
+    await resumeAudioEngine();
+    restoreDeckGain(id);
+    d.audio.play().catch(()=>{});d.playing=true;
+  }
   d.el.classList.add('is-playing');d.el.classList.remove('is-cued');
   icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
 }
-function pauseDeck(id){DECKS[id].audio.pause();DECKS[id].playing=false;DECKS[id].el.classList.remove('is-playing')}
+function pauseDeck(id){
+  if(isCpSafeMode()&&id===activeDeck){try{cpAudio.pause();}catch(e){}}
+  else{try{DECKS[id].audio.pause();}catch(e){}}
+  DECKS[id].playing=false;DECKS[id].el.classList.remove('is-playing');
+}
 function togglePause(){
   const d=DECKS[activeDeck];
   if(!d.song && djQueue.length){
@@ -1161,14 +1210,13 @@ function updateCarPlayButton(){
 }
 async function doDirectNext(auto=false){
   if(_fadeActive)return;
-  if(audioEngineReady){await resumeAudioEngine(true);restoreDeckGain('A');restoreDeckGain('B');}
+  if(!isCpSafeMode()&&audioEngineReady){await resumeAudioEngine(true);restoreDeckGain('A');restoreDeckGain('B');}
 
-  /* v69 CP/iPhone-Fix:
-     Im CarPlay-Modus wird nicht mehr zwischen zwei Audio-Elementen hin- und hergeschaltet.
-     Safari/PWA auf iPhone verlor dabei nach dem ersten CP-Weiter oft den hörbaren Audiopfad.
-     Stattdessen bleibt der Direktmodus auf dem aktuell aktiven Deck: aktueller Song stoppen,
-     nächsten Song in dasselbe Audio-Element laden, spielen, anderes Deck nur optisch/als Cue neu befüllen. */
-  if(carPlayMode&&isRealTouchPhoneDevice()){
+  /* v72 CP-Safe-Mode:
+     Im CarPlay-Modus gibt es akustisch nur ein einziges Audio-Element: cpAudio.
+     Fade-Taste = Weiter. Kein WebAudio, kein GainNode, kein zweites laufendes/vorgeladenes Deck-Audio.
+     Die beiden Plattenspieler bleiben nur optisch bestehen: aktives Deck spielt sichtbar, anderes Deck zeigt den nächsten Titel. */
+  if(isCpSafeMode()){
     const id=activeDeck;
     const cueId=other(id);
     const cur=DECKS[id];
@@ -1181,20 +1229,19 @@ async function doDirectNext(auto=false){
 
     if(!nextSong){if(!auto)toast('Kein nächster Song bereit.');return;}
 
-    try{cur.audio.pause();}catch(e){}
-    cur.playing=false;
-    restoreDeckGain(id);
+    try{cpAudio.pause();}catch(e){}
+    clearNativeDeckAudio('A');clearNativeDeckAudio('B');
+    cur.playing=false;cur.el.classList.remove('is-playing','is-fading-out');
+
     loadDeck(id,nextSong);
     activeDeck=id;
-    cur.el.classList.add('is-active');
+    cur.el.classList.add('is-active','is-playing');
     cur.el.classList.remove('is-cued','is-fading-out');
-    try{cur.audio.currentTime=0;}catch(e){}
-    await resumeAudioEngine(true);
-    restoreDeckGain(id);
-    const playPromise=cur.audio.play();
-    if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>{});
+    cpAudio.src=nextSong.mp3||'';
+    try{cpAudio.currentTime=0;}catch(e){}
+    cpAudio.volume=1;
+    cpAudio.play().catch(()=>{});
     cur.playing=true;
-    cur.el.classList.add('is-playing');
     icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
 
     if(djQueue.length){
@@ -1205,6 +1252,7 @@ async function doDirectNext(auto=false){
     } else {
       clearDeck(cueId);
     }
+    DECKS[cueId].playing=false;
     DECKS[cueId].el.classList.remove('is-active','is-playing');
     DECKS[cueId].el.classList.add('is-cued');
     if(!auto)toast('Weiter');
@@ -1339,13 +1387,14 @@ function autoAdvance(){
   if(djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();setTimeout(()=>doFade(true),80);}
   else if(shuffleOn&&ALL_SONGS.length){loadDeck(nxt,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);setTimeout(()=>doFade(true),80);}
 }
-audA.addEventListener('ended',()=>{if(activeDeck==='A')autoAdvance()});
-audB.addEventListener('ended',()=>{if(activeDeck==='B')autoAdvance()});
+audA.addEventListener('ended',()=>{if(!isCpSafeMode()&&activeDeck==='A')autoAdvance()});
+audB.addEventListener('ended',()=>{if(!isCpSafeMode()&&activeDeck==='B')autoAdvance()});
+cpAudio.addEventListener('ended',()=>{if(isCpSafeMode())autoAdvance()});
 
 const tProgCur=document.getElementById('tProgCur'),tProgRem=document.getElementById('tProgRem'),deckProgFill=document.getElementById('deckProgFill'),deckProgBar=document.getElementById('deckProgBar');
 let _autoFadeScheduled=false;
 setInterval(()=>{
-  const a=DECKS[activeDeck].audio;
+  const a=getActivePlaybackAudio();
   if(!a.duration||!isFinite(a.duration)){deckProgFill.style.width='0%';tProgCur.textContent='0:00';tProgRem.textContent='-0:00';return;}
   const cur=a.currentTime,dur=a.duration,rem=dur-cur;
   const p=(cur/dur)*100;
@@ -1365,7 +1414,7 @@ setInterval(()=>{
   }
   if(cur<dur-AUTO_FADE_LEAD)_autoFadeScheduled=false;},400);
 deckProgBar.addEventListener('click',e=>{
-  const a=DECKS[activeDeck].audio;if(!a.duration)return;
+  const a=getActivePlaybackAudio();if(!a.duration)return;
   const r=deckProgBar.getBoundingClientRect();a.currentTime=a.duration*(e.clientX-r.left)/r.width;
   updateTonearm(activeDeck);
 });
@@ -1715,11 +1764,38 @@ function ensureMobileChrome(){
     e.stopPropagation();
     carPlayMode=!carPlayMode;
     _autoFadeScheduled=false;
-    // v68: Beim Umschalten nicht den laufenden Audio-Element-Modus/CORS anfassen.
-    // Wenn WebAudio schon aktiv ist, bleibt es hörbar und wird nur auf volle Lautstärke gesetzt.
-    if(audioEngineReady){await resumeAudioEngine(true);}
-    restoreDeckGain('A');
-    restoreDeckGain('B');
+    if(carPlayMode&&isRealTouchPhoneDevice()){
+      // CP-Safe: sofort auf ein einziges, natives Audio-Element umschalten.
+      const cur=DECKS[activeDeck];
+      const wasPlaying=!!cur.playing;
+      let pos=0;
+      try{pos=cur.audio.currentTime||cpAudio.currentTime||0;}catch(e){}
+      clearNativeDeckAudio('A');clearNativeDeckAudio('B');
+      restoreDeckGain('A');restoreDeckGain('B');
+      if(cur.song){
+        cpAudio.src=cur.song.mp3||'';
+        try{if(pos>0)cpAudio.currentTime=pos;}catch(e){}
+        cpAudio.volume=1;
+        if(wasPlaying){cpAudio.play().catch(()=>{});cur.playing=true;cur.el.classList.add('is-playing');}
+      }
+      DECKS[other(activeDeck)].playing=false;
+      DECKS[other(activeDeck)].el.classList.remove('is-playing');
+    }else{
+      // Zurück in den normalen Modus: Deck-Audioelemente wieder mit ihren Songs befüllen.
+      const wasPlaying=!!DECKS[activeDeck].playing&&!cpAudio.paused;
+      try{cpAudio.pause();}catch(e){}
+      ['A','B'].forEach(id=>{
+        const song=DECKS[id].song;
+        if(song){
+          prepareDeckAudioForCurrentMode(DECKS[id].audio);
+          DECKS[id].audio.src=song.mp3||'';
+          try{DECKS[id].audio.load();}catch(e){}
+        }
+        DECKS[id].playing=false;
+        DECKS[id].el.classList.remove('is-playing');
+      });
+      if(wasPlaying&&DECKS[activeDeck].song)playDeck(activeDeck);
+    }
     updateCarPlayButton();
     toast(carPlayMode?'CarPlay: Fade wird zu Weiter':'CarPlay: Fade wieder aktiv');
   });
