@@ -109,7 +109,7 @@ box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)
 .deck:not(.is-playing) .deck-tonearm{transition:transform .45s ease}
 
 
-.deck-red-btn{position:absolute;right:9.8%;bottom:16.1%;width:8.4%;aspect-ratio:1;border:0;border-radius:50%;background:#C90019;z-index:8;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 2px 8px rgba(0,0,0,.35)}
+.deck-red-btn{position:absolute;right:9.8%;bottom:8%;width:8.4%;aspect-ratio:1;border:0;border-radius:50%;background:#C90019;z-index:8;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 2px 8px rgba(0,0,0,.35)}
 .deck-red-btn:active{transform:scale(.92)}
 .deck-info{position:absolute;left:4%;bottom:3.5%;right:21%;z-index:7;background:transparent;padding:0;border-radius:0;opacity:.94;pointer-events:none}
 .deck-title{font-size:clamp(10px,.83vw,16px);font-weight:800;color:#f3f8fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px #000}
@@ -760,7 +760,7 @@ body.drag-reordering{cursor:grabbing}
   #deckA{grid-column:1!important;grid-row:1!important}.deck-progress-wrap{grid-area:progress!important;width:100%!important;height:18px!important;padding:0!important;background:#071826!important}.deck-progress-time{display:none!important}.deck-progress-bar{height:3px!important;background:rgba(133,172,201,.25)!important}.deck-progress-fill{background:#85ACC9!important}
   #deckB{grid-column:2!important;grid-row:1!important}
   .deck{width:94%!important;height:auto!important;aspect-ratio:1/1!important;border:none!important;background:#000!important;overflow:visible!important;animation:none!important;box-shadow:none!important}
-  .deck-cover-wrap{left:50%!important;top:6%!important;width:78%!important;transform:translateX(-50%)!important}.deck-center-pin{left:50%!important;top:45%!important;width:3.8%!important}.deck-red-btn{display:block!important;right:8%!important;bottom:14%!important;width:10%!important;z-index:20!important}.deck-info{left:8px!important;right:22px!important;bottom:4px!important;min-height:20px!important}.deck-info::after{position:absolute;right:-8px;bottom:0;font-weight:900;font-size:20px;line-height:1;color:#fff;opacity:.98;text-shadow:none}.deck-title{font-size:10px!important}.deck-artist{font-size:8px!important}.deck-tonearm{z-index:7!important}.deck-info::after{content:''!important}
+  .deck-cover-wrap{left:50%!important;top:6%!important;width:78%!important;transform:translateX(-50%)!important}.deck-center-pin{left:50%!important;top:45%!important;width:3.8%!important}.deck-red-btn{display:block!important;right:8%!important;bottom:7%!important;width:10%!important;z-index:20!important}.deck-info{left:8px!important;right:22px!important;bottom:4px!important;min-height:20px!important}.deck-info::after{position:absolute;right:-8px;bottom:0;font-weight:900;font-size:20px;line-height:1;color:#fff;opacity:.98;text-shadow:none}.deck-title{font-size:10px!important}.deck-artist{font-size:8px!important}.deck-tonearm{z-index:7!important}.deck-info::after{content:''!important}
   .dj-controls{grid-area:controls!important;display:block!important;padding:0!important;transform:translateY(-26px)!important;min-height:72px!important;overflow:visible!important}.dj-btns{height:72px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:38px!important;width:100%!important}.round-btn{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important}.round-btn.mobile-lyrics-btn{display:flex!important;background:#C90019!important;color:#06141F!important}.round-btn.mobile-lyrics-btn svg{display:none!important}.hj-brand{display:none!important}
   .next-panel{grid-area:next!important;border:none!important;background:#06141F!important;min-height:0!important;overflow:hidden!important;transform:translateY(-8px)!important}.library-panel{grid-area:albums!important;border:none!important;display:block!important;min-height:0!important;overflow:hidden!important;transform:translateY(-8px)!important}.search-panel,.abc-section{display:none!important}
   .title-row{padding:7px 0 8px!important;min-height:0!important;align-items:center!important}.title{font-size:34px!important;padding:0!important;line-height:.95!important}.title-actions{gap:8px!important}.btn-clear-q,.btn-sort-abc{width:34px!important;height:34px!important;font-size:12px!important}
@@ -778,7 +778,7 @@ body.drag-reordering{cursor:grabbing}
 /* === v79: iPad-Hochformat · verbliebene 3 Funktionsbuttons mit deutlich mehr Luft === */
 @media (orientation:portrait) and (hover:none) and (pointer:coarse) and (min-width:600px){
   .dj-btns{
-    gap:76px!important;
+    gap:99px!important;
   }
 }
 
@@ -788,7 +788,7 @@ body.drag-reordering{cursor:grabbing}
     overflow:visible!important;
   }
   .dj-btns{
-    transform:none!important;
+    transform:translateY(-90px)!important;
   }
 }
 </style>
