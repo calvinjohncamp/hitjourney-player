@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v208-signature-red-dot-ci -->
 <!-- Version: v207-ios-lockscreen-background-audio-fix -->
 <!-- Version: v206-info-click-capture-fix -->
 <!-- Version: v202-silbertablett-no-blank-loop -->
@@ -30,6 +31,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
 .hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
 .hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
+.hj-logo-dot{display:inline-block;width:.34em;height:.34em;border-radius:50%;background:#C90019;margin-left:.09em;align-self:flex-end;margin-bottom:.17em;flex-shrink:0}
 .hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;line-height:1;padding-bottom:2px;margin-left:auto;align-self:flex-end;}
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -255,30 +257,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   width:43px;
   height:43px;
   border-radius:50%;
-  border:1px solid rgba(133,172,201,.35);
-  background:#0B2A42;
-  color:#85ACC9;
+  border:1px solid rgba(255,255,255,.14);
+  background:#C90019;
+  color:#C90019;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 4px 18px rgba(0,0,0,.34);
+  box-shadow:0 6px 20px rgba(0,0,0,.38),0 0 0 1px rgba(0,0,0,.14) inset;
   cursor:pointer;
-  transition:background .15s,color .15s,transform .1s;
+  transition:background .15s,transform .1s,box-shadow .15s;
   padding:0;
   overflow:hidden;
 }
 
-.home-info-i{
-  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
-  font-size:22px;
-  line-height:1;
-  font-weight:800;
-  color:#85ACC9;
-  transform:translateY(-1px);
-  pointer-events:none;
-}
+.home-info-i{display:none!important}
 .home-info-btn:active{transform:scale(.9)}
-.home-info-btn:hover{background:#123048;color:#cfe5f5}
+.home-info-btn:hover{background:#E0001C;box-shadow:0 7px 24px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.18) inset}
 @media(min-width:900px){
   .home-info-footer{padding-left:32px;padding-right:32px}
 }
@@ -2883,7 +2877,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Alben</span>
 </div>
 <div class="hj-logo" id="logoHome">
-<span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span>
+<span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span><span class="hj-logo-dot" aria-hidden="true"></span>
 </div>
 <span class="hj-logo-sub" id="makingWaves">making waves</span>
 <div class="hj-header-right" id="headerRight"></div>
@@ -2947,7 +2941,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 <footer class="home-info-footer" aria-label="Information">
-<button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information"><span class="home-info-i" aria-hidden="true">i</span></button>
+<button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information"><span class="home-info-i" aria-hidden="true"></span></button>
 </footer>
 </div>
 

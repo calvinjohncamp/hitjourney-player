@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
+<!-- Version v78: iPad-Querformat-Funktionsbuttons optisch hoeher gesetzt -->
 <!-- Version v77: iPhone-Lockscreen-Safe-Mode startet automatisch im Direkt-Audio-Modus -->
 <!-- Version v76: Ein-Deck-Masterlogik; Klick auf inaktives Deck startet Fade statt Parallelplay -->
 <!-- Version v66: Desktop-schmal bleibt Direkt-Audio; WebAudio nur auf echtem iPhone/Touch-Portrait -->
@@ -769,6 +770,17 @@ body.drag-reordering{cursor:grabbing}
 }
 @media (min-width:701px){.mobile-stage,.mobile-brand,.mobile-lyrics-btn{display:none!important}}
 
+
+
+/* === v78: iPad-Querformat · Funktionsbuttons optisch mittiger in die freie Flaeche gesetzt === */
+@media (orientation:landscape) and (max-aspect-ratio:1.55/1){
+  .dj-controls{
+    overflow:visible!important;
+  }
+  .dj-btns{
+    transform:translateY(-42px)!important;
+  }
+}
 </style>
 
 <style>
