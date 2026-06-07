@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v203c-home-chain-cover-lyrics-cue -->
 <!-- Version: v202-silbertablett-no-blank-loop -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
@@ -861,6 +862,86 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .np-btn-repeat.repeat-all .icon-rpt-all{display:block}
 .np-btn-repeat.repeat-one .icon-rpt-off{display:none}
 .np-btn-repeat.repeat-one .icon-rpt-one{display:block}
+
+
+
+/* ══ HOME/DIASHOW COVER CUE + VIEWER (v203c) ══ */
+.hj-cover-cue{
+  position:absolute;
+  right:10px;
+  top:10px;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:1px solid rgba(207,229,245,.42);
+  background:rgba(6,20,32,.34);
+  color:rgba(207,229,245,.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Anton',-apple-system,'Helvetica Neue',Arial,sans-serif;
+  font-size:31px;
+  line-height:1;
+  letter-spacing:.01em;
+  z-index:35;
+  cursor:pointer;
+  box-shadow:0 8px 28px rgba(0,0,0,.38);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  opacity:.94;
+  transition:transform .12s ease,background .14s ease,opacity .14s ease;
+}
+.hj-cover-cue:active{transform:scale(.9);opacity:.82}
+.home-silbertablett .hj-cover-cue,
+.ft-slideshow .hj-cover-cue,
+.home-card .hj-cover-cue{pointer-events:auto}
+.hj-chain-view{
+  position:fixed;
+  inset:0;
+  z-index:245;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 22px) 18px calc(env(safe-area-inset-bottom,0px) + 22px);
+  background:rgba(6,20,32,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  cursor:pointer;
+}
+.hj-chain-view.active{display:flex}
+.hj-chain-view-img{
+  max-width:min(88vw,72vh);
+  max-height:82vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  border-radius:14px;
+  box-shadow:0 26px 90px rgba(0,0,0,.72);
+  background:#050505;
+}
+.hj-chain-view.fullsheet .hj-chain-view-img{
+  max-width:96vw;
+  max-height:92vh;
+  border-radius:10px;
+}
+.hj-chain-view-label{
+  position:absolute;
+  left:0;
+  right:0;
+  top:calc(env(safe-area-inset-top,0px) + 16px);
+  text-align:center;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(133,172,201,.56);
+  pointer-events:none;
+}
+@media(max-width:599px){
+  .hj-cover-cue{width:44px;height:44px;font-size:28px;right:8px;top:8px}
+  .hj-chain-view-img{max-width:91vw;max-height:80vh}
+  .hj-chain-view.fullsheet .hj-chain-view-img{max-width:100vw;max-height:88vh;border-radius:0}
+}
 
 /* ══ SMART DOCK PLAYER ══ */
 .hj-player{
@@ -3772,6 +3853,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <button aria-label="Zurück zum Anfang" class="swf-top-btn" id="swfTopBtn">
 <svg viewbox="0 0 24 24"><polyline points="18,15 12,9 6,15"></polyline></svg>
 </button>
+<div class="hj-chain-view" id="hjChainView" aria-hidden="true">
+  <div class="hj-chain-view-label" id="hjChainViewLabel">Cover</div>
+  <img alt="" class="hj-chain-view-img" id="hjChainViewImg" src=""/>
+</div>
 <audio id="hjAudio" preload="none"></audio>
 <audio id="hjChainA" preload="none"></audio>
 <audio id="hjChainB" preload="none"></audio>
@@ -4309,6 +4394,139 @@ function getLyricsUrlsForSong(song) {
   const fallback = LYRICS_BY_TITLE[normalizeLyricsTitle(song.title)];
   return fallback ? [fallback] : [];
 }
+
+
+function getLyrics21UrlsForSong(song) {
+  if(!song) return [];
+  return [song.lyrics21, song.lyric21, song.cover21, song.cover21Url, song.lyrics21_url]
+    .filter((v,i,a)=>v && a.indexOf(v)===i);
+}
+
+let hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null };
+function hjGetChainViewerEls(){
+  return {
+    box: document.getElementById('hjChainView'),
+    img: document.getElementById('hjChainViewImg'),
+    label: document.getElementById('hjChainViewLabel')
+  };
+}
+function hjIsLyrics21Item(item){
+  const el = item && item.el;
+  const ds = el && el.dataset ? el.dataset : {};
+  if(ds && ds.chainViewMode === 'lyrics21') return true;
+  if(item && item._viewMode === 'lyrics21') return true;
+  const song = item && item.song;
+  return !!(song && !getImgUrls(song,'cover').length && getLyrics21UrlsForSong(song).length);
+}
+function hjChainViewerSetImage(song, item, phase){
+  const els = hjGetChainViewerEls();
+  if(!els.box || !els.img || !song) return false;
+  const fullSheet = hjIsLyrics21Item(item);
+  let urls = [];
+  let label = 'Cover';
+  if(fullSheet){
+    urls = getLyrics21UrlsForSong(song).concat(getLyricsUrlsForSong(song), getImgUrls(song,'cover'));
+    label = 'Lyric Sheet';
+    els.box.classList.add('fullsheet');
+    hjChainViewState.mode = 'lyrics21';
+    hjChainViewState.phase = 1;
+  } else if(phase === 2){
+    urls = getLyricsUrlsForSong(song).concat(getLyrics21UrlsForSong(song));
+    label = 'Lyrics';
+    els.box.classList.remove('fullsheet');
+    hjChainViewState.mode = 'lyrics';
+    hjChainViewState.phase = 2;
+  } else {
+    urls = getImgUrls(song,'cover');
+    label = 'Cover';
+    els.box.classList.remove('fullsheet');
+    hjChainViewState.mode = 'cover';
+    hjChainViewState.phase = 1;
+  }
+  if(!urls.length) return false;
+  setImgSrcWithFallback(els.img, urls);
+  els.label.textContent = label;
+  return true;
+}
+function hjOpenChainViewer(song, item){
+  const els = hjGetChainViewerEls();
+  if(!els.box || !song) return;
+  hjChainViewState = { open:true, phase:1, mode:'cover', song, item };
+  if(!hjChainViewerSetImage(song, item, 1)) return;
+  els.box.classList.add('active');
+  els.box.setAttribute('aria-hidden','false');
+}
+function hjCloseChainViewer(){
+  const els = hjGetChainViewerEls();
+  if(!els.box) return;
+  els.box.classList.remove('active','fullsheet');
+  els.box.setAttribute('aria-hidden','true');
+  if(els.img) els.img.removeAttribute('src');
+  hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null };
+}
+function hjAdvanceChainViewer(){
+  if(!hjChainViewState.open){
+    const cur = (typeof HJChain !== 'undefined' && HJChain.getCurrent) ? HJChain.getCurrent() : null;
+    if(cur && cur.song) hjOpenChainViewer(cur.song, cur.item);
+    return;
+  }
+  const song = hjChainViewState.song;
+  const item = hjChainViewState.item;
+  if(!song){ hjCloseChainViewer(); return; }
+  if(hjIsLyrics21Item(item)){
+    hjCloseChainViewer();
+    return;
+  }
+  if(hjChainViewState.phase === 1){
+    if(hjChainViewerSetImage(song, item, 2)) return;
+    hjCloseChainViewer();
+    return;
+  }
+  hjCloseChainViewer();
+}
+function hjSyncChainViewerToCurrent(song, item){
+  if(!hjChainViewState.open || !song) return;
+  const keepPhase = hjChainViewState.phase === 2 ? 2 : 1;
+  hjChainViewState.song = song;
+  hjChainViewState.item = item;
+  hjChainViewerSetImage(song, item, keepPhase);
+}
+function hjAttachCoverCue(el, onClick){
+  if(!el) return null;
+  let btn = el.querySelector(':scope > .hj-cover-cue');
+  if(!btn){
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'hj-cover-cue';
+    btn.setAttribute('aria-label','Cover und Lyrics anzeigen');
+    btn.textContent = 'C';
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof onClick === 'function') onClick(e);
+    });
+    el.appendChild(btn);
+  }
+  return btn;
+}
+function hjRemoveCoverCue(el){
+  if(!el) return;
+  const btn = el.querySelector(':scope > .hj-cover-cue');
+  if(btn) btn.remove();
+}
+
+(function(){
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const els = hjGetChainViewerEls();
+    if(els.box){
+      els.box.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        hjAdvanceChainViewer();
+      });
+    }
+  });
+})();
 
 
 
@@ -5891,16 +6109,26 @@ const HJChain = (function(){
   function epIn(t){ return Math.sin(t*Math.PI/2); }
 
   function setHighlight(el){
-    if(curHi && curHi!==el) curHi.classList.remove('playing');
+    if(curHi && curHi!==el){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); }
     curHi = el || null;
-    if(curHi) curHi.classList.add('playing');
+    if(curHi){
+      curHi.classList.add('playing');
+      if(typeof hjAttachCoverCue==='function'){
+        hjAttachCoverCue(curHi, ()=>{
+          const cur = getCurrent();
+          if(cur && cur.song && typeof hjOpenChainViewer==='function') hjOpenChainViewer(cur.song, cur.item);
+        });
+      }
+    }
+    const cur = getCurrent();
+    if(cur && cur.song && typeof hjSyncChainViewerToCurrent==='function') hjSyncChainViewerToCurrent(cur.song, cur.item);
   }
-  function clearHighlight(){ if(curHi) curHi.classList.remove('playing'); curHi=null; }
+  function clearHighlight(){ if(curHi){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); } curHi=null; }
 
   function syncDiashowSlide(item){
     try{
       if(item && item._ss && typeof item._ss.goTo==='function' && typeof item._slideIndex==='number'){
-        if(item._ss.pauseRotation) item._ss.pauseRotation();
+        // v203c: Diashow während der Playlist weiterlaufen lassen; nur auf den aktuellen Song synchronisieren.
         item._ss.goTo(item._slideIndex);
       }
     }catch(e){}
@@ -5979,6 +6207,11 @@ const HJChain = (function(){
     return items.slice(startIndex).concat(items.slice(0,startIndex));
   }
 
+  function getCurrent(){
+    const d = D[active] || null;
+    return d ? { song:d.song, item:d.item, audio:d.audio, running, paused:!!(d.audio && d.audio.paused) } : null;
+  }
+
   function togglePause(){
     const a=D[active].audio; if(!a) return;
     if(a.paused){ resumeEngine().then(()=>a.play().catch(()=>{})); }
@@ -6025,6 +6258,7 @@ const HJChain = (function(){
       setGain(id,1); D[id].song=null; D[id].item=null;
     });
     clearHighlight();
+    if(typeof hjCloseChainViewer==='function') hjCloseChainViewer();
     chain=[]; idx=0; active='A';
   }
 
@@ -6064,7 +6298,7 @@ const HJChain = (function(){
     const items=[];
     arr.forEach((sl,i)=>{
       const song=(typeof hjFindLiveSong==='function') ? hjFindLiveSong(sl) : resolveChainSong(sl && (sl.slug||sl.song_slug));
-      if(song && song.mp3) items.push({song, el:wrap, _ss:api, _slideIndex:i});
+      if(song && song.mp3) items.push({song, el:wrap, _ss:api, _slideIndex:i, _viewMode:(sl && (sl.type==='lyrics21'||sl.useCover21||sl.lyrics21)) ? 'lyrics21' : ''});
     });
     if(!items.length) return;
     const start=Math.max(0, Math.min(slideIndex||0, arr.length-1));
@@ -6073,7 +6307,7 @@ const HJChain = (function(){
     startChain(items, mapped);
   }
 
-  return { startHomeFrom, startDiashowFrom, startChain, stop, isRunning:()=>running };
+  return { startHomeFrom, startDiashowFrom, startChain, stop, isRunning:()=>running, getCurrent };
 })();
 
 /* ── Build a standard home-card div ── */
@@ -6100,6 +6334,7 @@ function buildHomeCard(cell, extraClass){
     if(_isLyr || _isTeaser || _isPlain){
       el.dataset.chainHome = '1';
       el.dataset.chainSlug = cell.slug || '';
+      if(cell.type === 'lyrics21' || cell.useCover21) el.dataset.chainViewMode = 'lyrics21';
     }
   }catch(e){}
 
