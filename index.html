@@ -34,7 +34,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:0;align-self:flex-end;}
 .hj-logo-img{display:block;height:32px;width:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .hj-logo-sub{margin-left:auto;align-self:flex-end;display:flex;line-height:0;margin-bottom:7px}
-.hj-making-img{display:block;height:11px;width:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.hj-making-img{display:block;height:10px;width:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
@@ -2587,7 +2587,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
   /* Wider header */
   .hj-header{padding:14px 32px 12px}
-  .hj-logo-img{height:30px}.hj-making-img{height:10px}
+  .hj-logo-img{height:38px}.hj-making-img{height:13px}
 
   /* Home grid: 4 columns */
   #screenHome{padding-top:12px}
@@ -2869,11 +2869,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     padding:16px 26px 13px;
     min-height:68px;
   }
-  .hj-logo-img{height:46px;}
-  .hj-making-img{height:14px;}
+  .hj-logo-img{height:58px;}
+  .hj-making-img{height:18px;}
   .hj-logo-sub{
-    margin-bottom:10px;
+    margin-bottom:13px;
   }
+}
+/* v213: iPhone Querformat (Home) — beide Logos +25% */
+@media (orientation:landscape) and (max-height:600px){
+  .hj-logo-img{height:40px}
+  .hj-making-img{height:14px}
+  .hj-logo-sub{margin-bottom:9px}
 }
 </style>
 </head>

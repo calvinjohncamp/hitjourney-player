@@ -788,7 +788,7 @@ body.drag-reordering{cursor:grabbing}
     overflow:visible!important;
   }
   .dj-btns{
-    transform:translateY(-42px)!important;
+    transform:none!important;
   }
 }
 </style>
@@ -1939,7 +1939,6 @@ function ensureMobileChrome(){
   });
   updateCarPlayButton();
   st.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
-  b.addEventListener('click',e=>{e.stopPropagation();cycleMobileStage();});
 }
 document.addEventListener('click',e=>{
   const st=document.getElementById('mobileStage');
@@ -2209,8 +2208,8 @@ function goHome(){
 /* ── v212: Bild-Logos hitjourney / making waves ──
    Höhe in em → erbt automatisch jeden bestehenden font-size-Breakpoint
    der jeweiligen Container, daher keine weiteren Anpassungen nötig. */
-.hj-logo-vert-img{height:.95em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
-.hj-making-vert-img{height:.72em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.hj-logo-vert-img{height:1.19em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.hj-making-vert-img{height:.90em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .mobile-hj-logo-img{height:.92em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .mobile-making-img{height:.72em;width:auto;display:block;margin-bottom:5px;-webkit-user-drag:none;user-select:none;pointer-events:none}
 </style>
