@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v212-home-lyrics-info-red-dot -->
 <!-- Version: v210-tablet-desktop-header-branding-balanced -->
 <!-- Version: v211-logo-dot-proportion-real-fix -->
 <!-- Version: v209-tablet-desktop-header-branding-scale -->
@@ -862,7 +863,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 
-/* ══ HOME/DIASHOW INFO CUE + VIEWER (v204) ══ */
+/* ══ HOME/DIASHOW SIGNATURE RED DOT CUE + VIEWER (v212) ══ */
 .hj-cover-cue{
   position:absolute;
   left:10px;
@@ -870,26 +871,25 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   width:48px;
   height:48px;
   border-radius:50%;
-  border:1px solid rgba(207,229,245,.42);
-  background:rgba(6,20,32,.34);
-  color:rgba(207,229,245,.92);
+  border:0;
+  background:#C90019;
+  color:transparent;
   display:flex;
   align-items:center;
   justify-content:center;
   font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
-  font-size:22px;
+  font-size:0;
   font-weight:800;
   line-height:1;
   letter-spacing:0;
   z-index:35;
   cursor:pointer;
-  box-shadow:0 8px 28px rgba(0,0,0,.38);
-  backdrop-filter:blur(7px);
-  -webkit-backdrop-filter:blur(7px);
-  opacity:.94;
+  box-shadow:0 8px 28px rgba(0,0,0,.38),0 0 0 1px rgba(0,0,0,.14) inset;
+  opacity:1;
   transition:transform .12s ease,background .14s ease,opacity .14s ease;
 }
-.hj-cover-cue:active{transform:scale(.9);opacity:.82}
+.hj-cover-cue:active{transform:scale(.9);opacity:1}
+.hj-cover-cue:hover{background:#E0001C}
 .home-silbertablett .hj-cover-cue,
 .ft-slideshow .hj-cover-cue,
 .home-card .hj-cover-cue{pointer-events:auto}
@@ -4577,7 +4577,7 @@ function hjAttachCoverCue(el, onClick){
     btn.type = 'button';
     btn.className = 'hj-cover-cue';
     btn.setAttribute('aria-label','Informationen zum Song anzeigen');
-    btn.textContent = 'i';
+    btn.textContent = '';
 
     // v206: Der Info-Button darf NIEMALS als normaler Kachel-Klick durchrutschen.
     // Besonders bei 2:1-Lyric-Sheets hatte der erste Klick sonst noch Play/Pause getriggert.
