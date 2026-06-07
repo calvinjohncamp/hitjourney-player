@@ -3773,6 +3773,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <svg viewbox="0 0 24 24"><polyline points="18,15 12,9 6,15"></polyline></svg>
 </button>
 <audio id="hjAudio" preload="none"></audio>
+<audio id="hjChainA" preload="none"></audio>
+<audio id="hjChainB" preload="none"></audio>
 <!-- Spacer im Body-Flex: reserviert die Höhe der fixed Player-Bar, damit Screens nicht darunter reichen -->
 <div id="hjPlayerSpacer" style="flex-shrink:0;height:0;transition:height .3s ease"></div>
 <!-- Player Bar -->
@@ -5827,6 +5829,253 @@ function renderHomeLayout(){
   wireHomeGrid(grid);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   HOME-CHAIN PLAYER (v203)
+   Auto-Playlist für die Homeseite mit demselben Equal-Power-Crossfade wie im DJ.
+   • Home: alle Einzel-Song-Kacheln in DOM-Reihenfolge, zirkulär ab Klick,
+           jeder Song genau einmal, endet beim Song direkt VOR dem geklickten.
+           Kein Endlosloop. Neuer Klick = Playlist startet an neuer Stelle.
+   • Diashow/Silbertablett: eigene, getrennte Kette aus den Diashow-Songs in
+           vorhandener Reihenfolge, ebenfalls zirkulär ab sichtbarem Slide.
+   • Kein Mini-Player, keine PlayerBar. Reines Durchlaufen (EarPods unterwegs).
+   • Eigene Audio-Elemente (#hjChainA/#hjChainB) – #hjAudio und dj.html bleiben
+     unberührt. iPhone: WebAudio-Gain-Fade (iOS ignoriert audio.volume),
+     Desktop/iPad: audio.volume-Fallback (Parität zum DJ).
+   ═══════════════════════════════════════════════════════════════════════ */
+const HJChain = (function(){
+  const FADE_TOTAL = 5000;   // identisch zum DJ
+  const AUTO_FADE_LEAD = 8;  // Sekunden vor Songende → Überblendung startet
+  const ANTI_POP_MS = 240;   // AirPods-Anti-Plopp am Fade-Ende
+  const GAIN_FLOOR = 0.0001;
+
+  const audA = document.getElementById('hjChainA');
+  const audB = document.getElementById('hjChainB');
+  const D = { A:{audio:audA, gain:null, song:null, item:null}, B:{audio:audB, gain:null, song:null, item:null} };
+  let ctx=null, srcA=null, srcB=null, gainA=null, gainB=null, waReady=false;
+  let active='A', chain=[], idx=0, running=false, fadeActive=false, watchTimer=null, curHi=null;
+
+  function isPhone(){
+    const touch=('ontouchstart' in window)||(navigator.maxTouchPoints&&navigator.maxTouchPoints>0);
+    const coarse=window.matchMedia?window.matchMedia('(hover:none) and (pointer:coarse)').matches:true;
+    const shortSide=Math.min(window.innerWidth||0,window.innerHeight||0);
+    const longSide=Math.max(window.innerWidth||0,window.innerHeight||0);
+    return !!(touch && coarse && shortSide<=700 && longSide<=1100);
+  }
+  function useWA(){ return isPhone(); }
+
+  function ensureEngine(){
+    if(!useWA()) return false;
+    if(waReady) return true;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; if(!C) return false;
+      ctx=ctx||new C();
+      if(!srcA){ srcA=ctx.createMediaElementSource(audA); gainA=ctx.createGain(); gainA.gain.value=1; srcA.connect(gainA).connect(ctx.destination); D.A.gain=gainA; }
+      if(!srcB){ srcB=ctx.createMediaElementSource(audB); gainB=ctx.createGain(); gainB.gain.value=1; srcB.connect(gainB).connect(ctx.destination); D.B.gain=gainB; }
+      waReady=true; return true;
+    }catch(e){ console.warn('[hjchain] WebAudio nicht verfügbar, Fallback auf audio.volume', e); waReady=false; return false; }
+  }
+  async function resumeEngine(){
+    if(useWA()){
+      try{ audA.crossOrigin='anonymous'; audB.crossOrigin='anonymous'; }catch(e){}
+      ensureEngine();
+      if(ctx && ctx.state==='suspended'){ try{ await ctx.resume(); }catch(e){} }
+    }
+  }
+  function setGain(id,v){
+    v=Math.max(0,Math.min(1,v));
+    try{ if(D[id].gain){ const g=D[id].gain.gain; if(ctx&&typeof g.setTargetAtTime==='function') g.setTargetAtTime(v,ctx.currentTime,0.012); else g.value=v; } }catch(e){}
+    try{ D[id].audio.volume=v; }catch(e){}
+  }
+  function other(d){ return d==='A'?'B':'A'; }
+  function epOut(t){ return Math.cos(t*Math.PI/2); }
+  function epIn(t){ return Math.sin(t*Math.PI/2); }
+
+  function setHighlight(el){
+    if(curHi && curHi!==el) curHi.classList.remove('playing');
+    curHi = el || null;
+    if(curHi) curHi.classList.add('playing');
+  }
+  function clearHighlight(){ if(curHi) curHi.classList.remove('playing'); curHi=null; }
+
+  function syncDiashowSlide(item){
+    try{
+      if(item && item._ss && typeof item._ss.goTo==='function' && typeof item._slideIndex==='number'){
+        if(item._ss.pauseRotation) item._ss.pauseRotation();
+        item._ss.goTo(item._slideIndex);
+      }
+    }catch(e){}
+  }
+
+  function loadDeck(id, item){
+    const d=D[id];
+    d.song = item ? item.song : null;
+    d.item = item || null;
+    const a=d.audio;
+    try{ a.pause(); }catch(e){}
+    a.src = (item && item.song && item.song.mp3) || '';
+    try{ a.load(); }catch(e){}
+  }
+
+  function startWatcher(){
+    stopWatcher();
+    watchTimer=setInterval(()=>{
+      if(!running) return;
+      const a=D[active].audio;
+      if(!a || !isFinite(a.duration) || a.duration<=0) return;
+      const rem=a.duration - a.currentTime;
+      const hasNext=(idx+1) < chain.length;
+      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD) crossfadeNext();
+    }, 300);
+  }
+  function stopWatcher(){ if(watchTimer){ clearInterval(watchTimer); watchTimer=null; } }
+
+  function onEnded(){
+    if(!running || fadeActive) return;
+    if((idx+1) >= chain.length) stop();   // letzter Song zu Ende → Kette fertig
+  }
+  audA.addEventListener('ended', ()=>{ if(active==='A') onEnded(); });
+  audB.addEventListener('ended', ()=>{ if(active==='B') onEnded(); });
+
+  function crossfadeNext(){
+    if(fadeActive) return;
+    const nextItem=chain[idx+1];
+    if(!nextItem || !nextItem.song || !nextItem.song.mp3) return;
+    fadeActive=true;
+    const fromId=active, toId=other(active);
+    loadDeck(toId, nextItem);
+    setGain(toId,0);
+    const ta=D[toId].audio;
+    try{ ta.currentTime=0; }catch(e){}
+    ta.play().catch(()=>{});
+    const start=performance.now(); let switched=false;
+    function step(now){
+      const t=Math.min((now-start)/FADE_TOTAL,1);
+      setGain(fromId, epOut(t));
+      setGain(toId, epIn(t));
+      if(!switched && t>=0.5){
+        switched=true; active=toId; idx=idx+1;
+        setHighlight(nextItem.el||null);
+        syncDiashowSlide(nextItem);
+      }
+      if(t<1) requestAnimationFrame(step);
+      else finishFade(fromId,toId);
+    }
+    requestAnimationFrame(step);
+  }
+  function finishFade(fromId,toId){
+    setGain(fromId, GAIN_FLOOR);
+    setGain(toId, 1);
+    setTimeout(()=>{
+      try{ D[fromId].audio.pause(); }catch(e){}
+      try{ D[fromId].audio.removeAttribute('src'); D[fromId].audio.load(); }catch(e){}
+      setGain(fromId,1);
+      D[fromId].song=null; D[fromId].item=null;
+      fadeActive=false;
+    }, ANTI_POP_MS);
+  }
+
+  function rotate(items, startIndex){
+    if(!startIndex || startIndex<=0) return items.slice();
+    return items.slice(startIndex).concat(items.slice(0,startIndex));
+  }
+
+  function togglePause(){
+    const a=D[active].audio; if(!a) return;
+    if(a.paused){ resumeEngine().then(()=>a.play().catch(()=>{})); }
+    else a.pause();
+  }
+
+  async function startChain(items, startIndex){
+    items=(items||[]).filter(it=>it && it.song && it.song.mp3);
+    if(!items.length) return;
+    startIndex=Math.max(0, Math.min(startIndex||0, items.length-1));
+    const clicked=items[startIndex];
+    // gleiche, gerade laufende Startkachel erneut geklickt → pause/resume
+    if(running && chain[idx] && chain[idx].song && clicked && clicked.song && chain[idx].song.slug===clicked.song.slug){
+      togglePause(); return;
+    }
+    stop();
+    // bestehende #hjAudio-Wiedergabe (Album/Teaser/featured) sauberer Stopp
+    try{ window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch',{detail:{source:'home-chain'}})); }catch(e){}
+    try{ if(typeof audio!=='undefined' && audio){ audio.pause(); } }catch(e){}
+    try{ if(typeof featuredMode!=='undefined'){ featuredMode=true; } }catch(e){}
+    try{ if(typeof playerBar!=='undefined' && playerBar){ playerBar.classList.remove('visible'); } }catch(e){}
+
+    await resumeEngine();
+
+    chain=rotate(items, startIndex);
+    idx=0; active='A'; running=true; fadeActive=false;
+    loadDeck('A', chain[0]);
+    loadDeck('B', null);
+    setGain('A',1); setGain('B',0);
+    const a=D.A.audio;
+    try{ a.currentTime=0; }catch(e){}
+    a.play().catch(()=>{});
+    setHighlight(chain[0].el||null);
+    syncDiashowSlide(chain[0]);
+    startWatcher();
+  }
+
+  function stop(){
+    stopWatcher();
+    running=false; fadeActive=false;
+    ['A','B'].forEach(id=>{
+      try{ D[id].audio.pause(); }catch(e){}
+      try{ D[id].audio.removeAttribute('src'); D[id].audio.load(); }catch(e){}
+      setGain(id,1); D[id].song=null; D[id].item=null;
+    });
+    clearHighlight();
+    chain=[]; idx=0; active='A';
+  }
+
+  // ── Quellen ───────────────────────────────────────────────────────────
+  function resolveChainSong(slug){
+    if(!slug) return null;
+    let s=SUPABASE_SONGS.find(x=>x.slug===slug);
+    if(s) return s;
+    const norm=(v)=> (typeof normalizeTeaserSlug==='function') ? normalizeTeaserSlug(v) : String(v||'').toLowerCase();
+    const n=norm(slug);
+    s=SUPABASE_SONGS.find(x=>norm(x.slug)===n); if(s) return s;
+    s=SUPABASE_SONGS.find(x=>norm(x.title||'')===n);
+    return s||null;
+  }
+  function buildHomeItems(){
+    const grid=document.getElementById('homeGrid'); if(!grid) return [];
+    const els=Array.from(grid.querySelectorAll('[data-chain-home="1"]'));
+    const out=[];
+    els.forEach(el=>{ const song=resolveChainSong(el.dataset.chainSlug||''); if(song && song.mp3) out.push({song, el}); });
+    return out;
+  }
+
+  function startHomeFrom(el){
+    const items=buildHomeItems(); if(!items.length) return;
+    let start=items.findIndex(it=>it.el===el);
+    if(start<0){
+      const song=resolveChainSong(el && el.dataset ? (el.dataset.chainSlug||'') : '');
+      if(song) start=items.findIndex(it=>it.song && it.song.slug===song.slug);
+    }
+    if(start<0) start=0;
+    startChain(items, start);
+  }
+
+  function startDiashowFrom(wrap, slideIndex, slides, ssApi){
+    const arr=slides || (wrap && wrap._chainSlides) || [];
+    const api=ssApi || (wrap && wrap._ssApi) || null;
+    const items=[];
+    arr.forEach((sl,i)=>{
+      const song=(typeof hjFindLiveSong==='function') ? hjFindLiveSong(sl) : resolveChainSong(sl && (sl.slug||sl.song_slug));
+      if(song && song.mp3) items.push({song, el:wrap, _ss:api, _slideIndex:i});
+    });
+    if(!items.length) return;
+    const start=Math.max(0, Math.min(slideIndex||0, arr.length-1));
+    let mapped=items.findIndex(it=>it._slideIndex===start);
+    if(mapped<0) mapped=0;
+    startChain(items, mapped);
+  }
+
+  return { startHomeFrom, startDiashowFrom, startChain, stop, isRunning:()=>running };
+})();
+
 /* ── Build a standard home-card div ── */
 function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
@@ -5840,6 +6089,19 @@ function buildHomeCard(cell, extraClass){
   const albumKey = (!_fnOverride && _specialSlugs.includes((targetSlug||'').toLowerCase())) ? null : resolveAlbumKey(targetSlug);
   if(albumKey) el.dataset.album = albumKey;
   el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
+  // Home-Chain (v203): Einzel-Song-Kacheln für die Auto-Playlist markieren.
+  // Alben, Unterseiten, Links, Sonderslugs und Sprach-Teaser sind ausgenommen.
+  try{
+    const _isNav     = (cell.fn === 'album' || cell.fn === 'subpage' || cell.fn === 'link');
+    const _isSpecial = ['kurs-nordwest','songwriters-picks'].includes((cell.slug||'').toLowerCase());
+    const _isLyr     = (cell.fn === 'play' && (cell.lyricsCycle || cell.useCover21));
+    const _isTeaser  = (typeof isStandaloneHomeAudioTeaser === 'function') && isStandaloneHomeAudioTeaser(cell);
+    const _isPlain   = (!_isNav && !_isSpecial && !albumKey && !!cell.slug);
+    if(_isLyr || _isTeaser || _isPlain){
+      el.dataset.chainHome = '1';
+      el.dataset.chainSlug = cell.slug || '';
+    }
+  }catch(e){}
 
   const img = document.createElement('img');
   img.alt = cell.alt || '';
@@ -5912,7 +6174,7 @@ function buildHomeCard(cell, extraClass){
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
     if(cell.fn === 'play' && (cell.lyricsCycle || cell.useCover21)){
-      if(playHomeLyricsCycle(cell, el)) return;
+      HJChain.startHomeFrom(el); return;
     }
     if(cell.fn === 'subpage'){
       if(openHomeSubpageFromCell(cell)) return;
@@ -5926,8 +6188,7 @@ function buildHomeCard(cell, extraClass){
     // verhalten sich wie „Just This Dance“: Klick 1 = Play, Klick 2 = Pause,
     // ohne die untere Player-Bar einzublenden.
     if(isStandaloneHomeAudioTeaser(cell)){
-      toggleStandaloneHomeAudioTeaser(cell, el);
-      return;
+      HJChain.startHomeFrom(el); return;
     }
 
     // fn=album: Admin hat explizit ein Album verlinkt
@@ -5949,7 +6210,7 @@ function buildHomeCard(cell, extraClass){
     if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
 
     if(albumKey) showAlbum(albumKey);
-    else if(cell.slug) toggleHomeCardPlay(cell, el);
+    else if(cell.slug) HJChain.startHomeFrom(el);
   });
   return el;
 }
@@ -6127,10 +6388,8 @@ function buildSilbertablettEl(cell){
 
   coverBox.addEventListener('click', () => {
     if(albumKey && ALBUMS[albumKey]) { showAlbum(albumKey); return; }
-    if(songs[0] && songs[0].slug){
-      playSongBySlug(songs[0].slug);
-      return;
-    }
+    // Silbertablett-Cover: startet dieselbe Diashow-Kette wie die Slideshow, ab dem ersten Song.
+    HJChain.startDiashowFrom(ss, 0, slides, ss._ssApi);
   });
 
   if(coverPos === 'left'){
@@ -6590,33 +6849,16 @@ function initDynamicSlideshow(id, slides){
     imgs[0].addEventListener('error', ()=>{ clearTimeout(startFallback); safeStart(); }, {once:true});
   } else { clearTimeout(startFallback); safeStart(); }
 
-  // Click → spielt den aktuell sichtbaren Slide-Song ab (featuredMode, kein PlayerBar)
+  // Diashow-API für die Auto-Playlist: optische Synchronisation auf den laufenden Song.
+  wrap._chainSlides = slides;
+  wrap._ssApi = { goTo: goTo, pauseRotation: stopRotation, startRotation: startRotation };
+
+  // Click → startet die Diashow-Auto-Playlist ab dem sichtbaren Slide,
+  // mit demselben Crossfade wie im DJ. Kein Mini-Player, keine PlayerBar.
+  // (Diashows/Silbertablett sind eine eigene Kette, getrennt von der Home-Playlist.)
   wrap.addEventListener('click', ()=>{
-    if(cur < 0) return;
-    const slide = slides[cur];
-    if(!slide) return;
-    // Slug/Titel/MP3 → echter Song aus Supabase, inkl. alter Spotlight-Aliase.
-    let song = hjFindLiveSong(slide);
-    if(!song || !song.mp3) {
-      console.warn('[hitjourney] Spotlight: Song nicht gefunden für Slide:', slide, '— verfügbare Slugs:', SUPABASE_SONGS.slice(0,12).map(s=>s.slug));
-      return;
-    }
-
-    // Toggle: gleicher Song → pause/play
-    if(featuredCurrentMp3 === song.mp3){
-      if(audio.paused) audio.play().catch(()=>{});
-      else audio.pause();
-      return;
-    }
-
-    // Neuer Song → featured-Modus starten
-    window.dispatchEvent(new CustomEvent('hj:teaser-audio-switch', { detail: { source: 'spotlight' } }));
-    featuredMode = true;
-    featuredCurrentMp3 = song.mp3;
-    playerBar.classList.remove('visible');
-    audio.src = song.mp3;
-    audio.load();
-    audio.play().catch(()=>{});
+    const startSlide = (cur < 0) ? 0 : cur;
+    HJChain.startDiashowFrom(wrap, startSlide, slides, wrap._ssApi);
   });
 
   // Wenn anderer Audio-Source übernimmt → reset
