@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v204-info-cue-smaller-lyrics21-fullscreen -->
+<!-- Version: v205-info-cue-lyrics21-desktop-fullscreen-ended-fallback -->
 <!-- Version: v202-silbertablett-no-blank-loop -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
@@ -920,9 +920,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   box-shadow:0 26px 90px rgba(0,0,0,.72);
   background:#050505;
 }
+.hj-chain-view.fullsheet{
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
+  background:rgba(6,20,32,.96);
+}
 .hj-chain-view.fullsheet .hj-chain-view-img{
+  width:min(96vw, calc(92vh * 2));
   max-width:96vw;
   max-height:92vh;
+  height:auto;
   border-radius:10px;
 }
 .hj-chain-view-label{
@@ -4411,11 +4417,25 @@ function hjGetChainViewerEls(){
     label: document.getElementById('hjChainViewLabel')
   };
 }
+function hjLooksLikeLyrics21Tile(el){
+  try{
+    if(!el) return false;
+    if(el.classList && (el.classList.contains('span-2col') || el.classList.contains('free-full') || el.classList.contains('panorama-4x1'))) return true;
+    const img = el.querySelector && el.querySelector('img');
+    if(img){
+      const w = img.naturalWidth || img.width || img.clientWidth || 0;
+      const h = img.naturalHeight || img.height || img.clientHeight || 0;
+      if(w && h && (w/h) >= 1.55) return true;
+    }
+  }catch(e){}
+  return false;
+}
 function hjIsLyrics21Item(item){
   const el = item && item.el;
   const ds = el && el.dataset ? el.dataset : {};
   if(ds && ds.chainViewMode === 'lyrics21') return true;
   if(item && item._viewMode === 'lyrics21') return true;
+  if(hjLooksLikeLyrics21Tile(el)) return true;
   const song = item && item.song;
   return !!(song && !getImgUrls(song,'cover').length && getLyrics21UrlsForSong(song).length);
 }
@@ -4441,7 +4461,7 @@ function hjChainViewerSetImage(song, item, phase){
   let urls = [];
   let label = 'Cover';
   if(fullSheet){
-    urls = getLyrics21UrlsForSong(song).concat(hjGetLyrics21ItemUrls(item), getLyricsUrlsForSong(song), getImgUrls(song,'cover'));
+    urls = hjGetLyrics21ItemUrls(item).concat(getLyrics21UrlsForSong(song), getLyricsUrlsForSong(song), getImgUrls(song,'cover'));
     label = 'Lyric Sheet';
     els.box.classList.add('fullsheet');
     hjChainViewState.mode = 'lyrics21';
@@ -6175,7 +6195,10 @@ const HJChain = (function(){
 
   function onEnded(){
     if(!running || fadeActive) return;
-    if((idx+1) >= chain.length) stop();   // letzter Song zu Ende → Kette fertig
+    // Fallback: Falls der 8-Sekunden-Watcher wegen fehlender/verspäteter duration
+    // keinen Crossfade auslösen konnte, läuft die Playlist am echten Songende weiter.
+    if((idx+1) < chain.length) crossfadeNext();
+    else stop();   // letzter Song zu Ende → Kette fertig
   }
   audA.addEventListener('ended', ()=>{ if(active==='A') onEnded(); });
   audB.addEventListener('ended', ()=>{ if(active==='B') onEnded(); });
@@ -6314,7 +6337,7 @@ const HJChain = (function(){
     const items=[];
     arr.forEach((sl,i)=>{
       const song=(typeof hjFindLiveSong==='function') ? hjFindLiveSong(sl) : resolveChainSong(sl && (sl.slug||sl.song_slug));
-      if(song && song.mp3) items.push({song, el:wrap, _ss:api, _slideIndex:i, _viewMode:(sl && (sl.type==='lyrics21'||sl.useCover21||sl.lyrics21)) ? 'lyrics21' : ''});
+      if(song && song.mp3) items.push({song, el:wrap, _ss:api, _slideIndex:i, _viewMode:(sl && (sl.type==='lyrics21'||sl.useCover21||sl.lyrics21)) ? 'lyrics21' : '', _lyrics21Url:(sl && (sl.cover21Url || sl.lyrics21Url || sl.customImageUrl || sl.imageUrl)) || ''});
     });
     if(!items.length) return;
     const start=Math.max(0, Math.min(slideIndex||0, arr.length-1));
