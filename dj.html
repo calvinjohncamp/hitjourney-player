@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
+<!-- Version v77: iPhone-Lockscreen-Safe-Mode startet automatisch im Direkt-Audio-Modus -->
 <!-- Version v76: Ein-Deck-Masterlogik; Klick auf inaktives Deck startet Fade statt Parallelplay -->
 <!-- Version v66: Desktop-schmal bleibt Direkt-Audio; WebAudio nur auf echtem iPhone/Touch-Portrait -->
 <!-- Version v65: Desktop/iPad Ton zurück auf Direkt-Audio; WebAudio nur noch iPhone-Normalmodus -->
@@ -1223,7 +1224,12 @@ const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
 
 
-let carPlayMode=false;
+/* v77 iPhone-Lockscreen-Safe-Mode:
+   Auf echten iPhones startet Mr. DJ automatisch im CP-/Direkt-Audio-Modus.
+   Grund: iOS sperrt WebAudio/requestAnimationFrame im Lock Screen deutlich aggressiver.
+   Direktes HTMLAudio + ended-Event ist fuer Display-aus-Wiedergabe und Next-Auto-Fortsetzung robuster.
+   Der CP-Button bleibt erhalten: Auf Desktop/iPad bleibt Standard = normaler Crossfade, auf iPhone = locksicherer Direktmodus. */
+let carPlayMode=isRealTouchPhoneDevice();
 function updateCarPlayButton(){
   const b=document.getElementById('btnCarPlayMode');
   if(!b)return;

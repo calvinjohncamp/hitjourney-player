@@ -11,6 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v207-ios-lockscreen-background-audio-fix -->
 <!-- Version: v206-info-click-capture-fix -->
 <!-- Version: v202-silbertablett-no-blank-loop -->
 <!-- Version: v199-dj-subpage-routing -->
@@ -3864,9 +3865,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   <div class="hj-chain-view-label" id="hjChainViewLabel">Cover</div>
   <img alt="" class="hj-chain-view-img" id="hjChainViewImg" src=""/>
 </div>
-<audio id="hjAudio" preload="none"></audio>
-<audio id="hjChainA" preload="none"></audio>
-<audio id="hjChainB" preload="none"></audio>
+<audio id="hjAudio" preload="auto" playsinline></audio>
+<audio id="hjChainA" preload="auto" playsinline></audio>
+<audio id="hjChainB" preload="auto" playsinline></audio>
 <!-- Spacer im Body-Flex: reserviert die Höhe der fixed Player-Bar, damit Screens nicht darunter reichen -->
 <div id="hjPlayerSpacer" style="flex-shrink:0;height:0;transition:height .3s ease"></div>
 <!-- Player Bar -->
@@ -6155,7 +6156,16 @@ const HJChain = (function(){
     const longSide=Math.max(window.innerWidth||0,window.innerHeight||0);
     return !!(touch && coarse && shortSide<=700 && longSide<=1100);
   }
-  function useWA(){ return isPhone(); }
+  function useWA(){
+    /* v207 iOS Lockscreen Fix:
+       Auf iPhone/iOS wird WebAudio beim Sperren des Displays sehr häufig suspendiert.
+       Die Musik startet dann erst wieder, wenn der Bildschirm aktiviert wird.
+       Deshalb läuft die Home-Playlist auf iPhone bewusst über echte HTMLAudio-Elemente.
+       Ergebnis: stabilere Hintergrund-/Sperrbildschirm-Wiedergabe; Crossfade wird dort
+       bei Bedarf zu einem direkten Songwechsel. Desktop/iPad behalten den bisherigen Fade. */
+    return false;
+  }
+  function isIOSBackgroundSafeMode(){ return isPhone(); }
 
   function ensureEngine(){
     if(!useWA()) return false;
@@ -6184,6 +6194,33 @@ const HJChain = (function(){
   function epOut(t){ return Math.cos(t*Math.PI/2); }
   function epIn(t){ return Math.sin(t*Math.PI/2); }
 
+  function setMediaSessionForChain(song){
+    if(!song || !('mediaSession' in navigator)) return;
+    try{
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song.title || 'HitJourney',
+        artist: song.artist || 'BRO · Jörn Kämper',
+        album: 'HitJourney',
+        artwork: [{src: song.cover || song.cover_url || '', sizes:'512x512', type:'image/jpeg'}]
+      });
+      navigator.mediaSession.setActionHandler('play', ()=>{
+        const cur = getCurrent();
+        if(cur && cur.audio) cur.audio.play().catch(()=>{});
+      });
+      navigator.mediaSession.setActionHandler('pause', ()=>{
+        const cur = getCurrent();
+        if(cur && cur.audio) cur.audio.pause();
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', ()=>{
+        if(running && (idx+1) < chain.length) directNext();
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', ()=>{
+        const a = D[active] && D[active].audio;
+        if(a){ try{ a.currentTime = 0; }catch(e){} }
+      });
+    }catch(e){}
+  }
+
   function setHighlight(el){
     if(curHi && curHi!==el){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); }
     curHi = el || null;
@@ -6197,7 +6234,10 @@ const HJChain = (function(){
       }
     }
     const cur = getCurrent();
-    if(cur && cur.song && typeof hjSyncChainViewerToCurrent==='function') hjSyncChainViewerToCurrent(cur.song, cur.item);
+    if(cur && cur.song){
+      setMediaSessionForChain(cur.song);
+      if(typeof hjSyncChainViewerToCurrent==='function') hjSyncChainViewerToCurrent(cur.song, cur.item);
+    }
   }
   function clearHighlight(){ if(curHi){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); } curHi=null; }
 
@@ -6243,8 +6283,37 @@ const HJChain = (function(){
   audA.addEventListener('ended', ()=>{ if(active==='A') onEnded(); });
   audB.addEventListener('ended', ()=>{ if(active==='B') onEnded(); });
 
+  [audA,audB].forEach(a=>{
+    try{
+      a.setAttribute('preload','auto');
+      a.setAttribute('playsinline','');
+      a.disableRemotePlayback = false;
+    }catch(e){}
+  });
+
+  function directNext(){
+    const nextItem = chain[idx+1];
+    if(!nextItem || !nextItem.song || !nextItem.song.mp3) return;
+    const fromId = active, toId = other(active);
+    fadeActive = true;
+    try{ D[fromId].audio.pause(); }catch(e){}
+    loadDeck(toId, nextItem);
+    active = toId;
+    idx = idx + 1;
+    setGain(toId,1);
+    const ta = D[toId].audio;
+    try{ ta.currentTime = 0; }catch(e){}
+    ta.play().catch(()=>{});
+    setHighlight(nextItem.el||null);
+    syncDiashowSlide(nextItem);
+    try{ D[fromId].audio.removeAttribute('src'); D[fromId].audio.load(); }catch(e){}
+    D[fromId].song=null; D[fromId].item=null;
+    fadeActive = false;
+  }
+
   function crossfadeNext(){
     if(fadeActive) return;
+    if(isIOSBackgroundSafeMode()){ directNext(); return; }
     const nextItem=chain[idx+1];
     if(!nextItem || !nextItem.song || !nextItem.song.mp3) return;
     fadeActive=true;
