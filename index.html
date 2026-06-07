@@ -11,7 +11,7 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
-<!-- Version: v205-info-cue-lyrics21-desktop-fullscreen-ended-fallback -->
+<!-- Version: v206-info-click-capture-fix -->
 <!-- Version: v202-silbertablett-no-blank-loop -->
 <!-- Version: v199-dj-subpage-routing -->
 <!-- Version: v199b-free-fullwidth-teaser -->
@@ -4527,6 +4527,31 @@ function hjSyncChainViewerToCurrent(song, item){
   hjChainViewState.item = item;
   hjChainViewerSetImage(song, item, keepPhase);
 }
+function hjRunCoverCueAction(btn, e){
+  try{
+    if(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+    }
+  }catch(_){ }
+  try{
+    const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
+    if(cur && cur.song && typeof hjOpenChainViewer === 'function'){
+      hjOpenChainViewer(cur.song, cur.item);
+      return true;
+    }
+  }catch(_){ }
+  try{
+    const fn = btn && btn._hjCoverCueAction;
+    if(typeof fn === 'function'){
+      fn(e);
+      return true;
+    }
+  }catch(_){ }
+  return false;
+}
+
 function hjAttachCoverCue(el, onClick){
   if(!el) return null;
   let btn = el.querySelector(':scope > .hj-cover-cue');
@@ -4536,13 +4561,17 @@ function hjAttachCoverCue(el, onClick){
     btn.className = 'hj-cover-cue';
     btn.setAttribute('aria-label','Informationen zum Song anzeigen');
     btn.textContent = 'i';
-    btn.addEventListener('click', (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      if(typeof onClick === 'function') onClick(e);
-    });
+
+    // v206: Der Info-Button darf NIEMALS als normaler Kachel-Klick durchrutschen.
+    // Besonders bei 2:1-Lyric-Sheets hatte der erste Klick sonst noch Play/Pause getriggert.
+    const swallow = (e)=>hjRunCoverCueAction(btn, e);
+    btn.addEventListener('pointerdown', swallow, {capture:true});
+    btn.addEventListener('mousedown', swallow, {capture:true});
+    btn.addEventListener('touchstart', swallow, {capture:true, passive:false});
+    btn.addEventListener('click', swallow, {capture:true});
     el.appendChild(btn);
   }
+  btn._hjCoverCueAction = onClick;
   return btn;
 }
 function hjRemoveCoverCue(el){
@@ -4552,6 +4581,17 @@ function hjRemoveCoverCue(el){
 }
 
 (function(){
+  // v206: Zusätzliche Sicherheitsleine in der Capture-Phase.
+  // Falls Safari/Mac den Klick anders routet, wird er vor allen Home-Card-Listenern abgefangen.
+  const captureInfoCue = (e)=>{
+    const t = e && e.target;
+    const btn = t && t.closest ? t.closest('.hj-cover-cue') : null;
+    if(!btn) return;
+    hjRunCoverCueAction(btn, e);
+  };
+  document.addEventListener('click', captureInfoCue, true);
+  document.addEventListener('pointerdown', captureInfoCue, true);
+
   document.addEventListener('DOMContentLoaded', ()=>{
     const els = hjGetChainViewerEls();
     if(els.box){
