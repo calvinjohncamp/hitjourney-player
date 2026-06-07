@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
+<!-- Version v79: iPad-Hochformat-Funktionsbuttons mehr Abstand -->
 <!-- Version v78: iPad-Querformat-Funktionsbuttons optisch hoeher gesetzt -->
 <!-- Version v77: iPhone-Lockscreen-Safe-Mode startet automatisch im Direkt-Audio-Modus -->
 <!-- Version v76: Ein-Deck-Masterlogik; Klick auf inaktives Deck startet Fade statt Parallelplay -->
@@ -772,6 +773,15 @@ body.drag-reordering{cursor:grabbing}
 
 
 
+
+
+/* === v79: iPad-Hochformat · verbliebene 3 Funktionsbuttons mit deutlich mehr Luft === */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse) and (min-width:600px){
+  .dj-btns{
+    gap:76px!important;
+  }
+}
+
 /* === v78: iPad-Querformat · Funktionsbuttons optisch mittiger in die freie Flaeche gesetzt === */
 @media (orientation:landscape) and (max-aspect-ratio:1.55/1){
   .dj-controls{
@@ -924,7 +934,7 @@ body.drag-reordering{cursor:grabbing}
   </section>
 
   <section class="dj-controls">
-    <div class="hj-brand" aria-label="hitjourney" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-logo-vert"><span class="hit">hit</span><span class="journey">journey</span><span class="dot"></span></div></div>
+    <div class="hj-brand" aria-label="hitjourney" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-logo-vert"><img class="hj-logo-vert-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"></div></div>
     <div class="dj-btns">
       <button class="round-btn fade" id="btnFade" title="Überblenden"><svg viewBox="0 0 24 24" fill="none" stroke="#06141F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
       <button class="round-btn shuffle" id="btnShuffle" title="Next zufällig mischen"><img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" onerror="this.style.display='none'" alt=""/></button>
@@ -933,7 +943,7 @@ body.drag-reordering{cursor:grabbing}
         <svg viewBox="0 0 24 24" id="icPlay" style="display:none"><polygon points="6,3 6,21 20,12" fill="#06141F"/></svg>
       </button>
     </div>
-    <div class="hj-brand" aria-label="Making Waves" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-making-vert">Making Waves</div></div>
+    <div class="hj-brand" aria-label="Making Waves" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-making-vert"><img class="hj-making-vert-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="Making Waves" draggable="false"></div></div>
   </section>
 
   <section class="panel next-panel" id="colNext"><div class="title-row"><div class="title">Next</div><div class="title-actions"><button class="btn-sort-abc" id="btnSortNext" title="Next alphabetisch sortieren">ABC</button><button class="btn-clear-q" id="btnClearQueue" title="Playlist leeren"><svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div><div class="next-list" id="nextList"><div class="nq-empty" id="nqEmpty"><svg></svg><span>Queue leer<br/>Songs oder Alben hineinziehen</span></div></div></section>
@@ -1878,7 +1888,7 @@ function isMobilePortraitDJ(){return window.matchMedia('(max-width:700px) and (o
 function ensureMobileChrome(){
   if(document.getElementById('mobileBrand'))return;
   const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
-  brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><span>hit</span><span class="journey">journey</span><span class="dot"></span></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home">Making Waves</div>';
+  brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><img class="mobile-hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home"><img class="mobile-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="Making Waves" draggable="false"></div>';
   brand.addEventListener('click',e=>{e.stopPropagation();goHome();});
   brand.addEventListener('pointerup',e=>{e.stopPropagation();goHome();});
   brand.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}});
@@ -2195,6 +2205,14 @@ function goHome(){
   }
 }
 @media (min-width:701px){.mobile-cp-btn{display:none!important}}
+
+/* ── v212: Bild-Logos hitjourney / making waves ──
+   Höhe in em → erbt automatisch jeden bestehenden font-size-Breakpoint
+   der jeweiligen Container, daher keine weiteren Anpassungen nötig. */
+.hj-logo-vert-img{height:.95em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.hj-making-vert-img{height:.72em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.mobile-hj-logo-img{height:.92em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.mobile-making-img{height:.72em;width:auto;display:block;margin-bottom:5px;-webkit-user-drag:none;user-select:none;pointer-events:none}
 </style>
 
 </body></html>

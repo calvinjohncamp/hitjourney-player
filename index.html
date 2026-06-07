@@ -11,6 +11,9 @@
 <link href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png" rel="apple-touch-icon"/>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/icon.png"/>
 <title>hitjourney</title>
+<!-- Version: v210-tablet-desktop-header-branding-balanced -->
+<!-- Version: v211-logo-dot-proportion-real-fix -->
+<!-- Version: v209-tablet-desktop-header-branding-scale -->
 <!-- Version: v208-signature-red-dot-ci -->
 <!-- Version: v207-ios-lockscreen-background-audio-fix -->
 <!-- Version: v206-info-click-capture-fix -->
@@ -28,11 +31,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 /* ── Header ── */
 .hj-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.12);min-height:48px;background:rgba(6,20,32,1);position:relative;z-index:10}
-.hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:1;}
-.hj-logo-hit{font-size:34px;font-weight:800;color:#cfe5f5;letter-spacing:-.5px}
-.hj-logo-journey{font-size:34px;font-weight:800;color:#5884A4;letter-spacing:-.5px}
-.hj-logo-dot{display:inline-block;width:.34em;height:.34em;border-radius:50%;background:#C90019;margin-left:.09em;align-self:flex-end;margin-bottom:.17em;flex-shrink:0}
-.hj-logo-sub{font-size:14px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#85ACC9;line-height:1;padding-bottom:2px;margin-left:auto;align-self:flex-end;}
+.hj-logo{display:flex;align-items:flex-end;gap:0;cursor:pointer;line-height:0;align-self:flex-end;}
+.hj-logo-img{display:block;height:32px;width:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.hj-logo-sub{margin-left:auto;align-self:flex-end;display:flex;line-height:0;margin-bottom:7px}
+.hj-making-img{display:block;height:11px;width:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
@@ -2585,7 +2587,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
   /* Wider header */
   .hj-header{padding:14px 32px 12px}
-  .hj-logo-hit,.hj-logo-journey{font-size:28px}
+  .hj-logo-img{height:30px}.hj-making-img{height:10px}
 
   /* Home grid: 4 columns */
   #screenHome{padding-top:12px}
@@ -2859,6 +2861,20 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .language-play-btn{grid-column:2;}
 }
 
+
+
+/* ══ v210: Tablet/Desktop Branding ausgewogener; iPhone Hoch- und Querformat bleibt unverändert ══ */
+@media (min-width:768px) and (min-height:700px){
+  .hj-header{
+    padding:16px 26px 13px;
+    min-height:68px;
+  }
+  .hj-logo-img{height:46px;}
+  .hj-making-img{height:14px;}
+  .hj-logo-sub{
+    margin-bottom:10px;
+  }
+}
 </style>
 </head>
 <body>
@@ -2877,9 +2893,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Alben</span>
 </div>
 <div class="hj-logo" id="logoHome">
-<span class="hj-logo-hit">hit</span><span class="hj-logo-journey">journey</span><span class="hj-logo-dot" aria-hidden="true"></span>
+<img class="hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/>
 </div>
-<span class="hj-logo-sub" id="makingWaves">making waves</span>
+<span class="hj-logo-sub" id="makingWaves"><img class="hj-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="making waves" draggable="false"/></span>
 <div class="hj-header-right" id="headerRight"></div>
 </div>
 <!-- HOME -->
