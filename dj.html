@@ -1531,11 +1531,14 @@ function showLyricsForDeck(id){
   img.onload=()=>ov.classList.remove('loading');
   img.onerror=tryLoad;
   ov.querySelector('.lyrics-close').addEventListener('click',e=>{e.stopPropagation();closeLyricsSheet();});
+  const lyricsTouch=window.matchMedia('(hover:none) and (pointer:coarse)').matches;
   ov.addEventListener('click',e=>{
     if(e.target.closest('.lyrics-close'))return;
+    if(ov.classList.contains('lyrics-fixed')){closeLyricsSheet();return;}
     ov.classList.toggle('expanded');
   });
-  abcSection.appendChild(ov);
+  if(lyricsTouch){ov.classList.add('lyrics-fixed');document.body.appendChild(ov);}
+  else{abcSection.appendChild(ov);}
   tryLoad();
 }
 
@@ -2212,6 +2215,24 @@ function goHome(){
 .hj-making-vert-img{height:.90em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .mobile-hj-logo-img{height:.92em;width:auto;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .mobile-making-img{height:.72em;width:auto;display:block;margin-bottom:5px;-webkit-user-drag:none;user-select:none;pointer-events:none}
+
+/* ── v214: Lyrics-Vollbild auf Touch-Geräten (abcSection ist dort ausgeblendet) ── */
+.lyrics-overlay.lyrics-fixed{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;z-index:300!important;cursor:zoom-out;box-shadow:none!important;background:#06141F}
+.lyrics-overlay.lyrics-fixed .lyrics-close{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:16px;width:40px;height:40px;font-size:24px;z-index:301}
+
+/* ── v214: iPhone — roter Deck-Button näher an die Unterkante ── */
+@media (max-width:500px) and (orientation:portrait){
+  .deck-red-btn{bottom:3%!important}
+}
+
+/* ── v214: iPhone Querformat — hitjourney/Making Waves oben/unten bündig,
+   Brand-Boxen hoch genug, damit die gedrehten Logos nicht in die Buttons ragen ── */
+@media (orientation:landscape) and (max-height:500px){
+  .deck-red-btn{bottom:3%!important}
+  .hj-brand{height:33%!important}
+  .hj-brand:first-child{margin-top:0!important}
+  .hj-brand:last-child{margin-bottom:0!important}
+}
 </style>
 
 </body></html>
