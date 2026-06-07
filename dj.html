@@ -2220,18 +2220,20 @@ function goHome(){
 .lyrics-overlay.lyrics-fixed{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;z-index:300!important;cursor:zoom-out;box-shadow:none!important;background:#06141F}
 .lyrics-overlay.lyrics-fixed .lyrics-close{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:16px;width:40px;height:40px;font-size:24px;z-index:301}
 
-/* ── v214: iPhone — roter Deck-Button näher an die Unterkante ── */
+/* ── v215: iPhone — roter Deck-Button (5% = Mittelweg, vorher 8% zu hoch / 3% zu tief) ── */
 @media (max-width:500px) and (orientation:portrait){
-  .deck-red-btn{bottom:3%!important}
+  .deck-red-btn{bottom:5%!important}
 }
 
-/* ── v214: iPhone Querformat — hitjourney/Making Waves oben/unten bündig,
-   Brand-Boxen hoch genug, damit die gedrehten Logos nicht in die Buttons ragen ── */
+/* ── v215: iPhone Querformat — hitjourney/Making Waves oben/unten bündig.
+   Ursache war translateX(±40%), das die gedrehten Logos je ~47px zur Mitte zog;
+   hier reine Rotation, dadurch sitzen sie zentriert in ihren Rand-Boxen. ── */
 @media (orientation:landscape) and (max-height:500px){
-  .deck-red-btn{bottom:3%!important}
+  .deck-red-btn{bottom:5%!important}
   .hj-brand{height:33%!important}
   .hj-brand:first-child{margin-top:0!important}
   .hj-brand:last-child{margin-bottom:0!important}
+  .hj-logo-vert,.hj-making-vert{transform:rotate(-90deg)!important}
 }
 </style>
 
