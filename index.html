@@ -6182,6 +6182,14 @@ const HJChain = (function(){
     return false;
   }
   function isIOSBackgroundSafeMode(){ return isPhone(); }
+  // v210 Sperrbildschirm-Fix: Bei ausgeschaltetem Display (document.hidden) wird die
+  // Playlist NICHT mehr per Crossfade (requestAnimationFrame) oder Watcher (setInterval)
+  // weitergeschaltet – beides friert iOS im Lock Screen ein. Stattdessen läuft der nächste
+  // Song direkt auf DEMSELBEN, gerade spielenden Audio-Element weiter (src-Tausch + play()),
+  // damit die iOS-Audio-Session erhalten bleibt und die Wiedergabe wie bei Spotify/Amazon im
+  // Hintergrund durchläuft. Im Vordergrund bleibt der weiche Crossfade (Desktop/iPad) bzw. der
+  // bisherige Direktwechsel (iPhone) unverändert erhalten.
+  function isBgHidden(){ try{ return typeof document!=='undefined' && document.hidden===true; }catch(e){ return false; } }
 
   function ensureEngine(){
     if(!useWA()) return false;
@@ -6228,7 +6236,7 @@ const HJChain = (function(){
         if(cur && cur.audio) cur.audio.pause();
       });
       navigator.mediaSession.setActionHandler('nexttrack', ()=>{
-        if(running && (idx+1) < chain.length) directNext();
+        if(running && (idx+1) < chain.length) advanceNext();
       });
       navigator.mediaSession.setActionHandler('previoustrack', ()=>{
         const a = D[active] && D[active].audio;
@@ -6284,20 +6292,63 @@ const HJChain = (function(){
       if(!a || !isFinite(a.duration) || a.duration<=0) return;
       const rem=a.duration - a.currentTime;
       const hasNext=(idx+1) < chain.length;
-      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD) crossfadeNext();
+      // Im Hintergrund (Display aus) KEIN vorgezogener Crossfade über den gedrosselten
+      // setInterval-Watcher – dort übernimmt ausschließlich das 'ended'-Event
+      // (advanceNext → directNextSameElement) am exakten Songende.
+      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD && !isBgHidden()) crossfadeNext();
     }, 300);
   }
   function stopWatcher(){ if(watchTimer){ clearInterval(watchTimer); watchTimer=null; } }
 
+  // v210: Hintergrund-Weiterschaltung auf DEMSELBEN, aktiven Audio-Element.
+  // Kein Deckwechsel, kein load(), kein rAF, kein setInterval – nur src-Tausch + play()
+  // synchron im selben Event-Tick, damit iOS die laufende Audio-Session nicht verliert.
+  function directNextSameElement(){
+    const nextItem = chain[idx+1];
+    if(!nextItem || !nextItem.song || !nextItem.song.mp3){ stop(); return; }
+    fadeActive = true;
+    const a = D[active].audio;          // gerade spielendes Element – BEHALTEN, nicht wechseln!
+    try{ setGain(active, 1); }catch(e){}
+    try{ a.src = nextItem.song.mp3; }catch(e){}
+    try{ a.currentTime = 0; }catch(e){}
+    a.play().catch(()=>{});
+    D[active].song = nextItem.song;
+    D[active].item = nextItem;
+    idx = idx + 1;
+    setHighlight(nextItem.el || null);  // aktualisiert u.a. die MediaSession-Metadaten
+    syncDiashowSlide(nextItem);
+    fadeActive = false;
+  }
+
+  // v210: zentrale Weiter-Logik. Wählt je nach Zustand die passende Methode:
+  //  • Display aus (hidden)         → directNextSameElement (sicher im Hintergrund)
+  //  • iPhone im Vordergrund        → directNext (harter Schnitt, wie bisher; iOS regelt
+  //                                    bei HTMLAudio die Lautstärke nicht, daher kein Fade)
+  //  • Desktop/iPad im Vordergrund  → crossfadeNext (weiche Überblendung)
+  function advanceNext(){
+    if(!running || fadeActive) return;
+    if((idx+1) >= chain.length){ stop(); return; }
+    if(isBgHidden()) directNextSameElement();
+    else if(isPhone()) directNext();
+    else crossfadeNext();
+  }
+
   function onEnded(){
     if(!running || fadeActive) return;
-    // Fallback: Falls der 8-Sekunden-Watcher wegen fehlender/verspäteter duration
-    // keinen Crossfade auslösen konnte, läuft die Playlist am echten Songende weiter.
-    if((idx+1) < chain.length) crossfadeNext();
+    if((idx+1) < chain.length) advanceNext();
     else stop();   // letzter Song zu Ende → Kette fertig
   }
   audA.addEventListener('ended', ()=>{ if(active==='A') onEnded(); });
   audB.addEventListener('ended', ()=>{ if(active==='B') onEnded(); });
+
+  // v210: Wird das Display GENAU während einer laufenden Überblendung ausgeschaltet,
+  // schließen wir die Blende sofort sauber ab (nur EIN Element bleibt aktiv und hält die
+  // iOS-Audio-Session), statt sie eingefroren „stecken" zu lassen.
+  try{
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden && running && fadeActive) finalizeFadeForBackground();
+    });
+  }catch(e){}
 
   [audA,audB].forEach(a=>{
     try{
@@ -6327,25 +6378,28 @@ const HJChain = (function(){
     fadeActive = false;
   }
 
+  let _ff=null, _ft=null, _fadeSwitched=false;
   function crossfadeNext(){
     if(fadeActive) return;
-    if(isIOSBackgroundSafeMode()){ directNext(); return; }
+    if(isBgHidden()){ directNextSameElement(); return; }   // Display aus → sicherer Direktwechsel
+    if(isPhone()){ directNext(); return; }                  // iPhone: kein HTMLAudio-Volume-Fade möglich
     const nextItem=chain[idx+1];
     if(!nextItem || !nextItem.song || !nextItem.song.mp3) return;
     fadeActive=true;
     const fromId=active, toId=other(active);
+    _ff=fromId; _ft=toId; _fadeSwitched=false;
     loadDeck(toId, nextItem);
     setGain(toId,0);
     const ta=D[toId].audio;
     try{ ta.currentTime=0; }catch(e){}
     ta.play().catch(()=>{});
-    const start=performance.now(); let switched=false;
+    const start=performance.now();
     function step(now){
       const t=Math.min((now-start)/FADE_TOTAL,1);
       setGain(fromId, epOut(t));
       setGain(toId, epIn(t));
-      if(!switched && t>=0.5){
-        switched=true; active=toId; idx=idx+1;
+      if(!_fadeSwitched && t>=0.5){
+        _fadeSwitched=true; active=toId; idx=idx+1;
         setHighlight(nextItem.el||null);
         syncDiashowSlide(nextItem);
       }
@@ -6353,6 +6407,29 @@ const HJChain = (function(){
       else finishFade(fromId,toId);
     }
     requestAnimationFrame(step);
+  }
+
+  // v210: Notfall-Abschluss einer Überblendung beim Wechsel in den Hintergrund.
+  // Bricht die (durch iOS eingefrorene) rAF-Blende ab und schaltet hart auf das
+  // einkommende Deck (toId) um, damit genau EIN Element die Audio-Session weiterhält.
+  function finalizeFadeForBackground(){
+    if(!fadeActive) return;
+    const fromId=_ff, toId=_ft;
+    if(!toId){ fadeActive=false; return; }
+    const nextItem = D[toId].item;
+    if(!_fadeSwitched){
+      _fadeSwitched=true; active=toId; idx=idx+1;
+      setHighlight((nextItem && nextItem.el) || null);
+      if(nextItem) syncDiashowSlide(nextItem);
+    }
+    try{ setGain(fromId, GAIN_FLOOR); }catch(e){}
+    try{ setGain(toId, 1); }catch(e){}
+    try{ D[fromId].audio.pause(); }catch(e){}
+    try{ D[fromId].audio.removeAttribute('src'); }catch(e){}
+    D[fromId].song=null; D[fromId].item=null;
+    try{ if(D[toId].audio.paused) D[toId].audio.play().catch(()=>{}); }catch(e){}
+    try{ setGain(fromId, 1); }catch(e){}
+    fadeActive=false; _ff=null; _ft=null; _fadeSwitched=false;
   }
   function finishFade(fromId,toId){
     setGain(fromId, GAIN_FLOOR);
@@ -6363,6 +6440,7 @@ const HJChain = (function(){
       setGain(fromId,1);
       D[fromId].song=null; D[fromId].item=null;
       fadeActive=false;
+      _ff=null; _ft=null; _fadeSwitched=false;
     }, ANTI_POP_MS);
   }
 

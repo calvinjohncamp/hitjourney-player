@@ -998,6 +998,61 @@ function clearNativeDeckAudio(id){
 }
 function getActivePlaybackAudio(){return isCpSafeMode()?cpAudio:DECKS[activeDeck].audio;}
 
+/* v78 Sperrbildschirm-Fix (analog zur Homeseite):
+   Bei ausgeschaltetem Display (document.hidden) wird der nächste Song NICHT per
+   requestAnimationFrame-Crossfade oder setInterval-Watcher gestartet (beides friert iOS
+   im Lock Screen ein), sondern direkt auf DEM GERADE SPIELENDEN Audio-Element fortgesetzt
+   (src-Tausch + play()), damit die iOS-Audio-Session erhalten bleibt und die Wiedergabe
+   im Hintergrund wie bei Spotify/Amazon durchläuft. Im Vordergrund bleibt der weiche
+   Crossfade unverändert erhalten. */
+function isBgHidden(){ try{ return document.hidden===true; }catch(e){ return false; } }
+
+function djSetMeta(song){
+  if(!song || !('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: song.title || 'HitJourney DJ',
+      artist: song.artist || 'BRO · Jörn Kämper',
+      album: 'HitJourney DJ',
+      artwork: [{src: song.cover || '', sizes:'512x512', type:'image/jpeg'}]
+    });
+  }catch(e){}
+}
+
+// Weiterschalten im Hintergrund: dasselbe (gerade spielende) Element wiederverwenden.
+function doBackgroundNext(){
+  _fadeActive=false; // evtl. durch iOS „eingefrorene" Blende verwerfen
+  const cueId=other(activeDeck);
+  let nextSong=null;
+  if(DECKS[cueId].song) nextSong=DECKS[cueId].song;
+  else if(djQueue.length) nextSong=djQueue.shift();
+  else if(shuffleOn&&ALL_SONGS.length) nextSong=ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)];
+  if(!nextSong) return;
+
+  const a=getActivePlaybackAudio(); // Element, das die iOS-Audio-Session hält
+  try{ a.src=nextSong.mp3||''; }catch(e){}
+  try{ a.currentTime=0; }catch(e){}
+  try{ a.volume=1; }catch(e){}
+  a.play().catch(()=>{});
+
+  // aktives Deck behalten – nur Song/Anzeige/Metadaten aktualisieren (kein Deckwechsel)
+  const cur=DECKS[activeDeck];
+  const usedCue=(DECKS[cueId].song===nextSong);
+  cur.song=nextSong; cur.playing=true;
+  try{ cur.dt.textContent=nextSong.title||''; cur.da.textContent=nextSong.artist||''; }catch(e){}
+  try{ if(nextSong.cover){ cur.cov.src=nextSong.cover; cur.ph.style.display='none'; } }catch(e){}
+  try{ cur.el.classList.add('is-playing','is-active'); cur.el.classList.remove('is-cued'); }catch(e){}
+
+  // Cue-Deck (anderes Deck) für den nächsten Schritt nachladen
+  if(usedCue){
+    if(djQueue.length){ loadDeck(cueId, djQueue.shift()); }
+    else if(shuffleOn&&ALL_SONGS.length){ loadDeck(cueId, ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]); }
+    else { DECKS[cueId].song=null; }
+  }
+  try{ renderQueue(); }catch(e){}
+  djSetMeta(nextSong);
+}
+
 /* v61 CarPlay-Safe-Test:
    WebAudio/AudioContext ist hier bewusst deaktiviert.
    Grund: Apple CarPlay produziert bei der DJ-Funktion sofort digitale Störgeräusche,
@@ -1226,6 +1281,7 @@ async function playDeck(id){
   }
   d.el.classList.add('is-playing');d.el.classList.remove('is-cued');
   icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+  try{ djSetMeta(d.song); }catch(e){}
 }
 function pauseDeck(id){
   if(isCpSafeMode()&&id===activeDeck){try{cpAudio.pause();}catch(e){}}
@@ -1248,6 +1304,36 @@ const AUTO_FADE_LEAD=8; // v59: passend zur 5s-Blende, mit genug Luft fürs weic
 const ANTI_POP_MS=240; // v58: Mini-Stummschleuse vor pause()/src-Wechsel gegen AirPods-Ploppen
 const GAIN_FLOOR=0.0001; // nicht hart 0, sondern unhörbar knapp darüber
 const btnFadeEl=document.getElementById('btnFade');
+
+// v78: Referenzen der laufenden Überblendung, damit eine Blende beim Wechsel in den
+// Hintergrund sauber abgeschlossen werden kann (iOS friert sonst die rAF-Blende ein).
+let _djFadeFrom=null,_djFadeTo=null,_djFadeUiSwitched=false;
+function djFinalizeFadeForBackground(){
+  if(!_fadeActive) return;
+  const fromId=_djFadeFrom, toId=_djFadeTo;
+  if(!toId){ _fadeActive=false; return; }
+  if(!_djFadeUiSwitched){
+    _djFadeUiSwitched=true;
+    activeDeck=toId;
+    try{ DECKS[toId].el.classList.add('is-active','is-playing'); DECKS[toId].el.classList.remove('is-cued'); }catch(e){}
+    try{ DECKS[fromId].el.classList.remove('is-active','is-playing','is-fading-out'); DECKS[fromId].el.classList.add('is-cued'); }catch(e){}
+  }
+  try{ setDeckGain(toId,1); restoreDeckGain(toId); }catch(e){}
+  try{ setDeckGain(fromId,GAIN_FLOOR); }catch(e){}
+  try{ DECKS[fromId].audio.pause(); }catch(e){}
+  try{ DECKS[fromId].audio.removeAttribute('src'); }catch(e){}
+  DECKS[fromId].playing=false; DECKS[fromId].song=null;
+  try{ if(DECKS[toId].audio.paused) DECKS[toId].audio.play().catch(()=>{}); }catch(e){}
+  DECKS[toId].playing=true;
+  try{ setDeckGain(fromId,1); }catch(e){}
+  try{ djSetMeta(DECKS[toId].song); }catch(e){}
+  _fadeActive=false; _djFadeFrom=null; _djFadeTo=null; _djFadeUiSwitched=false;
+}
+try{
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden && _fadeActive) djFinalizeFadeForBackground();
+  });
+}catch(e){}
 
 
 /* v77 iPhone-Lockscreen-Safe-Mode:
@@ -1298,6 +1384,7 @@ async function doDirectNext(auto=false){
     cpAudio.play().catch(()=>{});
     cur.playing=true;
     icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+    try{ djSetMeta(nextSong); }catch(e){}
 
     if(djQueue.length){
       loadDeck(cueId,djQueue.shift());
@@ -1338,6 +1425,7 @@ async function doDirectNext(auto=false){
   if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>{});
   toDeck.playing=true;
   icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+  try{ djSetMeta(toDeck.song); }catch(e){}
 
   const freeDeck=fromId;
   if(djQueue.length){
@@ -1366,6 +1454,7 @@ async function doFade(auto=false){
   _fadeActive=true;
 
   const fromId=activeDeck;
+  _djFadeFrom=fromId; _djFadeTo=nxt; _djFadeUiSwitched=false;
   const fromDeck=DECKS[fromId];
   const toDeck=DECKS[nxt];
   fromDeck.el.classList.add('is-fading-out');
@@ -1411,6 +1500,7 @@ async function doFade(auto=false){
           DECKS[freeDeck].el.classList.add('is-cued');
         }
         _fadeActive=false;
+        _djFadeFrom=null; _djFadeTo=null; _djFadeUiSwitched=false;
       },80);
     },ANTI_POP_MS);
   }
@@ -1425,10 +1515,12 @@ async function doFade(auto=false){
     // UI switch at midpoint — only visual, never touch audio
     if(!uiSwitched && t>=0.5){
       uiSwitched=true;
+      _djFadeUiSwitched=true;
       activeDeck=nxt;
       toDeck.el.classList.add('is-active');toDeck.el.classList.remove('is-cued');
       fromDeck.el.classList.remove('is-active');fromDeck.el.classList.add('is-cued');
       icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
+      try{ djSetMeta(toDeck.song); }catch(e){}
     }
 
     if(t<1){requestAnimationFrame(step);} else {finishFade();}
@@ -1436,6 +1528,7 @@ async function doFade(auto=false){
   requestAnimationFrame(step);
 }
 function autoAdvance(){
+  if(isBgHidden()){ doBackgroundNext(); return; } // Display aus → sicher auf demselben Element weiter
   if(carPlayMode){doDirectNext(true);return;}
   const nxt=other(activeDeck),d=DECKS[nxt];
   if(d.song){doFade(true);return;}
@@ -1460,7 +1553,7 @@ setInterval(()=>{
   updateTonearm('A');
   updateTonearm('B');
   // v59 Auto-crossfade trigger: passend zur 5s-Blende mit weicher Anti-Popp-Endphase
-  if(!carPlayMode&&!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
+  if(!isBgHidden()&&!carPlayMode&&!_fadeActive&&!_autoFadeScheduled&&rem<=AUTO_FADE_LEAD&&rem>0&&DECKS[activeDeck].playing){
     _autoFadeScheduled=true;
     const nxt=other(activeDeck);
     if(!DECKS[nxt].song&&djQueue.length){loadDeck(nxt,djQueue.shift());renderQueue();}
