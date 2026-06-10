@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v213-iphone-home-exact-ended-direct-next -->
 <!-- Version: v212-home-lyrics-info-red-dot -->
 <!-- Version: v210-tablet-desktop-header-branding-balanced -->
 <!-- Version: v211-logo-dot-proportion-real-fix -->
@@ -6154,6 +6155,7 @@ function renderHomeLayout(){
    • Eigene Audio-Elemente (#hjChainA/#hjChainB) – #hjAudio und dj.html bleiben
      unberührt. iPhone: WebAudio-Gain-Fade (iOS ignoriert audio.volume),
      Desktop/iPad: audio.volume-Fallback (Parität zum DJ).
+     iPhone ab v213: kein vorgezogener Auto-Fade mehr; Wechsel erst beim ended-Event.
    ═══════════════════════════════════════════════════════════════════════ */
 const HJChain = (function(){
   const FADE_TOTAL = 5000;   // identisch zum DJ
@@ -6294,10 +6296,10 @@ const HJChain = (function(){
       if(!a || !isFinite(a.duration) || a.duration<=0) return;
       const rem=a.duration - a.currentTime;
       const hasNext=chain.length>1;   // v211: am Listenende weicher Crossfade in den ersten Song (Wrap)
-      // Im Hintergrund (Display aus) KEIN vorgezogener Crossfade über den gedrosselten
-      // setInterval-Watcher – dort übernimmt ausschließlich das 'ended'-Event
-      // (advanceNext → directNextSameElement) am exakten Songende.
-      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD && !isBgHidden()) crossfadeNext();
+      // Im Hintergrund (Display aus) UND auf iPhone KEIN vorgezogener Wechsel über den
+      // setInterval-Watcher. iPhone soll den Song vollständig bis zum 'ended'-Event spielen;
+      // erst dann folgt der nächste Titel direkt. Desktop/iPad behalten den weichen Crossfade.
+      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD && !isBgHidden() && !isPhone()) crossfadeNext();
     }, 300);
   }
   function stopWatcher(){ if(watchTimer){ clearInterval(watchTimer); watchTimer=null; } }
@@ -6337,7 +6339,7 @@ const HJChain = (function(){
     if(!running || fadeActive) return;
     if(!chain.length){ stop(); return; }   // v211: kein Stop am Listenende mehr → Endlos-Loop
     if(isBgHidden()) directNextSameElement();
-    else if(isPhone()) directNext();
+    else if(isPhone()) directNextSameElement(); // v213: iPhone erst nach Songende, dann sicher auf demselben Audio-Element weiter
     else crossfadeNext();
   }
 
