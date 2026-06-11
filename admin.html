@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260611-album-title-edit-order-save-fix -->
+<!-- Version: admin-v20260611-album-order-delete-insert-duplicate-safe -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet">
@@ -9181,7 +9181,15 @@ async function addToAlbum(albumSlug, songSlug){
     const card = document.getElementById('album-'+albumSlug);
     if(card) card.querySelector('.album-meta').textContent = al.tracks.length+' Songs';
     toast('Song hinzugefügt');
-  } catch(e){ toast('Fehler: '+e.message,'err'); }
+  } catch(e){
+    const msg = String(e.message||'');
+    if(msg.includes('23505') || msg.toLowerCase().includes('duplicate key')){
+      toast('Song ist bereits im Album');
+      try{ await loadPlaylists(); }catch(_e){}
+      return;
+    }
+    toast('Fehler: '+msg,'err');
+  }
 }
 
 async function removeFromAlbum(albumSlug, songSlug){
@@ -9267,26 +9275,33 @@ async function saveOrder(albumSlug){
   const btn = document.getElementById('savesort-'+albumSlug);
   if(btn){ btn.textContent='Speichere …'; btn.disabled=true; }
   try{
-    // Lokale Reihenfolge sofort eindeutig setzen
-    const newOrder = rows.map((row,idx)=>({song_slug:row.dataset.slug, playlist_slug:albumSlug, position:idx+1}));
-    al.tracks = newOrder.map(x=>({...x}));
-    rows.forEach((row,idx)=>{
-      const numCell = row.querySelector('.td-num');
-      if(numCell) numCell.textContent = idx+1;
+    // Reihenfolge aus der sichtbaren Tabelle lesen und doppelte Slugs sicher entfernen.
+    // Das vermeidet den Supabase-Fehler 23505, falls ein Song durch Reload/Altbestand doppelt im UI landet.
+    const seen = new Set();
+    const newOrder = [];
+    rows.forEach(row=>{
+      const songSlug = row.dataset.slug;
+      if(songSlug && !seen.has(songSlug)){
+        seen.add(songSlug);
+        newOrder.push({playlist_slug:albumSlug, song_slug:songSlug, position:newOrder.length+1});
+      }
     });
+    if(!newOrder.length) throw new Error('Keine Songs zum Speichern gefunden');
 
-    // Wichtig: jeden PATCH prüfen. Vorher wurde nicht kontrolliert, ob einzelne Updates wirklich angenommen wurden.
-    for(const item of newOrder){
-      const url = SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+encodeURIComponent(albumSlug)+'&song_slug=eq.'+encodeURIComponent(item.song_slug)+'&apikey='+SB_KEY;
-      const r = await fetch(url, {
-        method:'PATCH',
-        headers:{...hdrsMin(),'Prefer':'return=minimal'},
-        body:JSON.stringify({position:item.position})
-      });
-      if(!r.ok) throw new Error(await r.text());
-    }
+    // Robusteste Variante: Album-Zuordnung komplett neu schreiben.
+    // Dadurch wird nicht gepatcht/dupliziert, sondern die Reihenfolge exakt so gespeichert, wie sie im Admin sichtbar ist.
+    const delUrl = SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+encodeURIComponent(albumSlug)+'&apikey='+SB_KEY;
+    const del = await fetch(delUrl, {method:'DELETE', headers:{...hdrsMin(),'Prefer':'return=minimal'}});
+    if(!del.ok) throw new Error(await del.text());
 
-    // Sichtbare Liste aus den aktualisierten lokalen Daten neu zeichnen.
+    const ins = await fetch(sbUrl('/rest/v1/playlist_tracks'), {
+      method:'POST',
+      headers:{...hdrsMin(),'Prefer':'return=minimal'},
+      body:JSON.stringify(newOrder)
+    });
+    if(!ins.ok) throw new Error(await ins.text());
+
+    al.tracks = newOrder.map(x=>({...x}));
     document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
     initDragSort(albumSlug);
     toast('Reihenfolge gespeichert ✓');
@@ -9294,6 +9309,8 @@ async function saveOrder(albumSlug){
   } catch(e){
     toast('Fehler beim Speichern der Reihenfolge: '+e.message,'err');
     if(btn){ btn.textContent='✓ Reihenfolge speichern'; btn.disabled=false; }
+    // Daten nach Fehler neu laden, damit der Admin nicht mit einem Zwischenstand weiterarbeitet.
+    try{ await loadPlaylists(); }catch(_e){}
   }
 }
 
