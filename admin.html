@@ -7,6 +7,7 @@
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260528-dj-subpage-link -->
 <!-- Version: admin-v20260529i-silbertablett-song-drag-reorder -->
+<!-- Version: admin-v20260611-cell-arrows-always-visible -->
 <!-- Version: admin-v20260528b-free-fullwidth-teaser -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -427,6 +428,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-act{width:18px;height:18px;border-radius:3px;border:none;cursor:pointer;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .he-cell-act.mov{background:rgba(133,172,201,.2);color:#85ACC9}
 .he-cell-act.mov:hover{background:rgba(133,172,201,.45);color:#cfe5f5}
+.he-cell-act.mov:disabled{opacity:.22;cursor:default}
+.he-cell-act.mov:disabled:hover{background:rgba(133,172,201,.2);color:#85ACC9}
 .he-cell-act.edt{background:rgba(133,172,201,.3);color:#cfe5f5}
 .he-cell-act.edt:hover{background:rgba(133,172,201,.55)}
 .he-cell-act.rem{background:rgba(220,80,80,.3);color:#f08080}
@@ -9675,6 +9678,17 @@ function rowIsFullyFilled(row){
 }
 
 /* ── Reorder cells within a row ── */
+// Liefert die Indizes der verschiebbaren (befüllten, sichtbaren) Zellen einer Zeile.
+// Gleiche Logik wie in moveCellInRow → die Pfeile entsprechen exakt den möglichen Swaps.
+function rowMovableCellIdxs(row){
+  if(!row || !row.cells) return [];
+  const isFilled = c => !!(c.imageUrl || c.bgUrl || (c.type==='slideshow' && c.slides && c.slides.length>0));
+  return row.cells.map((c,i)=>i).filter(i => {
+    const c = row.cells[i];
+    return c.type !== 'hidden' && c.type !== 'empty' && isFilled(c);
+  });
+}
+
 function moveCellInRow(rowId, cellIdx, dir){
   const row = rowById(rowId);
   if(!row) return;
@@ -9981,9 +9995,17 @@ function buildCell(row, cellIdx, extraClass, editing){
         el.appendChild(lblDe);
         el.appendChild(lblEn);
       } else {
+        // Dauerhaft sichtbare Links/Rechts-Pfeile zum Umsortieren von Songs/Alben
+        // innerhalb des Streifens — auch ohne die Zeile in den Edit-Modus zu schalten.
+        const movIdxs = rowMovableCellIdxs(row);
+        const movPos  = movIdxs.indexOf(cellIdx);
+        const canMove = movIdxs.length > 1 && movPos !== -1;
+        const arrowsHtml = canMove ? `
+            <button class="he-cell-act mov" ${movPos===0?'disabled':''} onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},-1)" title="Nach links">←</button>
+            <button class="he-cell-act mov" ${movPos===movIdxs.length-1?'disabled':''} onclick="event.stopPropagation();moveCellInRow('${row.id}',${cellIdx},1)" title="Nach rechts">→</button>` : '';
         ov.innerHTML = `
           <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
-          <div class="he-cell-acts">
+          <div class="he-cell-acts">${arrowsHtml}
             <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
             ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
           </div>`;
