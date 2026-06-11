@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v216-home-info-button-restored -->
 <!-- Version: v214-album-signature-cover-lyrics-button -->
 <!-- Version: v212-home-lyrics-info-red-dot -->
 <!-- Version: v210-tablet-desktop-header-branding-balanced -->
@@ -262,22 +263,37 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   width:43px;
   height:43px;
   border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);
-  background:#C90019;
-  color:#C90019;
+  border:1.5px solid rgba(133,172,201,.72);
+  background:rgba(6,20,32,.35);
+  color:#85ACC9;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 6px 20px rgba(0,0,0,.38),0 0 0 1px rgba(0,0,0,.14) inset;
+  box-shadow:0 5px 18px rgba(0,0,0,.24),0 0 0 1px rgba(133,172,201,.08) inset;
   cursor:pointer;
-  transition:background .15s,transform .1s,box-shadow .15s;
+  transition:background .15s,transform .1s,box-shadow .15s,border-color .15s,color .15s;
   padding:0;
   overflow:hidden;
 }
 
-.home-info-i{display:none!important}
+.home-info-i{
+  display:block!important;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  font-size:19px;
+  line-height:1;
+  font-weight:600;
+  font-style:normal;
+  color:#85ACC9;
+  transform:translateY(-1px);
+}
 .home-info-btn:active{transform:scale(.9)}
-.home-info-btn:hover{background:#E0001C;box-shadow:0 7px 24px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.18) inset}
+.home-info-btn:hover{
+  background:rgba(133,172,201,.08);
+  border-color:rgba(207,229,245,.82);
+  color:#cfe5f5;
+  box-shadow:0 6px 20px rgba(0,0,0,.30),0 0 0 1px rgba(207,229,245,.10) inset;
+}
+.home-info-btn:hover .home-info-i{color:#cfe5f5}
 @media(min-width:900px){
   .home-info-footer{padding-left:32px;padding-right:32px}
 }
@@ -2980,7 +2996,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 </div>
 </div>
 <footer class="home-info-footer" aria-label="Information">
-<button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information"><span class="home-info-i" aria-hidden="true"></span></button>
+<button class="home-info-btn" id="homeInfoBtn" type="button" aria-label="Information / Impressum"><span class="home-info-i" aria-hidden="true">i</span></button>
 </footer>
 </div>
 
