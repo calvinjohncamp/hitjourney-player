@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
-<!-- Version: v213-iphone-home-exact-ended-direct-next -->
+<!-- Version: v214-album-signature-cover-lyrics-button -->
 <!-- Version: v212-home-lyrics-info-red-dot -->
 <!-- Version: v210-tablet-desktop-header-branding-balanced -->
 <!-- Version: v211-logo-dot-proportion-real-fix -->
@@ -560,6 +560,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   content:'';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);
   width:4px;height:4px;border-radius:50%;background:#85ACC9;
 }
+.tl-signature-btn{
+  flex:0 0 auto;border-radius:50%;border:1px solid rgba(255,255,255,.14);
+  background:#C90019;color:#C90019;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.38),0 0 0 1px rgba(0,0,0,.14) inset;
+  transition:background .15s,transform .12s ease,box-shadow .15s,opacity .15s;
+}
+.tl-signature-btn:active{transform:scale(.91);opacity:.85}
+.tl-signature-btn:hover{background:#E0001C;box-shadow:0 7px 24px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.18) inset}
+.hj-chain-view.player-visible{z-index:190;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 126px)}
 
 /* tl-icon-group — Würfel + Repeat immer als fester Block nebeneinander */
 .tl-icon-group{
@@ -612,6 +621,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     margin:0;transform:none;
   }
   .tl-repeat-btn svg{width:24px;height:24px;}
+  .tl-signature-btn{width:72px;height:72px;flex:0 0 72px;margin:0;}
 }
 
 /* ══ iPad (≥600px) ══
@@ -681,6 +691,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     transform:none;
   }
   .tl-repeat-btn svg{width:25px;height:25px;}
+  .tl-signature-btn{
+    width:82px;height:82px;
+    margin-top:94px;
+    transform:none;
+  }
 }
 
 
@@ -3822,6 +3837,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <svg viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
       <span class="tl-repeat-one-label">1</span>
     </button>
+    <button aria-label="Cover und Lyrics des laufenden Songs anzeigen" class="tl-signature-btn" id="tlSignatureBtn" type="button"></button>
   </div>
 </div>
 </div>
@@ -4024,12 +4040,13 @@ async function loadFromSupabase() {
         songs: []
       };
     }
-    ALBUMS[info.key].songs.push(song);
+    ALBUMS[info.key].songs.push({...song, _position:Number(row.position)||0});
   });
 
   // Meta für dynamische Alben nach tatsächlicher Songzahl setzen und leere Einträge entfernen
   Object.keys(ALBUMS).forEach(k => {
     if (!ALBUMS[k] || !ALBUMS[k].songs || !ALBUMS[k].songs.length) { delete ALBUMS[k]; return; }
+    ALBUMS[k].songs.sort((a,b)=>(Number(a._position)||0)-(Number(b._position)||0));
     if(!ALBUMS[k].meta) ALBUMS[k].meta = ALBUMS[k].songs.length + ' Songs';
   });
 
@@ -4086,6 +4103,7 @@ const btnNext      = document.getElementById('btnNext');
 const btnShuffle   = document.getElementById('btnShuffle');
 const btnRepeat    = document.getElementById('btnRepeat');
 const tlRepeatBtn  = document.getElementById('tlRepeatBtn');
+const tlSignatureBtn = document.getElementById('tlSignatureBtn');
 // Now Playing screen
 const npCover      = document.getElementById('npCover');
 const npTitle      = document.getElementById('npTitle');
@@ -4514,7 +4532,7 @@ function hjOpenChainViewer(song, item){
 function hjCloseChainViewer(){
   const els = hjGetChainViewerEls();
   if(!els.box) return;
-  els.box.classList.remove('active','fullsheet');
+  els.box.classList.remove('active','fullsheet','player-visible');
   els.box.setAttribute('aria-hidden','true');
   if(els.img) els.img.removeAttribute('src');
   hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null };
@@ -5200,6 +5218,28 @@ if(homeInfoBtn) homeInfoBtn.addEventListener('click',showAbout);
 }
 
 // nowStrip tap → showNowPlaying handled in swipe block below
+function getCurrentAlbumSignatureSong(){
+  if(!curAlbum || !ALBUMS[curAlbum] || queueIdx < 0 || !queue || !queue.length) return null;
+  const idx = queue[queueIdx];
+  return ALBUMS[curAlbum].songs[idx] || null;
+}
+function toggleAlbumSignatureView(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  const song = getCurrentAlbumSignatureSong();
+  if(!song){ return; }
+  const els = hjGetChainViewerEls();
+  if(!els.box) return;
+  // 1. Klick: aktuelles Song-Cover, 2. Klick: Lyrics, 3. Klick: Anzeige schließen.
+  // Der untere Player bleibt sichtbar, weil dieser Viewer unterhalb der Player-Bar gepolstert wird.
+  if(!hjChainViewState.open || hjChainViewState.song !== song){
+    hjOpenChainViewer(song, {song});
+    els.box.classList.add('player-visible');
+    return;
+  }
+  els.box.classList.add('player-visible');
+  hjAdvanceChainViewer();
+}
+if(tlSignatureBtn) tlSignatureBtn.addEventListener('click', toggleAlbumSignatureView);
 npDownBtn.addEventListener('click', hideNowPlaying);
 
 // ── Now Playing screen update ──
@@ -8007,7 +8047,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v162-home-top-teaser-toggle-no-player-20260522';
+  const VERSION = 'v214-album-signature-cover-lyrics-button-20260611';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
