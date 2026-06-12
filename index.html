@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v246-album-tonearm-ios-inline-transform-cover-spin-fix -->
 <!-- Version: v245-album-bottom-strip-removed-tonearm-animated -->
 <!-- Version: v244-album-ipad-app-branding-up-only -->
 <!-- Version: v241-album-ipad-landscape-branding-up -->
@@ -3785,6 +3786,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
+/* v246: Platten-Drehung geräteunabhängig sicherstellen.
+   1. @keyframes coverSpin global definieren — bisher existierte die Definition
+      nur innerhalb von @media (min-width:600px); auf dem iPhone fehlte sie komplett.
+   2. iOS-Compositing-Hinweise: eigener Layer für den drehenden Innenteil und
+      stabiler runder Beschnitt — verhindert das bekannte Einfrieren von
+      Animationen in border-radius/overflow:hidden-Containern auf iPadOS. */
+@keyframes coverSpin{to{transform:rotate(360deg)}}
+.tl-deck .deck-cover-wrap{-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translateZ(0)}
+.tl-deck .deck-cover-inner{will-change:transform}
+
 /* v245: Player-Bar auf der Albumseite zusätzlich per JS-Klasse verstecken.
    Bisher hing das Ausblenden allein an body:has(...) — falls der Browser
    :has() nicht unterstützt, blieb die leere Bar als dunkler Streifen
@@ -6657,7 +6668,15 @@ function syncTlRepeatBtn(){
 const ALBUM_TONEARM_START_DEG = -9.5;
 const ALBUM_TONEARM_END_DEG = 29.0;
 const ALBUM_TONEARM_RETURN_SECS = 2;
+const tlDeckTonearmImg = document.getElementById('tlDeckTonearm');
 let albumArmReturning = false;
+// v246: Rotation zusätzlich direkt als Inline-Transform auf das Arm-Bild schreiben.
+// iOS/iPadOS wertet vererbte CSS-Variablen in transform nicht zuverlässig neu aus —
+// der Inline-Stil umgeht das; die CSS-Transition am Element bleibt dabei wirksam.
+function setAlbumArmRot(deg){
+  tlDeck.style.setProperty('--arm-rot', deg + 'deg');
+  if(tlDeckTonearmImg) tlDeckTonearmImg.style.transform = 'rotate(' + deg + 'deg)';
+}
 function updateAlbumDeckTonearm(){
   if(!tlDeck) return;
   if(!audio.duration || !isFinite(audio.duration) || !isFinite(audio.currentTime)) return;
@@ -6666,7 +6685,7 @@ function updateAlbumDeckTonearm(){
     if(!albumArmReturning){
       albumArmReturning = true;
       tlDeck.classList.add('arm-returning');
-      tlDeck.style.setProperty('--arm-rot', ALBUM_TONEARM_START_DEG + 'deg');
+      setAlbumArmRot(ALBUM_TONEARM_START_DEG);
     }
     return;
   }
@@ -6677,8 +6696,33 @@ function updateAlbumDeckTonearm(){
   const innerDur = Math.max(audio.duration - ALBUM_TONEARM_RETURN_SECS, 0.001);
   const p = Math.max(0, Math.min(audio.currentTime / innerDur, 1));
   const rot = ALBUM_TONEARM_START_DEG + (ALBUM_TONEARM_END_DEG - ALBUM_TONEARM_START_DEG) * p;
-  tlDeck.style.setProperty('--arm-rot', rot.toFixed(3) + 'deg');
+  setAlbumArmRot(rot.toFixed(3));
 }
+// v246: eigener Taktgeber — falls timeupdate auf iOS gedrosselt wird oder ausbleibt,
+// führt dieses Intervall den Arm trotzdem alle 300ms nach (no-op ohne geladenen Song).
+setInterval(updateAlbumDeckTonearm, 300);
+
+// v246: Watchdog für die Platten-Drehung — iPadOS friert CSS-Animationen nach
+// App-Wechsel/Standby gelegentlich ein. Steht das Cover trotz laufender Wiedergabe
+// still, wird die Animation einmal hart neu gestartet.
+let _coverLastTransform = '', _coverStuck = 0;
+setInterval(()=>{
+  if(!tlDeck || !tlDeck.classList.contains('is-playing')){ _coverLastTransform=''; _coverStuck=0; return; }
+  const inner = tlDeck.querySelector('.deck-cover-inner');
+  if(!inner) return;
+  const t = getComputedStyle(inner).transform;
+  if(t === _coverLastTransform){
+    if(++_coverStuck >= 2){
+      inner.style.animation = 'none';
+      void inner.offsetWidth; // Reflow erzwingen, damit der Neustart greift
+      inner.style.animation = '';
+      _coverStuck = 0;
+    }
+  } else {
+    _coverStuck = 0;
+  }
+  _coverLastTransform = t;
+}, 1500);
 
 // ── Audio events ──
 audio.addEventListener('play', updatePlayBtns);
