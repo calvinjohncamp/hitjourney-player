@@ -3181,6 +3181,76 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-abc-btn{font-size:14px!important}
 }
 
+
+/* ===== v233 album UX polish ===== */
+@media (max-width: 767px) and (orientation: portrait){
+  .tl-top-cover,
+  .tl-deck{
+    transform:scale(.82);
+    transform-origin:top center;
+  }
+  .tl-album-branding{
+    order:3;
+  }
+  .tlList,
+  #tlList{
+    order:2;
+  }
+}
+
+/* iPhone landscape: player smaller, controls vertical */
+@media (max-width: 950px) and (orientation: landscape){
+  .tl-album-layout{
+    grid-template-columns: 36% 90px 1fr !important;
+    gap:14px !important;
+  }
+  .tl-deck{
+    max-width:320px !important;
+    margin:auto;
+  }
+  .tl-album-controls{
+    flex-direction:column !important;
+    justify-content:center !important;
+    gap:12px !important;
+  }
+}
+
+/* iPad portrait */
+@media (min-width:768px) and (max-width:1180px) and (orientation:portrait){
+  .tl-album-branding{
+    margin-top:auto !important;
+    padding-bottom:8px !important;
+  }
+  .tl-album-controls .tl-control-btn{
+    transform:scale(1.35);
+  }
+  .tl-album-random-btn{
+    transform:scale(1.45);
+  }
+}
+
+/* iPad/Desktop landscape */
+@media (min-width:768px) and (orientation:landscape){
+  .tl-album-branding{
+    position:absolute !important;
+    left:0;
+    right:0;
+    bottom:0;
+  }
+  .tl-deck{
+    max-width:85% !important;
+  }
+  .tl-album-controls{
+    flex-direction:row !important;
+    justify-content:center !important;
+    gap:18px !important;
+    min-height:auto !important;
+  }
+  .tl-album-random-btn{
+    transform:scale(1.18);
+  }
+}
+
 </style>
 </head>
 <body>
