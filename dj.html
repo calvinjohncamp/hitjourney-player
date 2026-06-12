@@ -960,7 +960,7 @@ body.drag-reordering{cursor:grabbing}
   </section>
 
   <section class="dj-controls">
-    <div class="hj-brand" aria-label="hitjourney" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-logo-vert"><img class="hj-logo-vert-img" src="logo-hitjourney.png" alt="hitjourney" draggable="false"></div></div>
+    <div class="hj-brand" aria-label="hitjourney" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-logo-vert"><img class="hj-logo-vert-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"></div></div>
     <div class="dj-btns">
       <button class="round-btn fade" id="btnFade" title="Überblenden"><svg viewBox="0 0 24 24" fill="none" stroke="#06141F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></button>
       <button class="round-btn shuffle" id="btnShuffle" title="Next zufällig mischen"><img src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random.png" onerror="this.style.display='none'" alt=""/></button>
@@ -969,7 +969,7 @@ body.drag-reordering{cursor:grabbing}
         <svg viewBox="0 0 24 24" id="icPlay" style="display:none"><polygon points="6,3 6,21 20,12" fill="#06141F"/></svg>
       </button>
     </div>
-    <div class="hj-brand" aria-label="Making Waves" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-making-vert"><img class="hj-making-vert-img" src="logo-making-waves.png" alt="Making Waves" draggable="false"></div></div>
+    <div class="hj-brand" aria-label="Making Waves" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}"><div class="hj-making-vert"><img class="hj-making-vert-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="Making Waves" draggable="false"></div></div>
   </section>
 
   <section class="panel next-panel" id="colNext"><div class="title-row"><div class="title">Next</div><div class="title-actions"><button class="btn-sort-abc" id="btnSortNext" title="Next alphabetisch sortieren">ABC</button><button class="btn-clear-q" id="btnClearQueue" title="Playlist leeren"><svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div><div class="next-list" id="nextList"><div class="nq-empty" id="nqEmpty"><svg></svg><span>Queue leer<br/>Songs oder Alben hineinziehen</span></div></div></section>
@@ -2010,7 +2010,7 @@ function isMobilePortraitDJ(){return window.matchMedia('(max-width:700px) and (o
 function ensureMobileChrome(){
   if(document.getElementById('mobileBrand'))return;
   const brand=document.createElement('div');brand.id='mobileBrand';brand.className='mobile-brand';
-  brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><img class="mobile-hj-logo-img" src="logo-hitjourney.png" alt="hitjourney" draggable="false"></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home"><img class="mobile-making-img" src="logo-making-waves.png" alt="Making Waves" draggable="false"></div>';
+  brand.innerHTML='<div class="mobile-hj-logo" role="button" tabindex="0" aria-label="hitjourney Home"><img class="mobile-hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"></div><div class="mobile-making" role="button" tabindex="0" aria-label="Making Waves Home"><img class="mobile-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="Making Waves" draggable="false"></div>';
   brand.addEventListener('click',e=>{e.stopPropagation();goHome();});
   brand.addEventListener('pointerup',e=>{e.stopPropagation();goHome();});
   brand.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}});
