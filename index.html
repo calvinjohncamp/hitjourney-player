@@ -12,6 +12,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v248-back-button-home-und-homeplaylist-stopp-bei-unterseiten-song -->
+<!-- Version: v248-back-button-label-home -->
 <!-- Version: v247-album-iphone-branding-under-playlist-landscape-polish -->
 <!-- Version: v246-album-tonearm-ios-inline-transform-cover-spin-fix -->
 <!-- Version: v245-album-bottom-strip-removed-tonearm-animated -->
@@ -3949,7 +3951,7 @@ body.album-open #hjPlayerSpacer{
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
 <svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
-<span>Alben</span>
+<span>HOME</span>
 </div>
 <div class="hj-logo" id="logoHome">
 <img class="hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/>
@@ -6863,6 +6865,14 @@ setInterval(()=>{
 }, 1500);
 
 // ── Audio events ──
+// v248: Startet auf einer Unterseite (Album etc.) ein Song über #hjAudio,
+// wird die Home-Playlist (HJChain, eigene Audio-Elemente A/B) sofort gestoppt —
+// sonst liefen beide Wiedergaben gleichzeitig weiter. Die Gegenrichtung
+// (Chain-Start pausiert #hjAudio) ist in startChain() bereits abgedeckt.
+audio.addEventListener('play', ()=>{
+  // HJChain ist eine top-level const (kein window-Property) → typeof-Check nötig
+  try{ if(typeof HJChain!=='undefined' && HJChain.isRunning()) HJChain.stop(); }catch(e){}
+});
 audio.addEventListener('play', updatePlayBtns);
 audio.addEventListener('pause',updatePlayBtns);
 audio.addEventListener('loadedmetadata',()=>{
