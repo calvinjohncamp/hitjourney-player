@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v243-album-ipad-pwa-bottom-frame-fix -->
 <!-- Version: v242-album-ipad-pwa-safearea-fix -->
 <!-- Version: v241-album-ipad-landscape-branding-up -->
 <!-- Version: v240-album-left-layout-branding-bottom-final -->
@@ -3773,6 +3774,37 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
   .tl-album-branding{
     bottom:calc(var(--sab, 0px) + 18px)!important;
+  }
+}
+
+
+/* ===== v243 Album iPad-PWA Bottom-Frame Fix =====
+   Der echte iPad/Safari-App-Modus zeigt unten manchmal den HTML/Body-Hintergrund
+   wie eine zweite Menüleiste. Deshalb füllt die Album-Seite wieder die komplette
+   verfügbare Höhe; nur das Branding wird oberhalb der Safe-Area positioniert.
+   Controls bleiben unverändert. */
+@media (min-width:900px) and (max-width:1400px) and (orientation:landscape){
+  html:has(#screenTracklist.active),
+  body:has(#screenTracklist.active){
+    background:#071826!important;
+  }
+
+  #screenTracklist.active{
+    height:var(--screen-h, calc(100dvh - 60px))!important;
+    max-height:var(--screen-h, calc(100dvh - 60px))!important;
+    padding-bottom:0!important;
+    background:#071826!important;
+  }
+
+  #tlLeftCol,
+  #tlRightCol{
+    height:100%!important;
+    max-height:100%!important;
+    min-height:0!important;
+  }
+
+  .tl-album-branding{
+    bottom:calc(var(--sab, 0px) + 30px)!important;
   }
 }
 
