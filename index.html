@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v244-album-ipad-app-branding-up-only -->
 <!-- Version: v241-album-ipad-landscape-branding-up -->
 <!-- Version: v240-album-left-layout-branding-bottom-final -->
 <!-- Version: v239-album-branding-bottom-scroll-fix -->
@@ -3762,7 +3763,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   </svg>
   <div style="color:#85ACC9;font-family:sans-serif;font-size:.9rem;letter-spacing:.08em">loading songs …</div>
 </div>
-<style>@keyframes hjSpin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes hjSpin{to{transform:rotate(360deg)}}
+
+/* ===== v244 Album: iPad-App-Feinschliff nur Branding =====
+   Basis ist die bisher beste v241-Version. Keine Änderung an Deck, Buttons
+   oder Playlist. Nur das Branding im echten iPad-Querformat weiter aus der
+   unteren App-/Safe-Area-Zone nach oben ziehen. */
+@media (min-width:900px) and (orientation:landscape) and (hover:none) and (pointer:coarse){
+  .tl-album-branding{
+    bottom:50px!important;
+  }
+}
+
+@media (min-width:900px) and (orientation:landscape) and (hover:none) and (pointer:coarse) and (max-height:760px){
+  .tl-album-branding{
+    bottom:48px!important;
+  }
+}
+</style>
 <!-- Header -->
 <div class="hj-header" id="mainHeader">
 <div class="hj-back-btn" id="backBtn">
