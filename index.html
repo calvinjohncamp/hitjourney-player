@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v229-album-click-fix -->
 <!-- Version: v228-album-dj-deck-conservative -->
 <!-- Version: v216-home-info-button-restored -->
 <!-- Version: v214-album-signature-cover-lyrics-button -->
@@ -4906,7 +4907,12 @@ function showAlbum(key){
   const alb=ALBUMS[key];
   if(!alb || !alb.songs || !alb.songs.length){ console.warn('[hitjourney] Album nicht gefunden:', key); return; }
   curAlbum=key;
-  setImgSrcWithFallback(tlCover, [alb.cover]); tlTitle.textContent=alb.title; tlMeta.textContent=alb.meta;
+  if(tlCover) setImgSrcWithFallback(tlCover, [alb.cover]);
+  if(tlTitle) tlTitle.textContent=alb.title;
+  if(tlMeta) tlMeta.textContent=alb.meta;
+  if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, [alb.cover]);
+  if(tlDeckTitle) tlDeckTitle.textContent=alb.title||'';
+  if(tlDeckArtist) tlDeckArtist.textContent=alb.meta||'';
   if(!tlOriginalOrders[key]) tlOriginalOrders[key]=alb.songs.slice();
   const songsForView = tlAlbumAlpha ? alb.songs.slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'})) : tlOriginalOrders[key].slice();
   alb.songs = songsForView;
@@ -5655,6 +5661,12 @@ npCoverWrap.addEventListener('touchend',e=>{
 npBtnPlay.addEventListener('click',()=>btnPlay.click());
 npBtnPrev.addEventListener('click',()=>btnPrev.click());
 npBtnNext.addEventListener('click',()=>btnNext.click());
+// v229: Album-Deck-Controls auf bestehende stabile Player-Buttons mappen
+if(tlDeckPlayBtn) tlDeckPlayBtn.addEventListener('click',()=>btnPlay.click());
+if(tlDeckPrevBtn) tlDeckPrevBtn.addEventListener('click',()=>btnPrev.click());
+if(tlDeckNextBtn) tlDeckNextBtn.addEventListener('click',()=>btnNext.click());
+if(tlDeckABCBtn) tlDeckABCBtn.addEventListener('click',()=>{ tlAlbumAlpha=!tlAlbumAlpha; tlDeckABCBtn.classList.toggle('active',tlAlbumAlpha); if(curAlbum) showAlbum(curAlbum); });
+if(tlDeckSignatureBtn) tlDeckSignatureBtn.addEventListener('click', toggleAlbumSignatureView);
 npBtnShuffle.addEventListener('click',()=>btnShuffle.click());
 npBtnRepeat.addEventListener('click',()=>btnRepeat.click());
 const npProgWrap = document.getElementById('npProgWrap');
@@ -7659,6 +7671,24 @@ function wireHomeGrid(grid){
     archiveCard.addEventListener('click', showArchive);
   }
 }
+
+
+// v229: robuste Album-Klickbindung per Delegation, falls eine Kachel durch dynamisches Rendering
+// oder alte _wired-Flags keinen eigenen Listener bekommen hat.
+(function(){
+  const grid = document.getElementById('homeGrid');
+  if(!grid || grid._albumDelegationV229) return;
+  grid._albumDelegationV229 = true;
+  grid.addEventListener('click', function(e){
+    const card = e.target && e.target.closest ? e.target.closest('[data-album]') : null;
+    if(!card || !grid.contains(card)) return;
+    const key = card.dataset.album;
+    if(key && ALBUMS && ALBUMS[key]){
+      e.preventDefault();
+      showAlbum(key);
+    }
+  }, true);
+})();
 
 /* ── Fallback HTML (original hardcoded look) ── */
 function getFallbackHomeHTML(){
