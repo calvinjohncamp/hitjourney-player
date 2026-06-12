@@ -4,14 +4,9 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>hitjourney · Mr. DJ</title>
-<!-- Version v81: Branding-Assets wieder absolute GitHub-URLs -->
 <link rel="apple-touch-icon" sizes="180x180" href="icon-20260608.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
-<!-- Version v80: Deck-Text 150 Prozent groesser -->
-<!-- Version v80: Deck-Text-Platzierung luftiger -->
-<!-- Version v80: Album-Player Paket v220; DJ-Ansicht unverändert -->
-<!-- Version v80: Album-Player v221 Paket -->
 <!-- Version v79: iPad-Hochformat-Funktionsbuttons mehr Abstand -->
 <!-- Version v78: iPad-Querformat-Funktionsbuttons optisch hoeher gesetzt -->
 <!-- Version v77: iPhone-Lockscreen-Safe-Mode startet automatisch im Direkt-Audio-Modus -->
@@ -803,30 +798,6 @@ body.drag-reordering{cursor:grabbing}
     transform:translateY(-30px)!important;
   }
 }
-
-/* v80: Songtitel und Artist im Deck um 150% groesser */
-.deck-title{font-size:clamp(15px,1.245vw,24px)!important}
-.deck-artist{font-size:clamp(12px,.96vw,18px)!important}
-@media (orientation:portrait) and (hover:none) and (pointer:coarse), (max-width:700px) and (orientation:portrait){.deck-title{font-size:15px!important}.deck-artist{font-size:12px!important}}
-
-
-/* v80: Songtitel/Artist im Plattenspieler luftiger platziert */
-.deck-info{left:5.4%!important;bottom:5.0%!important;right:22%!important;}
-.deck-title{font-size:clamp(15px,1.25vw,24px)!important;line-height:1.08!important;}
-.deck-artist{font-size:clamp(12px,.96vw,18px)!important;line-height:1.08!important;}
-@media (max-aspect-ratio: 1.55/1){
-  .deck-info{left:5.4%!important;bottom:5.0%!important;right:22%!important;}
-}
-
-
-
-/* v81 Safety Net: DJ-Branding sichtbar und absolute Logo-Bilder skalieren */
-.hj-logo-vert-img,.hj-making-vert-img,.mobile-hj-logo-img,.mobile-making-img{display:block!important;opacity:1!important;visibility:visible!important;width:auto!important;-webkit-user-drag:none;user-select:none;pointer-events:none;}
-.hj-logo-vert-img{height:1.19em!important;}
-.hj-making-vert-img{height:.90em!important;}
-.mobile-hj-logo-img{height:.92em!important;}
-.mobile-making-img{height:.82em!important;}
-
 </style>
 
 <style>
