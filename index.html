@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v240-album-left-layout-branding-bottom-final -->
 <!-- Version: v239-album-branding-bottom-scroll-fix -->
 <!-- Version: v238-album-landscape-row-ipad-polish -->
 <!-- Version: v231-album-logo-png-button-ratio-polish -->
@@ -3589,6 +3590,149 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     margin-top:auto!important;
     padding:0 2px 6px!important;
   }
+}
+
+
+
+/* ===== v240 Album FINAL: linke Seite wirklich neu ausrichten =====
+   Plattenspieler oben, Branding unten verankert, Funktionsbuttons exakt
+   im freien Raum dazwischen zentriert. Rechte Playlist bleibt scrollbar. */
+#screenTracklist.active #tlRightCol{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+}
+#screenTracklist.active .tl-track{touch-action:pan-y!important;}
+#screenTracklist.active .tl-drag-handle{touch-action:none!important;}
+
+@media (min-width:900px) and (orientation:landscape){
+  #tlLeftCol{
+    position:relative!important;
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #tlLeftCol .tl-top,
+  #tlLeftCol .tl-hero.album-v228-hero{
+    position:absolute!important;
+    inset:0!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  #tlLeftCol{--album-deck-size:min(100%, calc(100dvh - 230px), 560px);}
+  .tl-deck.deck{
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    width:var(--album-deck-size)!important;
+    max-width:var(--album-deck-size)!important;
+    transform:translateX(-50%)!important;
+  }
+  .tl-album-branding{
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:16px!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:0 2px!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    overflow:visible!important;
+  }
+  .tl-album-controls{
+    position:absolute!important;
+    left:50%!important;
+    top:calc(var(--album-deck-size) + 18px)!important;
+    bottom:72px!important;
+    width:min(96%, 560px)!important;
+    height:auto!important;
+    min-height:0!important;
+    transform:translateX(-50%)!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:22px!important;
+  }
+  .tl-control-row{display:flex!important;flex-direction:row!important;gap:22px!important;align-items:center!important;justify-content:center!important;}
+}
+
+@media (min-width:900px) and (orientation:landscape) and (max-height:760px){
+  #tlLeftCol{--album-deck-size:min(100%, calc(100dvh - 210px), 520px);}
+  .tl-album-branding{bottom:14px!important;height:40px!important;min-height:40px!important;}
+  .tl-album-controls{top:calc(var(--album-deck-size) + 14px)!important;bottom:64px!important;width:min(96%, 520px)!important;}
+}
+
+@media (min-width:700px) and (max-width:1100px) and (orientation:portrait){
+  #tlLeftCol{
+    position:relative!important;
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #tlLeftCol .tl-top,
+  #tlLeftCol .tl-hero.album-v228-hero{
+    position:absolute!important;
+    inset:0!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  #tlLeftCol{--album-deck-size:min(100%, calc(100dvh - 530px), 455px);}
+  .tl-deck.deck{
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    width:var(--album-deck-size)!important;
+    max-width:var(--album-deck-size)!important;
+    transform:translateX(-50%)!important;
+  }
+  .tl-album-branding{
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:18px!important;
+    height:46px!important;
+    min-height:46px!important;
+    padding:0 2px!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    overflow:visible!important;
+  }
+  .tl-album-controls{
+    position:absolute!important;
+    left:50%!important;
+    top:calc(var(--album-deck-size) + 24px)!important;
+    bottom:82px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    transform:translateX(-50%)!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:clamp(34px,5vh,64px)!important;
+  }
+  .tl-control-row{display:flex!important;flex-direction:row!important;gap:clamp(38px,5.5vw,62px)!important;align-items:center!important;justify-content:center!important;}
 }
 
 </style>
