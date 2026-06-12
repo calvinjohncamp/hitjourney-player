@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v218-album-home-click-fix -->
 <!-- Version: v217-album-deck-page -->
 <!-- Version: v216-home-info-button-restored -->
 <!-- Version: v214-album-signature-cover-lyrics-button -->
@@ -4279,11 +4280,26 @@ function updateAlbumDeckArm(){
   albumDeck.style.setProperty('--arm-rot', rot + 'deg');
 }
 function renderAlbumRows(){
-  if(!curAlbum || !ALBUMS[curAlbum]) return;
+  if(!curAlbum || !ALBUMS[curAlbum] || !tlList) return;
   const alb=ALBUMS[curAlbum];
-  renderAlbumRows();
+  tlList.innerHTML='';
+  alb.songs.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='tl-track';
+    row.dataset.idx=i;
+    const cachedDur=durationCache[s.mp3]?fmt(durationCache[s.mp3]):'';
+    row.innerHTML=
+      '<div class="tl-drag-handle" aria-label="Song verschieben" title="Song verschieben"><svg viewBox="0 0 24 24"><path d="M8 6h8M8 12h8M8 18h8"/></svg></div>'+
+      '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
+      '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
+      '<img class="tl-thumb" loading="lazy" alt=""/>'+
+      '<div class="tl-info"><div class="tl-title">'+(s.title||'')+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>'+
+      '<span class="tl-duration" data-mp3="'+(s.mp3||'')+'">'+cachedDur+'</span>';
+    setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
+    row.addEventListener('click',()=>playIdx(i));
+    tlList.appendChild(row);
+  });
   wireAlbumDragRows();
-  refreshHighlight(false);
 }
 function reorderAlbumSong(from,to){
   if(!curAlbum || !ALBUMS[curAlbum] || from===to || from<0 || to<0) return;
