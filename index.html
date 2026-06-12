@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v241-album-ipad-landscape-branding-up -->
 <!-- Version: v240-album-left-layout-branding-bottom-final -->
 <!-- Version: v239-album-branding-bottom-scroll-fix -->
 <!-- Version: v238-album-landscape-row-ipad-polish -->
@@ -764,6 +765,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     z-index:80;
     background:rgba(6,20,32,1);
     box-shadow:8px 0 22px rgba(6,20,32,.35);
+  }
+}
+
+
+/* ===== v241 Album Feinschliff: iPad Querformat Branding minimal höher =====
+   Nur Touch-Tablets im Querformat: Funktionsbuttons bleiben unverändert,
+   Branding wird etwas aus der unteren Safe-Area nach oben gezogen. */
+@media (min-width:900px) and (orientation:landscape) and (hover:none) and (pointer:coarse){
+  .tl-album-branding{
+    bottom:30px!important;
+  }
+}
+
+@media (min-width:900px) and (orientation:landscape) and (hover:none) and (pointer:coarse) and (max-height:760px){
+  .tl-album-branding{
+    bottom:28px!important;
   }
 }
 
