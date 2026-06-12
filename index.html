@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v219-album-layout-finishing -->
 <!-- Version: v218-album-home-click-fix -->
 <!-- Version: v217-album-deck-page -->
 <!-- Version: v216-home-info-button-restored -->
@@ -2976,6 +2977,81 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .album-deck,.tl-play-btn,.tl-prev-btn,.tl-next-btn,.tl-abc-btn{display:none!important;}
 }
 
+
+
+/* === v219 Album-Player Feinschliff: kleinere linke Bühne, vertikale Buttons, DJ-Fit === */
+@media(min-width:600px){
+  #screenTracklist.active{
+    grid-template-columns:minmax(260px,36vw) minmax(0,1fr)!important;
+    gap:22px!important;
+    padding:22px clamp(24px,3vw,40px)!important;
+    align-items:start!important;
+  }
+  #tlLeftCol{height:100%!important;min-height:0!important;overflow:hidden!important;}
+  #tlRightCol{height:100%!important;min-height:0!important;overflow-y:auto!important;}
+  .tl-top{height:100%!important;display:flex!important;flex-direction:column!important;}
+  .tl-hero{height:100%!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important;}
+  .tl-cover-stack{
+    width:min(100%,42vh)!important;
+    max-width:clamp(330px,34vw,520px)!important;
+    margin:0!important;
+  }
+  .album-deck{width:100%!important;aspect-ratio:1/1!important;}
+  .album-deck-art{display:none!important;}
+  .album-deck-cover-wrap{left:7.6%!important;top:8.4%!important;width:74.8%!important;}
+  .album-deck-tonearm{z-index:7!important;transform-origin:79.6% 24.1%!important;}
+  .album-deck-red-btn{right:9.8%!important;bottom:8%!important;width:8.4%!important;background:#C90019!important;z-index:8!important;}
+  .album-deck-info{left:5.4%!important;bottom:5.0%!important;right:22%!important;}
+  .album-deck-title{font-size:clamp(22px,1.95vw,36px)!important;line-height:1.08!important;}
+  .album-deck-artist{font-size:clamp(16px,1.35vw,25px)!important;line-height:1.08!important;}
+
+  .tl-icon-group{
+    width:100%!important;
+    flex:1 1 auto!important;
+    min-height:240px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr)!important;
+    grid-template-rows:repeat(4,auto)!important;
+    align-content:space-evenly!important;
+    justify-content:center!important;
+    justify-items:center!important;
+    align-items:center!important;
+    column-gap:clamp(16px,2.1vw,32px)!important;
+    row-gap:clamp(18px,3.6vh,48px)!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  .tl-icon-group::before{
+    content:'hitjourney';
+    grid-column:1;grid-row:1/5;align-self:center;justify-self:end;
+    font-weight:900;letter-spacing:.015em;font-size:clamp(18px,2.0vw,28px);line-height:1;color:#f4f8fb;
+    cursor:pointer;
+  }
+  .tl-icon-group::after{
+    content:'MAKING WAVES';
+    grid-column:4;grid-row:1/5;align-self:center;justify-self:start;
+    font-weight:800;letter-spacing:.28em;font-size:clamp(8px,.9vw,13px);line-height:1;color:#9FBFDA;
+  }
+  .tl-album-random-btn{grid-column:2/4!important;grid-row:1!important;}
+  .tl-play-btn{grid-column:2/4!important;grid-row:2!important;}
+  .tl-prev-btn{grid-column:2!important;grid-row:3!important;}
+  .tl-next-btn{grid-column:3!important;grid-row:3!important;}
+  .tl-abc-btn{grid-column:2/4!important;grid-row:4!important;}
+  .tl-album-random-btn,.tl-play-btn,.tl-prev-btn,.tl-next-btn,.tl-abc-btn{
+    width:clamp(46px,4.6vw,64px)!important;height:clamp(46px,4.6vw,64px)!important;
+  }
+  .tl-next-btn svg{transform:scaleX(-1)!important;transform-origin:center center!important;}
+  .tl-track{gap:22px!important;padding:17px 28px!important;}
+  .tl-thumb{width:96px!important;height:96px!important;}
+  .tl-title{font-size:28px!important;}
+  .tl-artist{font-size:22px!important;}
+}
+@media(min-width:600px) and (orientation:portrait){
+  #screenTracklist.active{grid-template-columns:minmax(250px,44vw) minmax(0,1fr)!important;padding:18px!important;gap:18px!important;}
+  .tl-cover-stack{width:min(100%,38vh)!important;max-width:44vw!important;}
+  .tl-icon-group{min-height:300px!important;}
+}
+
 </style>
 </head>
 <body>
@@ -3924,7 +4000,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
       <svg class="icon-pause" viewbox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z"></path></svg>
     </button>
     <button aria-label="Vorheriger Song" class="tl-prev-btn" id="tlPrevBtn" type="button"><svg viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path></svg></button>
-    <button aria-label="Nächster Song" class="tl-next-btn" id="tlNextBtn" type="button"><svg viewbox="0 0 24 24"><path d="M16 6h2v12h-2zm-10 6 8.5 6V6z"></path></svg></button>
+    <button aria-label="Nächster Song" class="tl-next-btn" id="tlNextBtn" type="button"><svg viewbox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"></path></svg></button>
     <button aria-label="Album alphabetisch sortieren" class="tl-abc-btn" id="tlAbcBtn" type="button">ABC</button>
     <button aria-label="Wiederholung umschalten" class="tl-repeat-btn" id="tlRepeatBtn">
       <svg viewbox="0 0 24 24"><polyline points="17,1 21,5 17,9"></polyline><path d="M3 11V9A4 4 0 0 1 7 5H21"></path><polyline points="7,23 3,19 7,15"></polyline><path d="M21 13V15A4 4 0 0 1 17 19H3"></path></svg>
