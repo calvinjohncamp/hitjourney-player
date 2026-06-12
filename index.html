@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
 <!-- Version: v228-album-dj-deck-conservative -->
 <!-- Version: v216-home-info-button-restored -->
@@ -2971,6 +2972,88 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   #tlRightCol{overflow:visible!important;padding:0!important;border:2px solid #83ABD0;background:#06141F;min-height:0}.tl-track{gap:11px;padding:12px 10px;border-bottom:1px solid rgba(131,171,208,.13);touch-action:none}.tl-drag-handle{width:22px;height:32px;display:flex;align-items:center;justify-content:center;color:rgba(141,183,218,.72);flex-shrink:0}.tl-drag-handle svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.1;fill:none}.tl-num-wrap{width:26px;justify-content:center}.tl-track-num{font-size:16px}.tl-thumb{width:58px;height:58px}.tl-title{font-size:18px;font-weight:800}.tl-artist{font-size:14px;color:rgba(133,172,201,.55)}.tl-duration{font-size:12px;min-width:32px}
 }
 
+
+
+/* === v230 Album-Polish: Branding unten, Deck-Cover als Play/Pause, bessere Lesbarkeit === */
+.tl-album-branding{
+  width:100%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  padding:4px 4px 0;
+  flex-shrink:0;
+  pointer-events:auto;
+}
+.tl-brand-home{
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  font-weight:900;
+  font-size:clamp(24px,2.55vw,35px);
+  letter-spacing:-.055em;
+  line-height:1;
+  color:#f4f8fb;
+}
+.tl-brand-home .journey{color:#8DB7DA}
+.tl-brand-home .dot{display:inline-block;width:.22em;height:.22em;border-radius:50%;background:#C90019;margin-left:.06em;vertical-align:-.02em}
+.tl-brand-making{
+  font-size:clamp(10px,1.02vw,14px);
+  line-height:1;
+  color:#f4f8fb;
+  font-weight:800;
+  letter-spacing:.31em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  padding-bottom:.25em;
+}
+#tlDeckCoverWrap{cursor:pointer}
+@media (min-width:600px){
+  .tl-hero.album-v228-hero{grid-template-rows:auto minmax(0,1fr) auto!important;align-content:stretch!important}
+  .tl-album-controls{min-height:220px!important;gap:14px!important;justify-content:center!important}
+  .tl-album-random-btn{width:64px!important;height:64px!important}
+  .tl-control-btn,.tl-abc-btn{width:54px!important;height:54px!important}
+  .tl-control-row{gap:24px!important}
+  .tl-thumb{width:76px!important;height:76px!important}
+  .tl-track{gap:17px!important;padding:16px 20px!important}
+  .tl-title{font-size:clamp(20px,1.85vw,24px)!important;line-height:1.14!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tl-artist{font-size:clamp(15px,1.35vw,18px)!important;line-height:1.12!important;margin-top:4px!important}
+  .tl-track-num{font-size:clamp(19px,1.75vw,22px)!important}
+}
+@media (min-width:600px) and (max-width:900px){
+  .tl-album-controls{min-height:300px!important;gap:20px!important}
+  .tl-album-random-btn{width:66px!important;height:66px!important}
+  .tl-control-btn,.tl-abc-btn{width:54px!important;height:54px!important}
+  .tl-thumb{width:72px!important;height:72px!important}
+  .tl-title{font-size:22px!important}
+  .tl-artist{font-size:16px!important}
+  .tl-brand-home{font-size:clamp(24px,3.2vw,32px)}
+  .tl-brand-making{font-size:clamp(10px,1.35vw,13px)}
+}
+@media (min-width:600px) and (max-height:720px){
+  .tl-deck.deck{max-width:430px!important}
+  .tl-album-controls{min-height:190px!important;gap:10px!important}
+  .tl-album-random-btn{width:56px!important;height:56px!important}
+  .tl-control-btn,.tl-abc-btn{width:48px!important;height:48px!important}
+  .tl-control-row{gap:18px!important}
+  .tl-brand-home{font-size:24px!important}
+  .tl-brand-making{font-size:10px!important;letter-spacing:.28em}
+  .tl-track{padding:13px 18px!important}
+  .tl-thumb{width:62px!important;height:62px!important}
+  .tl-title{font-size:20px!important}
+  .tl-artist{font-size:15px!important}
+}
+@media (max-width:599px){
+  .tl-album-branding{padding:8px 2px 12px}
+  .tl-brand-home{font-size:25px}
+  .tl-brand-making{font-size:10px;letter-spacing:.28em}
+  .tl-title{font-size:20px!important;line-height:1.16!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tl-artist{font-size:15px!important}
+}
+
 </style>
 </head>
 <body>
@@ -3916,6 +3999,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     </div>
     <button aria-label="Album alphabetisch sortieren" class="tl-abc-btn" id="tlDeckABCBtn" type="button">ABC</button>
   </div>
+  <div class="tl-album-branding" aria-label="Album Branding">
+    <button class="tl-brand-home" id="tlAlbumHomeBrand" type="button" aria-label="Zur Home-Seite"><span>hit</span><span class="journey">journey</span><span class="dot"></span></button>
+    <div class="tl-brand-making">Making Waves</div>
+  </div>
 </div>
 </div>
 </div><!-- /tlLeftCol -->
@@ -4182,6 +4269,7 @@ const btnRepeat    = document.getElementById('btnRepeat');
 const tlRepeatBtn  = document.getElementById('tlRepeatBtn');
 const tlSignatureBtn = document.getElementById('tlSignatureBtn');
 const tlDeck = document.getElementById('tlDeck');
+const tlDeckCoverWrap = document.getElementById('tlDeckCoverWrap');
 const tlDeckCover = document.getElementById('tlDeckCover');
 const tlDeckTitle = document.getElementById('tlDeckTitle');
 const tlDeckArtist = document.getElementById('tlDeckArtist');
@@ -4190,6 +4278,7 @@ const tlDeckPrevBtn = document.getElementById('tlDeckPrevBtn');
 const tlDeckNextBtn = document.getElementById('tlDeckNextBtn');
 const tlDeckABCBtn = document.getElementById('tlDeckABCBtn');
 const tlDeckSignatureBtn = document.getElementById('tlDeckSignatureBtn');
+const tlAlbumHomeBrand = document.getElementById('tlAlbumHomeBrand');
 let tlAlbumAlpha = false;
 let tlOriginalOrders = {};
 // Now Playing screen
@@ -5666,7 +5755,9 @@ if(tlDeckPlayBtn) tlDeckPlayBtn.addEventListener('click',()=>btnPlay.click());
 if(tlDeckPrevBtn) tlDeckPrevBtn.addEventListener('click',()=>btnPrev.click());
 if(tlDeckNextBtn) tlDeckNextBtn.addEventListener('click',()=>btnNext.click());
 if(tlDeckABCBtn) tlDeckABCBtn.addEventListener('click',()=>{ tlAlbumAlpha=!tlAlbumAlpha; tlDeckABCBtn.classList.toggle('active',tlAlbumAlpha); if(curAlbum) showAlbum(curAlbum); });
-if(tlDeckSignatureBtn) tlDeckSignatureBtn.addEventListener('click', toggleAlbumSignatureView);
+if(tlDeckCoverWrap) tlDeckCoverWrap.addEventListener('click',()=>btnPlay.click());
+if(tlDeckSignatureBtn) tlDeckSignatureBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleAlbumSignatureView(); });
+if(tlAlbumHomeBrand) tlAlbumHomeBrand.addEventListener('click', e=>{ e.preventDefault(); showHome(); });
 npBtnShuffle.addEventListener('click',()=>btnShuffle.click());
 npBtnRepeat.addEventListener('click',()=>btnRepeat.click());
 const npProgWrap = document.getElementById('npProgWrap');
