@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v235-ipad-album-layout-fix -->
 <!-- Version: v231-album-logo-png-button-ratio-polish -->
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
@@ -3182,295 +3183,242 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 
-/* ===== v234 album layout repair - scoped, conservative ===== */
+/* ===== v235 iPad-only album layout fix =====
+   Scope: iPad/tablet Hoch- und Querformat. iPhone/Desktop bleiben bewusst unberührt. */
 
-/* Basis: keine transform-Spielereien, sondern echte Layout-Geometrie */
-body:has(#screenTracklist.active) #screenTracklist{
-  background:#071826!important;
-}
+@media (min-width:600px) and (max-width:1180px){
 
-/* Desktop + iPad Querformat */
-@media (min-width:901px){
+  body:has(#screenTracklist.active) .hj-player,
+  body:has(#screenTracklist.active) #hjPlayerSpacer{
+    display:none!important;
+    height:0!important;
+  }
+
   #screenTracklist.active{
     display:grid!important;
-    grid-template-columns:minmax(0,47%) minmax(0,53%)!important;
-    gap:22px!important;
-    padding:0 24px 22px!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:18px!important;
+    padding:0 18px 18px!important;
+    height:calc(var(--screen-h, 100dvh) - 8px)!important;
+    max-height:calc(var(--screen-h, 100dvh) - 8px)!important;
     overflow:hidden!important;
+    background:#071826!important;
   }
 
   #tlLeftCol{
     height:100%!important;
     min-height:0!important;
-    display:flex!important;
-    flex-direction:column!important;
     overflow:hidden!important;
+    display:block!important;
+    background:#071826!important;
   }
 
-  .tl-top,
+  #tlRightCol{
+    height:100%!important;
+    max-height:100%!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    border:2px solid #83ABD0!important;
+    background:#06141F!important;
+  }
+
+  .tl-top{
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    display:block!important;
+  }
+
   .tl-hero.album-v228-hero{
     height:100%!important;
     min-height:0!important;
-    display:grid!important;
-    grid-template-rows:auto auto 1fr!important;
-    align-content:start!important;
-    justify-items:center!important;
-    gap:14px!important;
     width:100%!important;
+    display:grid!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+    align-items:start!important;
+    justify-items:center!important;
+    gap:16px!important;
+  }
+
+  .tl-album-branding{
+    align-self:end!important;
+    width:100%!important;
+    padding:8px 2px 0!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+  }
+
+  .tl-brand-home{
+    width:clamp(150px,19vw,205px)!important;
+  }
+
+  .tl-brand-making-img{
+    width:clamp(130px,17vw,180px)!important;
+  }
+
+  #tlList{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+  }
+
+  .tl-bottom-pad{
+    height:0!important;
+  }
+}
+
+/* iPad Querformat: Buttons als breite, ruhige Zeile zwischen Player und Branding */
+@media (min-width:900px) and (max-width:1180px) and (orientation:landscape){
+
+  #screenTracklist.active{
+    grid-template-columns:minmax(0,48%) minmax(0,52%)!important;
+    gap:18px!important;
   }
 
   .tl-deck.deck{
-    width:min(100%, calc(var(--screen-h, 100dvh) - 205px), 560px)!important;
-    max-width:560px!important;
-    align-self:start!important;
+    width:min(100%, calc(var(--screen-h,100dvh) - 225px), 540px)!important;
+    max-width:540px!important;
+    justify-self:center!important;
+  }
+
+  .tl-album-controls{
+    width:min(92%, 470px)!important;
+    min-height:0!important;
+    height:100%!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:18px!important;
+    align-self:stretch!important;
+    justify-self:center!important;
+  }
+
+  .tl-control-row{
+    display:flex!important;
+    flex-direction:row!important;
+    gap:18px!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+
+  :root{
+    --tl-random-size:68px;
+    --tl-btn-size:56px;
+  }
+
+  .tl-track{
+    padding:15px 20px!important;
+    gap:17px!important;
+  }
+
+  .tl-thumb{
+    width:70px!important;
+    height:70px!important;
+  }
+
+  .tl-title{
+    font-size:22px!important;
+    line-height:1.15!important;
+  }
+
+  .tl-artist{
+    font-size:16px!important;
+  }
+}
+
+/* iPad Hochformat: Buttons großzügig in vier Ebenen untereinander */
+@media (min-width:600px) and (max-width:899px) and (orientation:portrait){
+
+  #screenTracklist.active{
+    grid-template-columns:minmax(0,49%) minmax(0,51%)!important;
+    gap:18px!important;
+  }
+
+  .tl-hero.album-v228-hero{
+    gap:18px!important;
+  }
+
+  .tl-deck.deck{
+    width:min(100%, calc(var(--screen-h,100dvh) - 390px), 470px)!important;
+    max-width:470px!important;
     justify-self:center!important;
   }
 
   .tl-album-controls{
     width:100%!important;
-    min-height:auto!important;
+    min-height:0!important;
+    height:100%!important;
+    padding:0 0 2px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:space-evenly!important;
+    gap:0!important;
+    align-self:stretch!important;
+  }
+
+  .tl-control-row{
     display:flex!important;
     flex-direction:row!important;
+    gap:34px!important;
     align-items:center!important;
     justify-content:center!important;
-    gap:18px!important;
-    padding:4px 0 2px!important;
   }
 
-  .tl-control-row{
-    display:flex!important;
-    gap:18px!important;
+  :root{
+    --tl-random-size:78px;
+    --tl-btn-size:62px;
   }
 
-  .tl-album-random-btn{
-    --tl-random-size:58px!important;
+  .tl-brand-home{
+    width:clamp(145px,24vw,190px)!important;
   }
 
-  .tl-control-btn,
-  .tl-abc-btn{
-    --tl-btn-size:50px!important;
+  .tl-brand-making-img{
+    width:clamp(126px,21vw,165px)!important;
   }
 
-  .tl-album-branding{
-    align-self:end!important;
-    margin-top:auto!important;
-    width:100%!important;
-    padding:8px 4px 2px!important;
+  .tl-track{
+    padding:16px 18px!important;
+    gap:16px!important;
   }
 
-  #tlRightCol{
-    height:100%!important;
-    max-height:100%!important;
-    overflow-y:auto!important;
+  .tl-thumb{
+    width:72px!important;
+    height:72px!important;
+  }
+
+  .tl-title{
+    font-size:22px!important;
+    line-height:1.15!important;
+  }
+
+  .tl-artist{
+    font-size:16px!important;
+  }
+
+  .tl-track-num{
+    font-size:22px!important;
   }
 }
 
-/* niedrige Desktop-/iPad-Querformate: etwas kompakter, damit unten nichts verschwindet */
-@media (min-width:901px) and (max-height:760px){
-  .tl-deck.deck{
-    width:min(100%, calc(var(--screen-h, 100dvh) - 185px), 520px)!important;
-    max-width:520px!important;
-  }
-  .tl-hero.album-v228-hero{gap:11px!important}
-  .tl-album-random-btn{--tl-random-size:52px!important}
-  .tl-control-btn,.tl-abc-btn{--tl-btn-size:46px!important}
-  .tl-album-branding{padding-bottom:0!important}
-}
-
-/* iPad Hochformat */
-@media (min-width:600px) and (max-width:900px) and (orientation:portrait){
+/* iPad Browser mit sichtbarer Adressleiste: etwas defensiver gegen abgeschnittene Rahmen */
+@media (min-width:600px) and (max-width:1180px) and (max-height:760px){
   #screenTracklist.active{
-    display:grid!important;
-    grid-template-columns:minmax(0,49%) minmax(0,51%)!important;
-    gap:18px!important;
-    padding:0 18px 18px!important;
-    overflow:hidden!important;
+    height:calc(var(--screen-h, 100dvh) - 18px)!important;
+    max-height:calc(var(--screen-h, 100dvh) - 18px)!important;
+    padding-bottom:16px!important;
   }
-
-  #tlLeftCol{
-    height:100%!important;
-    min-height:0!important;
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:hidden!important;
-  }
-
-  .tl-top,
   .tl-hero.album-v228-hero{
-    height:100%!important;
-    min-height:0!important;
-    display:grid!important;
-    grid-template-rows:auto auto 1fr!important;
-    gap:18px!important;
-    align-content:start!important;
-    justify-items:center!important;
-  }
-
-  .tl-deck.deck{
-    width:min(100%, calc(var(--screen-h, 100dvh) - 290px), 470px)!important;
-    max-width:470px!important;
-  }
-
-  .tl-album-controls{
-    width:100%!important;
-    min-height:260px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    justify-content:space-evenly!important;
-    align-items:center!important;
-    gap:18px!important;
-    padding:4px 0!important;
-  }
-
-  .tl-album-random-btn{--tl-random-size:74px!important}
-  .tl-control-btn,.tl-abc-btn{--tl-btn-size:58px!important}
-  .tl-control-row{display:flex!important;gap:28px!important}
-
-  .tl-album-branding{
-    align-self:end!important;
-    margin-top:auto!important;
-    width:100%!important;
-    padding:8px 4px 0!important;
-  }
-
-  #tlRightCol{
-    height:100%!important;
-    max-height:100%!important;
-    overflow-y:auto!important;
-  }
-}
-
-/* iPhone Hochformat: Player kleiner, Liste kommt vor Branding */
-@media (max-width:599px) and (orientation:portrait){
-  #screenTracklist.active{
-    display:flex!important;
-    flex-direction:column!important;
-    overflow-y:auto!important;
-    padding:0 12px 16px!important;
-  }
-
-  #tlLeftCol{
-    flex:0 0 auto!important;
-    width:100%!important;
-  }
-
-  .tl-hero.album-v228-hero{
-    display:flex!important;
-    flex-direction:column!important;
     gap:12px!important;
-    align-items:center!important;
   }
-
   .tl-deck.deck{
-    width:min(72vw,340px)!important;
-    max-width:340px!important;
+    width:min(100%, calc(var(--screen-h,100dvh) - 210px), 500px)!important;
   }
-
-  .tl-album-controls{
-    width:100%!important;
-    display:grid!important;
-    grid-template-columns:1.15fr 1fr 1fr 1fr 1fr!important;
-    gap:8px!important;
-    padding:4px 6px 12px!important;
-  }
-
-  .tl-album-random-btn{--tl-random-size:58px!important}
-  .tl-control-btn,.tl-abc-btn{--tl-btn-size:48px!important}
-
-  #tlRightCol{
-    order:2!important;
-    overflow:visible!important;
-    border:2px solid #83ABD0!important;
-    width:100%!important;
-    flex:0 0 auto!important;
-  }
-
-  .tl-album-branding{
-    order:3!important;
-    width:100%!important;
-    padding:14px 4px 2px!important;
-  }
-}
-
-/* iPhone Querformat: Deck links, Buttons senkrecht daneben, Liste rechts */
-@media (max-width:950px) and (orientation:landscape){
-  #screenTracklist.active{
-    display:grid!important;
-    grid-template-columns:minmax(0,48%) minmax(0,52%)!important;
-    gap:14px!important;
-    padding:0 16px 14px!important;
-    overflow:hidden!important;
-  }
-
-  #tlLeftCol{
-    height:100%!important;
-    min-height:0!important;
-    display:flex!important;
-    flex-direction:column!important;
-    overflow:hidden!important;
-  }
-
-  .tl-top,
-  .tl-hero.album-v228-hero{
-    height:100%!important;
-    min-height:0!important;
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) 70px!important;
-    grid-template-rows:minmax(0,1fr) auto!important;
-    gap:10px 12px!important;
-    align-items:center!important;
-    justify-items:center!important;
-  }
-
-  .tl-deck.deck{
-    grid-column:1!important;
-    grid-row:1!important;
-    width:min(100%, calc(var(--screen-h, 100dvh) - 88px), 310px)!important;
-    max-width:310px!important;
-  }
-
-  .tl-album-controls{
-    grid-column:2!important;
-    grid-row:1!important;
-    min-height:0!important;
-    height:100%!important;
-    width:70px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    justify-content:center!important;
-    align-items:center!important;
-    gap:10px!important;
-    padding:0!important;
-  }
-
-  .tl-control-row{
-    display:flex!important;
-    flex-direction:column!important;
-    gap:10px!important;
-  }
-
-  .tl-album-random-btn{--tl-random-size:48px!important}
-  .tl-control-btn,.tl-abc-btn{--tl-btn-size:42px!important}
-
-  .tl-album-branding{
-    grid-column:1 / 3!important;
-    grid-row:2!important;
-    width:100%!important;
-    padding:4px 2px 0!important;
-    align-self:end!important;
-  }
-
-  #tlRightCol{
-    height:100%!important;
-    max-height:100%!important;
-    overflow-y:auto!important;
-    border:2px solid #83ABD0!important;
-  }
-
-  .tl-track{padding:11px 14px!important;gap:12px!important}
-  .tl-thumb{width:54px!important;height:54px!important}
-  .tl-title{font-size:19px!important}
-  .tl-artist{font-size:14px!important}
 }
 
 </style>
@@ -9188,39 +9136,6 @@ playerBar.classList.add = function(...args){
   _origPlayerAdd(...args);
   if(args.includes('visible')) requestAnimationFrame(()=>{ updateBottomPads(); updatePlayerBarHeight(); });
 };
-</script>
-
-
-<script>
-/* v234: Album-Branding nur im iPhone-Hochformat hinter die Playlist setzen.
-   In allen anderen Ansichten bleibt die Originalstruktur erhalten. */
-(function(){
-  function repairAlbumBrandingOrder(){
-    var screen = document.getElementById('screenTracklist');
-    var hero = document.querySelector('.tl-hero.album-v228-hero');
-    var branding = document.querySelector('.tl-album-branding');
-    var right = document.getElementById('tlRightCol');
-    var topBtn = document.getElementById('tlTopBtn');
-    if(!screen || !hero || !branding || !right) return;
-
-    var isPhonePortrait = window.matchMedia('(max-width:599px) and (orientation:portrait)').matches;
-
-    if(isPhonePortrait){
-      if(branding.parentElement !== screen){
-        screen.insertBefore(branding, topBtn || null);
-      }
-    }else{
-      if(branding.parentElement !== hero){
-        hero.appendChild(branding);
-      }
-    }
-  }
-
-  window.addEventListener('resize', repairAlbumBrandingOrder, {passive:true});
-  window.addEventListener('orientationchange', function(){ setTimeout(repairAlbumBrandingOrder, 80); }, {passive:true});
-  document.addEventListener('DOMContentLoaded', repairAlbumBrandingOrder);
-  setTimeout(repairAlbumBrandingOrder, 250);
-})();
 </script>
 
 </body>
