@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v223-branding-assets-restored -->
 <!-- Version: v222-album-iphone-layout-drag-branding-fix -->
 <!-- Version: v219-album-layout-finishing -->
 <!-- Version: v218-album-home-click-fix -->
@@ -3150,6 +3151,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 
+
+
+/* === v223 Safety Net: Branding auf Home/Album/Display sichtbar und nicht lokal abhängig === */
+.hj-logo-img,.hj-making-img,.tl-home-logo img,.tl-making-logo img{display:block!important;opacity:1!important;visibility:visible!important;}
+#screenTracklist.active .tl-home-logo,#screenTracklist.active .tl-making-logo{display:flex!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;background:transparent!important;border:0!important;padding:0!important;}
+@media(min-width:600px){
+  #screenTracklist.active .tl-icon-group{position:relative!important;}
+  #screenTracklist.active .tl-home-logo{align-self:end!important;justify-self:start!important;}
+  #screenTracklist.active .tl-making-logo{align-self:end!important;justify-self:end!important;}
+}
+@media(max-width:599px){
+  .hj-header{min-height:48px!important;}
+  .hj-logo-img{height:32px!important;}
+  .hj-making-img{height:10px!important;}
+}
+
 </style>
 </head>
 <body>
@@ -3168,9 +3185,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 <span>Alben</span>
 </div>
 <div class="hj-logo" id="logoHome">
-<img class="hj-logo-img" src="logo-hitjourney.png" alt="hitjourney" draggable="false"/>
+<img class="hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/>
 </div>
-<span class="hj-logo-sub" id="makingWaves"><img class="hj-making-img" src="logo-making-waves.png" alt="making waves" draggable="false"/></span>
+<span class="hj-logo-sub" id="makingWaves"><img class="hj-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="making waves" draggable="false"/></span>
 <div class="hj-header-right" id="headerRight"></div>
 </div>
 <!-- HOME -->
@@ -4090,8 +4107,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     <div class="tl-top-meta" id="tlMeta"></div>
   </div>
   <div class="tl-icon-group">
-    <button aria-label="Zur Startseite" class="tl-home-logo" id="tlHomeLogo" type="button"><img src="logo-hitjourney.png" alt="hitjourney" draggable="false"/></button>
-    <button aria-label="Zur Startseite" class="tl-making-logo" id="tlMakingLogo" type="button"><img src="logo-making-waves.png" alt="Making Waves" draggable="false"/></button>
+    <button aria-label="Zur Startseite" class="tl-home-logo" id="tlHomeLogo" type="button"><img src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/></button>
+    <button aria-label="Zur Startseite" class="tl-making-logo" id="tlMakingLogo" type="button"><img src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="Making Waves" draggable="false"/></button>
     <button aria-label="Album zufällig abspielen" class="tl-album-random-btn" id="tlAlbumShuffleBtn">
       <img alt="" class="arc-shuffle-img" onerror="this.onerror=null;this.src='https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png';" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png"/>
     </button>
