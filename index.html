@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
-<!-- Version: v236-ipad-album-correction -->
+<!-- Version: v237-real-ipad-album-fix -->
 <!-- Version: v231-album-logo-png-button-ratio-polish -->
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
@@ -3183,34 +3183,43 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 
 
-/* ===== v236 iPad album layout correction =====
-   Nur iPad / Tablet: Hochformat und Querformat. iPhone/Desktop bleiben unberührt. */
+/* ===== v237 REAL iPad album fix =====
+   iPad-Bereich jetzt bis 1400px, damit iPad Pro / App-Mode im Querformat sicher getroffen wird.
+   Ziel: Branding unten sichtbar, Songlistenrahmen unten sichtbar, iPad Hoch/Quer separat. */
 
-@media (min-width:600px) and (max-width:1180px){
+/* Gemeinsame iPad-Regeln */
+@media (min-width:700px) and (max-width:1400px){
+
+  body:has(#screenTracklist.active){
+    overflow:hidden!important;
+  }
 
   body:has(#screenTracklist.active) .hj-player,
   body:has(#screenTracklist.active) #hjPlayerSpacer{
     display:none!important;
     height:0!important;
+    min-height:0!important;
   }
 
   #screenTracklist.active{
     display:grid!important;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-columns:minmax(0,48%) minmax(0,52%)!important;
     gap:18px!important;
-    padding:0 18px 14px!important;
-    height:calc(100dvh - var(--hj-header-h, 48px) - 14px)!important;
-    max-height:calc(100dvh - var(--hj-header-h, 48px) - 14px)!important;
+    padding:0 18px 16px!important;
+    height:calc(100dvh - 58px)!important;
+    max-height:calc(100dvh - 58px)!important;
     overflow:hidden!important;
     background:#071826!important;
   }
 
   #tlLeftCol{
     height:100%!important;
+    max-height:100%!important;
     min-height:0!important;
     overflow:hidden!important;
     display:block!important;
     background:#071826!important;
+    padding:0!important;
   }
 
   #tlRightCol{
@@ -3218,8 +3227,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     max-height:100%!important;
     min-height:0!important;
     overflow-y:auto!important;
+    overflow-x:hidden!important;
     border:2px solid #83ABD0!important;
     background:#06141F!important;
+    padding:0!important;
   }
 
   .tl-top{
@@ -3231,35 +3242,44 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
   .tl-hero.album-v228-hero{
     height:100%!important;
-    min-height:0!important;
     width:100%!important;
+    min-height:0!important;
     display:grid!important;
-    grid-template-rows:auto minmax(0,1fr) auto!important;
     align-items:start!important;
     justify-items:center!important;
-    gap:12px!important;
+    margin:0!important;
   }
 
   .tl-album-branding{
     align-self:end!important;
     width:100%!important;
-    padding:0 2px 2px!important;
+    height:38px!important;
+    min-height:38px!important;
+    padding:0 2px 0!important;
     margin:0!important;
     display:flex!important;
     align-items:flex-end!important;
     justify-content:space-between!important;
+    overflow:visible!important;
     line-height:0!important;
   }
 
   .tl-brand-home{
-    width:clamp(150px,19vw,205px)!important;
     display:block!important;
+    width:185px!important;
+    height:auto!important;
   }
 
   .tl-brand-making-img{
-    width:clamp(128px,16vw,178px)!important;
     display:block!important;
-    transform:translateY(-2px)!important;
+    width:160px!important;
+    height:auto!important;
+    transform:translateY(-5px)!important;
+  }
+
+  .tl-bottom-pad{
+    height:0!important;
+    display:none!important;
   }
 
   #tlList{
@@ -3267,44 +3287,41 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     max-width:none!important;
     margin:0!important;
   }
-
-  .tl-bottom-pad{
-    height:0!important;
-  }
 }
 
-/* iPad Hochformat: Buttons größer, aber kompakter zusammen; Branding sicher sichtbar */
-@media (min-width:600px) and (max-width:899px) and (orientation:portrait){
+/* iPad Hochformat */
+@media (min-width:700px) and (max-width:1100px) and (orientation:portrait){
 
   #screenTracklist.active{
     grid-template-columns:minmax(0,49%) minmax(0,51%)!important;
     gap:18px!important;
-    padding-bottom:18px!important;
-    height:calc(100dvh - var(--hj-header-h, 48px) - 20px)!important;
-    max-height:calc(100dvh - var(--hj-header-h, 48px) - 20px)!important;
+    padding:0 18px 18px!important;
+    height:calc(100dvh - 60px)!important;
+    max-height:calc(100dvh - 60px)!important;
   }
 
   .tl-hero.album-v228-hero{
-    grid-template-rows:auto minmax(305px,1fr) 34px!important;
+    grid-template-rows:auto minmax(305px,1fr) 38px!important;
     gap:10px!important;
   }
 
   .tl-deck.deck{
-    width:min(100%, calc(100dvh - var(--hj-header-h,48px) - 405px), 465px)!important;
-    max-width:465px!important;
-    justify-self:center!important;
+    width:min(100%, calc(100dvh - 468px), 455px)!important;
+    max-width:455px!important;
+    min-width:0!important;
+    aspect-ratio:1/1!important;
   }
 
   .tl-album-controls{
     width:100%!important;
     height:100%!important;
     min-height:0!important;
-    padding:4px 0 0!important;
+    padding:0!important;
     display:flex!important;
     flex-direction:column!important;
     align-items:center!important;
     justify-content:center!important;
-    gap:23px!important;
+    gap:22px!important;
     align-self:stretch!important;
   }
 
@@ -3316,18 +3333,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     justify-content:center!important;
   }
 
-  :root{
-    --tl-random-size:92px;
-    --tl-btn-size:78px;
+  .tl-album-random-btn{
+    width:96px!important;
+    height:96px!important;
+    min-width:96px!important;
+    min-height:96px!important;
   }
 
-  .tl-brand-home{
-    width:clamp(150px,24vw,190px)!important;
+  .tl-control-btn,
+  .tl-abc-btn{
+    width:78px!important;
+    height:78px!important;
+    min-width:78px!important;
+    min-height:78px!important;
   }
 
-  .tl-brand-making-img{
-    width:clamp(122px,20vw,160px)!important;
-    transform:translateY(-4px)!important;
+  .tl-abc-btn{
+    font-size:24px!important;
   }
 
   .tl-track{
@@ -3354,39 +3376,40 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
-/* iPad Querformat: Buttons in eine horizontale Zeile; Branding bleibt sichtbar */
-@media (min-width:900px) and (max-width:1180px) and (orientation:landscape){
+/* iPad Querformat inklusive iPad Pro / App-Mode */
+@media (min-width:1000px) and (max-width:1400px) and (orientation:landscape){
 
   #screenTracklist.active{
     grid-template-columns:minmax(0,48%) minmax(0,52%)!important;
     gap:18px!important;
-    padding-bottom:16px!important;
-    height:calc(100dvh - var(--hj-header-h, 48px) - 16px)!important;
-    max-height:calc(100dvh - var(--hj-header-h, 48px) - 16px)!important;
+    padding:0 18px 16px!important;
+    height:calc(100dvh - 60px)!important;
+    max-height:calc(100dvh - 60px)!important;
   }
 
   .tl-hero.album-v228-hero{
-    grid-template-rows:auto minmax(70px,1fr) 34px!important;
+    grid-template-rows:auto 92px 38px!important;
     gap:10px!important;
   }
 
   .tl-deck.deck{
-    width:min(100%, calc(100dvh - var(--hj-header-h,48px) - 190px), 530px)!important;
-    max-width:530px!important;
-    justify-self:center!important;
+    width:min(100%, calc(100dvh - 210px), 520px)!important;
+    max-width:520px!important;
+    min-width:0!important;
+    aspect-ratio:1/1!important;
   }
 
   .tl-album-controls{
-    width:min(94%, 500px)!important;
-    height:100%!important;
-    min-height:0!important;
+    width:min(96%, 520px)!important;
+    height:92px!important;
+    min-height:92px!important;
     padding:0!important;
     display:flex!important;
     flex-direction:row!important;
     align-items:center!important;
     justify-content:space-between!important;
     gap:18px!important;
-    align-self:stretch!important;
+    align-self:center!important;
     justify-self:center!important;
   }
 
@@ -3398,28 +3421,33 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     justify-content:center!important;
   }
 
-  :root{
-    --tl-random-size:72px;
-    --tl-btn-size:56px;
+  .tl-album-random-btn{
+    width:76px!important;
+    height:76px!important;
+    min-width:76px!important;
+    min-height:76px!important;
   }
 
-  .tl-brand-home{
-    width:clamp(152px,18vw,205px)!important;
+  .tl-control-btn,
+  .tl-abc-btn{
+    width:58px!important;
+    height:58px!important;
+    min-width:58px!important;
+    min-height:58px!important;
   }
 
-  .tl-brand-making-img{
-    width:clamp(128px,15vw,178px)!important;
-    transform:translateY(-4px)!important;
+  .tl-abc-btn{
+    font-size:18px!important;
   }
 
   .tl-track{
-    padding:14px 20px!important;
+    padding:13px 20px!important;
     gap:17px!important;
   }
 
   .tl-thumb{
-    width:68px!important;
-    height:68px!important;
+    width:66px!important;
+    height:66px!important;
   }
 
   .tl-title{
@@ -3432,31 +3460,52 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   }
 }
 
-/* iPad Browser mit Adressleiste / geringere sichtbare Höhe */
-@media (min-width:600px) and (max-width:1180px) and (max-height:760px){
+/* iPad Browser mit sichtbarer Adressleiste: noch etwas kompakter */
+@media (min-width:1000px) and (max-width:1400px) and (orientation:landscape) and (max-height:760px){
 
   #screenTracklist.active{
+    height:calc(100dvh - 58px)!important;
+    max-height:calc(100dvh - 58px)!important;
     padding-bottom:14px!important;
-    height:calc(100dvh - var(--hj-header-h, 48px) - 14px)!important;
-    max-height:calc(100dvh - var(--hj-header-h, 48px) - 14px)!important;
   }
 
   .tl-hero.album-v228-hero{
-    grid-template-rows:auto minmax(58px,1fr) 32px!important;
+    grid-template-rows:auto 82px 36px!important;
     gap:8px!important;
   }
 
   .tl-deck.deck{
-    width:min(100%, calc(100dvh - var(--hj-header-h,48px) - 176px), 500px)!important;
-  }
-
-  :root{
-    --tl-random-size:66px;
-    --tl-btn-size:52px;
+    width:min(100%, calc(100dvh - 196px), 500px)!important;
+    max-width:500px!important;
   }
 
   .tl-album-controls{
-    width:min(94%, 470px)!important;
+    height:82px!important;
+    min-height:82px!important;
+    width:min(96%, 500px)!important;
+  }
+
+  .tl-album-random-btn{
+    width:70px!important;
+    height:70px!important;
+    min-width:70px!important;
+    min-height:70px!important;
+  }
+
+  .tl-control-btn,
+  .tl-abc-btn{
+    width:54px!important;
+    height:54px!important;
+    min-width:54px!important;
+    min-height:54px!important;
+  }
+
+  .tl-brand-home{
+    width:175px!important;
+  }
+
+  .tl-brand-making-img{
+    width:150px!important;
   }
 }
 
@@ -9175,21 +9224,6 @@ playerBar.classList.add = function(...args){
   _origPlayerAdd(...args);
   if(args.includes('visible')) requestAnimationFrame(()=>{ updateBottomPads(); updatePlayerBarHeight(); });
 };
-</script>
-
-
-<script>
-/* v236: Headerhöhe exakt als CSS-Variable setzen, damit iPad-Browser und App-Modus sauber passen. */
-(function(){
-  function setAlbumHeaderHeight(){
-    var h = document.querySelector('.hj-header');
-    document.documentElement.style.setProperty('--hj-header-h', (h ? h.offsetHeight : 48) + 'px');
-  }
-  window.addEventListener('resize', setAlbumHeaderHeight, {passive:true});
-  window.addEventListener('orientationchange', function(){ setTimeout(setAlbumHeaderHeight, 80); }, {passive:true});
-  document.addEventListener('DOMContentLoaded', setAlbumHeaderHeight);
-  setTimeout(setAlbumHeaderHeight, 250);
-})();
 </script>
 
 </body>
