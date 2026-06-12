@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v247-album-iphone-branding-under-playlist-landscape-polish -->
 <!-- Version: v246-album-tonearm-ios-inline-transform-cover-spin-fix -->
 <!-- Version: v245-album-bottom-strip-removed-tonearm-animated -->
 <!-- Version: v244-album-ipad-app-branding-up-only -->
@@ -3805,6 +3806,143 @@ body.album-open #hjPlayerSpacer{
   display:none!important;
   height:0!important;
   min-height:0!important;
+}
+
+/* ===== v247 Album iPhone Hochformat: Branding UNTER die Playlist =====
+   Die Seite scrollt nicht mehr als Ganzes — die Playlist scrollt in ihrem
+   Rahmen, der den restlichen Platz füllt. Das Branding sitzt fest darunter
+   am unteren Bildschirmrand (über der Home-Indicator-Zone), nichts wird
+   abgeschnitten. Deck und Buttons bleiben unverändert oben stehen. */
+@media (max-width:599px){
+  #screenTracklist.active{
+    overflow:hidden!important;
+    height:var(--album-screen-h, var(--screen-h, calc(100dvh - 60px)))!important;
+    max-height:var(--album-screen-h, var(--screen-h, calc(100dvh - 60px)))!important;
+    padding:0 12px 0!important;
+  }
+  #screenTracklist.active #tlLeftCol{flex:0 0 auto!important;}
+  /* Buttons etwas kompakter gepolstert — schenkt der Playlist sichtbare Zeilen */
+  #screenTracklist.active .tl-album-controls{padding:6px 6px 8px!important;}
+  #screenTracklist.active #tlRightCol{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    margin-bottom:calc(env(safe-area-inset-bottom,0px) + 42px)!important;
+  }
+  #screenTracklist.active .tl-bottom-pad{display:none!important;height:0!important;}
+  #screenTracklist.active .tl-album-branding{
+    position:fixed!important;
+    left:14px!important;
+    right:14px!important;
+    width:auto!important;
+    top:auto!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 5px)!important;
+    height:32px!important;
+    min-height:32px!important;
+    padding:0!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    z-index:30;
+  }
+  #screenTracklist.active .tl-brand-making-img{transform:translateY(-3px)!important;}
+}
+
+/* ===== v247 Album iPhone Querformat (alle Telefone, niedrige Höhe ≤500px) =====
+   Eigenständiges Layout: Teller oben zentriert, Funktionsbuttons mittig im
+   Raum zwischen Teller und Branding (mehr Abstand zum Plattenspieler, kleinere
+   blaue Buttons), Branding kleiner und exakt am unteren Ende des Songrahmens.
+   Deckt sowohl die Pro-Max-Klasse (≥900px, bisher iPad-Regeln) als auch
+   kleinere iPhones (600–899px) ab, deren Teller bisher kollabierte. */
+@media (min-width:600px) and (orientation:landscape) and (max-height:500px){
+  #screenTracklist.active{
+    display:grid!important;
+    grid-template-columns:minmax(0,48%) minmax(0,52%)!important;
+    gap:18px!important;
+    padding:0 18px 18px!important;
+    height:var(--album-screen-h, calc(100dvh - 58px))!important;
+    max-height:var(--album-screen-h, calc(100dvh - 58px))!important;
+    overflow:hidden!important;
+  }
+  #tlLeftCol{
+    position:relative!important;
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #tlLeftCol .tl-top,
+  #tlLeftCol .tl-hero.album-v228-hero{
+    position:absolute!important;
+    inset:0!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  #tlRightCol{
+    height:100%!important;
+    max-height:100%!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    border:2px solid #83ABD0!important;
+    background:#06141F!important;
+    margin:0!important;
+  }
+  #tlList{width:100%!important;max-width:none!important;margin:0!important;}
+  .tl-bottom-pad{height:0!important;display:none!important;}
+  #tlLeftCol{--album-deck-size:min(100%, calc(100dvh - 248px), 560px);}
+  .tl-deck.deck{
+    position:absolute!important;
+    top:0!important;
+    left:50%!important;
+    transform:translateX(-50%)!important;
+    width:var(--album-deck-size)!important;
+    max-width:var(--album-deck-size)!important;
+  }
+  .tl-album-controls{
+    position:absolute!important;
+    left:50%!important;
+    transform:translateX(-50%)!important;
+    top:calc(var(--album-deck-size) + 26px)!important;
+    bottom:44px!important;
+    width:min(96%, 500px)!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+  }
+  .tl-control-row{display:flex!important;flex-direction:row!important;gap:16px!important;align-items:center!important;justify-content:center!important;}
+  .tl-album-random-btn{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;}
+  .tl-control-btn,
+  .tl-abc-btn{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;}
+  .tl-abc-btn{font-size:14px!important;font-weight:700!important;}
+  .tl-album-branding{
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    width:auto!important;
+    bottom:0!important;
+    height:30px!important;
+    min-height:30px!important;
+    padding:0 2px!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    overflow:visible!important;
+  }
+  .tl-brand-home{width:122px!important;height:auto!important;display:block!important;}
+  .tl-brand-making-img{width:104px!important;height:auto!important;display:block!important;transform:translateY(-4px)!important;}
 }
 </style>
 <!-- Header -->
