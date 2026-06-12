@@ -12,8 +12,6 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
-<!-- Version: v243-album-ipad-pwa-bottom-frame-fix -->
-<!-- Version: v242-album-ipad-pwa-safearea-fix -->
 <!-- Version: v241-album-ipad-landscape-branding-up -->
 <!-- Version: v240-album-left-layout-branding-bottom-final -->
 <!-- Version: v239-album-branding-bottom-scroll-fix -->
@@ -3752,60 +3750,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
     gap:clamp(34px,5vh,64px)!important;
   }
   .tl-control-row{display:flex!important;flex-direction:row!important;gap:clamp(38px,5.5vw,62px)!important;align-items:center!important;justify-content:center!important;}
-}
-
-
-/* ===== v242 Album iPad-PWA Safe-Area Fix =====
-   Auf dem echten iPad als Safari/Home-Screen-App ist unten eine reale Safe-Area
-   für Home-Indikator/Browser-Chrome vorhanden. Chrome DevTools simuliert diese
-   Zone nicht zuverlässig. Deshalb wird im iPad-Querformat die Albumfläche um
-   die gemessene Safe-Area gekürzt und das Branding sichtbar oberhalb davon
-   verankert. Buttons bleiben unverändert. */
-@media (min-width:900px) and (max-width:1400px) and (orientation:landscape){
-  #screenTracklist.active{
-    height:calc(var(--screen-h, calc(100dvh - 60px)) - var(--sab, 0px) - 6px)!important;
-    max-height:calc(var(--screen-h, calc(100dvh - 60px)) - var(--sab, 0px) - 6px)!important;
-    padding-bottom:0!important;
-  }
-  #tlLeftCol,
-  #tlRightCol{
-    height:100%!important;
-    max-height:100%!important;
-  }
-  .tl-album-branding{
-    bottom:calc(var(--sab, 0px) + 18px)!important;
-  }
-}
-
-
-/* ===== v243 Album iPad-PWA Bottom-Frame Fix =====
-   Der echte iPad/Safari-App-Modus zeigt unten manchmal den HTML/Body-Hintergrund
-   wie eine zweite Menüleiste. Deshalb füllt die Album-Seite wieder die komplette
-   verfügbare Höhe; nur das Branding wird oberhalb der Safe-Area positioniert.
-   Controls bleiben unverändert. */
-@media (min-width:900px) and (max-width:1400px) and (orientation:landscape){
-  html:has(#screenTracklist.active),
-  body:has(#screenTracklist.active){
-    background:#071826!important;
-  }
-
-  #screenTracklist.active{
-    height:var(--screen-h, calc(100dvh - 60px))!important;
-    max-height:var(--screen-h, calc(100dvh - 60px))!important;
-    padding-bottom:0!important;
-    background:#071826!important;
-  }
-
-  #tlLeftCol,
-  #tlRightCol{
-    height:100%!important;
-    max-height:100%!important;
-    min-height:0!important;
-  }
-
-  .tl-album-branding{
-    bottom:calc(var(--sab, 0px) + 30px)!important;
-  }
 }
 
 </style>
