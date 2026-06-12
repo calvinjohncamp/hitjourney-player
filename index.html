@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v222-album-iphone-layout-drag-branding-fix -->
 <!-- Version: v219-album-layout-finishing -->
 <!-- Version: v218-album-home-click-fix -->
 <!-- Version: v217-album-deck-page -->
@@ -3148,6 +3149,210 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-abc-btn{font-size:clamp(14px,1.65vw,22px)!important;}
 }
 
+/* === v222: iPhone Album-Layout + Branding überall fixiert + Drag whole-row ===
+   Änderungen:
+   - iPhone (≤599px): Vollständiger Album-Player mit Plattenspieler oben, 5 Buttons,
+     scrollbare Tracklist darunter, Branding absolut am unteren Rand
+   - iPad/Desktop (≥600px): Logos verlassen den Grid-Flow, werden absolut am Boden
+     des linken Panels verankert (löst das Querformat-Abschneid-Problem)
+     overflow:visible auf #tlLeftCol damit Logos nie abgeschnitten werden
+   - Button-Grid neu als 2-Spalten-Grid: Shuffle/Play/ABC zentriert spanning 2 cols,
+     Prev + Next nebeneinander in einer Zeile
+   - Drag: wireAlbumDragRows nutzt jetzt Pointer-Events auf der ganzen Zeile
+*/
+
+/* ── iPad/Desktop ≥600px: Logos absolut verankert, Grid bereinigt ── */
+@media(min-width:600px){
+  /* overflow:visible damit absolute Logos den Container nicht verlassen ohne Clipping */
+  #tlLeftCol{overflow:visible!important;position:relative!important;}
+
+  /* Icon-Group: 2-Spalten-Grid für symmetrische Button-Verteilung */
+  .tl-icon-group{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto auto auto auto!important;
+    align-items:center!important;
+    justify-items:center!important;
+    column-gap:clamp(14px,1.8vw,26px)!important;
+    row-gap:clamp(14px,2.0vh,26px)!important;
+    flex:1 1 auto!important;
+    min-height:0!important;
+    width:100%!important;
+    /* Padding-bottom reserviert Platz für die absolut platzierten Logos */
+    padding:clamp(8px,1.2vh,16px) clamp(4px,0.5vw,10px) clamp(58px,8.8vh,84px)!important;
+    margin:0!important;
+  }
+  /* Shuffle: zentriert, volle Breite (spanning 2 Spalten) */
+  .tl-album-random-btn{grid-column:1/-1!important;grid-row:1!important;justify-self:center!important;
+    width:clamp(54px,5.2vw,72px)!important;height:clamp(54px,5.2vw,72px)!important;}
+  /* Play: zentriert, volle Breite */
+  .tl-play-btn{grid-column:1/-1!important;grid-row:2!important;justify-self:center!important;
+    width:clamp(44px,4.0vw,56px)!important;height:clamp(44px,4.0vw,56px)!important;}
+  /* Prev: linke Spalte, rechts ausgerichtet */
+  .tl-prev-btn{grid-column:1!important;grid-row:3!important;justify-self:end!important;
+    width:clamp(44px,4.0vw,56px)!important;height:clamp(44px,4.0vw,56px)!important;}
+  /* Next: rechte Spalte, links ausgerichtet */
+  .tl-next-btn{grid-column:2!important;grid-row:3!important;justify-self:start!important;
+    width:clamp(44px,4.0vw,56px)!important;height:clamp(44px,4.0vw,56px)!important;}
+  /* ABC: zentriert, volle Breite */
+  .tl-abc-btn{grid-column:1/-1!important;grid-row:4!important;justify-self:center!important;
+    width:clamp(44px,4.0vw,56px)!important;height:clamp(44px,4.0vw,56px)!important;
+    font-size:clamp(12px,1.1vw,17px)!important;}
+  /* Next-Pfeil spiegeln (zeigt nach links) */
+  .tl-next-btn svg{transform:scaleX(-1)!important;transform-origin:center center!important;}
+
+  /* Logos: absolut am unteren Rand des linken Panels verankert */
+  .tl-home-logo{
+    position:absolute!important;
+    bottom:clamp(12px,1.8vh,22px)!important;
+    left:clamp(4px,0.6vw,10px)!important;
+    grid-column:unset!important;grid-row:unset!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    padding:0!important;cursor:pointer!important;
+    display:flex!important;align-items:center!important;z-index:5!important;
+  }
+  .tl-making-logo{
+    position:absolute!important;
+    bottom:clamp(14px,2.0vh,24px)!important;
+    right:clamp(4px,0.6vw,10px)!important;
+    grid-column:unset!important;grid-row:unset!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    padding:0!important;cursor:pointer!important;
+    display:flex!important;align-items:center!important;z-index:5!important;
+  }
+  .tl-home-logo img{height:clamp(22px,2.2vw,36px)!important;width:auto!important;display:block!important;pointer-events:none!important;}
+  .tl-making-logo img{height:clamp(9px,0.95vw,15px)!important;width:auto!important;display:block!important;pointer-events:none!important;}
+}
+
+/* iPad Hochformat: größere Buttons, mehr Abstand */
+@media(min-width:600px) and (orientation:portrait){
+  .tl-icon-group{
+    row-gap:clamp(22px,3.8vh,48px)!important;
+    padding-bottom:clamp(66px,9.8vh,92px)!important;
+  }
+  .tl-album-random-btn{width:clamp(64px,8.5vw,92px)!important;height:clamp(64px,8.5vw,92px)!important;}
+  .tl-play-btn,.tl-prev-btn,.tl-next-btn,.tl-abc-btn{
+    width:clamp(48px,6.0vw,68px)!important;height:clamp(48px,6.0vw,68px)!important;}
+  .tl-abc-btn{font-size:clamp(14px,1.8vw,22px)!important;}
+  .tl-home-logo img{height:clamp(24px,2.8vw,40px)!important;}
+  .tl-making-logo img{height:clamp(10px,1.2vw,17px)!important;}
+}
+
+/* ── iPhone ≤599px: Vollständiges Album-Player-Layout ── */
+@media(max-width:599px){
+  /* Player-Bar verbergen (kein Mini-Player nötig) */
+  body:has(#screenTracklist.active) .hj-player{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+
+  /* Tracklist-Screen: vertikaler Flex, volle Höhe */
+  #screenTracklist.active{
+    display:flex!important;flex-direction:column!important;
+    overflow:hidden!important;padding:0!important;
+    position:relative!important; /* Positionierungskontext für absolute Logos */
+    height:var(--screen-h,calc(100dvh - 60px))!important;
+    max-height:var(--screen-h,calc(100dvh - 60px))!important;
+    background:#071826!important;
+  }
+
+  /* Linke Spalte = oberer fester Block (Plattenspieler + Buttons) */
+  #tlLeftCol{
+    flex:0 0 auto!important;width:100%!important;
+    overflow:visible!important;
+    /* position:static → Logos werden relativ zu #screenTracklist positioniert */
+    position:static!important;
+    display:flex!important;flex-direction:column!important;align-items:center!important;
+    padding:10px 14px 0!important;background:#071826!important;
+  }
+  .tl-top{height:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;width:100%!important;padding:0!important;}
+  .tl-hero{display:flex!important;flex-direction:column!important;align-items:center!important;gap:0!important;width:100%!important;height:auto!important;}
+
+  /* Plattenspieler: zentriert, ~54vw breit */
+  .tl-cover-stack{width:min(54vw,230px)!important;flex:0 0 auto!important;margin:0 auto!important;order:1!important;}
+  .tl-top-cover{display:none!important;}
+  .album-deck{display:block!important;width:100%!important;}
+  .album-deck-title{font-size:clamp(10px,3.2vw,16px)!important;line-height:1.1!important;}
+  .album-deck-artist{font-size:clamp(8px,2.5vw,12px)!important;line-height:1.1!important;}
+
+  /* Titel/Meta-Block ausblenden */
+  .tl-side{display:none!important;}
+
+  /* Icon-Group: 5 Buttons gleichmäßig in einer Reihe */
+  .tl-icon-group{
+    order:2!important;
+    display:flex!important;flex-direction:row!important;
+    align-items:center!important;justify-content:space-evenly!important;
+    flex-wrap:nowrap!important;
+    width:100%!important;padding:9px 0 10px!important;gap:0!important;margin:0!important;
+    position:static!important; /* nicht absolute */
+    grid-column:unset!important;grid-row:unset!important;
+  }
+
+  /* Shuffle-Button (transparent wie bisher) */
+  .tl-album-random-btn{
+    display:flex!important;width:56px!important;height:56px!important;flex:0 0 56px!important;
+    order:1!important;
+  }
+  /* Play, Prev, Next, ABC: einheitliche Pill-Buttons */
+  .tl-play-btn,.tl-prev-btn,.tl-next-btn,.tl-abc-btn{
+    display:flex!important;width:50px!important;height:50px!important;flex:0 0 50px!important;
+    border-radius:50%!important;border:0!important;
+    background:#86B1D1!important;color:#06141F!important;
+    align-items:center!important;justify-content:center!important;
+    cursor:pointer!important;
+    box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 -5px 9px rgba(0,0,0,.08)!important;
+    padding:0!important;
+  }
+  .tl-play-btn{order:2!important;}
+  .tl-prev-btn{order:3!important;}
+  .tl-next-btn{order:4!important;}
+  .tl-abc-btn{order:5!important;font-family:'Anton',sans-serif!important;font-size:15px!important;letter-spacing:.02em!important;font-weight:400!important;}
+  .tl-play-btn svg,.tl-prev-btn svg,.tl-next-btn svg{width:52%!important;height:52%!important;fill:#06141F!important;stroke:none!important;display:block!important;}
+  .tl-next-btn svg{transform:scaleX(-1)!important;}
+  .tl-repeat-btn,.tl-signature-btn{display:none!important;}
+
+  /* Logos: absolut am unteren Rand des #screenTracklist (position:relative) */
+  .tl-home-logo{
+    position:absolute!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 9px)!important;
+    left:14px!important;
+    grid-column:unset!important;grid-row:unset!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    padding:0!important;cursor:pointer!important;
+    display:flex!important;align-items:center!important;z-index:10!important;
+  }
+  .tl-making-logo{
+    position:absolute!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 12px)!important;
+    right:14px!important;
+    grid-column:unset!important;grid-row:unset!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    padding:0!important;cursor:pointer!important;
+    display:flex!important;align-items:center!important;z-index:10!important;
+  }
+  .tl-home-logo img{height:22px!important;width:auto!important;display:block!important;pointer-events:none!important;}
+  .tl-making-logo img{height:9px!important;width:auto!important;display:block!important;pointer-events:none!important;}
+
+  /* Rechte Spalte = Tracklist, füllt restlichen Raum */
+  #tlRightCol{
+    flex:1 1 0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
+    min-height:0!important;
+    /* Padding-bottom: Platz für Branding-Logos am unteren Rand */
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 44px)!important;
+    background:#06141F!important;
+    border-top:1px solid rgba(133,172,201,.1)!important;
+  }
+
+  /* Track-Zeilen: etwas kompakter für iPhone */
+  .tl-track{gap:10px!important;padding:9px 14px 9px 10px!important;}
+  .tl-thumb{width:48px!important;height:48px!important;border-radius:5px!important;}
+  .tl-title{font-size:14px!important;}
+  .tl-artist{font-size:11px!important;}
+  .tl-num-wrap{width:22px!important;}
+  .tl-track-num{font-size:13px!important;}
+  .tl-duration{font-size:11px!important;}
+  .tl-drag-handle{display:flex!important;width:26px!important;height:42px!important;color:rgba(133,172,201,.50)!important;}
+  .tl-bottom-pad{height:8px!important;}
+}
+
 </style>
 </head>
 <body>
@@ -4487,39 +4692,78 @@ function reorderAlbumSong(from,to){
   if(curSong) syncAlbumDeck(curSong);
 }
 function wireAlbumDragRows(){
-  let dragIdx=null;
-  tlList.querySelectorAll('.tl-track').forEach(row=>{
-    const handle=row.querySelector('.tl-drag-handle');
-    if(!handle) return;
-    handle.addEventListener('click', e=>e.stopPropagation());
-    handle.addEventListener('mousedown', e=>e.stopPropagation());
-    row.draggable=false; handle.draggable=true;
-    handle.addEventListener('dragstart',e=>{dragIdx=parseInt(row.dataset.idx);row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
-    handle.addEventListener('dragend',()=>{dragIdx=null;tlList.querySelectorAll('.tl-track').forEach(r=>r.classList.remove('dragging','drag-before','drag-after'));});
-    row.addEventListener('dragover',e=>{if(dragIdx===null)return;e.preventDefault();const r=row.getBoundingClientRect();row.classList.toggle('drag-before',e.clientY<r.top+r.height/2);row.classList.toggle('drag-after',e.clientY>=r.top+r.height/2);});
-    row.addEventListener('dragleave',()=>row.classList.remove('drag-before','drag-after'));
-    row.addEventListener('drop',e=>{if(dragIdx===null)return;e.preventDefault();const r=row.getBoundingClientRect();let to=parseInt(row.dataset.idx)+(e.clientY>=r.top+r.height/2?1:0);if(to>dragIdx)to--;reorderAlbumSong(dragIdx,to);});
-    let touchActive=false, startY=0, lastY=0;
-    const finishTouch=()=>{
-      if(!touchActive) return;
-      touchActive=false;
-      document.body.classList.remove('tl-touch-dragging');
-      const rows=[...tlList.querySelectorAll('.tl-track')];
-      let to=rows.length;
-      for(const r2 of rows){
-        const b=r2.getBoundingClientRect();
-        if(lastY < b.top + b.height/2){ to=parseInt(r2.dataset.idx); break; }
+  // v222: Pointer-Events auf der ganzen Zeile (nicht nur Handle) – wie DJ-Player.
+  // Event-Delegation auf tlList; beim zweiten Aufruf kein Doppel-Listener dank Flag.
+  if(tlList._tlDragWired) return;
+  tlList._tlDragWired=true;
+
+  let ds=null; // drag state
+
+  function clearTlMarks(){
+    tlList.querySelectorAll('.tl-track').forEach(r=>
+      r.classList.remove('dragging','drag-before','drag-after'));
+    document.body.classList.remove('tl-touch-dragging');
+  }
+
+  // Drag startet bei pointerdown auf der Zeile – außer beim Antippen von Songtitel/Thumbnail
+  tlList.addEventListener('pointerdown',e=>{
+    const row=e.target.closest('.tl-track');
+    if(!row) return;
+    // Songtitel, Artist und Albumcover → normaler Klick (Abspielen)
+    if(e.target.closest('.tl-info')||e.target.closest('.tl-thumb')) return;
+    const fromIdx=parseInt(row.dataset.idx);
+    if(isNaN(fromIdx)) return;
+    e.preventDefault();
+    ds={fromIdx,toIdx:fromIdx,row,startY:e.clientY,lastY:e.clientY,moved:false};
+    try{row.setPointerCapture(e.pointerId);}catch(_){}
+  },{passive:false});
+
+  tlList.addEventListener('pointermove',e=>{
+    if(!ds) return;
+    // Erst als Drag committen wenn wirklich bewegt
+    if(Math.abs(e.clientY-ds.startY)>6){
+      if(!ds.moved){
+        ds.moved=true;
+        ds.row.classList.add('dragging');
+        document.body.classList.add('tl-touch-dragging');
       }
-      if(to>dragIdx) to--;
-      rows.forEach(r=>r.classList.remove('dragging','drag-before','drag-after'));
-      reorderAlbumSong(dragIdx,to);
-      dragIdx=null;
-    };
-    handle.addEventListener('touchstart',e=>{ if(!e.touches||!e.touches.length)return; touchActive=true; dragIdx=parseInt(row.dataset.idx); startY=lastY=e.touches[0].clientY; row.classList.add('dragging'); document.body.classList.add('tl-touch-dragging'); },{passive:true});
-    handle.addEventListener('touchmove',e=>{ if(!touchActive||!e.touches||!e.touches.length)return; lastY=e.touches[0].clientY; e.preventDefault(); const rows=[...tlList.querySelectorAll('.tl-track')]; rows.forEach(r=>r.classList.remove('drag-before','drag-after')); for(const r2 of rows){ const b=r2.getBoundingClientRect(); if(lastY>=b.top && lastY<=b.bottom){ r2.classList.add(lastY < b.top+b.height/2 ? 'drag-before':'drag-after'); break; } } },{passive:false});
-    handle.addEventListener('touchend',finishTouch,{passive:true});
-    handle.addEventListener('touchcancel',finishTouch,{passive:true});
-  });
+    }
+    if(!ds.moved) return;
+    e.preventDefault();
+    ds.lastY=e.clientY;
+    const rows=[...tlList.querySelectorAll('.tl-track')];
+    rows.forEach(r=>r.classList.remove('drag-before','drag-after'));
+    for(const r of rows){
+      const b=r.getBoundingClientRect();
+      if(ds.lastY>=b.top&&ds.lastY<=b.bottom){
+        const after=ds.lastY>b.top+b.height/2;
+        r.classList.add(after?'drag-after':'drag-before');
+        let to=parseInt(r.dataset.idx)+(after?1:0);
+        if(to>ds.fromIdx) to--;
+        ds.toIdx=to;
+        break;
+      }
+    }
+  },{passive:false});
+
+  function finishTlDrag(){
+    if(!ds) return;
+    const moved=ds.moved,fromIdx=ds.fromIdx,toIdx=ds.toIdx;
+    ds=null;
+    clearTlMarks();
+    if(!moved) return; // war nur ein Tap → Klick-Event läuft normal weiter
+    // Click nach Drag unterdrücken
+    window.__hjTlDragSuppressClick=true;
+    setTimeout(()=>{window.__hjTlDragSuppressClick=false;},80);
+    if(fromIdx!==toIdx) reorderAlbumSong(fromIdx,Math.max(0,toIdx));
+  }
+  tlList.addEventListener('pointerup',finishTlDrag,{passive:true});
+  tlList.addEventListener('pointercancel',finishTlDrag,{passive:true});
+
+  // Click nach Drag unterdrücken
+  tlList.addEventListener('click',e=>{
+    if(window.__hjTlDragSuppressClick) e.stopImmediatePropagation();
+  },true);
 }
 function sortCurrentAlbumABC(){
   if(!curAlbum || !ALBUMS[curAlbum]) return;
