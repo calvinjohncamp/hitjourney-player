@@ -7,6 +7,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon-20260608.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
+<!-- Version v80: Decks immer im Ping-Pong (auch CP/iPhone), nie zwei Songs parallel ausser Crossfade -->
 <!-- Version v79: iPad-Hochformat-Funktionsbuttons mehr Abstand -->
 <!-- Version v78: iPad-Querformat-Funktionsbuttons optisch hoeher gesetzt -->
 <!-- Version v77: iPhone-Lockscreen-Safe-Mode startet automatisch im Direkt-Audio-Modus -->
@@ -1254,16 +1255,19 @@ function clearDeck(id){
 async function playDeck(id){
   const d=DECKS[id];if(!d.song)return;
 
-  // v76: Master-Ausgang-Logik. Außer während eines echten Fade-Vorgangs darf nie
-  // ein zweites Deck parallel hörbar weiterlaufen. Direkte Deck-Starts stoppen
-  // deshalb immer zuerst das andere Deck.
+  // v79: Master-Ausgang-Logik. Ein direkter Deck-Start ist IMMER exklusiv und stoppt
+  // zuerst das andere Deck. (playDeck wird nie vom Crossfade benutzt – der spielt sein
+  // Ziel-Deck direkt über audio.play() –, deshalb ist das hier bedingungslos sicher.)
+  // Wichtig: Früher lief der Stopp nur bei !_fadeActive. Blieb _fadeActive nach einer
+  // auf iOS unterbrochenen Blende "hängen", startete ein zweiter Song parallel. Behoben,
+  // indem ein direkter Start eine evtl. hängende Blende verwirft und das andere Deck stoppt.
+  _fadeActive=false;
   const oid=other(id);
-  if(!_fadeActive){
-    try{DECKS[oid].audio.pause();}catch(e){}
-    DECKS[oid].playing=false;
-    DECKS[oid].el.classList.remove('is-playing','is-fading-out');
-    DECKS[oid].el.classList.add('is-cued');
-  }
+  try{DECKS[oid].audio.pause();}catch(e){}
+  DECKS[oid].playing=false;
+  DECKS[oid].el.classList.remove('is-playing','is-fading-out');
+  DECKS[oid].el.classList.add('is-cued');
+  resetTonearm(oid);
 
   if(isCpSafeMode()){
     activeDeck=id;
@@ -1361,13 +1365,17 @@ async function doDirectNext(auto=false){
      Fade-Taste = Weiter. Kein WebAudio, kein GainNode, kein zweites laufendes/vorgeladenes Deck-Audio.
      Die beiden Plattenspieler bleiben nur optisch bestehen: aktives Deck spielt sichtbar, anderes Deck zeigt den nächsten Titel. */
   if(isCpSafeMode()){
-    const id=activeDeck;
-    const cueId=other(id);
-    const cur=DECKS[id];
-    const cue=DECKS[cueId];
-    let nextSong=null;
+    // v79: Auch im CP-/Direkt-Modus wechseln die Decks jetzt im Ping-Pong (A→B→A …),
+    // genau wie im Crossfade-Modus auf dem Desktop. Der wartende Song spielt in dem Deck,
+    // in dem er sichtbar wartet – er springt NICHT mehr immer zurück ins erste Deck.
+    // Hörbar bleibt weiterhin nur ein einziges Audio-Element (cpAudio), also nie parallel.
+    const fromId=activeDeck;
+    const toId=other(fromId);
+    const fromDeck=DECKS[fromId];
+    const toDeck=DECKS[toId];
 
-    if(cue.song) nextSong=cue.song;
+    let nextSong=null;
+    if(toDeck.song) nextSong=toDeck.song;            // bevorzugt der bereits im Cue-Deck wartende Song
     else if(djQueue.length) nextSong=djQueue.shift();
     else if(shuffleOn&&ALL_SONGS.length) nextSong=ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)];
 
@@ -1375,31 +1383,34 @@ async function doDirectNext(auto=false){
 
     try{cpAudio.pause();}catch(e){}
     clearNativeDeckAudio('A');clearNativeDeckAudio('B');
-    cur.playing=false;cur.el.classList.remove('is-playing','is-fading-out');
 
-    loadDeck(id,nextSong);
-    activeDeck=id;
-    cur.el.classList.add('is-active','is-playing');
-    cur.el.classList.remove('is-cued','is-fading-out');
+    // Aktives Deck wechselt auf das bisherige Cue-Deck.
+    activeDeck=toId;
+    if(toDeck.song!==nextSong) loadDeck(toId,nextSong); // Song dort einsetzen, falls noch nicht vorhanden
+    toDeck.playing=true;
+    toDeck.el.classList.add('is-active','is-playing');
+    toDeck.el.classList.remove('is-cued','is-fading-out');
+
     cpAudio.src=nextSong.mp3||'';
     try{cpAudio.currentTime=0;}catch(e){}
     cpAudio.volume=1;
     cpAudio.play().catch(()=>{});
-    cur.playing=true;
     icPause.style.display='';icPlay.style.display='none';btnPause.classList.remove('paused');
     try{ djSetMeta(nextSong); }catch(e){}
 
+    // Bisher aktives Deck stoppt und wartet mit dem nächsten Song (oder wird geleert).
+    fromDeck.playing=false;
     if(djQueue.length){
-      loadDeck(cueId,djQueue.shift());
+      loadDeck(fromId,djQueue.shift());
       renderQueue();
     } else if(shuffleOn&&ALL_SONGS.length){
-      loadDeck(cueId,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);
+      loadDeck(fromId,ALL_SONGS[Math.floor(Math.random()*ALL_SONGS.length)]);
     } else {
-      clearDeck(cueId);
+      clearDeck(fromId);
     }
-    DECKS[cueId].playing=false;
-    DECKS[cueId].el.classList.remove('is-active','is-playing');
-    DECKS[cueId].el.classList.add('is-cued');
+    fromDeck.el.classList.remove('is-active','is-playing','is-fading-out');
+    fromDeck.el.classList.add('is-cued');
+    resetTonearm(fromId);
     if(!auto)toast('Weiter');
     return;
   }
