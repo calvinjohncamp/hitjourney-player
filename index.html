@@ -26,6 +26,7 @@
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
 <!-- Version: v232-album-space-abc-prev-polish -->
+<!-- Version: v251-wide-teaser-cover-lyrics-cycle-fix -->
 <!-- Version: v250-describe-page-nach-lyrics-cover-lyrics-describe -->
 <!-- Version: v249-describe-page-cover-describe-lyrics-cycle -->
 <!-- Version: v228-album-dj-deck-conservative -->
@@ -5550,6 +5551,11 @@ function hjIsLyrics21Item(item){
   const ds = el && el.dataset ? el.dataset : {};
   if(ds && ds.chainViewMode === 'lyrics21') return true;
   if(item && item._viewMode === 'lyrics21') return true;
+  // Expliziter Admin-Wunsch "Cover + Lyrics" hat IMMER Vorrang vor der Form-Erkennung:
+  // Eine 2:1-/4:1-/Vollbreiten-Kachel ist dann KEIN einseitiges Lyric-Sheet, sondern
+  // durchläuft den Zyklus Cover → Lyrics → (Beschreibung) des dahinterliegenden Songs.
+  if(ds && ds.chainViewMode === 'cover-lyrics') return false;
+  if(item && item._viewMode === 'cover-lyrics') return false;
   if(hjLooksLikeLyrics21Tile(el)) return true;
   const song = item && item.song;
   return !!(song && !getImgUrls(song,'cover').length && getLyrics21UrlsForSong(song).length);
@@ -7816,7 +7822,7 @@ const HJChain = (function(){
     const grid=document.getElementById('homeGrid'); if(!grid) return [];
     const els=Array.from(grid.querySelectorAll('[data-chain-home="1"]'));
     const out=[];
-    els.forEach(el=>{ const song=resolveChainSong(el.dataset.chainSlug||''); if(song && song.mp3) out.push({song, el, _viewMode:(el.dataset && el.dataset.chainViewMode==='lyrics21') ? 'lyrics21' : '', _lyrics21Url:(el.dataset && el.dataset.chainLyrics21) || ''}); });
+    els.forEach(el=>{ const song=resolveChainSong(el.dataset.chainSlug||''); if(song && song.mp3) out.push({song, el, _viewMode:(el.dataset && (el.dataset.chainViewMode==='lyrics21'||el.dataset.chainViewMode==='cover-lyrics')) ? el.dataset.chainViewMode : '', _lyrics21Url:(el.dataset && el.dataset.chainLyrics21) || ''}); });
     return out;
   }
 
@@ -7879,6 +7885,10 @@ function buildHomeCard(cell, extraClass){
       if(cell.type === 'lyrics21' || cell.useCover21){
         el.dataset.chainViewMode = 'lyrics21';
         el.dataset.chainLyrics21 = cell.cover21Url || cell.lyrics21Url || cell.customImageUrl || cell.imageUrl || '';
+      } else if(cell.lyricsCycle){
+        // 2:1-/4:1-/Vollbreiten-Teaser mit ausdrücklichem Cover+Lyrics-Zyklus:
+        // NICHT als einseitiges Lyric-Sheet behandeln, sondern Cover → Lyrics → (Beschreibung) zeigen.
+        el.dataset.chainViewMode = 'cover-lyrics';
       }
     }
   }catch(e){}
@@ -9321,7 +9331,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v214-album-signature-cover-lyrics-button-20260611';
+  const VERSION = 'v251-wide-teaser-cover-lyrics-cycle-fix-20260614';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
