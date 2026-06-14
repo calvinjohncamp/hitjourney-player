@@ -367,6 +367,27 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell-silber-split>div{position:relative;overflow:hidden;border-radius:8px;background:#000}
 .he-cell-silber-split img{width:100%;height:100%;object-fit:cover;display:block}
 .badge-silber{background:rgba(255,120,30,.85)}
+/* Silbertablett-Editor: reduzierter Dialog für 2 quadratische Kacheln */
+#homeSlideshowModal.silber-mode .ss-normal-field{display:none!important}
+#homeSlideshowModal.silber-mode .ss-normal-only{display:none!important}
+.st-editor-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
+.st-editor-tile{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;border:1px solid rgba(133,172,201,.16);background:#06141F;display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.35);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center}
+.st-editor-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.st-editor-tile.slideshow{background:linear-gradient(135deg,#071826,#102b3d)}
+.st-editor-tile.slideshow .st-slide-stack{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;padding:8px;opacity:.88}
+.st-editor-tile.slideshow .st-slide-stack img{position:relative;border-radius:5px;background:#000}
+.st-editor-tile-label{position:absolute;left:8px;bottom:8px;padding:5px 7px;border-radius:7px;background:rgba(0,0,0,.58);color:#fff;font-size:9px;letter-spacing:.1em;text-transform:uppercase;z-index:2}
+.st-upload-zone{position:relative;border-radius:10px;border:1.5px dashed rgba(133,172,201,.22);background:rgba(11,42,66,.4);cursor:pointer;overflow:hidden;transition:border-color .2s,background .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:1/1}
+.st-upload-zone:hover{border-color:rgba(133,172,201,.45);background:rgba(11,42,66,.7)}
+.st-upload-zone.has-file{border-style:solid;border-color:rgba(133,172,201,.35)}
+.st-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+.st-upload-zone .zone-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none}
+.st-upload-zone.has-file .zone-preview{display:block}
+.st-upload-zone.has-file .upload-zone-icon{display:none}
+.st-pos-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.st-pos-btn{padding:10px 12px;border-radius:10px;border:1px solid rgba(133,172,201,.16);background:rgba(133,172,201,.06);color:#85ACC9;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.04em}
+.st-pos-btn.active{background:rgba(133,172,201,.20);border-color:rgba(133,172,201,.55);color:#cfe5f5}
+
 /* Trio layout — mobile: stacked, desktop: gl bd po */
 .he-cell.hidden-cell{display:none}
 .he-row-caption-wrap{padding:0 2px 6px}
@@ -7920,254 +7941,56 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       </div>
 
       <!-- Silbertablett / Velvet Radio Style -->
-      <div class="lpm-option full" data-layout="silbertablett" onclick="lpmPick(this)">
-        <div class="lpm-option-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="lpm-sq" style="aspect-ratio:1/1">▣</div>
-          <div class="lpm-sq diashow" style="aspect-ratio:1/1">◈</div>
-        </div>
-        <div class="lpm-label">Diashow erstellen — 2× 1:1 nebeneinander</div>
-      </div>
-
-    </div>
-    <button class="lpm-cancel" onclick="closeLpm()">Abbrechen</button>
-  </div>
-</div>
-
-<!-- ══ 2x1plus2 ARRANGEMENT MODAL ══ -->
-<div id="arrangementModal">
-  <div class="arm-inner">
-    <div class="arm-title">Position des 2:1-Blocks wählen</div>
-    <div class="arm-sub">Wähle, wo der breite Block platziert werden soll. Die Anordnung lässt sich danach nicht mehr verschieben.</div>
-    <div class="arm-options">
-      <div class="arm-option selected" data-arm="left" onclick="armSelect(this)">
-        <div class="arm-preview arm-a">
-          <div class="blk-wide"></div>
-          <div class="blk-sq1"></div>
-          <div class="blk-sq2"></div>
-          <div class="blk-sq3"></div>
-          <div class="blk-sq4"></div>
-        </div>
-        <div class="arm-label">2:1 links &nbsp;&middot;&nbsp; 1:1 &nbsp;&middot;&nbsp; 1:1</div>
-      </div>
-      <div class="arm-option" data-arm="center" onclick="armSelect(this)">
-        <div class="arm-preview arm-b">
-          <div class="blk-sq1"></div>
-          <div class="blk-sq2"></div>
-          <div class="blk-wide"></div>
-          <div class="blk-sq3"></div>
-          <div class="blk-sq4"></div>
-        </div>
-        <div class="arm-label">1:1 &nbsp;&middot;&nbsp; 2:1 mitte &nbsp;&middot;&nbsp; 1:1</div>
-      </div>
-      <div class="arm-option" data-arm="right" onclick="armSelect(this)">
-        <div class="arm-preview arm-c">
-          <div class="blk-sq1"></div>
-          <div class="blk-sq2"></div>
-          <div class="blk-sq3"></div>
-          <div class="blk-sq4"></div>
-          <div class="blk-wide"></div>
-        </div>
-        <div class="arm-label">1:1 &nbsp;&middot;&nbsp; 1:1 &nbsp;&middot;&nbsp; 2:1 rechts</div>
-      </div>
-    </div>
-    <div class="arm-footer">
-      <button class="arm-btn-back" onclick="armBack()">&#8592; Zur&#252;ck</button>
-      <button class="arm-btn-ok" id="armOkBtn" onclick="armConfirm()">OK &#8211; Anordnung best&#228;tigen</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MOTIF CONFIRM MODAL ══ -->
-<div id="motifConfirmModal" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px">
-  <div style="width:100%;max-width:340px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:18px;padding:22px 20px 18px;animation:fadeIn .18s ease">
-    <div style="font-size:13px;font-weight:700;color:#85ACC9;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px">Motiv übernehmen?</div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <img id="motifConfirmImg" src="" style="width:80px;height:80px;object-fit:cover;border-radius:10px;background:#06141F;flex-shrink:0;border:1px solid rgba(133,172,201,.15)">
-      <div style="min-width:0">
-        <div id="motifConfirmTitle" style="font-size:14px;font-weight:700;color:#cfe5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-        <div id="motifConfirmSub" style="font-size:11px;color:rgba(133,172,201,.5);margin-top:3px"></div>
-        <div id="motifConfirmNote" style="font-size:10px;color:rgba(133,172,201,.35);margin-top:6px;line-height:1.4">Dieses Cover wird als Kachelbild verwendet.</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button onclick="motifConfirmCancel()" style="flex:1;padding:10px;background:rgba(133,172,201,.06);border:1px solid rgba(133,172,201,.15);border-radius:10px;color:rgba(133,172,201,.7);font-size:13px;cursor:pointer">Abbrechen</button>
-      <button onclick="motifConfirmOk()" style="flex:1;padding:10px;background:rgba(50,180,100,.15);border:1px solid rgba(50,180,100,.3);border-radius:10px;color:#6fdb9e;font-size:13px;font-weight:700;cursor:pointer">✓ Übernehmen</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ HOME SLIDESHOW MODAL ══ -->
-<div id="homeSlideshowModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);flex-direction:column;align-items:center;justify-content:flex-end;padding:0">
-  <div style="width:100%;max-width:560px;background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:94vh;animation:fadeIn .2s ease">
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(133,172,201,.1);flex-shrink:0">
-      <div class="htm-title" style="margin:0">◈ Diashow bearbeiten</div>
-      <button onclick="closeSlideshowModal()" style="background:rgba(133,172,201,.1);border:none;border-radius:6px;color:#85ACC9;width:28px;height:28px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
-    </div>
-
-    <!-- Scrollable body -->
-    <div style="flex:1;overflow-y:auto;padding:14px 18px 0">
-
-      <!-- Frame Upload + KI-Analyse -->
-      <div class="htm-field">
-        <span class="htm-label">Frame / Hintergrundbild (2:1)</span>
-        <input type="hidden" id="htmSsBgUrl">
-        <div class="upload-zone wide" id="zSsFrame" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onSsFrameDrop(event)">
-          <input type="file" id="ssFrameFileInput" accept="image/png,image/jpeg,image/webp" onchange="onSsFrameFile(this)">
-          <img class="zone-preview" id="prevSsFrame" alt="Frame Vorschau">
-          <div class="upload-zone-icon">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            <span>Frame anklicken / hochladen</span>
-            <small>PNG/JPG · 2:1</small>
-          </div>
-          <button type="button" class="zone-clear" onclick="clearSsFrame(event)">×</button>
-          <div class="upload-progress" id="progSsFrame"></div>
-        </div>
-        <div class="s3-hint" id="hintSsFrame"></div>
-      </div>
-
-
-      <!-- Startfarbe für transparenten Bereich -->
-      <div class="htm-field">
-        <span class="htm-label">Startfarbe transparenter Bereich</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="htm-input" id="htmSsStartColor" placeholder="#0A0A0A" value="#0A0A0A" oninput="ssStartColorPreviewUpdate()" style="font-family:'SF Mono','Menlo',monospace;flex:1">
-          <div id="ssStartColorPreview" style="width:42px;height:42px;border-radius:9px;border:1px solid rgba(133,172,201,.25);background:#0A0A0A;flex-shrink:0"></div>
-        </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Diese Farbe liegt am Anfang hinter dem transparenten Frame und bleibt sichtbar, bis das erste Dia eingeblendet wird.</div>
-      </div>
-
-      <input type="checkbox" id="htmSsCoverFitSquare" checked="" style="display:none">
-
-      <!-- Anzeige Songtitel / Nummer -->
-      <div class="htm-field">
-        <span class="htm-label">Einblendungen im Frame</span>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
-            <input type="checkbox" id="htmSsShowSongTitle" checked="" style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
-            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songtitel anzeigen</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
-            <input type="checkbox" id="htmSsShowSongNumber" checked="" style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
-            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Songnummer anzeigen</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(133,172,201,.16);border-radius:10px;background:rgba(133,172,201,.05);cursor:pointer;user-select:none">
-            <input type="checkbox" id="htmSsShowProgressDots" checked="" style="width:17px;height:17px;accent-color:#85ACC9;flex-shrink:0">
-            <span style="font-size:12px;color:#cfe5f5;font-weight:700">Fortschritt anzeigen</span>
-          </label>
-        </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Songtitel und Songnummer laufen als gemeinsamer Block. Textblock und Fortschrittspunkte lassen sich unten im WYSIWYG-Feld frei ziehen.</div>
-      </div>
-
-      <!-- Songtitel Look -->
-      <div class="htm-field">
-        <span class="htm-label">Songtitel-Look</span>
-        <div class="ss-title-style-grid">
-          <div>
-            <div class="field-label">Stil</div>
-            <select class="htm-input" id="htmSsTitleStyleMode" onchange="ssWysApply()">
-              <option value="outline">Hell + dunkler Rahmen</option>
-              <option value="solid">Einfarbig ohne Rahmen</option>
-            </select>
-          </div>
-          <div>
-            <div class="field-label">Farbe</div>
-            <select class="htm-input" id="htmSsTitleColor" onchange="ssWysApply()">
-              <option value="#f1ecdf">Creme / hell</option>
-              <option value="#85ACC9">Hitjourney-Blau</option>
-              <option value="#cfe5f5">Eisblau</option>
-              <option value="#ffffff">Weiß</option>
-              <option value="#0A0A0A">Schwarz</option>
-              <option value="#F44A22">Orange</option>
-              <option value="#FFD35A">Gelb</option>
-            </select>
-          </div>
-          <div>
-            <div class="field-label">Größe</div>
-            <select class="htm-input" id="htmSsTitleSize" onchange="ssWysApply()">
-              <option value="small">Klein</option>
-              <option value="normal">Normal</option>
-              <option value="large">Groß</option>
-              <option value="xlarge">Sehr groß</option>
-            </select>
-          </div>
-        </div>
-        <div style="font-size:10.5px;color:rgba(133,172,201,.35);margin-top:5px;line-height:1.35">Voreinstellung bleibt exakt wie bisher: helle Schrift mit dunklem Rahmen. Die Farbvarianten sind einfarbig und ohne Rahmen gedacht.</div>
-      </div>
-
-      <!-- WYSIWYG Cover-Platzierung -->
-      <div class="htm-field">
-        <span class="htm-label">Cover-Platzierung direkt im Teaser</span>
-        <div class="ss-wys-card">
-          <div class="ss-wys-stage" id="ssWysStage">
-            <div class="ss-wys-cover square" id="ssWysCover"><img id="ssWysCoverImg" alt="Cover Vorschau"></div>
-            <img class="ss-wys-frame" id="ssWysFrame" alt="Frame Vorschau">
-            <div class="ss-wys-box square" id="ssWysBox">
-              <div class="ss-wys-rotate" id="ssWysRotate">↻</div>
-              <div class="ss-wys-handle" id="ssWysHandle"></div>
-            </div>
-            <div class="ss-wys-overlay dots" id="ssWysDots" title="Fortschrittspunkte ziehen"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-            <div class="ss-wys-overlay text" id="ssWysText" title="Songtitel/Nummer ziehen"><div>Songtitel</div><div class="small">01 / 10</div></div>
-          </div>
-          <div class="ss-wys-controls">
-            <button type="button" id="ssShapeSquare" onclick="ssWysSetShape('square')">Quadrat</button>
-            <button type="button" id="ssShapeCircle" onclick="ssWysSetShape('circle')">Kreis</button>
-            <button type="button" id="ssFitContain" onclick="ssWysSetFit('contain')">Ganzes Cover</button>
-            <button type="button" id="ssFitCover" onclick="ssWysSetFit('cover')">Fläche füllen</button>
-            <button type="button" id="ssUploadFrameBtn" onclick="ssTriggerFrameUpload()">Frame/Motiv hochladen</button>
-            <button type="button" id="ssFocusText" onclick="ssWysFocusOverlay('text')">Songtitel + Nr.</button>
-            <button type="button" id="ssFocusDots" onclick="ssWysFocusOverlay('dots')">Fortschrittsleiste</button>
-            <button type="button" onclick="ssWysReset()">Reset</button>
-          </div>
-          <div class="ss-wys-mini">Quadrat/Kreis, Fortschrittspunkte und Songtitel/Nummer direkt im Teaser ziehen. Unten rechts wird proportional skaliert – Kreis bleibt rund, Quadrat bleibt quadratisch.</div>
-        </div>
-        <input type="hidden" id="htmSsCoverAngleOffset" value="0">
-        <input type="hidden" id="htmSsFitLeft"><input type="hidden" id="htmSsFitTop"><input type="hidden" id="htmSsFitWidth"><input type="hidden" id="htmSsFitHeight">
-        <input type="hidden" id="htmSsCoverShape" value="square"><input type="hidden" id="htmSsCoverFitMode" value="contain">
-        <input type="hidden" id="htmSsTitleX" value="4"><input type="hidden" id="htmSsTitleY" value="78">
-        <input type="hidden" id="htmSsDotsX" value="4"><input type="hidden" id="htmSsDotsY" value="94">
-      </div>
-
-      <input type="hidden" id="ssPosGrid" value="bottom-left">
-
-
-      <!-- Titel -->
-      <div class="htm-field">
-        <span class="htm-label">Titel / Overlay-Text</span>
-        <input class="htm-input" id="htmSlideshowTitle" placeholder="z. B. IN THE SPOTLIGHT" oninput="updateSsFrameHint()">
-      </div>
-
-      <!-- Silbertablett / Velvet Radio Style -->
       <div id="htmSilberFields" style="display:none;border:1px solid rgba(133,172,201,.14);border-radius:12px;padding:12px;margin:10px 0;background:rgba(133,172,201,.05)">
-        <div class="htm-field">
-          <span class="htm-label">Teaser-Kachel</span>
-          <input class="htm-input" id="htmStImageUrl" placeholder="Cover-/Teaser-Bild URL, z. B. Velvet Radio Cover">
+        <div style="font-size:12px;font-weight:800;color:#cfe5f5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Silbertablett / Velvet Radio</div>
+        <div style="font-size:11px;line-height:1.45;color:rgba(133,172,201,.58);margin-bottom:10px">
+          Zwei quadratische Kacheln nebeneinander: eine feste Teaser-Kachel und daneben die Cover-Diashow aus der Songliste. Alles bleibt nachträglich editierbar.
         </div>
+
+        <div class="st-editor-preview" id="stEditorPreview">
+          <div class="st-editor-tile" id="stPreviewLeft"><span>Links</span></div>
+          <div class="st-editor-tile" id="stPreviewRight"><span>Rechts</span></div>
+        </div>
+
+        <div class="htm-field">
+          <span class="htm-label">Teaser-Motiv hochladen / ersetzen</span>
+          <input type="hidden" id="htmStImageUrl">
+          <div class="st-upload-zone" id="zStTeaser" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onStTeaserDrop(event)">
+            <input type="file" id="stTeaserFileInput" accept="image/png,image/jpeg,image/webp" onchange="onStTeaserFile(this)">
+            <img class="zone-preview" id="prevStTeaser" alt="Teaser Vorschau">
+            <div class="upload-zone-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>Teaser-Motiv anklicken / hochladen</span>
+              <small>PNG/JPG · ideal 1:1</small>
+            </div>
+            <button type="button" class="zone-clear" onclick="clearStTeaser(event)">×</button>
+            <div class="upload-progress" id="progStTeaser"></div>
+          </div>
+          <div class="s3-hint" id="hintStTeaser"></div>
+        </div>
+
         <div class="field-row cols-2">
           <div class="htm-field">
-            <span class="htm-label">Teaser-Position</span>
-            <select class="htm-input" id="htmStCoverPos">
-              <option value="left">Links</option>
-              <option value="right">Rechts</option>
-            </select>
+            <span class="htm-label">Welche Kachel ist der Teaser?</span>
+            <input type="hidden" id="htmStCoverPos" value="right">
+            <div class="st-pos-buttons">
+              <button type="button" class="st-pos-btn" id="stPosLeftBtn" onclick="stSetCoverPos('left')">← Teaser links</button>
+              <button type="button" class="st-pos-btn" id="stPosRightBtn" onclick="stSetCoverPos('right')">Teaser rechts →</button>
+            </div>
           </div>
           <div class="htm-field">
             <span class="htm-label">Diashow-Speed Sek.</span>
-            <input class="htm-input" id="htmStSsSpeed" type="number" min="1" max="12" step="0.5" value="3">
+            <input class="htm-input" id="htmStSsSpeed" type="number" min="1" max="12" step="0.5" value="3" oninput="stRefreshPreview()">
           </div>
         </div>
         <div class="htm-field">
           <span class="htm-label">Hintergrundfarbe</span>
-          <input class="htm-input" id="htmStBgColor" value="#000000">
-        </div>
-        <div style="font-size:11px;line-height:1.45;color:rgba(133,172,201,.58);margin-top:4px">
-          Speichert denselben Live-Typ wie Velvet Radio: zwei quadratische Kacheln nebeneinander – eine feste Teaser-Kachel und eine 1:1-Cover-Diashow aus der Songliste.
+          <input class="htm-input" id="htmStBgColor" value="#000000" oninput="stRefreshPreview()">
         </div>
       </div>
 
       <!-- Funktion -->
-      <div class="htm-field">
+      <div class="htm-field ss-normal-field">
         <span class="htm-label">Klick-Funktion</span>
         <div class="htm-seg">
           <div class="htm-slideshow-seg-btn htm-seg-btn active" data-fn="play" onclick="htmSlideshowSetFn('play')">▶ Play</div>
@@ -11300,6 +11123,7 @@ let htmSlideshowRowId = null;
 let htmSlides = [];
 let ssOverlayPos = 'bottom-left';
 let ssFrameFile = null;
+let stTeaserFile = null;
 
 
 function ssFrameExt(file){
@@ -11319,6 +11143,97 @@ function updateSsFrameHint(){
   if(!hint) return;
   if(ssFrameFile) hint.textContent = '→ ' + ssFrameS3Key(ssFrameFile);
   else hint.textContent = '';
+}
+
+function stTeaserExt(file){
+  const name = (file && file.name || '').toLowerCase();
+  if(name.endsWith('.png')) return '.png';
+  if(name.endsWith('.webp')) return '.webp';
+  if(name.endsWith('.jpeg')) return '.jpg';
+  return '.jpg';
+}
+function stTeaserS3Key(file){
+  const title = document.getElementById('htmSlideshowTitle')?.value?.trim() || 'silbertablett-teaser';
+  const slug = makeSlug(title) || ('silbertablett-teaser-'+Date.now());
+  return `artwork/${slug}-teaser${stTeaserExt(file)}`;
+}
+function updateStTeaserHint(){
+  const hint = document.getElementById('hintStTeaser');
+  if(!hint) return;
+  hint.textContent = stTeaserFile ? ('→ ' + stTeaserS3Key(stTeaserFile)) : '';
+}
+function setStTeaserPreview(url){
+  const zone = document.getElementById('zStTeaser');
+  const img  = document.getElementById('prevStTeaser');
+  if(img) img.src = url || '';
+  if(zone) zone.classList.toggle('has-file', !!url);
+  stRefreshPreview();
+}
+function onStTeaserFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  stTeaserFile = file;
+  hjSetVal('htmStImageUrl','');
+  setStTeaserPreview(URL.createObjectURL(file));
+  updateStTeaserHint();
+}
+function onStTeaserDrop(e){
+  e.preventDefault();
+  offDrag(document.getElementById('zStTeaser'));
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  stTeaserFile = file;
+  hjSetVal('htmStImageUrl','');
+  setStTeaserPreview(URL.createObjectURL(file));
+  updateStTeaserHint();
+}
+function clearStTeaser(e){
+  if(e && e.preventDefault){ e.preventDefault(); e.stopPropagation(); }
+  stTeaserFile = null;
+  hjSetVal('htmStImageUrl','');
+  const input = document.getElementById('stTeaserFileInput');
+  if(input) input.value = '';
+  const prog = document.getElementById('progStTeaser');
+  if(prog) prog.style.width = '0%';
+  setStTeaserPreview('');
+  updateStTeaserHint();
+}
+function stSetCoverPos(pos){
+  hjSetVal('htmStCoverPos', pos === 'left' ? 'left' : 'right');
+  document.getElementById('stPosLeftBtn')?.classList.toggle('active', pos === 'left');
+  document.getElementById('stPosRightBtn')?.classList.toggle('active', pos !== 'left');
+  stRefreshPreview();
+}
+function stRefreshPreview(){
+  const left = document.getElementById('stPreviewLeft');
+  const right = document.getElementById('stPreviewRight');
+  if(!left || !right) return;
+  const pos = document.getElementById('htmStCoverPos')?.value || 'right';
+  const teaserImg = document.getElementById('prevStTeaser');
+  const teaserUrl = (teaserImg && teaserImg.getAttribute('src')) || document.getElementById('htmStImageUrl')?.value || '';
+  const bg = document.getElementById('htmStBgColor')?.value || '#000000';
+  const buildTeaser = () => `<img src="${teaserUrl}" onerror="this.style.display='none'"><div class="st-editor-tile-label">Teaser</div>`;
+  const imgs = htmSlides.slice(0,4).map(s=>`<img src="${s.coverUrl||s.cover||s.cover_url||''}" onerror="this.style.opacity='.15'">`).join('');
+  const buildSlide = () => `<div class="st-slide-stack">${imgs || '<span style="grid-column:1/-1;align-self:center;justify-self:center;color:rgba(133,172,201,.35)">Songs wählen</span>'}</div><div class="st-editor-tile-label">Diashow</div>`;
+  [left,right].forEach(el=>{ el.className='st-editor-tile'; el.style.background=bg; });
+  if(pos === 'left'){
+    left.innerHTML = teaserUrl ? buildTeaser() : '<span>Teaser<br>hochladen</span><div class="st-editor-tile-label">Teaser</div>';
+    right.classList.add('slideshow'); right.innerHTML = buildSlide();
+  }else{
+    left.classList.add('slideshow'); left.innerHTML = buildSlide();
+    right.innerHTML = teaserUrl ? buildTeaser() : '<span>Teaser<br>hochladen</span><div class="st-editor-tile-label">Teaser</div>';
+  }
+}
+function setSlideshowModalMode(isSilber){
+  const modal = document.getElementById('homeSlideshowModal');
+  if(modal) modal.classList.toggle('silber-mode', !!isSilber);
+  const title = modal?.querySelector('.htm-title');
+  if(title) title.textContent = isSilber ? '▣▣ Silbertablett bearbeiten' : '◈ Diashow bearbeiten';
+  hjSetDisplay('htmSilberFields', isSilber ? 'block' : 'none');
+  if(isSilber){
+    htmSlideshowSetFn('play');
+    setTimeout(stRefreshPreview, 40);
+  }
 }
 function setSsFramePreview(url){
   const zone = document.getElementById('zSsFrame');
@@ -11370,12 +11285,14 @@ function openSlideshowModal(rowId){
     htmSlides    = (cell && cell.type === 'silbertablett' && Array.isArray(cell.stCustomSongs)) ? cell.stCustomSongs.map(s=>({...s, coverUrl:s.coverUrl || s.cover || s.cover_url || ''})) : (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
     ssOverlayPos = (cell && cell.overlayPos) || 'bottom-left';
     ssFrameFile  = null;
+    stTeaserFile = null;
 
     hjSetVal('htmSlideshowTitle', (cell && cell.alt) || '');
     const isSilber = !!(cell && cell.type === 'silbertablett');
-    hjSetDisplay('htmSilberFields', isSilber ? 'block' : 'none');
+    setSlideshowModalMode(isSilber);
     hjSetVal('htmStImageUrl', (cell && (cell.stImageUrl || cell.imageUrl)) || '');
-    hjSetVal('htmStCoverPos', (cell && cell.stCoverPos) || 'right');
+    setStTeaserPreview((cell && (cell.stImageUrl || cell.imageUrl)) || '');
+    stSetCoverPos((cell && cell.stCoverPos) || 'right');
     hjSetVal('htmStSsSpeed', (cell && cell.stSsSpeed) || '3');
     hjSetVal('htmStBgColor', (cell && (cell.stBgColor || cell.startColor)) || '#000000');
     hjSetVal('htmSlideshowFn', (cell && cell.fn) || 'play');
@@ -11425,7 +11342,8 @@ function openSlideshowModal(rowId){
 }
 
 function closeSlideshowModal(){
-  document.getElementById('homeSlideshowModal').style.display = 'none';
+  const modal = document.getElementById('homeSlideshowModal');
+  if(modal){ modal.style.display = 'none'; modal.classList.remove('silber-mode'); }
   htmSlideshowRowId = null;
 }
 
@@ -11509,6 +11427,7 @@ function renderSlidesList(){
     list.appendChild(div);
   });
   renderSsPicker();
+  stRefreshPreview();
 }
 
 let ssDragIndex = null;
@@ -11918,13 +11837,25 @@ async function saveSlideshowTile(){
   }
   markHomeAction();
   if(cell.type === 'silbertablett'){
+    let teaserUrl = document.getElementById('htmStImageUrl')?.value?.trim() || '';
+    if(stTeaserFile){
+      try{
+        if(btn){ btn.disabled = true; btn.textContent = 'Teaser wird hochgeladen …'; }
+        teaserUrl = await uploadToS3(stTeaserFile, stTeaserS3Key(stTeaserFile), 'progStTeaser');
+        hjSetVal('htmStImageUrl', teaserUrl);
+      } catch(e){
+        toast('Teaser-Upload fehlgeschlagen: '+e.message,'err');
+        if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
+        return;
+      }
+    }
     cell.fn = 'play';
     cell.slug = document.getElementById('htmSlideshowSlug').value.trim();
     cell.url = '';
     cell.alt = document.getElementById('htmSlideshowTitle').value.trim();
     cell.stPlaylistSlug = cell.slug;
     cell.playlistSlug = cell.slug;
-    cell.stImageUrl = document.getElementById('htmStImageUrl')?.value?.trim() || '';
+    cell.stImageUrl = teaserUrl;
     cell.imageUrl = cell.stImageUrl;
     cell.stCoverPos = document.getElementById('htmStCoverPos')?.value || 'right';
     cell.stBgColor = document.getElementById('htmStBgColor')?.value?.trim() || '#000000';
