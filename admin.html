@@ -361,6 +361,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.panorama-4x1{grid-column:1/-1;aspect-ratio:4/1}
 /* slideshow: full width, 2:1 */
 .he-cell.span-slide{grid-column:1/-1;aspect-ratio:2/1}
+.he-row-grid.layout-silbertablett{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.he-row-grid.layout-silbertablett .he-cell.silber-cell{aspect-ratio:1/1;width:100%}
+.he-cell-silber-split{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;pointer-events:none}
+.he-cell-silber-split>div{position:relative;overflow:hidden;border-radius:8px;background:#000}
+.he-cell-silber-split img{width:100%;height:100%;object-fit:cover;display:block}
+.badge-silber{background:rgba(255,120,30,.85)}
 /* Trio layout — mobile: stacked, desktop: gl bd po */
 .he-cell.hidden-cell{display:none}
 .he-row-caption-wrap{padding:0 2px 6px}
@@ -7656,9 +7662,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <span class="htm-type-icon">DE│EN</span>
           <span class="htm-type-label">Language Teaser</span>
         </button>
-        <button class="htm-type-btn" data-type="slideshow" onclick="htmPickType('slideshow',this)" style="grid-column:1/-1">
+        <button class="htm-type-btn" data-type="slideshow" onclick="htmPickType('slideshow',this)">
           <span class="htm-type-icon">◈</span>
           <span class="htm-type-label">Diashow</span>
+        </button>
+        <button class="htm-type-btn" data-type="silbertablett" onclick="htmPickType('silbertablett',this)">
+          <span class="htm-type-icon">▣▣</span>
+          <span class="htm-type-label">Diashow + Teaser</span>
         </button>
       </div>
       <div class="htm-actions" style="margin-top:10px">
@@ -7909,6 +7919,15 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">Diashow — Animierter Bilderstreifen</div>
       </div>
 
+      <!-- Silbertablett / Velvet Radio Style -->
+      <div class="lpm-option full" data-layout="silbertablett" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="lpm-sq" style="aspect-ratio:1/1">▣</div>
+          <div class="lpm-sq diashow" style="aspect-ratio:1/1">◈</div>
+        </div>
+        <div class="lpm-label">Diashow erstellen — 2× 1:1 nebeneinander</div>
+      </div>
+
     </div>
     <button class="lpm-cancel" onclick="closeLpm()">Abbrechen</button>
   </div>
@@ -8117,6 +8136,34 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <div class="htm-field">
         <span class="htm-label">Titel / Overlay-Text</span>
         <input class="htm-input" id="htmSlideshowTitle" placeholder="z. B. IN THE SPOTLIGHT" oninput="updateSsFrameHint()">
+      </div>
+
+      <!-- Silbertablett / Velvet Radio Style -->
+      <div id="htmSilberFields" style="display:none;border:1px solid rgba(133,172,201,.14);border-radius:12px;padding:12px;margin:10px 0;background:rgba(133,172,201,.05)">
+        <div class="htm-field">
+          <span class="htm-label">Teaser-Kachel</span>
+          <input class="htm-input" id="htmStImageUrl" placeholder="Cover-/Teaser-Bild URL, z. B. Velvet Radio Cover">
+        </div>
+        <div class="field-row cols-2">
+          <div class="htm-field">
+            <span class="htm-label">Teaser-Position</span>
+            <select class="htm-input" id="htmStCoverPos">
+              <option value="left">Links</option>
+              <option value="right">Rechts</option>
+            </select>
+          </div>
+          <div class="htm-field">
+            <span class="htm-label">Diashow-Speed Sek.</span>
+            <input class="htm-input" id="htmStSsSpeed" type="number" min="1" max="12" step="0.5" value="3">
+          </div>
+        </div>
+        <div class="htm-field">
+          <span class="htm-label">Hintergrundfarbe</span>
+          <input class="htm-input" id="htmStBgColor" value="#000000">
+        </div>
+        <div style="font-size:11px;line-height:1.45;color:rgba(133,172,201,.58);margin-top:4px">
+          Speichert denselben Live-Typ wie Velvet Radio: zwei quadratische Kacheln nebeneinander – eine feste Teaser-Kachel und eine 1:1-Cover-Diashow aus der Songliste.
+        </div>
       </div>
 
       <!-- Funktion -->
@@ -9532,7 +9579,7 @@ function updateAlbumDropdown(){
     cells: [                // always 4 logical cells
       {
         id: string,
-        type: 'empty'|'1x1'|'2x1'|'trio-a'|'trio-b'|'trio-c'|'4x1'|'lyrics21'|'slideshow'|'hidden',
+        type: 'empty'|'1x1'|'2x1'|'trio-a'|'trio-b'|'trio-c'|'4x1'|'lyrics21'|'slideshow'|'silbertablett'|'hidden',
         fn: 'play'|'link',
         slug: string, url: string, imageUrl: string, alt: string,
         // slideshow extras:
@@ -9586,7 +9633,7 @@ function cancelHomeEdits(){
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function rowById(id){ return homeLayout.find(r=>r.id===id); }
-function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
+function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, stImageUrl:'', stCoverPos:'right', stBgColor:'#000000', stSsSpeed:'3', stCustomSongs:[]}; }
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
@@ -9603,7 +9650,7 @@ async function loadHomeLayout(){
       editing: false,
       caption: row.caption || undefined,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, stImageUrl:'', stCoverPos:'right', stBgColor:'#000000', stSsSpeed:'3', stCustomSongs:[], ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -9698,7 +9745,7 @@ function rowVisibleCells(row){
 function rowIsFullyFilled(row){
   const visible = rowVisibleCells(row);
   if(visible.length === 0) return false;
-  return visible.every(c => c.imageUrl || c.bgUrl || (c.type === 'slideshow' && c.slides && c.slides.length > 0));
+  return visible.every(c => c.imageUrl || c.bgUrl || (c.type === 'slideshow' && c.slides && c.slides.length > 0) || (c.type === 'silbertablett' && c.stCustomSongs && c.stCustomSongs.length > 0));
 }
 
 /* ── Reorder cells within a row ── */
@@ -9707,7 +9754,7 @@ function moveCellInRow(rowId, cellIdx, dir){
   if(!row) return;
 
   // Nur befüllte Zellen nehmen am Swap teil
-  const isFilled = c => !!(c.imageUrl || c.bgUrl || (c.type==='slideshow' && c.slides && c.slides.length>0));
+  const isFilled = c => !!(c.imageUrl || c.bgUrl || (c.type==='slideshow' && c.slides && c.slides.length>0) || (c.type==='silbertablett' && c.stCustomSongs && c.stCustomSongs.length>0));
   const visible = row.cells.map((c,i)=>i).filter(i => {
     const c = row.cells[i];
     return c.type !== 'hidden' && c.type !== 'empty' && isFilled(c);
@@ -9773,7 +9820,7 @@ function buildRowEl(row, idx){
   if(row.editing){
     // Show fill status
     const visible = rowVisibleCells(row);
-    const filled  = visible.filter(c => c.imageUrl || c.bgUrl || (c.type==='slideshow'&&c.slides?.length>0)).length;
+    const filled  = visible.filter(c => c.imageUrl || c.bgUrl || (c.type==='slideshow'&&c.slides?.length>0) || (c.type==='silbertablett'&&c.stCustomSongs?.length>0)).length;
     const total   = visible.length;
     if(total > 0 && filled < total){
       const status = document.createElement('span');
@@ -9821,6 +9868,14 @@ function buildCells(row, grid){
   if(t0 === 'language'){
     // Language Teaser: immer volle Breite 2:1, read-only (nicht im Admin änderbar)
     grid.appendChild(buildCell(row, 0, 'span-4 language-cell', editing));
+
+  } else if(t0 === 'silbertablett'){
+    grid.classList.add('layout-silbertablett');
+    grid.appendChild(buildCell(row, 0, 'silber-cell', editing));
+    // zweite Kachel ist nur die visuelle Diashow-Fläche, bearbeitet wird der Gesamtblock über Kachel 1
+    const ghost = buildCell(row, 0, 'silber-cell', editing);
+    ghost.onclick = ()=>openCellEdit(row.id, 0);
+    grid.appendChild(ghost);
 
   } else if(t0 === 'slideshow'){
     grid.appendChild(buildCell(row, 0, 'span-slide', editing));
@@ -9911,16 +9966,19 @@ function buildCell(row, cellIdx, extraClass, editing){
   el.dataset.rowId = row.id;
   el.dataset.cellIdx = cellIdx;
 
-  const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0);
+  const isFilled = cell.imageUrl || cell.bgUrl || (cell.type==='slideshow' && cell.slides && cell.slides.length>0) || (cell.type==='silbertablett' && cell.stCustomSongs && cell.stCustomSongs.length>0);
   const isSlide  = cell.type === 'slideshow';
+  const isSilber = cell.type === 'silbertablett';
   const hasLayoutType = cell.type && cell.type !== 'empty' && cell.type !== 'hidden';
 
-  if(isFilled || isSlide){
+  if(isFilled || isSlide || isSilber){
     // Filled — always show image
     // For slideshow: prefer bgUrl, fall back to first slide cover
-    let imgSrc = isSlide
-      ? (cell.bgUrl || cell.imageUrl || (cell.slides && cell.slides[0] && (cell.slides[0].focusUrl || cell.slides[0].coverUrl)) || '')
-      : (cell.imageUrl || cell.customImageUrl || cell.cover21Url || cell.bgUrl || '');
+    let imgSrc = isSilber
+      ? (cell.stImageUrl || cell.imageUrl || (cell.stCustomSongs && cell.stCustomSongs[0] && (cell.stCustomSongs[0].coverUrl || cell.stCustomSongs[0].cover)) || '')
+      : isSlide
+        ? (cell.bgUrl || cell.imageUrl || (cell.slides && cell.slides[0] && (cell.slides[0].focusUrl || cell.slides[0].coverUrl)) || '')
+        : (cell.imageUrl || cell.customImageUrl || cell.cover21Url || cell.bgUrl || '');
     if(imgSrc){
       const img = document.createElement('img');
       img.className = 'he-cell-img';
@@ -9928,6 +9986,18 @@ function buildCell(row, cellIdx, extraClass, editing){
       img.alt = cell.alt||'';
       img.onerror = ()=>{ img.style.opacity='.15'; };
       el.appendChild(img);
+    }
+    if(isSilber){
+      const split = document.createElement('div');
+      split.className = 'he-cell-silber-split';
+      const cover = cell.stImageUrl || cell.imageUrl || imgSrc || '';
+      const first = cell.stCustomSongs && cell.stCustomSongs[0] && (cell.stCustomSongs[0].coverUrl || cell.stCustomSongs[0].cover || '');
+      const a = document.createElement('div');
+      const b = document.createElement('div');
+      if(cover) a.innerHTML = `<img src="${cover}">`;
+      if(first) b.innerHTML = `<img src="${first}">`;
+      if((cell.stCoverPos||'right') === 'left'){ split.appendChild(a); split.appendChild(b); } else { split.appendChild(b); split.appendChild(a); }
+      el.appendChild(split);
     }
     // Alt text overlay (bottom, always visible, subtle)
     {
@@ -9967,8 +10037,8 @@ function buildCell(row, cellIdx, extraClass, editing){
       const ov = document.createElement('div');
       ov.className = 'he-cell-overlay always-edit';
       const isLang = cell.type === 'language';
-      const badgeCls = isLang ? 'badge-language' : isSlide ? 'badge-diashow' : (cell._badge==='Album' || cell.fn==='album') ? 'badge-album' : cell._badge==='Playlist' ? 'badge-playlist' : (cell._badge==='Unterseite' || cell.fn==='subpage') ? 'badge-subpage' : cell.fn==='link' ? 'badge-link' : 'badge-song';
-      const badgeTxt = isLang ? '⬡ German · English' : isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='album' ? 'Album' : cell.fn==='subpage' ? 'Unterseite' : cell.fn==='link' ? 'Link' : 'Song');
+      const badgeCls = isLang ? 'badge-language' : isSilber ? 'badge-silber' : isSlide ? 'badge-diashow' : (cell._badge==='Album' || cell.fn==='album') ? 'badge-album' : cell._badge==='Playlist' ? 'badge-playlist' : (cell._badge==='Unterseite' || cell.fn==='subpage') ? 'badge-subpage' : cell.fn==='link' ? 'badge-link' : 'badge-song';
+      const badgeTxt = isLang ? '⬡ German · English' : isSilber ? '▣▣ Diashow + Teaser' : isSlide ? '◈ Diashow' : cell._badge || (cell.fn==='album' ? 'Album' : cell.fn==='subpage' ? 'Unterseite' : cell.fn==='link' ? 'Link' : 'Song');
       if(isLang){
         // Language Teaser: read-only, kein Edit-Button
         ov.innerHTML = `
@@ -9998,6 +10068,12 @@ function buildCell(row, cellIdx, extraClass, editing){
           </div>`;
       }
       el.appendChild(ov);
+    }
+    if(isSilber){
+      const lbl2 = document.createElement('div');
+      lbl2.style.cssText='position:absolute;bottom:6px;left:8px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(207,229,245,.85);pointer-events:none;background:rgba(6,20,32,.5);padding:3px 7px;border-radius:4px';
+      lbl2.textContent = '▣▣ ' + (cell.alt||'Diashow + Teaser') + ' · ' + (cell.stCustomSongs?cell.stCustomSongs.length:0) + ' Songs';
+      el.appendChild(lbl2);
     }
     if(isSlide){
       const lbl2 = document.createElement('div');
@@ -10087,6 +10163,7 @@ const LPM_TYPE_MAP = {
   '3x1x15':     'trio',
   '1x2x1-plus2':'2x1plus2',   // 2:1 half + 2×1:1
   'slideshow':   'slideshow',
+  'silbertablett':'silbertablett',
 };
 
 function lpmPick(optionEl){
@@ -10266,11 +10343,16 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old0, type:'slideshow'};
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
+  } else if(type === 'silbertablett'){
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'silbertablett', stCoverPos:(old0.stCoverPos||'right'), stBgColor:(old0.stBgColor||'#000000'), stSsSpeed:(old0.stSsSpeed||'3'), stCustomSongs:(old0.stCustomSongs||old0.slides||[])};
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
   }
 
   renderHomeEditor();
 
-  if(type === 'slideshow'){
+  if(type === 'slideshow' || type === 'silbertablett'){
     setTimeout(()=>openSlideshowModal(rowId), 80);
   }
   // No auto-openCellEdit: user sees the row layout and clicks individual cells themselves
@@ -11285,11 +11367,17 @@ function openSlideshowModal(rowId){
     const row  = rowById(rowId);
     const cell = row && row.cells ? row.cells[0] : null;
 
-    htmSlides    = (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
+    htmSlides    = (cell && cell.type === 'silbertablett' && Array.isArray(cell.stCustomSongs)) ? cell.stCustomSongs.map(s=>({...s, coverUrl:s.coverUrl || s.cover || s.cover_url || ''})) : (cell && Array.isArray(cell.slides)) ? cell.slides.map(s=>({...s})) : [];
     ssOverlayPos = (cell && cell.overlayPos) || 'bottom-left';
     ssFrameFile  = null;
 
     hjSetVal('htmSlideshowTitle', (cell && cell.alt) || '');
+    const isSilber = !!(cell && cell.type === 'silbertablett');
+    hjSetDisplay('htmSilberFields', isSilber ? 'block' : 'none');
+    hjSetVal('htmStImageUrl', (cell && (cell.stImageUrl || cell.imageUrl)) || '');
+    hjSetVal('htmStCoverPos', (cell && cell.stCoverPos) || 'right');
+    hjSetVal('htmStSsSpeed', (cell && cell.stSsSpeed) || '3');
+    hjSetVal('htmStBgColor', (cell && (cell.stBgColor || cell.startColor)) || '#000000');
     hjSetVal('htmSlideshowFn', (cell && cell.fn) || 'play');
     hjSetVal('htmSlideshowSlug', (cell && cell.slug) || '');
     hjSetVal('htmSlideshowUrl', (cell && cell.url) || '');
@@ -11829,6 +11917,34 @@ async function saveSlideshowTile(){
     }
   }
   markHomeAction();
+  if(cell.type === 'silbertablett'){
+    cell.fn = 'play';
+    cell.slug = document.getElementById('htmSlideshowSlug').value.trim();
+    cell.url = '';
+    cell.alt = document.getElementById('htmSlideshowTitle').value.trim();
+    cell.stPlaylistSlug = cell.slug;
+    cell.playlistSlug = cell.slug;
+    cell.stImageUrl = document.getElementById('htmStImageUrl')?.value?.trim() || '';
+    cell.imageUrl = cell.stImageUrl;
+    cell.stCoverPos = document.getElementById('htmStCoverPos')?.value || 'right';
+    cell.stBgColor = document.getElementById('htmStBgColor')?.value?.trim() || '#000000';
+    cell.startColor = cell.stBgColor;
+    cell.stSsSpeed = document.getElementById('htmStSsSpeed')?.value || '3';
+    cell.stCustomSongs = htmSlides.map(s=>({slug:s.slug, title:s.title||s.slug, artist:s.artist||'', coverUrl:s.coverUrl || s.cover || s.cover_url || '', focusUrl:s.coverUrl || s.cover || s.cover_url || ''}));
+    cell.slides = [];
+    renderHomeEditor();
+    try{
+      if(btn){ btn.disabled = true; btn.textContent = 'Speichert …'; }
+      await saveHomeLayout();
+      toast('Diashow + Teaser gespeichert ✓','ok');
+    }catch(e){
+      toast('Diashow + Teaser konnte nicht gespeichert werden: '+e.message,'err');
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = 'Übernehmen'; }
+      closeSlideshowModal();
+    }
+    return;
+  }
   cell.fn         = fn;
   cell.slug       = document.getElementById('htmSlideshowSlug').value.trim();
   cell.url        = document.getElementById('htmSlideshowUrl').value.trim();
@@ -11881,7 +11997,7 @@ function importCurrentHome(){
   }
   markHomeAction();
   const S3 = 'https://hitjourney.s3.eu-west-1.amazonaws.com';
-  function makeCell(o){ return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'', bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, playlistSlug:'', ...o }; }
+  function makeCell(o){ return { id:uid(), type:'empty', fn:'play', slug:'', url:'', imageUrl:'', alt:'', artist:'', bgUrl:'', startColor:'#0A0A0A', overlayPos:'bottom-left', slides:[], coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, playlistSlug:'', stImageUrl:'', stCoverPos:'right', stBgColor:'#000000', stSsSpeed:'3', stCustomSongs:[], ...o }; }
   function row(cells){ return { id:uid(), editing:false, cells }; }
 
   homeLayout = [
