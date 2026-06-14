@@ -5,6 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
+<!-- Version: admin-v20260614-describe-page-und-play-describe-lyrics-modus -->
 <!-- Version: admin-v20260611-album-order-delete-insert-duplicate-safe -->
 <link href="https://fonts.googleapis.com" rel="preconnect">
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
@@ -7182,7 +7183,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     </div>
 
     <div class="section-label">Bilder</div>
-    <div class="upload-grid">
+    <div class="upload-grid cols-3">
       <div class="field">
         <div class="field-label">Cover</div>
         <div class="upload-zone sq" id="zCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDrop(event,'cover')">
@@ -7196,6 +7197,20 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <button class="zone-clear" onclick="clearZone('cover',event)" title="Entfernen">×</button>
         </div>
         <div class="s3-hint" id="hintCover"></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Beschreibung</div>
+        <div class="upload-zone sq" id="zDescribe" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDrop(event,'describe')">
+          <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFile(this,'describe')">
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>Beschreibung</span>
+          </div>
+          <img class="zone-preview" id="prevDescribe" alt="">
+          <div class="upload-progress" id="progDescribe"></div>
+          <button class="zone-clear" onclick="clearZone('describe',event)" title="Entfernen">×</button>
+        </div>
+        <div class="s3-hint" id="hintDescribe"></div>
       </div>
       <div class="field">
         <div class="field-label">Lyrics</div>
@@ -7402,7 +7417,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     </div>
 
     <div class="section-label">Bilder</div>
-    <div class="upload-grid">
+    <div class="upload-grid cols-3">
       <div class="field">
         <div class="field-label">Cover</div>
         <div class="upload-zone sq" id="ezCover" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'cover')">
@@ -7414,6 +7429,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <img class="zone-preview" id="ePrevCover" alt="">
           <div class="upload-progress" id="eProgCover"></div>
           <button class="zone-clear" onclick="clearEditZone('cover',event)" title="Entfernen">×</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Beschreibung</div>
+        <div class="upload-zone sq" id="ezDescribe" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDropEdit(event,'describe')">
+          <input type="file" accept="image/jpeg,image/jpg,.jpg,.jpeg" onchange="onFileEdit(this,'describe')">
+          <div class="upload-zone-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>Beschreibung</span>
+          </div>
+          <img class="zone-preview" id="ePrevDescribe" alt="">
+          <div class="upload-progress" id="eProgDescribe"></div>
+          <button class="zone-clear" onclick="clearEditZone('describe',event)" title="Entfernen">×</button>
         </div>
       </div>
       <div class="field">
@@ -7784,10 +7812,16 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           </div>
           <button onclick="htmClearActionSong()" style="background:rgba(220,80,80,.15);border:none;border-radius:5px;color:#f08080;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0">×</button>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:13px;color:rgba(133,172,201,.8)">
-          <input type="checkbox" id="htmLyricsCycleCheck" style="width:16px;height:16px;accent-color:#85ACC9">
-          Play + Lyrics-Modus aktivieren
-        </label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:13px;color:rgba(133,172,201,.8)">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="htmLyricsCycleCheck" onchange="htmSyncCycleMode('lyrics')" style="width:16px;height:16px;accent-color:#85ACC9">
+            Play + Lyrics-Modus aktivieren
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="htmDescribeCycleCheck" onchange="htmSyncCycleMode('describe')" style="width:16px;height:16px;accent-color:#85ACC9">
+            Play, Describe, Lyrics
+          </label>
+        </div>
       </div>
 
       <!-- Album wählen (action=album) -->
@@ -8286,7 +8320,7 @@ function makeSmartSlug(title, artist){
 }
 
 /* ── UPLOAD STATE ── */
-const files = { mp3: null, cover: null, cover21: null, lyrics: null };
+const files = { mp3: null, cover: null, cover21: null, lyrics: null, describe: null };
 
 function getS3Names(){
   const title = document.getElementById('addTitle').value.trim();
@@ -8296,13 +8330,14 @@ function getS3Names(){
     cover:   `artwork/${slug}-cover.jpg`,
     cover21: `artwork/${slug}-cover-2-1.jpg`,
     lyrics:  `artwork/${slug}-lyrics.jpg`,
+    describe:`artwork/${slug}-describe.jpg`,
   };
 }
 function updateHints(){
   const title = document.getElementById('addTitle').value.trim();
   const n = getS3Names();
   const h = (id,path)=>{ const el=document.getElementById(id); if(el)el.textContent=title?'→ '+path:''; };
-  h('hintMp3',n.mp3); h('hintCover',n.cover); h('hintCover21',n.cover21); h('hintLyrics',n.lyrics);
+  h('hintMp3',n.mp3); h('hintCover',n.cover); h('hintCover21',n.cover21); h('hintLyrics',n.lyrics); h('hintDescribe',n.describe);
 }
 
 function refreshAutoSlug(){
@@ -8558,6 +8593,7 @@ function renderTable(){
       <td>
         <div class="td-urls">
           <div class="url-dot ${s.cover_url?'has':'missing'}" title="Cover"></div>
+          <div class="url-dot ${s.describe_url?'has':'missing'}" title="Beschreibung"></div>
           <div class="url-dot ${s.lyrics_url?'has':'missing'}" title="Lyrics"></div>
           <div class="url-dot ${s.lyrics21_url?'has':'missing'}" title="Lyrics-Sheet 21"></div>
           <div class="url-dot ${s.mp3_url?'has':'missing'}" title="MP3"></div>
@@ -8623,7 +8659,7 @@ async function confirmDeleteSong(){
 }
 
 /* ── EDIT SCREEN ── */
-const editFiles = { mp3: null, cover: null, cover21: null, lyrics: null };
+const editFiles = { mp3: null, cover: null, cover21: null, lyrics: null, describe: null };
 let editOriginalState = null;
 function captureEditState(){
   return {
@@ -8677,10 +8713,10 @@ function onDropEdit(e, key){
 function clearEditZone(key, e){
   if(e){ e.preventDefault(); e.stopPropagation(); }
   editFiles[key] = null;
-  const ids = {mp3:'ezMp3',cover:'ezCover',cover21:'ezCover21',lyrics:'ezLyrics'};
+  const ids = {mp3:'ezMp3',cover:'ezCover',cover21:'ezCover21',lyrics:'ezLyrics',describe:'ezDescribe'};
   const zone = document.getElementById(ids[key]);
   if(zone){ zone.classList.remove('has-file'); const inp=zone.querySelector('input[type=file]'); if(inp) inp.value=''; }
-  const prevIds = {cover:'ePrevCover',cover21:'ePrevCover21',lyrics:'ePrevLyrics'};
+  const prevIds = {cover:'ePrevCover',cover21:'ePrevCover21',lyrics:'ePrevLyrics',describe:'ePrevDescribe'};
   if(prevIds[key]){ const p=document.getElementById(prevIds[key]); if(p) p.src=''; }
 }
 
@@ -8711,9 +8747,10 @@ function _fillEditForm(s){
 
   // Images from S3 — show directly in drop zones
   [
-    {id:'ePrevCover',   url:s.cover_url,    zone:'ezCover'},
-    {id:'ePrevLyrics',  url:s.lyrics_url,   zone:'ezLyrics'},
-    {id:'ePrevCover21', url:s.lyrics21_url, zone:'ezCover21'},
+    {id:'ePrevCover',    url:s.cover_url,    zone:'ezCover'},
+    {id:'ePrevDescribe', url:s.describe_url, zone:'ezDescribe'},
+    {id:'ePrevLyrics',   url:s.lyrics_url,   zone:'ezLyrics'},
+    {id:'ePrevCover21',  url:s.lyrics21_url, zone:'ezCover21'},
   ].forEach(({id, url, zone})=>{
     const prev = document.getElementById(id);
     const z    = document.getElementById(zone);
@@ -8834,13 +8871,14 @@ async function saveEdit(){
     cover:   `artwork/${slug}-cover.jpg`,
     cover21: `artwork/${slug}-cover-2-1.jpg`,
     lyrics:  `artwork/${slug}-lyrics.jpg`,
+    describe:`artwork/${slug}-describe.jpg`,
   };
-  const urlKeys  = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url' };
-  const progIds  = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics' };
+  const urlKeys  = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url', describe:'describe_url' };
+  const progIds  = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics', describe:'eProgDescribe' };
   const newUrls  = {};
 
   try{
-    for(const key of ['mp3','cover','cover21','lyrics']){
+    for(const key of ['mp3','cover','cover21','lyrics','describe']){
       if(!editFiles[key]) continue;
       if(btn) btn.textContent = `Lade hoch: ${editFiles[key].name} …`;
       newUrls[urlKeys[key]] = await uploadToS3(editFiles[key], eNames[key], progIds[key]);
@@ -8869,6 +8907,9 @@ async function saveEdit(){
   if(!newUrls.cover_url)    body.cover_url    = editTarget.cover_url    || null;
   if(!newUrls.lyrics21_url) body.lyrics21_url = editTarget.lyrics21_url || null;
   if(!newUrls.lyrics_url)   body.lyrics_url   = editTarget.lyrics_url   || null;
+  // describe_url nur senden, wenn es tatsächlich einen Wert gibt (neuer Upload oder vorhandenes Bild).
+  // So schlägt das Bearbeiten nicht fehl, falls die Spalte in Supabase noch nicht existiert.
+  if(!newUrls.describe_url && editTarget.describe_url) body.describe_url = editTarget.describe_url;
 
   try{
     const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
@@ -8940,6 +8981,7 @@ async function saveSong(){
     {key:'cover',  file:files.cover,   s3:names.cover,   prog:'progCover',   urlKey:'cover_url'},
     {key:'cover21',file:files.cover21, s3:names.cover21, prog:'progCover21', urlKey:'lyrics21_url'},
     {key:'lyrics', file:files.lyrics,  s3:names.lyrics,  prog:'progLyrics',  urlKey:'lyrics_url'},
+    {key:'describe',file:files.describe,s3:names.describe,prog:'progDescribe',urlKey:'describe_url'},
   ];
 
   try{
@@ -8985,7 +9027,7 @@ async function saveSong(){
     document.getElementById('addSlug').value='';
     delete document.getElementById('addSlug').dataset.m;
     document.getElementById('addPlaylist').value='';
-    ['mp3','cover','cover21','lyrics'].forEach(k=>clearZone(k,null));
+    ['mp3','cover','cover21','lyrics','describe'].forEach(k=>clearZone(k,null));
     updateHints();
   } catch(e){ showMsg(msgEl,'Datenbankfehler: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='Song speichern & hochladen';
@@ -9109,6 +9151,7 @@ function renderAlbumSongs(al, q=''){
         <td>
           <div class="td-urls">
             <div class="url-dot ${s.cover_url?'has':'missing'}" title="Cover"></div>
+            <div class="url-dot ${s.describe_url?'has':'missing'}" title="Beschreibung"></div>
             <div class="url-dot ${s.lyrics_url?'has':'missing'}" title="Lyrics"></div>
             <div class="url-dot ${s.lyrics21_url?'has':'missing'}" title="Lyrics-Sheet 21"></div>
             <div class="url-dot ${s.mp3_url?'has':'missing'}" title="MP3"></div>
@@ -9616,7 +9659,7 @@ async function loadHomeLayout(){
       editing: false,
       caption: row.caption || undefined,
       cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, describeCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
         // Kompatibilität mit älteren Feldnamen/Strings
         const bv = (v, fallback=true) => {
           if(v === undefined || v === null || v === '') return fallback;
@@ -9625,6 +9668,8 @@ async function loadHomeLayout(){
         };
         cc.coverFitSquare = bv(cc.coverFitSquare, false);
         cc.lyricsCycle = bv(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
+        cc.describeCycle = bv(cc.describeCycle ?? cc.describeOnClick, false);
+        if(cc.describeCycle) cc.lyricsCycle = true; // 3-Seiten-Modus enthält Lyrics
         cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
         cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
         cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
@@ -10870,9 +10915,25 @@ async function htmInitStep3(){
   if(actionSearch) actionSearch.value = '';
   htmRenderActionSongList('');
 
-  // Restore lyrics cycle checkbox
-  const cb = document.getElementById('htmLyricsCycleCheck');
-  if(cb) cb.checked = (htmChosenAction === 'lyrics');
+  // Restore cycle-mode checkboxes from the existing cell
+  const lyrCb  = document.getElementById('htmLyricsCycleCheck');
+  const descCb = document.getElementById('htmDescribeCycleCheck');
+  let _cell = null;
+  if(htmEditTarget){ const _r = rowById(htmEditTarget.rowId); _cell = _r && _r.cells[htmEditTarget.cellIdx]; }
+  const _describe = !!(_cell && _cell.describeCycle);
+  const _lyrics   = !!(_cell && _cell.lyricsCycle) && !_describe;
+  if(descCb) descCb.checked = _describe;
+  if(lyrCb)  lyrCb.checked  = _lyrics;
+}
+
+// Die beiden Modus-Kästchen „Play + Lyrics" und „Play, Describe, Lyrics" schließen sich
+// gegenseitig aus: maximal eines ist aktiv (oder keines = nur Play).
+function htmSyncCycleMode(which){
+  const lyrCb  = document.getElementById('htmLyricsCycleCheck');
+  const descCb = document.getElementById('htmDescribeCycleCheck');
+  if(!lyrCb || !descCb) return;
+  if(which === 'lyrics'   && lyrCb.checked)  descCb.checked = false;
+  if(which === 'describe' && descCb.checked) lyrCb.checked  = false;
 }
 
 function htmSetAction(action, btn){
@@ -11007,6 +11068,8 @@ function htmResetUploadUi(){
   if(actionAlbumSel) actionAlbumSel.value = '';
   const cb = document.getElementById('htmLyricsCycleCheck');
   if(cb) cb.checked = false;
+  const dcb = document.getElementById('htmDescribeCycleCheck');
+  if(dcb) dcb.checked = false;
   htmSetSourceVisual('upload');
 }
 function htmSetSourceVisual(source){
@@ -11197,9 +11260,13 @@ async function saveHomeTile(){
   // Without this, a 2:1 custom album motif could be lost or replaced by the 1:1 album cover.
   updatedCell.customImageUrl = (htmMotifFile || htmMotifUrl) ? finalImageUrl : ((htmAlbumMotifFile || htmAlbumMotifUrl) ? finalAlbumCover : '');
 
-  // Lyrics cycle = play action + checkbox ticked
-  const lyricsCb = document.getElementById('htmLyricsCycleCheck');
-  updatedCell.lyricsCycle = htmChosenAction === 'play' && lyricsCb && lyricsCb.checked;
+  // Cycle-Modi = Play-Aktion + angehaktes Kästchen.
+  // „Play, Describe, Lyrics" (describeCycle) ist der 3-Seiten-Zyklus und enthält Lyrics,
+  // deshalb impliziert describeCycle auch lyricsCycle (für die bestehende Player-Logik).
+  const lyricsCb   = document.getElementById('htmLyricsCycleCheck');
+  const describeCb = document.getElementById('htmDescribeCycleCheck');
+  updatedCell.describeCycle = htmChosenAction === 'play' && !!(describeCb && describeCb.checked);
+  updatedCell.lyricsCycle   = htmChosenAction === 'play' && (!!(lyricsCb && lyricsCb.checked) || updatedCell.describeCycle);
 
   if(htmChosenAction === 'subpage'){
     updatedCell.fn   = 'subpage';

@@ -26,6 +26,7 @@
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
 <!-- Version: v232-album-space-abc-prev-polish -->
+<!-- Version: v249-describe-page-cover-describe-lyrics-cycle -->
 <!-- Version: v228-album-dj-deck-conservative -->
 <!-- Version: v216-home-info-button-restored -->
 <!-- Version: v214-album-signature-cover-lyrics-button -->
@@ -5016,7 +5017,12 @@ async function loadFromSupabase() {
   const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON };
 
   // 1. Alle Songs laden
-  const songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+  let songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,describe_url,lyrics_url,lyrics21_url&order=title', { headers });
+  // Robust: Falls die Spalte describe_url in Supabase noch nicht angelegt ist, ohne sie laden,
+  // damit die App auch vor dem Anlegen der Spalte normal funktioniert.
+  if (!songsRes.ok) {
+    songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+  }
   if (!songsRes.ok) throw new Error('Songs fetch failed: ' + songsRes.status);
   const songsRaw = await songsRes.json();
 
@@ -5031,6 +5037,7 @@ async function loadFromSupabase() {
       language: row.language || 'english',
       mp3:      row.mp3_url,
       cover:    row.cover_url,
+      describe: row.describe_url || null,
       lyrics:   row.lyrics_url   || null,
       lyrics21: row.lyrics21_url || null,
     };
@@ -5498,6 +5505,17 @@ function getLyricsUrlsForSong(song) {
   return fallback ? [fallback] : [];
 }
 
+// Beschreibungs-Seite (optionale 3. Seite zwischen Cover und Lyrics).
+// Reines DB-Asset, kein Title-Fallback.
+function getDescribeUrlsForSong(song) {
+  if(!song) return [];
+  return [song.describe, song.describe_url, song.describeUrl]
+    .filter((v,i,a)=>v && a.indexOf(v)===i);
+}
+function songHasDescribe(song){
+  return getDescribeUrlsForSong(song).length > 0;
+}
+
 
 function getLyrics21UrlsForSong(song) {
   if(!song) return [];
@@ -5550,6 +5568,17 @@ function hjGetLyrics21ItemUrls(item){
   }
   return urls.filter((v,i,a)=>v && a.indexOf(v)===i);
 }
+// Soll die optionale Beschreibungs-Seite (zwischen Cover und Lyrics) gezeigt werden?
+// Home-Kacheln entscheiden über das Datenattribut chainDescribe ('1'/'0', vom Admin-Modus),
+// Album-/Sprachseiten zeigen sie automatisch, sobald ein Beschreibungs-Bild vorhanden ist.
+function hjWantsDescribe(song, item){
+  if(!getDescribeUrlsForSong(song).length) return false;
+  const el = item && item.el;
+  const ds = el && el.dataset ? el.dataset : null;
+  if(ds && ds.chainDescribe != null && ds.chainDescribe !== '') return ds.chainDescribe === '1';
+  return true;
+}
+// phase: 1 = Cover, 2 = Lyrics, 3 = Beschreibung (lyrics21-Kacheln bleiben einseitig)
 function hjChainViewerSetImage(song, item, phase){
   const els = hjGetChainViewerEls();
   if(!els.box || !els.img || !song) return false;
@@ -5568,6 +5597,12 @@ function hjChainViewerSetImage(song, item, phase){
     els.box.classList.remove('fullsheet');
     hjChainViewState.mode = 'lyrics';
     hjChainViewState.phase = 2;
+  } else if(phase === 3){
+    urls = getDescribeUrlsForSong(song);
+    label = 'Beschreibung';
+    els.box.classList.remove('fullsheet');
+    hjChainViewState.mode = 'describe';
+    hjChainViewState.phase = 3;
   } else {
     urls = getImgUrls(song,'cover');
     label = 'Cover';
@@ -5609,19 +5644,23 @@ function hjAdvanceChainViewer(){
     hjCloseChainViewer();
     return;
   }
-  if(hjChainViewState.phase === 1){
-    if(hjChainViewerSetImage(song, item, 2)) return;
-    hjCloseChainViewer();
-    return;
+  // Cover → (Beschreibung) → Lyrics → schließen. Schritte ohne Bild werden übersprungen.
+  let phase = hjChainViewState.phase;
+  while(phase < 3){
+    phase++;
+    if(phase === 2 && !hjWantsDescribe(song, item)) continue; // Beschreibung überspringen
+    if(hjChainViewerSetImage(song, item, phase)) return;
   }
   hjCloseChainViewer();
 }
 function hjSyncChainViewerToCurrent(song, item){
   if(!hjChainViewState.open || !song) return;
-  const keepPhase = hjChainViewState.phase === 2 ? 2 : 1;
+  const keepPhase = hjChainViewState.phase || 1;
   hjChainViewState.song = song;
   hjChainViewState.item = item;
-  hjChainViewerSetImage(song, item, keepPhase);
+  if(!hjChainViewerSetImage(song, item, keepPhase)){
+    hjChainViewerSetImage(song, item, 1);
+  }
 }
 function hjRunCoverCueAction(btn, e){
   try{
@@ -6219,12 +6258,27 @@ function playLanguageSong(lang, idx){
     return;
   }
 
-  // 2. Klick auf dasselbe große Cover: im exakt gleichen Rahmen zum Lyrics-Sheet wechseln.
+  // 2. Klick auf dasselbe große Cover: im selben Rahmen zur Beschreibung (falls vorhanden)
+  //    oder direkt zum Lyrics-Sheet wechseln.
   if(languageCoverClickState.phase === 1){
     if(audio.paused) audio.play().catch(()=>{});
     if(!screenNP.classList.contains('active')) showNowPlaying();
+    if(openDescribe()){
+      languageCoverFrameOpen = false;
+      languageCoverClickState.phase = 1.5;
+      updateLanguageHighlight();
+      return;
+    }
     openLyrics();
     languageCoverFrameOpen = false;
+    languageCoverClickState.phase = 2;
+    updateLanguageHighlight();
+    return;
+  }
+
+  // 2b. Klick nach Beschreibung: zum Lyrics-Sheet wechseln.
+  if(languageCoverClickState.phase === 1.5){
+    openLyrics();
     languageCoverClickState.phase = 2;
     updateLanguageHighlight();
     return;
@@ -6469,8 +6523,21 @@ function advanceLanguageImageCycle(e){
 
   if(languageCoverClickState.phase === 1){
     if(audio.paused) audio.play().catch(()=>{});
+    if(openDescribe()){
+      languageCoverFrameOpen = false;
+      languageCoverClickState.phase = 1.5;
+      updateLanguageHighlight();
+      return true;
+    }
     openLyrics();
     languageCoverFrameOpen = false;
+    languageCoverClickState.phase = 2;
+    updateLanguageHighlight();
+    return true;
+  }
+
+  if(languageCoverClickState.phase === 1.5){
+    openLyrics();
     languageCoverClickState.phase = 2;
     updateLanguageHighlight();
     return true;
@@ -6485,23 +6552,39 @@ function advanceLanguageImageCycle(e){
   return false;
 }
 
+// Aktuell im großen Rahmen gezeigter Song (gemeinsam für Cover/Beschreibung/Lyrics).
+function _resolveCycleSong(){
+  if(isArchiveMode()) return arcQueue[arcQueueIdx];
+  if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0) return KNW_SONGS[knwActiveSongIdx];
+  if(isHomeLyricsContextActive()) return window._hjHomeLyricsSong;
+  if(curAlbum && queueIdx >= 0) return ALBUMS[curAlbum].songs[queue[queueIdx]];
+  if(curAlbum && ALBUMS[curAlbum]) return ALBUMS[curAlbum].songs[0]; // Preview-Fallback
+  return null;
+}
+
+// Optionale Beschreibungs-Seite zwischen Cover und Lyrics, im selben großen Rahmen.
+// Gibt true zurück, wenn ein Beschreibungs-Bild vorhanden ist und gezeigt wurde.
+function openDescribe() {
+  const song = _resolveCycleSong();
+  const urls = getDescribeUrlsForSong(song);
+  if (!song || !urls.length) return false;
+  if(!lyricsOpen) lyricsCoverSrc = npCoverImg.src; // Original-Cover nur beim Eintritt sichern
+  setImgSrcWithFallback(npCoverImg, urls);
+  npCoverImg.classList.add('lyrics-active');
+  npCoverWrap.classList.add('lyrics-mode');
+  screenNP.classList.add('lyrics-open');
+  if(!isHomeLyricsContextActive()) screenNP.classList.remove('home-cover-open');
+  resetImageFrameTransform();
+  languageCoverFrameOpen = false;
+  lyricsOpen = true;
+  return true;
+}
+
 function openLyrics() {
-  let song = null;
-  if(isArchiveMode()){
-    song = arcQueue[arcQueueIdx];
-  } else if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0){
-    song = KNW_SONGS[knwActiveSongIdx];
-  } else if(isHomeLyricsContextActive()){
-    song = window._hjHomeLyricsSong;
-  } else if(curAlbum && queueIdx >= 0){
-    song = ALBUMS[curAlbum].songs[queue[queueIdx]];
-  } else if(curAlbum && ALBUMS[curAlbum]){
-    // Preview-Modus: kein Song läuft, aber Album ist offen → Song 0 als Fallback
-    song = ALBUMS[curAlbum].songs[0];
-  }
+  const song = _resolveCycleSong();
   const lyricsUrls = getLyricsUrlsForSong(song);
   if (!song || !lyricsUrls.length) return;
-  lyricsCoverSrc = npCoverImg.src;
+  if(!lyricsOpen) lyricsCoverSrc = npCoverImg.src; // beim Wechsel von Beschreibung Cover behalten
   setImgSrcWithFallback(npCoverImg, lyricsUrls);
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
@@ -7790,6 +7873,9 @@ function buildHomeCard(cell, extraClass){
     if(_isLyr || _isTeaser || _isPlain){
       el.dataset.chainHome = '1';
       el.dataset.chainSlug = cell.slug || '';
+      // 3-Seiten-Modus dieser Kachel an den Bild-Zyklus weiterreichen:
+      // '1' = Beschreibung zwischen Cover und Lyrics zeigen, '0' = nur Cover→Lyrics.
+      el.dataset.chainDescribe = cell.describeCycle ? '1' : '0';
       if(cell.type === 'lyrics21' || cell.useCover21){
         el.dataset.chainViewMode = 'lyrics21';
         el.dataset.chainLyrics21 = cell.cover21Url || cell.lyrics21Url || cell.customImageUrl || cell.imageUrl || '';
