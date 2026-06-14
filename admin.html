@@ -5,6 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
+<!-- Version: admin-v20260614c-describe-save-robust-fehlende-spalte-abgefangen -->
 <!-- Version: admin-v20260614b-describe-page-nach-lyrics -->
 <!-- Version: admin-v20260614-describe-page-und-play-describe-lyrics-modus -->
 <!-- Version: admin-v20260611-album-order-delete-insert-duplicate-safe -->
@@ -8859,6 +8860,22 @@ function closeEdit(){
   editTarget = null;
 }
 
+// Schreibt einen Song-Datensatz. Falls Supabase die Spalte describe_url (noch) nicht kennt,
+// wird ohne describe_url erneut gespeichert, damit die übrigen Änderungen nicht verloren gehen.
+// Rückgabe: {res, describeDropped}.
+async function sbWriteSongRecord(method, url, body){
+  let res = await fetch(url, {method, headers:hdrs(), body:JSON.stringify(body)});
+  if(res.ok) return {res, describeDropped:false};
+  let txt=''; try{ txt = await res.clone().text(); }catch(e){}
+  if(('describe_url' in body) && txt.indexOf('describe_url') !== -1){
+    const b2 = {...body}; delete b2.describe_url;
+    const res2 = await fetch(url, {method, headers:hdrs(), body:JSON.stringify(b2)});
+    return {res:res2, describeDropped:true};
+  }
+  return {res, describeDropped:false};
+}
+const DESCRIBE_COLUMN_HINT = '⚠️ Alle Änderungen gespeichert – aber die Beschreibung konnte nicht gespeichert werden. Bitte zuerst in Supabase die Spalte „describe_url" in der Tabelle „songs" anlegen (siehe Anleitung), dann die Beschreibung erneut hochladen.';
+
 async function saveEdit(){
   if(!editTarget) return;
   const slug = editTarget.slug;
@@ -8913,8 +8930,9 @@ async function saveEdit(){
   if(!newUrls.describe_url && editTarget.describe_url) body.describe_url = editTarget.describe_url;
 
   try{
-    const r = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrs(),body:JSON.stringify(body)});
-    if(!r.ok) throw new Error(await r.text());
+    const w = await sbWriteSongRecord('PATCH', SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY, body);
+    if(!w.res.ok) throw new Error(await w.res.text());
+    const describeDropped = w.describeDropped;
 
     // Playlist changes
     const checks = document.querySelectorAll('#ePlaylistChecks input[type=checkbox]');
@@ -8945,7 +8963,8 @@ async function saveEdit(){
 
     renderTable();
     populateArtistList();
-    toast('✓ Gespeichert');
+    if(describeDropped){ showMsg(msgEl, DESCRIBE_COLUMN_HINT, 'err'); toast('Gespeichert (ohne Beschreibung)'); }
+    else { showMsg(msgEl, '✓ Änderungen gespeichert', 'ok'); toast('✓ Gespeichert'); }
 
     // Stay in edit screen, refresh form with updated data
     editTarget = s;
@@ -8999,7 +9018,9 @@ async function saveSong(){
   btn.textContent='Speichere in Datenbank …';
   try{
     const body={slug,title,artist:artist||null,language:lang||null,...urls};
-    const r=await fetch(sbUrl('/rest/v1/songs'),{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    const w=await sbWriteSongRecord('POST', sbUrl('/rest/v1/songs'), body);
+    const r=w.res;
+    const describeDropped=w.describeDropped;
     if(!r.ok){
       const errText=await r.text();
       let errMsg = 'HTTP '+r.status+': '+errText;
@@ -9017,7 +9038,8 @@ async function saveSong(){
     const fetched=await fetchedR.json();
     if(fetched&&fetched[0]){allSongs=allSongs.filter(s=>s.slug!==slug);allSongs.push(fetched[0]);}
     renderTable(); populateArtistList();
-    showMsg(msgEl,'✓ Song gespeichert'+(pl?' und zur Playlist hinzugefügt.':'.'),'ok');
+    if(describeDropped) showMsg(msgEl, DESCRIBE_COLUMN_HINT, 'err');
+    else showMsg(msgEl,'✓ Song gespeichert'+(pl?' und zur Playlist hinzugefügt.':'.'),'ok');
     // Grüner Button als visuelles Feedback
     btn.textContent='✓ Song gespeichert';
     btn.style.background='#2a8a5a';
