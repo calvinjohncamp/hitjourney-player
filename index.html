@@ -26,6 +26,7 @@
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
 <!-- Version: v232-album-space-abc-prev-polish -->
+<!-- Version: v250-describe-page-nach-lyrics-cover-lyrics-describe -->
 <!-- Version: v249-describe-page-cover-describe-lyrics-cycle -->
 <!-- Version: v228-album-dj-deck-conservative -->
 <!-- Version: v216-home-info-button-restored -->
@@ -5568,7 +5569,7 @@ function hjGetLyrics21ItemUrls(item){
   }
   return urls.filter((v,i,a)=>v && a.indexOf(v)===i);
 }
-// Soll die optionale Beschreibungs-Seite (zwischen Cover und Lyrics) gezeigt werden?
+// Soll die optionale Beschreibungs-Seite (nach den Lyrics) gezeigt werden?
 // Home-Kacheln entscheiden über das Datenattribut chainDescribe ('1'/'0', vom Admin-Modus),
 // Album-/Sprachseiten zeigen sie automatisch, sobald ein Beschreibungs-Bild vorhanden ist.
 function hjWantsDescribe(song, item){
@@ -5644,11 +5645,11 @@ function hjAdvanceChainViewer(){
     hjCloseChainViewer();
     return;
   }
-  // Cover → (Beschreibung) → Lyrics → schließen. Schritte ohne Bild werden übersprungen.
+  // Cover → Lyrics → (Beschreibung) → schließen. Schritte ohne Bild werden übersprungen.
   let phase = hjChainViewState.phase;
   while(phase < 3){
     phase++;
-    if(phase === 2 && !hjWantsDescribe(song, item)) continue; // Beschreibung überspringen
+    if(phase === 3 && !hjWantsDescribe(song, item)) continue; // Beschreibung überspringen
     if(hjChainViewerSetImage(song, item, phase)) return;
   }
   hjCloseChainViewer();
@@ -6258,17 +6259,10 @@ function playLanguageSong(lang, idx){
     return;
   }
 
-  // 2. Klick auf dasselbe große Cover: im selben Rahmen zur Beschreibung (falls vorhanden)
-  //    oder direkt zum Lyrics-Sheet wechseln.
+  // 2. Klick auf dasselbe große Cover: im exakt gleichen Rahmen zum Lyrics-Sheet wechseln.
   if(languageCoverClickState.phase === 1){
     if(audio.paused) audio.play().catch(()=>{});
     if(!screenNP.classList.contains('active')) showNowPlaying();
-    if(openDescribe()){
-      languageCoverFrameOpen = false;
-      languageCoverClickState.phase = 1.5;
-      updateLanguageHighlight();
-      return;
-    }
     openLyrics();
     languageCoverFrameOpen = false;
     languageCoverClickState.phase = 2;
@@ -6276,16 +6270,22 @@ function playLanguageSong(lang, idx){
     return;
   }
 
-  // 2b. Klick nach Beschreibung: zum Lyrics-Sheet wechseln.
-  if(languageCoverClickState.phase === 1.5){
-    openLyrics();
-    languageCoverClickState.phase = 2;
+  // 3. Klick nach Lyrics: zur Beschreibung (falls vorhanden) wechseln, sonst schließen.
+  if(languageCoverClickState.phase === 2){
+    if(openDescribe()){
+      languageCoverFrameOpen = false;
+      languageCoverClickState.phase = 2.5;
+      updateLanguageHighlight();
+      return;
+    }
+    closeLanguageImageFrame(true);
+    languageCoverClickState.phase = 3;
     updateLanguageHighlight();
     return;
   }
 
-  // 3. Klick nach geöffnetem Lyrics-Sheet: alles schließen und zur Kachelseite zurück.
-  if(languageCoverClickState.phase === 2){
+  // 3b. Klick nach Beschreibung: alles schließen und zur Kachelseite zurück.
+  if(languageCoverClickState.phase === 2.5){
     closeLanguageImageFrame(true);
     languageCoverClickState.phase = 3;
     updateLanguageHighlight();
@@ -6523,12 +6523,6 @@ function advanceLanguageImageCycle(e){
 
   if(languageCoverClickState.phase === 1){
     if(audio.paused) audio.play().catch(()=>{});
-    if(openDescribe()){
-      languageCoverFrameOpen = false;
-      languageCoverClickState.phase = 1.5;
-      updateLanguageHighlight();
-      return true;
-    }
     openLyrics();
     languageCoverFrameOpen = false;
     languageCoverClickState.phase = 2;
@@ -6536,14 +6530,20 @@ function advanceLanguageImageCycle(e){
     return true;
   }
 
-  if(languageCoverClickState.phase === 1.5){
-    openLyrics();
-    languageCoverClickState.phase = 2;
+  if(languageCoverClickState.phase === 2){
+    if(openDescribe()){
+      languageCoverFrameOpen = false;
+      languageCoverClickState.phase = 2.5;
+      updateLanguageHighlight();
+      return true;
+    }
+    closeLanguageImageFrame(true);
+    languageCoverClickState.phase = 3;
     updateLanguageHighlight();
     return true;
   }
 
-  if(languageCoverClickState.phase === 2){
+  if(languageCoverClickState.phase === 2.5){
     closeLanguageImageFrame(true);
     languageCoverClickState.phase = 3;
     updateLanguageHighlight();
@@ -6562,7 +6562,7 @@ function _resolveCycleSong(){
   return null;
 }
 
-// Optionale Beschreibungs-Seite zwischen Cover und Lyrics, im selben großen Rahmen.
+// Optionale Beschreibungs-Seite nach den Lyrics, im selben großen Rahmen.
 // Gibt true zurück, wenn ein Beschreibungs-Bild vorhanden ist und gezeigt wurde.
 function openDescribe() {
   const song = _resolveCycleSong();
@@ -7874,7 +7874,7 @@ function buildHomeCard(cell, extraClass){
       el.dataset.chainHome = '1';
       el.dataset.chainSlug = cell.slug || '';
       // 3-Seiten-Modus dieser Kachel an den Bild-Zyklus weiterreichen:
-      // '1' = Beschreibung zwischen Cover und Lyrics zeigen, '0' = nur Cover→Lyrics.
+      // '1' = Beschreibung nach den Lyrics zeigen (Cover→Lyrics→Beschreibung), '0' = nur Cover→Lyrics.
       el.dataset.chainDescribe = cell.describeCycle ? '1' : '0';
       if(cell.type === 'lyrics21' || cell.useCover21){
         el.dataset.chainViewMode = 'lyrics21';
