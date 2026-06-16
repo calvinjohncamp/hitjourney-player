@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v261-landing-playback-fix-logo-per-section-headline-fit-textnav -->
 <!-- Version: v260-landingpage-logo-1-2-4-left -->
 <!-- Version: v260-landingpage-logo-4x1-admin-compatible -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
@@ -343,10 +344,18 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
 .landing-section-title{font-family:'Anton',sans-serif;font-size:clamp(19px,2.65vw,32px);letter-spacing:.065em;text-transform:uppercase;color:#cfe5f5;line-height:1.05;text-align:left}
 .landing-section-sub{font-size:clamp(18px,2.8vw,28px);font-weight:700;color:rgba(207,229,245,.78);line-height:1.05;text-align:right;white-space:nowrap}
+/* v261: Logo + schlichte Headline pro Sektion (über den Covern) */
+.landing-sec-logo-wrap{display:flex;align-items:center;justify-content:flex-start;margin:30px 0 22px;width:100%}
+.landing-section:first-child .landing-sec-logo-wrap{margin-top:14px}
+.landing-sec-logo{display:block;height:auto;object-fit:contain;border-radius:0}
+.landing-sec-logo.square{width:min(180px,42vw);aspect-ratio:1/1}
+.landing-sec-logo.wide{width:min(380px,66vw);aspect-ratio:2/1}
+.landing-sec-logo.pano{width:100%;max-width:1120px;aspect-ratio:4/1}
+.landing-sec-headline{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;color:#cfe5f5;line-height:1.05;text-align:left;white-space:nowrap;overflow:hidden;margin:0 0 26px;letter-spacing:-.01em}
 .landing-grid{display:grid;gap:12px}.landing-grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing-grid.cols-4{grid-template-columns:repeat(4,1fr)}.landing-grid.cols-5{grid-template-columns:repeat(5,1fr)}
 .landing-card{position:relative;border-radius:8px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
 .landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card.playing::after{content:'';position:absolute;inset:0;border-radius:8px;border:2px solid rgba(133,172,201,.60);pointer-events:none;animation:hcPulse 2s ease-in-out infinite}.landing-card-title{display:none!important}
-.landing-nav{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:center;padding:16px 0 8px}.landing-nav button{width:43px;height:43px;border-radius:50%;border:1.5px solid rgba(133,172,201,.72);background:rgba(6,20,32,.35);color:#85ACC9;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 18px rgba(0,0,0,.24),0 0 0 1px rgba(133,172,201,.08) inset;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s,border-color .15s,color .15s;padding:0;font-size:19px;font-weight:700;line-height:1}.landing-nav button:hover{background:rgba(133,172,201,.08);border-color:rgba(207,229,245,.82);color:#cfe5f5}.landing-nav button:active{transform:scale(.9)}.landing-nav .landing-home-icon{font-size:18px;transform:translateY(-1px)}
+.landing-nav{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center;padding:24px 0 10px}.landing-nav button{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:999px;border:1.5px solid rgba(133,172,201,.72);background:rgba(6,20,32,.35);color:#85ACC9;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.24),0 0 0 1px rgba(133,172,201,.08) inset;transition:background .15s,transform .1s,box-shadow .15s,border-color .15s,color .15s}.landing-nav button:hover{background:rgba(133,172,201,.08);border-color:rgba(207,229,245,.82);color:#cfe5f5}.landing-nav button:active{transform:scale(.95)}
 @media(max-width:760px){.landing-grid.cols-5,.landing-grid.cols-4{grid-template-columns:repeat(2,1fr)}.landing-grid.cols-3{grid-template-columns:repeat(2,1fr)}.landing-section-head{align-items:flex-start;flex-direction:column;gap:8px}.landing-section-sub{text-align:left;white-space:normal}.landing-section + .landing-section{margin-top:58px}}
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 
@@ -4294,8 +4303,8 @@ body.album-open #hjPlayerSpacer{
     </div>
     <div id="landingSections"></div>
     <div class="landing-nav">
-      <button type="button" onclick="showAbout()" aria-label="Biografie">i</button>
-      <button type="button" onclick="showHome()" aria-label="Home"><span class="landing-home-icon">⌂</span></button>
+      <button type="button" onclick="showAbout()" aria-label="Songwriter-Infos">Songwriter-Infos</button>
+      <button type="button" onclick="showHome()" aria-label="Home">Home</button>
     </div>
   </div>
 </div>
@@ -6184,7 +6193,7 @@ function getLyrics21UrlsForSong(song) {
     .filter((v,i,a)=>v && a.indexOf(v)===i);
 }
 
-let hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null };
+let hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null, stopOnClose:false };
 function hjGetChainViewerEls(){
   return {
     box: document.getElementById('hjChainView'),
@@ -6284,7 +6293,7 @@ function hjChainViewerSetImage(song, item, phase){
 function hjOpenChainViewer(song, item){
   const els = hjGetChainViewerEls();
   if(!els.box || !song) return;
-  hjChainViewState = { open:true, phase:1, mode:'cover', song, item };
+  hjChainViewState = { open:true, phase:1, mode:'cover', song, item, stopOnClose:false };
   if(!hjChainViewerSetImage(song, item, 1)) return;
   els.box.classList.add('active');
   els.box.setAttribute('aria-hidden','false');
@@ -6295,9 +6304,16 @@ function hjCloseChainViewer(){
   els.box.classList.remove('active','fullsheet','player-visible');
   els.box.setAttribute('aria-hidden','true');
   if(els.img) els.img.removeAttribute('src');
-  hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null };
+  hjChainViewState = { open:false, phase:0, mode:'cover', song:null, item:null, stopOnClose:false };
 }
 function hjAdvanceChainViewer(){
+  // Beim Schließen ggf. die laufende Wiedergabe stoppen (Landingpage-Cover-Zyklus:
+  // Cover → Lyrics → Seite → weiterer Klick schließt den Viewer und stoppt den Song).
+  const closeNow = () => {
+    const stopIt = hjChainViewState.stopOnClose;
+    hjCloseChainViewer();
+    if(stopIt){ try{ if(window.HJChain && HJChain.isRunning && HJChain.isRunning()) HJChain.stop(); }catch(e){} }
+  };
   if(!hjChainViewState.open){
     const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
     if(cur && cur.song) hjOpenChainViewer(cur.song, cur.item);
@@ -6305,9 +6321,9 @@ function hjAdvanceChainViewer(){
   }
   const song = hjChainViewState.song;
   const item = hjChainViewState.item;
-  if(!song){ hjCloseChainViewer(); return; }
+  if(!song){ closeNow(); return; }
   if(hjIsLyrics21Item(item)){
-    hjCloseChainViewer();
+    closeNow();
     return;
   }
   // Cover → Lyrics → (Beschreibung) → schließen. Schritte ohne Bild werden übersprungen.
@@ -6317,7 +6333,7 @@ function hjAdvanceChainViewer(){
     if(phase === 3 && !hjWantsDescribe(song, item)) continue; // Beschreibung überspringen
     if(hjChainViewerSetImage(song, item, phase)) return;
   }
-  hjCloseChainViewer();
+  closeNow();
 }
 function hjSyncChainViewerToCurrent(song, item){
   if(!hjChainViewState.open || !song) return;
@@ -7948,27 +7964,22 @@ function renderLandingPage(page){
   const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  if(logoWrap && logoImg){
-    const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
-    const logoUrl = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
-    if(logoUrl){
-      logoImg.src = logoUrl;
-      logoImg.className = 'landing-logo ' + logoKind;
-      logoWrap.classList.add('visible');
-    } else {
-      logoImg.removeAttribute('src');
-      logoWrap.classList.remove('visible');
-    }
-  }
+  // Globales Hero-Logo deaktiviert — das Logo erscheint jetzt pro Sektion über der Headline.
+  if(logoWrap) logoWrap.classList.remove('visible');
+  if(logoImg) logoImg.removeAttribute('src');
+
+  const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
+  const logoUrl  = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
+
   root.innerHTML = '';
   const flatSongs = [];
+  const flatCards = [];
   const bySlug = new Map((SUPABASE_SONGS||[]).map(s=>[s.slug,s]));
-  const landingState = { slug:null, phase:0 };
-  function countLabel(n,title){
+  function headlineLabel(n,title){
     const t = String(title||'').toLowerCase();
-    if(t.includes('german') || t.includes('deutsch')) return n + ' deutsche Songs';
-    if(t.includes('english') || t.includes('englisch')) return n + ' English Songs';
-    return n + (n===1 ? ' Song' : ' Songs');
+    if(t.includes('german') || t.includes('deutsch'))  return n + ' selected German songs';
+    if(t.includes('english') || t.includes('englisch')) return n + ' selected English songs';
+    return n + (n===1 ? ' selected song' : ' selected songs');
   }
   function clearLandingHighlights(){ root.querySelectorAll('.landing-card.playing').forEach(el=>el.classList.remove('playing')); }
   page.sections.forEach(sec=>{
@@ -7978,8 +7989,12 @@ function renderLandingPage(page){
     if(!songs.length) return;
     const section = document.createElement('section');
     section.className = 'landing-section';
-    const subtitle = countLabel(songs.length, title);
-    section.innerHTML = `<div class="landing-section-head"><div class="landing-section-title">${escapeHtml(title)}</div><div class="landing-section-sub">${escapeHtml(subtitle)}</div></div>`;
+    let headHtml = '';
+    if(logoUrl){
+      headHtml += `<div class="landing-sec-logo-wrap"><img class="landing-sec-logo ${logoKind}" src="${escapeHtml(logoUrl)}" alt=""></div>`;
+    }
+    headHtml += `<div class="landing-sec-headline">${escapeHtml(headlineLabel(songs.length, title))}</div>`;
+    section.innerHTML = headHtml;
     const grid = document.createElement('div');
     grid.className = `landing-grid cols-${columns}`;
     songs.forEach(song=>{
@@ -7994,30 +8009,33 @@ function renderLandingPage(page){
       img.alt = song.title || '';
       setImgSrcWithFallback(img, getImgUrls(song,'cover'));
       card.appendChild(img);
+      flatCards.push(card);
       const open = () => {
-        const items = flatSongs.map((s,idx)=>({song:s, el: grid.querySelectorAll('.landing-card')[idx], _viewMode:'cover-lyrics'}));
         const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
-        const same = cur && cur.song && cur.song.slug === song.slug && cur.audio && !cur.audio.paused;
-        if(same){
-          if(landingState.slug === song.slug && landingState.phase === 1){
-            if(typeof hjOpenChainViewer === 'function'){
-              hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
-              if(typeof hjChainViewerSetImage === 'function') hjChainViewerSetImage(song, {song, el:card, _viewMode:'cover-lyrics'}, 2);
-            }
-            landingState.phase = 2;
-            return;
+        const isThis = cur && cur.song && cur.song.slug === song.slug;
+        // Läuft dieser Song bereits → der Cover-/Lyrics-/Seiten-Viewer übernimmt das
+        // Weiterklicken; sein Klick-Handler ruft hjAdvanceChainViewer und der letzte
+        // Klick schließt den Viewer und stoppt den Song (stopOnClose).
+        if(isThis && window.HJChain && HJChain.isRunning && HJChain.isRunning()){
+          if(typeof hjChainViewState !== 'undefined' && hjChainViewState.open){
+            hjAdvanceChainViewer();
+          } else if(typeof hjOpenChainViewer === 'function'){
+            hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
+            hjChainViewState.stopOnClose = true;
           }
-          if(window.HJChain && HJChain.stop) HJChain.stop();
-          clearLandingHighlights();
-          landingState.slug = null; landingState.phase = 0;
           return;
         }
         if(window.HJChain && HJChain.startChain){
+          const items = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics'}));
           HJChain.startChain(items, landingIndex);
           clearLandingHighlights();
           card.classList.add('playing');
-          landingState.slug = song.slug; landingState.phase = 1;
           prevScreen = 'landing';
+          // Cover sofort einblenden; weitere Klicks: Cover → Lyrics → Seite → Stop.
+          if(typeof hjOpenChainViewer === 'function'){
+            hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
+            hjChainViewState.stopOnClose = true;
+          }
         }
       };
       card.addEventListener('click', open);
@@ -8027,7 +8045,30 @@ function renderLandingPage(page){
     section.appendChild(grid);
     root.appendChild(section);
   });
+  landingFitHeadlines();
 }
+// Schriftgröße der Sektions-Headlines so wählen, dass der Text die Cover-Breite
+// füllt (linke Kante 1. Cover → rechte Kante letztes Cover). DE und EN bekommen die
+// gemeinsame, einheitliche Größe (die kleinere von beiden), damit beide sauber passen.
+function landingFitHeadlines(){
+  const els = Array.from(document.querySelectorAll('#landingSections .landing-sec-headline'));
+  if(!els.length) return;
+  let ratio = Infinity;
+  els.forEach(el=>{
+    el.style.fontSize = '100px';
+    const avail = el.clientWidth;          // volle Sektions-/Grid-Breite
+    const natural = el.scrollWidth || 1;   // Textbreite bei 100px
+    if(avail > 0) ratio = Math.min(ratio, avail / natural);
+  });
+  if(!isFinite(ratio)){ els.forEach(el=>{ el.style.fontSize=''; }); return; }
+  const size = Math.max(15, Math.min(100 * ratio, 46));
+  els.forEach(el=>{ el.style.fontSize = size + 'px'; });
+}
+let _landingFitRaf = 0;
+window.addEventListener('resize', ()=>{
+  if(_landingFitRaf) cancelAnimationFrame(_landingFitRaf);
+  _landingFitRaf = requestAnimationFrame(landingFitHeadlines);
+});
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
 function isLandingRoute(){
   const route = currentLandingRoute();
@@ -8046,6 +8087,8 @@ function showLanding(){
   if(screenKnw) screenKnw.style.display='none'; if(screenSwf) screenSwf.style.display='none'; hideLanguageScreens();
   screenLanding.classList.add('active'); screenLanding.scrollTop = 0;
   backBtn.classList.remove('visible'); logoHome.style.display=''; makingWaves.style.display=''; headerRight.textContent=''; mainHeader.style.display=''; prevScreen='landing';
+  // Headlines erst bei sichtbarer Bühne korrekt auf Cover-Breite skalieren.
+  requestAnimationFrame(()=>{ if(typeof landingFitHeadlines==='function') landingFitHeadlines(); });
 }
 function routeLandingIfNeeded(){ if(isLandingRoute()) setTimeout(showLanding, 0); }
 
@@ -8676,6 +8719,9 @@ const HJChain = (function(){
 
   return { startHomeFrom, startDiashowFrom, startChain, stop, isRunning:()=>running, getCurrent };
 })();
+// HJChain ist eine lexikalische const — für die window.HJChain-Aufrufe (u.a. Landingpage)
+// zusätzlich global verfügbar machen, sonst startet die Wiedergabe dort nie.
+try{ window.HJChain = HJChain; }catch(e){}
 
 /* ── Build a standard home-card div ── */
 function buildHomeCard(cell, extraClass){
