@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
-<!-- Version: v261-landing-playback-fix-logo-per-section-headline-fit-textnav -->
+<!-- Version: v262-landing-single-logo-headline-2cover-fit-lyrics-keepplaying-bio -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
 <!-- Version: v258-multi-landingpages-routes -->
 <!-- Version: v257-landingpage-selected-works -->
@@ -329,7 +329,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenLanding{padding:26px 14px 120px;background:rgba(6,20,32,1)}
 #screenLanding.active{display:block;overflow-y:auto}
 .landing-wrap{max-width:1120px;margin:0 auto;width:100%}
-.landing-hero{padding:4px 2px 24px;text-align:center}
+.landing-hero{padding:0 2px 0;text-align:center}
 .landing-kicker,.landing-title,.landing-sub{display:none!important}
 .landing-logo-wrap{display:none;align-items:center;justify-content:center;margin:0 auto 22px;max-width:min(520px,78vw)}
 .landing-logo-wrap.visible{display:flex}
@@ -348,7 +348,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-sec-logo.square{width:min(180px,42vw);aspect-ratio:1/1}
 .landing-sec-logo.wide{width:min(380px,66vw);aspect-ratio:2/1}
 .landing-sec-logo.pano{width:100%;max-width:1120px;aspect-ratio:4/1}
-.landing-sec-headline{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;color:#cfe5f5;line-height:1.05;text-align:left;white-space:nowrap;overflow:hidden;margin:0 0 26px;letter-spacing:-.01em}
+.landing-sec-headline{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;color:#cfe5f5;line-height:1.25;text-align:left;white-space:nowrap;margin:0 0 26px;padding-bottom:3px;letter-spacing:-.01em}
 .landing-grid{display:grid;gap:12px}.landing-grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing-grid.cols-4{grid-template-columns:repeat(4,1fr)}.landing-grid.cols-5{grid-template-columns:repeat(5,1fr)}
 .landing-card{position:relative;border-radius:8px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
 .landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card.playing::after{content:'';position:absolute;inset:0;border-radius:8px;border:2px solid rgba(133,172,201,.60);pointer-events:none;animation:hcPulse 2s ease-in-out infinite}.landing-card-title{display:none!important}
@@ -4300,7 +4300,7 @@ body.album-open #hjPlayerSpacer{
     </div>
     <div id="landingSections"></div>
     <div class="landing-nav">
-      <button type="button" onclick="showAbout()" aria-label="Songwriter-Infos">Songwriter-Infos</button>
+      <button type="button" onclick="landingShowBio()" aria-label="Songwriter-Infos">Songwriter-Infos</button>
       <button type="button" onclick="showHome()" aria-label="Home">Home</button>
     </div>
   </div>
@@ -7961,12 +7961,19 @@ function renderLandingPage(page){
   const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  // Globales Hero-Logo deaktiviert — das Logo erscheint jetzt pro Sektion über der Headline.
-  if(logoWrap) logoWrap.classList.remove('visible');
-  if(logoImg) logoImg.removeAttribute('src');
-
-  const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
-  const logoUrl  = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
+  // Logo erscheint genau EINMAL oben (Hero) — nicht pro Sektion.
+  if(logoWrap && logoImg){
+    const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
+    const logoUrl  = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
+    if(logoUrl){
+      logoImg.src = logoUrl;
+      logoImg.className = 'landing-logo ' + logoKind;
+      logoWrap.classList.add('visible');
+    } else {
+      logoImg.removeAttribute('src');
+      logoWrap.classList.remove('visible');
+    }
+  }
 
   root.innerHTML = '';
   const flatSongs = [];
@@ -7986,12 +7993,7 @@ function renderLandingPage(page){
     if(!songs.length) return;
     const section = document.createElement('section');
     section.className = 'landing-section';
-    let headHtml = '';
-    if(logoUrl){
-      headHtml += `<div class="landing-sec-logo-wrap"><img class="landing-sec-logo ${logoKind}" src="${escapeHtml(logoUrl)}" alt=""></div>`;
-    }
-    headHtml += `<div class="landing-sec-headline">${escapeHtml(headlineLabel(songs.length, title))}</div>`;
-    section.innerHTML = headHtml;
+    section.innerHTML = `<div class="landing-sec-headline">${escapeHtml(headlineLabel(songs.length, title))}</div>`;
     const grid = document.createElement('div');
     grid.className = `landing-grid cols-${columns}`;
     songs.forEach(song=>{
@@ -8009,29 +8011,30 @@ function renderLandingPage(page){
       flatCards.push(card);
       const open = () => {
         const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
-        const isThis = cur && cur.song && cur.song.slug === song.slug;
-        // Läuft dieser Song bereits → der Cover-/Lyrics-/Seiten-Viewer übernimmt das
-        // Weiterklicken; sein Klick-Handler ruft hjAdvanceChainViewer und der letzte
-        // Klick schließt den Viewer und stoppt den Song (stopOnClose).
-        if(isThis && window.HJChain && HJChain.isRunning && HJChain.isRunning()){
+        const isThis = cur && cur.song && cur.song.slug === song.slug && window.HJChain && HJChain.isRunning && HJChain.isRunning();
+        if(isThis){
+          // Dieser Song läuft bereits:
+          //  • Overlay offen (Cover → Lyrics) → weiterblättern. Der Klick aufs Lyric-Sheet
+          //    schließt das Overlay → alle Cover sind wieder sichtbar, der Song LÄUFT WEITER.
+          //  • Overlay zu (Cover sichtbar) → erneuter Klick auf das laufende Cover STOPPT.
           if(typeof hjChainViewState !== 'undefined' && hjChainViewState.open){
             hjAdvanceChainViewer();
-          } else if(typeof hjOpenChainViewer === 'function'){
-            hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
-            hjChainViewState.stopOnClose = true;
+          } else {
+            HJChain.stop();
+            clearLandingHighlights();
           }
           return;
         }
         if(window.HJChain && HJChain.startChain){
+          // Wie auf der Homeseite: ganze 20er-Playlist ab hier, läuft automatisch weiter.
           const items = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics'}));
           HJChain.startChain(items, landingIndex);
           clearLandingHighlights();
           card.classList.add('playing');
           prevScreen = 'landing';
-          // Cover sofort einblenden; weitere Klicks: Cover → Lyrics → Seite → Stop.
+          // Cover sofort zeigen; Klick blättert Cover → Lyrics → zurück zu den Covern (Song läuft weiter).
           if(typeof hjOpenChainViewer === 'function'){
             hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
-            hjChainViewState.stopOnClose = true;
           }
         }
       };
@@ -8044,28 +8047,47 @@ function renderLandingPage(page){
   });
   landingFitHeadlines();
 }
-// Schriftgröße der Sektions-Headlines so wählen, dass der Text die Cover-Breite
-// füllt (linke Kante 1. Cover → rechte Kante letztes Cover). DE und EN bekommen die
-// gemeinsame, einheitliche Größe (die kleinere von beiden), damit beide sauber passen.
+// Schriftgröße der Sektions-Headlines so wählen, dass der Text exakt von der linken
+// Kante des 1. Covers bis zur rechten Kante des 2. Covers reicht (auf dem Handy = 2
+// Spalten = volle Breite; auf dem Desktop = die ersten 2 von z.B. 5 Covern). DE und EN
+// bekommen die gemeinsame, einheitliche Größe (die kleinere von beiden).
 function landingFitHeadlines(){
-  const els = Array.from(document.querySelectorAll('#landingSections .landing-sec-headline'));
-  if(!els.length) return;
+  const secs = Array.from(document.querySelectorAll('#landingSections .landing-section'));
+  if(!secs.length) return;
   let ratio = Infinity;
-  els.forEach(el=>{
+  const heads = [];
+  secs.forEach(sec=>{
+    const el = sec.querySelector('.landing-sec-headline');
+    if(!el) return;
     el.style.fontSize = '100px';
-    const avail = el.clientWidth;          // volle Sektions-/Grid-Breite
-    const natural = el.scrollWidth || 1;   // Textbreite bei 100px
-    if(avail > 0) ratio = Math.min(ratio, avail / natural);
+    const natural = el.scrollWidth || 1;          // Textbreite bei 100px
+    let target = el.clientWidth;                  // Fallback: volle Sektionsbreite
+    const cards = sec.querySelectorAll('.landing-card');
+    if(cards.length >= 2){
+      const r1 = cards[0].getBoundingClientRect();
+      const r2 = cards[1].getBoundingClientRect();
+      if(Math.abs(r1.top - r2.top) < 4) target = r2.right - r1.left; // 1.+2. Cover in einer Zeile
+    }
+    if(target > 0){ ratio = Math.min(ratio, target / natural); heads.push(el); }
   });
-  if(!isFinite(ratio)){ els.forEach(el=>{ el.style.fontSize=''; }); return; }
-  const size = Math.max(15, Math.min(100 * ratio, 46));
-  els.forEach(el=>{ el.style.fontSize = size + 'px'; });
+  if(!isFinite(ratio)){ heads.forEach(el=>{ el.style.fontSize=''; }); return; }
+  const size = Math.max(14, Math.min(100 * ratio, 44));
+  heads.forEach(el=>{ el.style.fontSize = size + 'px'; });
 }
 let _landingFitRaf = 0;
 window.addEventListener('resize', ()=>{
   if(_landingFitRaf) cancelAnimationFrame(_landingFitRaf);
   _landingFitRaf = requestAnimationFrame(landingFitHeadlines);
 });
+// „Songwriter-Infos" öffnet direkt die Biografie (nicht das Impressum/die Info-Seite).
+function landingShowBio(){
+  try{
+    if(typeof openAboutBio === 'function' && typeof aboutBioSections !== 'undefined' && aboutBioSections && aboutBioSections.length){
+      openAboutBio(); return;
+    }
+  }catch(e){}
+  if(typeof showAbout === 'function') showAbout();
+}
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
 function isLandingRoute(){
   const route = currentLandingRoute();
