@@ -3006,7 +3006,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;
   align-items:stretch;
   gap:16px;
-  margin-top:28px;
+  margin-top:30px;
   min-height:118px;
 }
 .bio-cq-cover{
@@ -3025,21 +3025,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .bio-cq-cover.is-playable:active{ transform:scale(.97); }
 .bio-cq-cover img{ width:100%;height:100%;object-fit:cover;display:block; }
-.bio-cq-play{
-  position:absolute;
-  left:50%;top:50%;
-  transform:translate(-50%,-50%);
-  width:38%;max-width:54px;aspect-ratio:1;
-  border-radius:50%;
-  background:rgba(6,20,32,.5);
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  border:1.5px solid rgba(207,229,245,.85);
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;
-  transition:opacity .2s;
-}
-.bio-cq-play svg{ width:42%;height:42%;fill:#eaf2fa;margin-left:8%; }
-.bio-cq-cover.is-hidden-play .bio-cq-play{ opacity:0; }
 .about-bio-stage{
   position:fixed;
   inset:0;
@@ -5442,9 +5427,8 @@ function buildBioPageHtml(sec, idx){
     h += '<div class="bio-cq">';
     if(sec.image){
       const playable = !!resolveBioSong(sec);
-      const badge = playable ? '<div class="bio-cq-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>' : '';
       h += '<div class="bio-cq-cover'+(playable?' is-playable':'')+'" data-bioidx="'+idx+'">'
-         + '<img alt="'+esc(sec.headline||'Cover')+'" src="'+esc(sec.image)+'">'+badge+'</div>';
+         + '<img alt="'+esc(sec.headline||'Cover')+'" src="'+esc(sec.image)+'"></div>';
     }
     if(sec.quote) h += '<div class="bio-cq-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
                     + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
@@ -5515,8 +5499,9 @@ function gotoBioPage(i){
 function nextBioPage(){ gotoBioPage(aboutBioPage+1); }
 function prevBioPage(){ gotoBioPage(aboutBioPage-1); }
 
-// ── BIO-Cover: Play + Cover/Lyrics-Zyklus (wie die App-Cover/Lyrics-Funktion) ──
-// phase 0 = auf der Bio-Seite, 1 = großes Cover, 2 = Lyrics
+// ── BIO-Cover: Play + Cover/Lyrics-Zyklus ──
+// phase: 0 = gestoppt/Start, 1 = spielt (Bio-Seite), 2 = großes Cover,
+//        3 = Lyrics, 4 = spielt (Bio-Seite, nächster Klick stoppt)
 let bioPlay = { idx:-1, phase:0 };
 function bioStartSong(idx){
   const startSong = resolveBioSong(aboutBioPages[idx]);
@@ -5531,8 +5516,13 @@ function bioStartSong(idx){
   queueIdx = startPos;
   prevScreen = 'home';
   loadPlay(queue[queueIdx]);
-  bioPlay = { idx, phase:0 };
+  bioPlay = { idx, phase:1 };
   return true;
+}
+function bioStopSong(){
+  if(typeof audio !== 'undefined' && audio) audio.pause();
+  bioHideStage();
+  bioPlay.phase = 0;
 }
 function bioShowStage(kind){
   const song = resolveBioSong(aboutBioPages[bioPlay.idx]);
@@ -5551,17 +5541,14 @@ function bioHideStage(){
   if(stage){ stage.classList.remove('open'); stage.setAttribute('aria-hidden','true'); }
 }
 function onBioCoverClick(idx){
-  if(bioPlay.idx !== idx){
-    // 1. Klick: Song starten (bleibt auf der Bio-Seite, Musik läuft)
-    bioStartSong(idx);
-    return;
-  }
-  // 2. Klick auf dasselbe Cover: großes Plattencover zeigen
-  if(bioPlay.phase === 0){ bioShowStage('cover'); bioPlay.phase = 1; }
+  // Anderer Abschnitt oder gestoppt → 1. Klick: Song starten (Bio-Seite, Musik läuft)
+  if(bioPlay.idx !== idx || bioPlay.phase === 0){ bioStartSong(idx); return; }
+  if(bioPlay.phase === 1){ bioShowStage('cover'); bioPlay.phase = 2; return; } // 2. Klick: großes Cover
+  if(bioPlay.phase === 4){ bioStopSong(); return; }                           // 5. Klick: Song stoppen
 }
 function onBioStageClick(){
-  if(bioPlay.phase === 1){ bioShowStage('lyrics'); bioPlay.phase = 2; }       // 3. Klick: Lyrics
-  else if(bioPlay.phase === 2){ bioHideStage(); bioPlay.phase = 0; }           // 4. Klick: zurück zur Bio
+  if(bioPlay.phase === 2){ bioShowStage('lyrics'); bioPlay.phase = 3; }        // 3. Klick: Lyrics
+  else if(bioPlay.phase === 3){ bioHideStage(); bioPlay.phase = 4; }           // 4. Klick: zurück zur Bio
 }
 function openAboutBio(){
   if(!aboutBioSections.length) return;
