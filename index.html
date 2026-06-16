@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v255-bio-button-absolute-address-center-fix -->
 <!-- Version: v254-bio-finale-cover-songlink-cycle-fix -->
 <!-- Version: v253-bio-button-position-und-home-scrolltop -->
 <!-- Version: v248-back-button-home-und-homeplaylist-stopp-bei-unterseiten-song -->
@@ -2777,6 +2778,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenAbout.active{display:block;}
 #screenAbout::-webkit-scrollbar{display:none}
 .about-wrap{
+  position:relative;
   max-width:720px;
   margin:0 auto;
   padding:44px 28px 0;
@@ -2942,10 +2944,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   stroke-linecap:round;stroke-linejoin:round;
 }
 #aboutBodyText{position:relative;}
-.about-bio-marker{display:inline-block;width:0;height:0;overflow:hidden;vertical-align:baseline;}
-.about-bio-anchor{position:absolute;left:50%;top:0;display:inline-flex;align-items:center;margin:0;z-index:3;transform:translate(-50%,-50%);}
-.about-bio-anchor .about-bio-btn{margin-top:0;transform:none;}
-.about-bio-anchor .about-bio-btn:active{transform:scale(.96);}
+.about-bio-marker{display:none;}
+.about-bio-anchor{display:none;}
+#aboutBioBtn.about-bio-floating{
+  position:absolute;
+  left:50%;
+  top:0;
+  margin:0;
+  z-index:4;
+  transform:translate(-50%,-50%);
+}
+#aboutBioBtn.about-bio-floating:active{transform:translate(-50%,-50%) scale(.96);}
 .bio-home-btn{
   display:flex;align-items:center;justify-content:center;gap:9px;
   margin:32px auto 0;padding:12px 20px;border-radius:999px;
@@ -5391,50 +5400,85 @@ async function loadFromSupabase() {
 
 function placeAboutBioButton(hasBio){
   const btn  = document.getElementById('aboutBioBtn');
-  const body = document.getElementById('aboutBodyText');
   const wrap = document.querySelector('#screenAbout .about-wrap');
   const divider = document.querySelector('#screenAbout .about-divider');
   if(!btn) return;
 
-  // Alte Inline-Platzierung bereinigen, damit die Adresse wieder exakt gleiche Zeilenabstände hat.
-  document.querySelectorAll('#aboutBioAnchor').forEach(a=>{ if(!a.contains(btn)) a.remove(); });
-  document.querySelectorAll('#aboutBioMarker').forEach((m,i)=>{ if(i>0) m.remove(); });
+  // v255: Button vollständig aus dem Fließtext herausnehmen.
+  // Dadurch bleiben alle Adresszeilen exakt gleichmäßig, und die Position wird rein optisch berechnet.
+  document.querySelectorAll('#aboutBioAnchor,#aboutBioMarker').forEach(el=>el.remove());
+  btn.classList.toggle('about-bio-floating', !!hasBio);
 
-  if(hasBio && body){
-    if(!body.querySelector('#aboutBioMarker')){
-      const html = body.innerHTML;
-      const next = html.replace(/(tulpenweg\s*11)(\s*<br\s*\/?\s*>)/i,
-        '$1<span id="aboutBioMarker" class="about-bio-marker"></span>$2<span id="aboutBioAnchor" class="about-bio-anchor"></span>');
-      body.innerHTML = (next !== html)
-        ? next
-        : html + '<span id="aboutBioMarker" class="about-bio-marker"></span><span id="aboutBioAnchor" class="about-bio-anchor"></span>';
-    } else if(!body.querySelector('#aboutBioAnchor')){
-      body.insertAdjacentHTML('beforeend','<span id="aboutBioAnchor" class="about-bio-anchor"></span>');
-    }
-    const anchor = document.getElementById('aboutBioAnchor');
-    if(anchor) anchor.appendChild(btn);
+  if(hasBio && wrap){
+    if(btn.parentElement !== wrap) wrap.appendChild(btn);
+    btn.style.display = 'inline-flex';
     requestAnimationFrame(positionAboutBioButton);
-  } else if(wrap && divider && btn.parentElement !== wrap){
-    wrap.insertBefore(btn, divider);
+    setTimeout(positionAboutBioButton, 80);
+  } else {
+    btn.style.display = 'none';
+    btn.classList.remove('about-bio-floating');
+    if(wrap && divider && btn.parentElement !== wrap) wrap.insertBefore(btn, divider);
   }
-  btn.style.display = hasBio ? 'inline-flex' : 'none';
+}
+
+function findTextRectInElement(root, needle){
+  if(!root || !needle) return null;
+  const wanted = String(needle).toLowerCase();
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const txt = (node.nodeValue || '').toLowerCase();
+      return txt.includes(wanted) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const node = walker.nextNode();
+  if(!node) return null;
+  const txt = (node.nodeValue || '').toLowerCase();
+  const idx = txt.indexOf(wanted);
+  if(idx < 0) return null;
+  const range = document.createRange();
+  range.setStart(node, idx);
+  range.setEnd(node, idx + wanted.length);
+  const rect = range.getBoundingClientRect();
+  range.detach && range.detach();
+  return (rect && rect.width >= 0) ? rect : null;
 }
 
 function positionAboutBioButton(){
-  const body   = document.getElementById('aboutBodyText');
-  const marker = document.getElementById('aboutBioMarker');
-  const anchor = document.getElementById('aboutBioAnchor');
-  const btn    = document.getElementById('aboutBioBtn');
-  if(!body || !marker || !anchor || !btn || btn.style.display === 'none') return;
-  const bodyRect = body.getBoundingClientRect();
-  const markerRect = marker.getBoundingClientRect();
-  const cs = getComputedStyle(body);
-  let lineHeight = parseFloat(cs.lineHeight);
-  if(!lineHeight || Number.isNaN(lineHeight)) lineHeight = parseFloat(cs.fontSize || '14') * 1.55;
-  // Vertikal exakt zwischen „tulpenweg 11“ und „51674 wiehl“.
-  const y = (markerRect.top - bodyRect.top) + lineHeight;
-  anchor.style.top = y + 'px';
-  anchor.style.left = '50%';
+  const body = document.getElementById('aboutBodyText');
+  const wrap = document.querySelector('#screenAbout .about-wrap');
+  const btn  = document.getElementById('aboutBioBtn');
+  if(!body || !wrap || !btn || btn.style.display === 'none') return;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  const line1 = findTextRectInElement(body, 'tulpenweg 11');
+  const line2 = findTextRectInElement(body, '51674 wiehl');
+
+  let top;
+  if(line1 && line2){
+    // exakt waagerecht zwischen den beiden Adresszeilen
+    top = ((line1.bottom + line2.top) / 2) - wrapRect.top;
+  } else if(line1){
+    const cs = getComputedStyle(body);
+    let lh = parseFloat(cs.lineHeight);
+    if(!lh || Number.isNaN(lh)) lh = parseFloat(cs.fontSize || '14') * 1.55;
+    top = (line1.bottom - wrapRect.top) + lh * .5;
+  } else {
+    // Fallback: nahe der Adressposition, ohne den Fließtext zu beeinflussen
+    const bodyRect = body.getBoundingClientRect();
+    const cs = getComputedStyle(body);
+    let lh = parseFloat(cs.lineHeight);
+    if(!lh || Number.isNaN(lh)) lh = parseFloat(cs.fontSize || '14') * 1.55;
+    top = (bodyRect.top - wrapRect.top) + lh * 10.5;
+  }
+
+  // horizontal exakt auf der Mitte des Content-/2:1-Motiv-Bereichs,
+  // damit der Button sauber rechts neben der Adresse sitzt.
+  const art = document.getElementById('aboutFinalArt');
+  const artRect = art ? art.getBoundingClientRect() : null;
+  const left = artRect && artRect.width ? ((artRect.left + artRect.width / 2) - wrapRect.left) : (wrapRect.width / 2);
+
+  btn.style.left = left + 'px';
+  btn.style.top  = top + 'px';
 }
 window.addEventListener('resize', ()=>requestAnimationFrame(positionAboutBioButton));
 
