@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260616l-landing-deck-title-bottom-left -->
+<!-- Version: admin-v20260616n-safe-home-save-no-delete-first -->
 <!-- Version: admin-v20260616h-landing-teaser32-only -->
 <!-- Version: admin-v20260616c-landingpage-teaser-5x1-2x1 -->
 <!-- Version: admin-v20260616d-teaser-2x1-5x1-visible-live -->
@@ -10027,6 +10027,84 @@ async function loadHomeLayout(){
   if(sb){ sb.disabled = false; sb.style.opacity = ''; sb.style.cursor = ''; }
 }
 
+async function createHomeLayoutSafetyBackup(reason='manual'){
+  const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'), {headers:hdrs()});
+  if(!r.ok){
+    const txt = await r.text();
+    throw new Error('Backup READ ' + r.status + ': ' + txt.slice(0,300));
+  }
+  const rows = await r.json();
+  const stamp = new Date().toISOString().replace(/[:.]/g,'-');
+  const backup = {
+    created: new Date().toISOString(),
+    version: 'home-layout-backup-v1',
+    reason,
+    row_count: rows.length,
+    tables: { home_layout: rows }
+  };
+  try{
+    const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'hitjourney-home-layout-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }catch(e){
+    console.warn('Backup-Download konnte nicht gestartet werden:', e);
+  }
+  return rows;
+}
+
+function normalizeHomePayloadRows(){
+  return homeLayout.map((r,i)=>({
+    id: r.id || uid(),
+    row_order: i,
+    cells: r.cells,
+    caption: r.caption || null
+  }));
+}
+
+async function safeUpsertHomeLayoutRows(payload){
+  const res = await fetch(SB_URL + '/rest/v1/home_layout?on_conflict=id&apikey=' + SB_KEY, {
+    method: 'POST',
+    headers: {...hdrsMin(), 'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok){
+    const txt = await res.text();
+    throw new Error('UPSERT ' + res.status + ': ' + txt.slice(0,500));
+  }
+}
+
+async function deleteRemovedHomeLayoutRows(oldRows, payload){
+  const keep = new Set(payload.map(r=>String(r.id)));
+  const removed = (oldRows||[]).filter(r => Number(r.row_order) >= 0 && r.id && !keep.has(String(r.id)));
+  for(const r of removed){
+    const del = await fetch(SB_URL + '/rest/v1/home_layout?id=eq.' + encodeURIComponent(r.id) + '&apikey=' + SB_KEY, {
+      method:'DELETE', headers:hdrsMin()
+    });
+    if(!del.ok){
+      const txt = await del.text();
+      throw new Error('DELETE old row ' + r.id + ' ' + del.status + ': ' + txt.slice(0,300));
+    }
+  }
+  return removed.length;
+}
+
+async function verifyHomeLayoutSaved(expectedCount){
+  const r = await fetch(sbUrl('/rest/v1/home_layout?select=id,row_order&row_order=gte.0&order=row_order.asc'), {headers:hdrs()});
+  if(!r.ok){
+    const txt = await r.text();
+    throw new Error('VERIFY READ ' + r.status + ': ' + txt.slice(0,300));
+  }
+  const rows = await r.json();
+  if(rows.length !== expectedCount){
+    throw new Error('VERIFY: erwartet ' + expectedCount + ' Home-Zeilen, gefunden ' + rows.length + '. Speicherung wurde nicht als sicher bestätigt.');
+  }
+  return rows;
+}
+
 async function saveHomeLayout(){
   // Guard: niemals mit leerem State speichern
   if(!homeLayout || homeLayout.length === 0){
@@ -10034,33 +10112,47 @@ async function saveHomeLayout(){
     console.warn('saveHomeLayout() abgebrochen — homeLayout ist leer.');
     return;
   }
+  if(homeLayoutBase && homeLayoutBase.length && homeLayout.length < Math.max(1, homeLayoutBase.length - 2)){
+    const ok = confirm('Achtung: Aktuell sollen nur ' + homeLayout.length + ' Home-Zeilen gespeichert werden. Vorher geladen waren ' + homeLayoutBase.length + '.\\n\\nDas wirkt wie ein möglicher Datenverlust. Trotzdem speichern?');
+    if(!ok){ toast('Speichern abgebrochen.','err'); return; }
+  }
+
+  const btn = document.getElementById('homeSaveBtn');
+  if(btn){ btn.disabled = true; btn.style.opacity = '.55'; btn.style.cursor = 'wait'; }
+
   try {
-    const payload = homeLayout.map((r,i)=>({ id:r.id, row_order:i, cells:r.cells, caption:r.caption||null }));
-
-    // DELETE alle vorhandenen Zeilen — row_order >= 0 trifft immer zu
-    const delRes = await fetch(SB_URL+'/rest/v1/home_layout?row_order=gte.0'+'&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
-    if(!delRes.ok){
-      const txt = await delRes.text();
-      throw new Error('DELETE ' + delRes.status + ': ' + txt.slice(0,300));
+    // 1) Erst Sicherheitskopie der aktuellen DB-Zeilen ziehen. Keine destruktive Aktion davor.
+    const oldRows = await createHomeLayoutSafetyBackup('before-home-save');
+    const oldNormalCount = oldRows.filter(r=>Number(r.row_order) >= 0).length;
+    if(oldNormalCount && homeLayout.length < Math.max(1, oldNormalCount - 2)){
+      const ok = confirm('In der Datenbank liegen aktuell ' + oldNormalCount + ' Home-Zeilen. Gespeichert würden nur ' + homeLayout.length + '.\\n\\nDas kann korrekt sein, wirkt aber riskant. Trotzdem speichern?');
+      if(!ok){ toast('Speichern abgebrochen. Backup wurde erstellt.','err'); return; }
     }
 
-    if(payload.length > 0){
-      const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
-        method:'POST', headers:{...hdrs(),'Prefer':'return=minimal'}, body:JSON.stringify(payload)
-      });
-      if(!res.ok){
-        const txt = await res.text();
-        throw new Error('POST ' + res.status + ': ' + txt.slice(0,300));
-      }
-    }
+    const payload = normalizeHomePayloadRows();
+
+    // 2) Sicheres Upsert: vorhandene IDs werden aktualisiert, neue IDs eingefügt.
+    //    Kein vorheriges Löschen mehr — dadurch kann ein Fehler nicht mehr die Homepage leeren.
+    await safeUpsertHomeLayoutRows(payload);
+
+    // 3) Erst nach erfolgreichem Upsert entfernte Zeilen gezielt löschen.
+    const removedCount = await deleteRemovedHomeLayoutRows(oldRows, payload);
+
+    // 4) Verifizieren: Zahl der normalen Home-Zeilen muss exakt passen.
+    await verifyHomeLayoutSaved(payload.length);
+
+    // 5) Lokalen State stabilisieren.
+    homeLayout = payload.map(r=>({ id:r.id, editing:false, caption:r.caption||undefined, cells:r.cells }));
     homeLayoutBase = cloneHomeLayout(homeLayout);
     homeUndoStack = [];
     renderHomeEditor();
-    toast('Home gespeichert ✓','ok');
+    toast('Home sicher gespeichert ✓' + (removedCount ? ' (' + removedCount + ' alte Zeile(n) entfernt)' : ''),'ok');
   } catch(e){
-    toast('Speichern fehlgeschlagen: '+e.message,'err');
-    alert('Speichern fehlgeschlagen:\n\n' + e.message);
+    toast('Speichern fehlgeschlagen: '+e.message,'err',6000);
+    alert('Speichern fehlgeschlagen. Es wurde vorab ein Backup versucht.\\n\\n' + e.message);
     throw e;
+  } finally {
+    if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
   }
 }
 
