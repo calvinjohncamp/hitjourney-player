@@ -725,6 +725,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   <div class="tab" data-tab="add">Song hinzufügen</div>
   <div class="tab" data-tab="playlists">Alben</div>
   <div class="tab active" data-tab="home">Home</div>
+  <div class="tab" data-tab="info">Info</div>
 </div>
 
 <!-- ══ TAB: SONGS ══ -->
@@ -7653,6 +7654,101 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         </div></div></div></div></div><div class="he-add-bar bottom"><button class="he-add-btn" onclick="addRow()">＋ Neue Zeile unten hinzufügen</button></div></div>
 </div>
 
+<!-- ══ TAB: INFO / IMPRESSUM (WYSIWYG) ══ -->
+<style>
+#tabInfo{padding:0;flex-direction:column;overflow:hidden}
+#tabInfo.active{display:flex}
+.info-editor-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;background:rgb(6,20,32);border-bottom:1px solid rgba(133,172,201,.12);flex-shrink:0}
+.info-editor-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#cfe5f5}
+.info-editor-hint{padding:10px 16px;font-size:12px;line-height:1.55;color:rgba(133,172,201,.7);background:rgba(6,20,32,.6);border-bottom:1px solid rgba(133,172,201,.08);flex-shrink:0}
+.info-format-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 14px;background:rgb(6,20,32);border-bottom:1px solid rgba(133,172,201,.12);flex-shrink:0}
+.ifb-select{background:rgba(11,42,66,.7);color:#cfe5f5;border:1px solid rgba(133,172,201,.2);border-radius:7px;padding:6px 8px;font-size:12px;cursor:pointer;outline:none}
+.ifb-btn{min-width:34px;height:32px;padding:0 9px;background:rgba(11,42,66,.7);color:#cfe5f5;border:1px solid rgba(133,172,201,.2);border-radius:7px;font-size:14px;cursor:pointer;line-height:1;transition:background .15s,border-color .15s}
+.ifb-btn:hover{background:rgba(133,172,201,.18)}
+.ifb-btn:active{background:rgba(133,172,201,.3)}
+.ifb-clear{font-size:11px;font-weight:600;color:rgba(133,172,201,.8)}
+.ifb-sep{width:1px;height:22px;background:rgba(133,172,201,.18);margin:0 2px}
+.info-editor-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#06141F;min-height:0}
+.ie-about-wrap{max-width:720px;margin:0 auto;padding:40px 28px 120px;color:#f1ecdf}
+.ie-edit{outline:none;border-radius:6px;transition:box-shadow .15s,background .15s}
+.ie-edit:hover{box-shadow:0 0 0 1px rgba(133,172,201,.25)}
+.ie-edit:focus{box-shadow:0 0 0 2px #85ACC9;background:rgba(133,172,201,.06)}
+.ie-about-title{font-family:'Anton',sans-serif;font-size:clamp(28px,6vw,56px);letter-spacing:.06em;text-transform:uppercase;line-height:1;color:#cfe5f5;padding:2px 6px}
+.ie-about-domain{font-size:15px;font-weight:600;color:#5884A4;margin-top:6px;margin-bottom:16px;letter-spacing:.06em;padding:2px 6px}
+.ie-about-label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#5884A4;margin-bottom:12px;font-weight:700;padding:2px 6px}
+.ie-about-text{font-size:15px;line-height:1.85;color:rgba(207,229,245,.75);padding:6px}
+.ie-about-text strong{color:#cfe5f5;font-weight:700}
+.ie-about-text a{color:#85ACC9;text-decoration:none}
+.ie-about-text .about-contact{margin-top:18px;line-height:2.2;font-size:14px;color:rgba(133,172,201,.6)}
+.ie-about-text .about-contact a{color:#85ACC9;text-decoration:none}
+.ie-about-text .about-ico,.about-ico{width:24px;height:24px;vertical-align:-7px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:inline-block}
+.ie-about-divider{height:1px;background:rgba(133,172,201,.1);margin:28px 0}
+.ie-about-final-art{position:relative;width:100%;margin-top:28px;border-radius:8px;overflow:hidden;background:#0B2A42}
+.ie-about-final-art img{width:100%;aspect-ratio:2/1;object-fit:cover;display:block}
+.ie-img-replace{position:absolute;right:12px;bottom:12px;padding:9px 14px;border:1px solid rgba(207,229,245,.5);border-radius:8px;background:rgba(6,20,32,.78);color:#cfe5f5;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.ie-img-replace:hover{background:rgba(6,20,32,.92)}
+.ie-img-progress{position:absolute;left:0;top:0;height:3px;width:0;background:#6fda9a;transition:width .2s;border-radius:0 3px 3px 0}
+.ie-field-note{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:700;margin:22px 0 4px;padding-left:6px}
+</style>
+<div class="screen" id="tabInfo">
+  <div class="info-editor-toolbar">
+    <span class="info-editor-title">Info / Impressum</span>
+    <div style="display:flex;gap:6px">
+      <button class="home-toolbar-btn cancel" id="infoResetBtn" onclick="initInfoEditor()" title="Geladenen Stand wiederherstellen">Zurücksetzen</button>
+      <button class="home-toolbar-btn save" id="infoSaveBtn" onclick="saveInfoContent()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Speichern
+      </button>
+    </div>
+  </div>
+  <div class="info-editor-hint">Tippe direkt in die Texte, um sie zu ändern – genau so erscheint die Seite, wenn man im Player unten auf den i-Button tippt. Markiere Text und nutze die Leiste für Schrift, Größe &amp; Format. Über „Bild ändern" tauschst du die Grafik unten aus. Danach „Speichern".</div>
+  <div class="info-format-bar" id="infoFormatBar">
+    <select class="ifb-select" id="ifbFont" title="Schriftart" onchange="ieApplyFont(this.value)">
+      <option value="">Standard (App-Schrift)</option>
+      <option value="'Anton',sans-serif">Anton (Display)</option>
+      <option value="'Special Elite',monospace">Special Elite (Typewriter)</option>
+      <option value="Georgia,serif">Georgia (Serif)</option>
+      <option value="'Times New Roman',serif">Times (Serif)</option>
+      <option value="Helvetica,Arial,sans-serif">Helvetica (Sans)</option>
+      <option value="'Courier New',monospace">Courier (Mono)</option>
+    </select>
+    <select class="ifb-select" id="ifbSize" title="Schriftgröße" onchange="ieApplySize(this.value)">
+      <option value="">Größe</option>
+      <option value="12">12</option><option value="13">13</option><option value="14">14</option>
+      <option value="15">15 (Standard)</option><option value="17">17</option><option value="20">20</option>
+      <option value="24">24</option><option value="30">30</option><option value="40">40</option><option value="56">56</option>
+    </select>
+    <span class="ifb-sep"></span>
+    <button type="button" class="ifb-btn" title="Fett" onclick="ieCmd('bold')" style="font-weight:800">B</button>
+    <button type="button" class="ifb-btn" title="Kursiv" onclick="ieCmd('italic')" style="font-style:italic">I</button>
+    <button type="button" class="ifb-btn" title="Unterstrichen" onclick="ieCmd('underline')" style="text-decoration:underline">U</button>
+    <span class="ifb-sep"></span>
+    <button type="button" class="ifb-btn ifb-clear" title="Formatierung entfernen (normal)" onclick="ieClearFormat()">⨯ Format</button>
+  </div>
+  <div class="info-editor-scroll">
+    <div class="ie-about-wrap">
+      <div class="ie-field-note">Überschrift</div>
+      <div class="ie-about-title ie-edit" id="ieAboutTitle" contenteditable="true" spellcheck="false">About</div>
+      <div class="ie-field-note">Domain / Untertitel</div>
+      <div class="ie-about-domain ie-edit" id="ieAboutDomain" contenteditable="true" spellcheck="false">hitjourney.com</div>
+      <div class="ie-field-note">Text (Enter = neue Zeile)</div>
+      <div class="ie-about-text ie-edit" id="ieAboutBody" contenteditable="true" spellcheck="false"></div>
+      <div class="ie-about-divider"></div>
+      <div class="ie-field-note">Abschnitts-Label</div>
+      <div class="ie-about-label ie-edit" id="ieAboutCopyrightLabel" contenteditable="true" spellcheck="false">copyright</div>
+      <div class="ie-field-note">Copyright-Text</div>
+      <div class="ie-about-text ie-edit" id="ieAboutCopyright" contenteditable="true" spellcheck="false"></div>
+      <div class="ie-field-note">Grafik</div>
+      <div class="ie-about-final-art">
+        <img id="ieAboutImg" alt="Info-Grafik" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg">
+        <button type="button" class="ie-img-replace" onclick="document.getElementById('ieAboutImgFile').click()">Bild ändern</button>
+        <div class="ie-img-progress" id="ieAboutImgProg"></div>
+      </div>
+      <input type="file" id="ieAboutImgFile" accept="image/*" style="display:none" onchange="onInfoImagePicked(event)">
+    </div>
+  </div>
+</div>
+
 <!-- ══ HOME TILE MODAL — 3-STEP ══ -->
 <div id="homeTileModal">
   <div class="htm-inner">
@@ -8302,6 +8398,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     if(tab.dataset.tab==='songs' && !songsLoaded){ songsLoaded=true; loadSongs(); }
     if(tab.dataset.tab==='playlists') loadPlaylists();
     if(tab.dataset.tab==='home') initHomeEditor();
+    if(tab.dataset.tab==='info') initInfoEditor();
   });
 });
 
@@ -9676,7 +9773,9 @@ async function loadHomeLayout(){
   try {
     const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs()});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const rows = await r.json();
+    // About-/Info-Sonderzeile (type 'about', row_order -1) gehört nicht in den Home-Editor.
+    const rows = (await r.json()).filter(row =>
+      !(row.cells && row.cells[0] && row.cells[0].type === 'about'));
     homeLayout = rows.map(row=>({
       id:      row.id,
       editing: false,
@@ -9745,6 +9844,217 @@ async function saveHomeLayout(){
     toast('Speichern fehlgeschlagen: '+e.message,'err');
     alert('Speichern fehlgeschlagen:\n\n' + e.message);
     throw e;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INFO / IMPRESSUM (About-Seite) — WYSIWYG-Editor
+   Speicherung: geschützte Sonderzeile in home_layout
+   (row_order = -1, cells[0].type = 'about').
+   Das normale Home-Speichern löscht nur row_order >= 0,
+   lässt diese Zeile also unangetastet.
+═══════════════════════════════════════════════════════ */
+// Konsistente Vektor-Icons für Kontakt (gleiche Darstellung auf allen Geräten,
+// keine bunten System-Emoji mehr). stroke=currentColor → übernimmt die Textfarbe.
+const CONTACT_MAIL_SVG  = '<svg class="about-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>';
+const CONTACT_PHONE_SVG = '<svg class="about-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c0-.6.4-1 1-1h2.4c.5 0 .9.3 1 .8l.8 3c.1.4 0 .8-.3 1.1L8.2 10.6a12 12 0 0 0 5.2 5.2l1.7-1.7c.3-.3.7-.4 1.1-.3l3 .8c.5.1.8.5.8 1V19c0 .6-.4 1-1 1A15 15 0 0 1 4 5z"/></svg>';
+
+const DEFAULT_ABOUT = {
+  type:'about',
+  title:'About',
+  domain:'hitjourney.com',
+  bodyHtml:
+    'hitjourney is an independent music, lyrics and design project by<br><br>'+
+    '<strong>jörn kämper</strong><br><br>'+
+    'All songs, lyrics, visuals, cover artworks, lyric sheets, playlists, interface concepts and app designs shown on this website are original creations and protected by copyright. Responsible for concept, songwriting, music production, artwork, app design and creative direction:<br><br>'+
+    'jörn kämper<br>tulpenweg 11<br>51674 wiehl<br>germany'+
+    '<div class="about-contact"><a href="mailto:calvinjohncamp@aol.com">'+CONTACT_MAIL_SVG+'calvinjohncamp@aol.com</a><br>'+CONTACT_PHONE_SVG+'+49 160 94600284</div>',
+  copyrightLabel:'copyright',
+  copyrightHtml:
+    'All content on this website — including music, lyrics, artwork, graphics, animations and app elements — may not be copied, reproduced or redistributed without permission.<br><br>'+
+    '© jörn kämper — all rights reserved',
+  imageUrl:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg',
+  imageAlt:'hitjourney shaped by human choice powered by AI'
+};
+
+let infoImageUrl = DEFAULT_ABOUT.imageUrl;   // aktuell gespeicherte Grafik-URL
+let infoImagePendingFile = null;             // neu gewählte, noch nicht hochgeladene Grafik
+
+// Erlaubte Inline-Style-Eigenschaften — genau die, die die Format-Leiste setzt.
+// Alles andere (z.B. aus Copy&Paste mitgeschleppte Hintergründe) wird entfernt,
+// damit der gespeicherte HTML-Code sauber bleibt.
+const IE_STYLE_WHITELIST = ['font-family','font-size','font-weight','font-style','text-decoration','text-decoration-line','color'];
+
+// Liest den innerHTML eines contenteditable-Feldes, entfernt Editor-Artefakte
+// (contenteditable/spellcheck/id), behält aber die vom Nutzer gesetzten
+// Formatierungen (gewhitelistete Inline-Styles), <strong>, <br>, <a>,
+// die .about-contact-Struktur und die Kontakt-SVGs.
+function ieClean(el){
+  if(!el) return '';
+  const tmp = el.cloneNode(true);
+  tmp.querySelectorAll('*').forEach(n=>{
+    n.removeAttribute('contenteditable');
+    n.removeAttribute('spellcheck');
+    n.removeAttribute('id');
+    if(n.getAttribute && n.getAttribute('style')){
+      const keep = [];
+      for(const p of Array.from(n.style)){
+        if(IE_STYLE_WHITELIST.includes(p)) keep.push(p+':'+n.style.getPropertyValue(p));
+      }
+      if(keep.length) n.setAttribute('style', keep.join(';'));
+      else n.removeAttribute('style');
+    }
+    // <b>/<i> in semantische Tags überführen (Browser liefern mal so, mal so)
+    if(n.tagName==='B'){ const s=document.createElement('strong'); s.innerHTML=n.innerHTML; n.replaceWith(s); }
+    else if(n.tagName==='I'){ const s=document.createElement('em'); s.innerHTML=n.innerHTML; n.replaceWith(s); }
+  });
+  return tmp.innerHTML.trim();
+}
+
+/* ── Format-Leiste (einfacher Rich-Text-Editor) ──
+   Wirkt auf das zuletzt fokussierte Textfeld (Haupttext / Copyright).
+   Nutzt CSS-Inline-Styles, damit die Live-Seite es 1:1 gleich darstellt. */
+let ieActiveEditable = null;
+function ieRegisterEditables(){
+  ['ieAboutBody','ieAboutCopyright','ieAboutTitle','ieAboutDomain','ieAboutCopyrightLabel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !el._ieWired){
+      el._ieWired = true;
+      el.addEventListener('focus', ()=>{ ieActiveEditable = el; });
+    }
+  });
+}
+function ieEnsureFocus(){
+  if(ieActiveEditable && document.contains(ieActiveEditable)){
+    if(document.activeElement !== ieActiveEditable) ieActiveEditable.focus();
+    return true;
+  }
+  const body = document.getElementById('ieAboutBody');
+  if(body){ body.focus(); ieActiveEditable = body; return true; }
+  return false;
+}
+function ieCmd(cmd){
+  if(!ieEnsureFocus()) return;
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  document.execCommand(cmd, false, null);
+}
+function ieApplyFont(value){
+  if(!value){ document.getElementById('ifbFont').selectedIndex = 0; return; }
+  if(!ieEnsureFocus()){ document.getElementById('ifbFont').selectedIndex = 0; return; }
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  document.execCommand('fontName', false, value);
+  document.getElementById('ifbFont').selectedIndex = 0;
+}
+function ieApplySize(px){
+  if(!px){ return; }
+  if(!ieEnsureFocus()){ document.getElementById('ifbSize').selectedIndex = 0; return; }
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  // execCommand('fontSize') kennt nur 1–7; wir setzen 7 und ersetzen das
+  // resultierende xx-large gezielt durch die gewünschte px-Größe.
+  document.execCommand('fontSize', false, '7');
+  // fontSize '7' erzeugt je nach Browser ein Schlüsselwort (xx-large / xxx-large);
+  // wir ersetzen genau diese frisch gesetzten Spans durch die gewünschte px-Größe.
+  const KW = ['xxx-large','xx-large','x-large','larger'];
+  const root = ieActiveEditable;
+  if(root){
+    root.querySelectorAll('span[style*="font-size"]').forEach(s=>{
+      if(KW.includes(s.style.fontSize)) s.style.fontSize = px+'px';
+    });
+  }
+  document.getElementById('ifbSize').selectedIndex = 0;
+}
+function ieClearFormat(){
+  if(!ieEnsureFocus()) return;
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  document.execCommand('removeFormat', false, null);
+}
+// Toolbar-Klicks dürfen die Textauswahl nicht stehlen.
+document.addEventListener('mousedown', function(e){
+  if(e.target.closest && e.target.closest('#infoFormatBar')){
+    if(e.target.tagName !== 'SELECT') e.preventDefault();
+  }
+}, true);
+
+async function initInfoEditor(){
+  infoImagePendingFile = null;
+  let data = DEFAULT_ABOUT;
+  try{
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-1'),{headers:hdrs()});
+    if(r.ok){
+      const rows = await r.json();
+      const row = rows.find(x=>x.cells && x.cells[0] && x.cells[0].type==='about');
+      if(row) data = {...DEFAULT_ABOUT, ...row.cells[0]};
+    }
+  }catch(e){ console.warn('Info-Editor: Laden fehlgeschlagen, nutze Standard.', e); }
+
+  const $ = id => document.getElementById(id);
+  if($('ieAboutTitle'))          $('ieAboutTitle').innerHTML = data.title || '';
+  if($('ieAboutDomain'))         $('ieAboutDomain').innerHTML = data.domain || '';
+  if($('ieAboutBody'))           $('ieAboutBody').innerHTML = data.bodyHtml || '';
+  if($('ieAboutCopyrightLabel')) $('ieAboutCopyrightLabel').innerHTML = data.copyrightLabel || '';
+  if($('ieAboutCopyright'))      $('ieAboutCopyright').innerHTML = data.copyrightHtml || '';
+  const img = $('ieAboutImg');
+  if(img){ img.src = data.imageUrl || DEFAULT_ABOUT.imageUrl; img.alt = data.imageAlt || ''; }
+  infoImageUrl = data.imageUrl || DEFAULT_ABOUT.imageUrl;
+  const prog = $('ieAboutImgProg'); if(prog) prog.style.width='0';
+  ieRegisterEditables();
+  ieActiveEditable = $('ieAboutBody');
+}
+
+function onInfoImagePicked(ev){
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  infoImagePendingFile = f;
+  const img = document.getElementById('ieAboutImg');
+  if(img) img.src = URL.createObjectURL(f);   // lokale Vorschau
+  const prog = document.getElementById('ieAboutImgProg'); if(prog) prog.style.width='0';
+  toast('Bild gewählt – mit „Speichern" übernehmen','ok');
+  ev.target.value = '';   // erlaubt erneutes Wählen derselben Datei
+}
+
+async function saveInfoContent(){
+  const btn = document.getElementById('infoSaveBtn');
+  if(btn) btn.disabled = true;
+  try{
+    let imageUrl = infoImageUrl;
+    if(infoImagePendingFile){
+      const prog = document.getElementById('ieAboutImgProg'); if(prog) prog.style.width='0';
+      const ext = (infoImagePendingFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      const key = 'artwork/info-grafik-'+Date.now()+'.'+ext;
+      imageUrl = await uploadToS3(infoImagePendingFile, key, 'ieAboutImgProg');
+    }
+
+    const $ = id => document.getElementById(id);
+    const about = {
+      type:'about',
+      title:          ieClean($('ieAboutTitle')) || DEFAULT_ABOUT.title,
+      domain:         ieClean($('ieAboutDomain')),
+      bodyHtml:       ieClean($('ieAboutBody')),
+      copyrightLabel: ieClean($('ieAboutCopyrightLabel')),
+      copyrightHtml:  ieClean($('ieAboutCopyright')),
+      imageUrl:       imageUrl,
+      imageAlt:       ($('ieAboutImg').alt||'') || DEFAULT_ABOUT.imageAlt
+    };
+
+    // Bestehende About-Sonderzeile entfernen, dann neu schreiben.
+    const del = await fetch(SB_URL+'/rest/v1/home_layout?row_order=eq.-1&apikey='+SB_KEY, {method:'DELETE', headers:hdrsMin()});
+    if(!del.ok){ throw new Error('DELETE '+del.status+': '+(await del.text()).slice(0,200)); }
+
+    const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY, {
+      method:'POST', headers:hdrsMin(),
+      body: JSON.stringify({ row_order:-1, cells:[about], caption:'__about__' })
+    });
+    if(!res.ok){ throw new Error('POST '+res.status+': '+(await res.text()).slice(0,200)); }
+
+    infoImageUrl = imageUrl;
+    infoImagePendingFile = null;
+    const img = $('ieAboutImg'); if(img) img.src = imageUrl;
+    toast('Info-Seite gespeichert ✓','ok');
+  }catch(e){
+    toast('Speichern fehlgeschlagen: '+e.message,'err');
+    alert('Speichern fehlgeschlagen:\n\n'+e.message);
+  }finally{
+    if(btn) btn.disabled = false;
   }
 }
 
@@ -12135,13 +12445,14 @@ function importCurrentHome(){
 // Tab-Navigation per URL-Hash: admin.html#home springt direkt zum Home-Tab
 (function(){
   const hash = location.hash.replace('#','');
-  const validTabs = ['songs','hinzufuegen','alben','home'];
+  const validTabs = ['songs','hinzufuegen','alben','home','info'];
   if(hash && validTabs.includes(hash)){
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===hash));
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     const screen = document.getElementById('tab'+hash.charAt(0).toUpperCase()+hash.slice(1));
     if(screen) screen.classList.add('active');
     if(hash==='home') initHomeEditor();
+    if(hash==='info') initInfoEditor();
   }
 })();
 

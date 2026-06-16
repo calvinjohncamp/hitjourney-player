@@ -2814,11 +2814,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .about-text strong{color:#cfe5f5;font-weight:700;}
 .about-contact{
   margin-top:18px;
-  line-height:2;
+  line-height:2.2;
   font-size:14px;
   color:rgba(133,172,201,.6);
 }
 .about-contact a{color:#85ACC9;text-decoration:none;}
+/* Kontakt-Icons als Vektor: identische Darstellung auf allen Geräten (keine bunten System-Emoji) */
+.about-ico{
+  width:24px;height:24px;
+  vertical-align:-7px;
+  margin-right:6px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  display:inline-block;
+}
 .about-divider{height:1px;background:rgba(133,172,201,.1);margin:28px 0;}
 
 
@@ -4071,10 +4083,10 @@ body.album-open #hjPlayerSpacer{
 <div class="screen" id="screenAbout">
   <div class="about-wrap">
 
-    <div class="about-title">About</div>
-    <div class="about-domain">hitjourney.com</div>
+    <div class="about-title" id="aboutTitle">About</div>
+    <div class="about-domain" id="aboutDomain">hitjourney.com</div>
 
-    <div class="about-text">
+    <div class="about-text" id="aboutBodyText">
       hitjourney is an independent music, lyrics and design project by<br><br>
       <strong>jörn kämper</strong><br><br>
       All songs, lyrics, visuals, cover artworks, lyric sheets, playlists, interface concepts and app designs shown on this website are original creations and protected by copyright. Responsible for concept, songwriting, music production, artwork, app design and creative direction:<br><br>
@@ -4083,18 +4095,18 @@ body.album-open #hjPlayerSpacer{
       51674 wiehl<br>
       germany
       <div class="about-contact">
-        ✉ <a href="mailto:calvinjohncamp@aol.com">calvinjohncamp@aol.com</a><br>
-        ✆ +49 160 94600284
+        <a href="mailto:calvinjohncamp@aol.com"><svg class="about-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>calvinjohncamp@aol.com</a><br>
+        <svg class="about-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c0-.6.4-1 1-1h2.4c.5 0 .9.3 1 .8l.8 3c.1.4 0 .8-.3 1.1L8.2 10.6a12 12 0 0 0 5.2 5.2l1.7-1.7c.3-.3.7-.4 1.1-.3l3 .8c.5.1.8.5.8 1V19c0 .6-.4 1-1 1A15 15 0 0 1 4 5z"/></svg>+49 160 94600284
       </div>
     </div>
 
     <div class="about-divider"></div>
 
 
-    <div class="about-label">copyright</div>
+    <div class="about-label" id="aboutCopyrightLabel">copyright</div>
     <div class="about-text">
-      All content on this website — including music, lyrics, artwork, graphics, animations and app elements — may not be copied, reproduced or redistributed without permission.<br><br>
-      © jörn kämper — all rights reserved
+      <span id="aboutCopyrightText">All content on this website — including music, lyrics, artwork, graphics, animations and app elements — may not be copied, reproduced or redistributed without permission.<br><br>
+      © jörn kämper — all rights reserved</span>
       <div class="about-final-art" id="aboutFinalArt" role="button" aria-label="Artwork groß anzeigen" tabindex="0">
         <img id="aboutFinalArtImg" alt="hitjourney shaped by human choice powered by AI" loading="lazy" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
       </div>
@@ -4106,7 +4118,7 @@ body.album-open #hjPlayerSpacer{
 </div>
 
 <div class="about-art-lightbox" id="aboutArtLightbox" aria-hidden="true">
-  <img alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
+  <img id="aboutArtLightboxImg" alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
 </div>
 
 <!-- KURS NORDWEST -->
@@ -5128,6 +5140,36 @@ async function loadFromSupabase() {
     if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
+
+  // 4b. Info-/Impressum-Inhalt (About-Seite) aus der geschützten home_layout-Sonderzeile
+  //     (row_order = -1, cells[0].type = 'about') anwenden — falls im Admin gepflegt.
+  try {
+    const aboutRow = (window._homeLayoutRows || []).find(r =>
+      r && r.cells && r.cells[0] && r.cells[0].type === 'about');
+    if(aboutRow) applyAboutContent(aboutRow.cells[0]);
+  } catch(e){ console.warn('[hitjourney] About-Inhalt konnte nicht angewendet werden:', e); }
+}
+
+// Befüllt die About-/Info-Seite mit im Admin gepflegten Inhalten.
+// Fehlende Felder bleiben auf dem im HTML hinterlegten Standard.
+function applyAboutContent(a){
+  if(!a) return;
+  const set = (id, html)=>{ const el=document.getElementById(id); if(el && html!=null && html!=='') el.innerHTML = html; };
+  set('aboutTitle',         a.title);
+  set('aboutDomain',        a.domain);
+  set('aboutBodyText',      a.bodyHtml);
+  set('aboutCopyrightLabel',a.copyrightLabel);
+  set('aboutCopyrightText', a.copyrightHtml);
+  if(a.imageUrl){
+    const img = document.getElementById('aboutFinalArtImg');
+    const lb  = document.getElementById('aboutArtLightboxImg');
+    if(img) img.src = a.imageUrl;
+    if(lb)  lb.src  = a.imageUrl;
+    if(a.imageAlt){
+      if(img) img.alt = a.imageAlt;
+      if(lb)  lb.alt  = a.imageAlt;
+    }
+  }
 }
 
 // ── DOM ──
@@ -7235,7 +7277,9 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const rows = window._homeLayoutRows || [];
+  // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
+  const rows = (window._homeLayoutRows || []).filter(r =>
+    !(r && r.cells && r.cells[0] && r.cells[0].type === 'about'));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
