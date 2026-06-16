@@ -4063,7 +4063,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenLanding #landingPlayerBox #landingDeck .deck-tonearm{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1!important;z-index:4!important}
 #screenLanding #landingPlayerBox #landingDeck .deck-red-btn{display:block!important;position:absolute!important;right:9.8%!important;bottom:8%!important;width:8.4%!important;aspect-ratio:1/1!important;z-index:8!important}
 #screenLanding #landingPlayerBox #landingDeck .deck-info{display:block!important;position:absolute!important;left:4%!important;bottom:3.5%!important;right:21%!important;z-index:7!important}
-#screenLanding #landingPlayerBox #landingDeck.quick-return .deck-tonearm{transition:transform .52s cubic-bezier(.22,.72,.18,1)!important}
+#screenLanding #landingPlayerBox #landingDeck.quick-return .deck-tonearm{transition:transform .28s linear!important}
 </style>
 </head>
 <body>
@@ -8127,45 +8127,38 @@ function landingStartAt(index, songs, cards){
 
   if(landingPendingStartTimer){ clearTimeout(landingPendingStartTimer); landingPendingStartTimer = null; }
 
-  // Gleiche Platte: Cover-Klick soll NICHT pausieren; Pause/Resume passiert nur über die Platte im Player.
+  // Gleiche Platte: Cover-Klick wählt nur aus; Play/Pause bleibt wie beim Album-Player
+  // ausschließlich auf der Platte im Plattenspieler.
   if(same){
     landingUpdateDeck(cur.song, cur.item, !!(cur.running && cur.audio && !cur.audio.paused));
     return;
   }
 
-  const startNow = ()=>{
-    if(!window.HJChain || !HJChain.startChain) return;
-    HJChain.startChain(items, index, {noFade:true});
-    prevScreen = 'landing';
-    requestAnimationFrame(()=>landingUpdateDeck(next.song, next, true));
-  };
-
-  // Wenn gerade eine andere Platte läuft, fährt der Arm wie in der Albumfunktion
-  // zügig zur Ausgangsposition zurück; direkt danach startet die neue Platte.
-  // Wichtig: kein langer 1.4s-End-of-song-Return bei manueller Neuwahl.
-  if(cur && cur.song && cur.running){
-    try{ if(cur.audio) cur.audio.pause(); }catch(_){ }
-    const deck = document.getElementById('landingDeck');
-    if(deck){
-      deck.classList.remove('arm-returning');
-      deck.classList.add('quick-return');
-    }
-    landingArmReturning = true;
-    landingSetArmRot(LANDING_TONEARM_START_DEG);
-    try{ HJChain.stop(); }catch(_){ }
-    landingUpdateDeck(next.song, next, false);
-    landingPendingStartTimer = setTimeout(()=>{
-      const d = document.getElementById('landingDeck');
-      if(d){
-        d.classList.remove('quick-return');
-        d.classList.remove('arm-returning');
-      }
-      landingArmReturning = false;
-      startNow();
-    }, 540);
-  } else {
-    startNow();
+  const deck = document.getElementById('landingDeck');
+  if(deck){
+    deck.classList.remove('arm-returning');
+    deck.classList.add('quick-return');
   }
+
+  // Album-Player-Parität: Der neue Song startet sofort. Der Tonarm fährt parallel
+  // zügig zurück und wird anschließend von landingSyncDeckFromChain wieder progressiv
+  // nach innen geführt. Kein vorgelagertes Stoppen/kein Warten auf den Arm.
+  landingArmReturning = false;
+  landingSetArmRot(LANDING_TONEARM_START_DEG);
+  landingUpdateDeck(next.song, next, true);
+  prevScreen = 'landing';
+
+  try{ HJChain.startChain(items, index, {noFade:true}); }catch(_){ }
+
+  setTimeout(()=>{
+    const d = document.getElementById('landingDeck');
+    if(d){
+      d.classList.remove('quick-return');
+      d.classList.remove('arm-returning');
+    }
+    landingArmReturning = false;
+    landingSyncDeckFromChain();
+  }, 280);
 }
 function landingToggleDeckPlayback(){
   const cur = landingGetCurrent();
