@@ -18,6 +18,7 @@
 <!-- Version: v267-landing-teaser-fullwidth-no-section-headlines -->
 <!-- Version: v266-landing-teaser-ratio-fields -->
 <!-- Version: v265-landing-teaser-visible-5x1-2x1 -->
+<!-- Version: v270-landing-turntable-real-playback -->
 <!-- Version: v263-landing-redbtn-only-nologo-nocrossfade-endlessplaylist -->
 <!-- Version: v260-landingpage-logo-1-2-4-left -->
 <!-- Version: v260-landingpage-logo-4x1-admin-compatible -->
@@ -8066,23 +8067,9 @@ function renderLandingPage(page){
       card.appendChild(img);
       flatCards.push(card);
       const open = () => {
-        const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
-        const isThis = cur && cur.song && cur.song.slug === song.slug && window.HJChain && HJChain.isRunning && HJChain.isRunning();
-        if(isThis){
-          // Läuft dieser Song bereits, bleibt die Wiedergabe bestehen; nur ein offener Viewer blättert weiter.
-          if(typeof hjChainViewState !== 'undefined' && hjChainViewState.open) hjAdvanceChainViewer();
-          return;
-        }
-        if(window.HJChain && HJChain.startChain){
-          // Wie auf der Homeseite: ganze 20er-Playlist ab hier, läuft automatisch weiter –
-          // aber OHNE Überblendung (noFade), damit jeder Song komplett A–Z zu hören ist.
-          const items = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics', _noAutoViewer:true}));
-          HJChain.startChain(items, landingIndex, {noFade:true});
-          clearLandingHighlights();
-          card.classList.add('playing');
-          prevScreen = 'landing';
-          // KEIN großes Cover-Overlay beim Start: Der Song läuft oben rechts im Plattenspieler.
-        }
+        // Cover-Kacheln wählen nur noch einen neuen Song aus.
+        // Play/Pause und Cover/Lyrics passieren danach ausschließlich oben im Plattenspieler.
+        landingStartAt(landingIndex, flatSongs, flatCards);
       };
       card.addEventListener('click', open);
       card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
@@ -8091,6 +8078,10 @@ function renderLandingPage(page){
     section.appendChild(grid);
     root.appendChild(section);
   });
+  // v270: Landing-Playlist global merken, damit der Plattenteller selbst Song 1 starten kann.
+  window._landingChainItems = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics', _noAutoViewer:true}));
+  window._landingFlatSongs = flatSongs;
+  window._landingFlatCards = flatCards;
   // Initialzustand des Plattenspielers: erstes Cover zeigen, solange noch nichts läuft.
   const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
   if(cur && cur.song) landingUpdateDeck(cur.song, cur.item, window.HJChain && HJChain.isRunning && HJChain.isRunning());
@@ -8104,6 +8095,91 @@ function landingInitDeckTonearm(){
   const srcArm = document.getElementById('tlDeckTonearm');
   if(srcArm && srcArm.getAttribute('src')) arm.setAttribute('src', srcArm.getAttribute('src'));
 }
+// v270: Plattenspieler-Logik für Verlags-Landingpages
+const LANDING_TONEARM_START_DEG = -9.5;
+const LANDING_TONEARM_END_DEG = 29.0;
+const LANDING_TONEARM_RETURN_SECS = 2.0;
+let landingPendingStartTimer = null;
+let landingArmReturning = false;
+
+function landingSetArmRot(deg){
+  const deck = document.getElementById('landingDeck');
+  const arm = document.getElementById('landingDeckTonearm');
+  if(deck) deck.style.setProperty('--arm-rot', deg + 'deg');
+  if(arm) arm.style.transform = 'rotate(' + deg + 'deg)';
+}
+function landingGetCurrent(){
+  try{ return (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null; }catch(_){ return null; }
+}
+function landingIsCurrentSong(song){
+  const cur = landingGetCurrent();
+  return !!(cur && cur.song && song && cur.song.slug === song.slug);
+}
+function landingStartAt(index, songs, cards){
+  const items = (songs && cards) ? songs.map((s,i)=>({song:s, el:cards[i], _viewMode:'cover-lyrics', _noAutoViewer:true})) : (window._landingChainItems || []);
+  if(!items.length || !window.HJChain || !HJChain.startChain) return;
+  index = Math.max(0, Math.min(index||0, items.length-1));
+  const next = items[index];
+  const cur = landingGetCurrent();
+  const same = cur && cur.song && next && next.song && cur.song.slug === next.song.slug;
+
+  if(landingPendingStartTimer){ clearTimeout(landingPendingStartTimer); landingPendingStartTimer = null; }
+
+  // Gleiche Platte: Cover-Klick soll NICHT pausieren; Pause/Resume passiert nur über die Platte im Player.
+  if(same){
+    landingUpdateDeck(cur.song, cur.item, !!(cur.running && cur.audio && !cur.audio.paused));
+    return;
+  }
+
+  const startNow = ()=>{
+    if(!window.HJChain || !HJChain.startChain) return;
+    HJChain.startChain(items, index, {noFade:true});
+    prevScreen = 'landing';
+    requestAnimationFrame(()=>landingUpdateDeck(next.song, next, true));
+  };
+
+  // Wenn gerade eine andere Platte läuft, fährt der Arm erst zurück, dann startet die neue Platte.
+  if(cur && cur.song && cur.running){
+    try{ if(cur.audio) cur.audio.pause(); }catch(_){ }
+    const deck = document.getElementById('landingDeck');
+    if(deck) deck.classList.add('arm-returning');
+    landingArmReturning = true;
+    landingSetArmRot(LANDING_TONEARM_START_DEG);
+    try{ HJChain.stop(); }catch(_){ }
+    landingUpdateDeck(next.song, next, false);
+    landingPendingStartTimer = setTimeout(()=>{
+      const d = document.getElementById('landingDeck');
+      if(d) d.classList.remove('arm-returning');
+      landingArmReturning = false;
+      startNow();
+    }, 1450);
+  } else {
+    startNow();
+  }
+}
+function landingToggleDeckPlayback(){
+  const cur = landingGetCurrent();
+  // Anfangszustand: erstes Cover liegt bereits auf dem Plattenteller → Klick startet Song 1.
+  if(!cur || !cur.song || !cur.running){
+    const items = window._landingChainItems || [];
+    if(items.length) landingStartAt(0);
+    return;
+  }
+  try{
+    if(cur.audio){
+      if(cur.audio.paused) cur.audio.play().catch(()=>{});
+      else cur.audio.pause();
+    }
+  }catch(_){ }
+  setTimeout(()=>landingUpdateDeck(cur.song, cur.item, !!(cur.audio && !cur.audio.paused)), 30);
+}
+function landingOpenViewer(){
+  const deck = document.getElementById('landingDeck');
+  const cur = landingGetCurrent();
+  const s = (cur && cur.song) || (deck && deck._landingSong);
+  const it = (cur && cur.item) || (deck && deck._landingItem) || (s ? {song:s} : null);
+  if(s && typeof hjOpenChainViewer === 'function') hjOpenChainViewer(s, it);
+}
 function landingUpdateDeck(song, item, isPlaying){
   const deck = document.getElementById('landingDeck');
   if(!deck) return;
@@ -8112,7 +8188,7 @@ function landingUpdateDeck(song, item, isPlaying){
   const title = document.getElementById('landingDeckTitle');
   const artist = document.getElementById('landingDeckArtist');
   const btn = document.getElementById('landingDeckSignatureBtn');
-  const arm = document.getElementById('landingDeckTonearm');
+  const wrap = document.getElementById('landingDeckCoverWrap');
   if(song){
     if(cover) setImgSrcWithFallback(cover, getImgUrls(song,'cover'));
     if(title) title.textContent = song.title || '—';
@@ -8120,21 +8196,48 @@ function landingUpdateDeck(song, item, isPlaying){
     deck._landingSong = song; deck._landingItem = item || {song};
   }
   deck.classList.toggle('is-playing', !!isPlaying);
-  if(arm) arm.style.setProperty('--arm-rot', isPlaying ? '-2.5deg' : '-9.5deg');
+  if(!isPlaying && !landingArmReturning) landingSetArmRot(LANDING_TONEARM_START_DEG);
   if(btn && !btn._landingBound){
     btn._landingBound = true;
-    const open = (e)=>{
-      if(e){ e.preventDefault(); e.stopPropagation(); }
-      const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
-      const s = (cur && cur.song) || deck._landingSong;
-      const it = (cur && cur.item) || deck._landingItem || (s ? {song:s} : null);
-      if(s && typeof hjOpenChainViewer === 'function') hjOpenChainViewer(s, it);
-    };
-    btn.addEventListener('click', open);
-    const wrap = document.getElementById('landingDeckCoverWrap');
-    if(wrap) wrap.addEventListener('click', open);
+    btn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); landingOpenViewer(); });
+  }
+  if(wrap && !wrap._landingBound){
+    wrap._landingBound = true;
+    wrap.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); landingToggleDeckPlayback(); });
   }
 }
+function landingSyncDeckFromChain(){
+  const deck = document.getElementById('landingDeck');
+  if(!deck || !screenLanding || !screenLanding.classList.contains('active')) return;
+  const cur = landingGetCurrent();
+  if(!cur || !cur.song){
+    deck.classList.remove('is-playing');
+    if(!landingArmReturning) landingSetArmRot(LANDING_TONEARM_START_DEG);
+    return;
+  }
+  const playing = !!(cur.running && cur.audio && !cur.audio.paused);
+  landingUpdateDeck(cur.song, cur.item, playing);
+  if(!cur.audio || !cur.audio.duration || !isFinite(cur.audio.duration) || !isFinite(cur.audio.currentTime)) return;
+  if(!playing) return;
+  const remain = cur.audio.duration - cur.audio.currentTime;
+  if(remain <= LANDING_TONEARM_RETURN_SECS){
+    if(!landingArmReturning){
+      landingArmReturning = true;
+      deck.classList.add('arm-returning');
+      landingSetArmRot(LANDING_TONEARM_START_DEG);
+    }
+    return;
+  }
+  if(landingArmReturning){
+    landingArmReturning = false;
+    deck.classList.remove('arm-returning');
+  }
+  const innerDur = Math.max(cur.audio.duration - LANDING_TONEARM_RETURN_SECS, 0.001);
+  const p = Math.max(0, Math.min(cur.audio.currentTime / innerDur, 1));
+  const rot = LANDING_TONEARM_START_DEG + (LANDING_TONEARM_END_DEG - LANDING_TONEARM_START_DEG) * p;
+  landingSetArmRot(rot.toFixed(3));
+}
+setInterval(landingSyncDeckFromChain, 250);
 // Schriftgröße der Sektions-Headlines so wählen, dass der Text exakt von der linken
 // Kante des 1. Covers bis zur rechten Kante des 2. Covers reicht (auf dem Handy = 2
 // Spalten = volle Breite; auf dem Desktop = die ersten 2 von z.B. 5 Covern). DE und EN
