@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v256-bio-button-kontaktblock-fix -->
 <!-- Version: v255-bio-button-absolute-address-center-fix -->
 <!-- Version: v254-bio-finale-cover-songlink-cycle-fix -->
 <!-- Version: v253-bio-button-position-und-home-scrolltop -->
@@ -2923,7 +2924,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:inline-flex;
   align-items:center;
   gap:6px;
-  margin-top:26px;
+  margin-top:0;
   padding:7px 11px 7px 9px;
   border:1px solid rgba(133,172,201,.28);
   border-radius:999px;
@@ -2943,18 +2944,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   fill:none;stroke:currentColor;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;
 }
-#aboutBodyText{position:relative;}
-.about-bio-marker{display:none;}
-.about-bio-anchor{display:none;}
-#aboutBioBtn.about-bio-floating{
-  position:absolute;
-  left:50%;
-  top:0;
-  margin:0;
-  z-index:4;
-  transform:translate(-50%,-50%);
+.about-bio-line{
+  display:block;
+  margin-top:18px;
+  line-height:1;
 }
-#aboutBioBtn.about-bio-floating:active{transform:translate(-50%,-50%) scale(.96);}
 .bio-home-btn{
   display:flex;align-items:center;justify-content:center;gap:9px;
   margin:32px auto 0;padding:12px 20px;border-radius:999px;
@@ -5399,25 +5393,37 @@ async function loadFromSupabase() {
 
 
 function placeAboutBioButton(hasBio){
-  const btn  = document.getElementById('aboutBioBtn');
-  const wrap = document.querySelector('#screenAbout .about-wrap');
+  const btn     = document.getElementById('aboutBioBtn');
+  const wrap    = document.querySelector('#screenAbout .about-wrap');
   const divider = document.querySelector('#screenAbout .about-divider');
+  const contact = document.querySelector('#aboutBodyText .about-contact');
   if(!btn) return;
 
-  // v255: Button vollständig aus dem Fließtext herausnehmen.
-  // Dadurch bleiben alle Adresszeilen exakt gleichmäßig, und die Position wird rein optisch berechnet.
-  document.querySelectorAll('#aboutBioAnchor,#aboutBioMarker').forEach(el=>el.remove());
-  btn.classList.toggle('about-bio-floating', !!hasBio);
+  // v256: Der BIO-Button gehört wieder in den Kontaktblock.
+  // Keine absolute Positionierung mehr — dadurch bleiben die Adresszeilen sauber im Fließtext.
+  btn.classList.remove('about-bio-floating');
+  btn.style.left = '';
+  btn.style.top = '';
 
-  if(hasBio && wrap){
-    if(btn.parentElement !== wrap) wrap.appendChild(btn);
+  let line = document.getElementById('aboutBioLine');
+
+  if(hasBio){
+    if(!line){
+      line = document.createElement('div');
+      line.id = 'aboutBioLine';
+      line.className = 'about-bio-line';
+    }
+    if(contact){
+      if(line.parentElement !== contact) contact.appendChild(line);
+      if(btn.parentElement !== line) line.appendChild(btn);
+    } else if(wrap && divider){
+      if(btn.parentElement !== wrap) wrap.insertBefore(btn, divider);
+    }
     btn.style.display = 'inline-flex';
-    requestAnimationFrame(positionAboutBioButton);
-    setTimeout(positionAboutBioButton, 80);
   } else {
     btn.style.display = 'none';
-    btn.classList.remove('about-bio-floating');
     if(wrap && divider && btn.parentElement !== wrap) wrap.insertBefore(btn, divider);
+    if(line && line.parentElement) line.remove();
   }
 }
 
@@ -5444,43 +5450,8 @@ function findTextRectInElement(root, needle){
 }
 
 function positionAboutBioButton(){
-  const body = document.getElementById('aboutBodyText');
-  const wrap = document.querySelector('#screenAbout .about-wrap');
-  const btn  = document.getElementById('aboutBioBtn');
-  if(!body || !wrap || !btn || btn.style.display === 'none') return;
-
-  const wrapRect = wrap.getBoundingClientRect();
-  const line1 = findTextRectInElement(body, 'tulpenweg 11');
-  const line2 = findTextRectInElement(body, '51674 wiehl');
-
-  let top;
-  if(line1 && line2){
-    // exakt waagerecht zwischen den beiden Adresszeilen
-    top = ((line1.bottom + line2.top) / 2) - wrapRect.top;
-  } else if(line1){
-    const cs = getComputedStyle(body);
-    let lh = parseFloat(cs.lineHeight);
-    if(!lh || Number.isNaN(lh)) lh = parseFloat(cs.fontSize || '14') * 1.55;
-    top = (line1.bottom - wrapRect.top) + lh * .5;
-  } else {
-    // Fallback: nahe der Adressposition, ohne den Fließtext zu beeinflussen
-    const bodyRect = body.getBoundingClientRect();
-    const cs = getComputedStyle(body);
-    let lh = parseFloat(cs.lineHeight);
-    if(!lh || Number.isNaN(lh)) lh = parseFloat(cs.fontSize || '14') * 1.55;
-    top = (bodyRect.top - wrapRect.top) + lh * 10.5;
-  }
-
-  // horizontal exakt auf der Mitte des Content-/2:1-Motiv-Bereichs,
-  // damit der Button sauber rechts neben der Adresse sitzt.
-  const art = document.getElementById('aboutFinalArt');
-  const artRect = art ? art.getBoundingClientRect() : null;
-  const left = artRect && artRect.width ? ((artRect.left + artRect.width / 2) - wrapRect.left) : (wrapRect.width / 2);
-
-  btn.style.left = left + 'px';
-  btn.style.top  = top + 'px';
+  // v256: keine freie Positionierung mehr nötig; Button sitzt im Kontaktblock.
 }
-window.addEventListener('resize', ()=>requestAnimationFrame(positionAboutBioButton));
 
 // Befüllt die About-/Info-Seite mit im Admin gepflegten Inhalten.
 // Fehlende Felder bleiben auf dem im HTML hinterlegten Standard.
