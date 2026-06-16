@@ -2913,6 +2913,102 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:block;
   pointer-events:none;
 }
+
+/* ── BIO-Button + Viewer ── */
+.about-bio-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  margin-top:26px;
+  padding:11px 18px 11px 14px;
+  border:1px solid rgba(133,172,201,.28);
+  border-radius:999px;
+  background:rgba(133,172,201,.07);
+  color:#cfe5f5;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.14em;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,border-color .15s,transform .12s;
+}
+.about-bio-btn:hover{background:rgba(133,172,201,.14);border-color:rgba(133,172,201,.45);}
+.about-bio-btn:active{transform:scale(.96);}
+.about-bio-btn svg{
+  width:22px;height:22px;
+  fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.about-bio-viewer{
+  position:fixed;
+  inset:0;
+  z-index:9600;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px);
+  background:rgba(6,20,32,.97);
+}
+.about-bio-viewer.open{display:flex;}
+.about-bio-close{
+  position:absolute;
+  top:calc(env(safe-area-inset-top,0px) + 14px);
+  right:18px;
+  width:42px;height:42px;
+  border:none;border-radius:50%;
+  background:rgba(133,172,201,.12);
+  color:#cfe5f5;
+  font-size:26px;line-height:1;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.about-bio-close:active{transform:scale(.92);}
+.about-bio-stage{
+  position:relative;
+  width:min(86vw,520px);
+  aspect-ratio:1/1;
+  border-radius:14px;
+  overflow:hidden;
+  background:#0B2A42;
+  box-shadow:0 18px 60px rgba(0,0,0,.55);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.about-bio-stage img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+}
+.about-bio-cue{
+  position:absolute;
+  right:12px;bottom:12px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:rgba(6,20,32,.62);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:rgba(207,229,245,.92);
+  font-size:12px;font-weight:600;
+  pointer-events:none;
+  transition:opacity .25s;
+}
+.about-bio-dots{
+  display:flex;
+  gap:9px;
+  align-items:center;
+}
+.about-bio-dots .bio-dot{
+  width:9px;height:9px;
+  border-radius:50%;
+  background:rgba(133,172,201,.3);
+  transition:background .2s,transform .2s;
+}
+.about-bio-dots .bio-dot.active{
+  background:#cfe5f5;
+  transform:scale(1.15);
+}
+
 /* Bottom pad after teaser */
 .about-bottom-pad{
   height:calc(env(safe-area-inset-bottom,0px) + 100px);
@@ -4100,6 +4196,11 @@ body.album-open #hjPlayerSpacer{
       </div>
     </div>
 
+    <button class="about-bio-btn" id="aboutBioBtn" type="button" aria-label="Bio von Jörn Kämper öffnen" style="display:none">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19c.6-3.4 3.3-5.2 6.5-5.2s5.9 1.8 6.5 5.2"/></svg>
+      <span>BIO</span>
+    </button>
+
     <div class="about-divider"></div>
 
 
@@ -4119,6 +4220,16 @@ body.album-open #hjPlayerSpacer{
 
 <div class="about-art-lightbox" id="aboutArtLightbox" aria-hidden="true">
   <img id="aboutArtLightboxImg" alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
+</div>
+
+<!-- BIO-Viewer: quadratische Motive, durchtippbar wie Cover/Lyrics/Beschreibung -->
+<div class="about-bio-viewer" id="aboutBioViewer" aria-hidden="true">
+  <button class="about-bio-close" id="aboutBioClose" type="button" aria-label="Bio schließen">×</button>
+  <div class="about-bio-stage" id="aboutBioStage" role="button" aria-label="Weiter zum nächsten Bio-Motiv">
+    <img id="aboutBioImg" alt="Bio" />
+    <div class="about-bio-cue" id="aboutBioCue">Tippen für weiter ›</div>
+  </div>
+  <div class="about-bio-dots" id="aboutBioDots"></div>
 </div>
 
 <!-- KURS NORDWEST -->
@@ -5170,7 +5281,59 @@ function applyAboutContent(a){
       if(lb)  lb.alt  = a.imageAlt;
     }
   }
+  // BIO-Motive: quadratische Bilder, durchtippbar im Viewer
+  aboutBioImages = Array.isArray(a.bioImages) ? a.bioImages.filter(u=>u) : [];
+  const bioBtn = document.getElementById('aboutBioBtn');
+  if(bioBtn) bioBtn.style.display = aboutBioImages.length ? 'inline-flex' : 'none';
 }
+
+// ── BIO-Viewer (quadratische Motive wie Cover/Lyrics/Beschreibung) ──
+let aboutBioImages = [];
+let aboutBioIndex = 0;
+function renderAboutBio(){
+  const img  = document.getElementById('aboutBioImg');
+  const dots = document.getElementById('aboutBioDots');
+  const cue  = document.getElementById('aboutBioCue');
+  if(!aboutBioImages.length) return;
+  if(img) img.src = aboutBioImages[aboutBioIndex];
+  if(dots){
+    dots.innerHTML = '';
+    aboutBioImages.forEach((_,i)=>{
+      const d = document.createElement('span');
+      d.className = 'bio-dot' + (i===aboutBioIndex ? ' active' : '');
+      dots.appendChild(d);
+    });
+    dots.style.display = aboutBioImages.length > 1 ? 'flex' : 'none';
+  }
+  if(cue) cue.style.display = aboutBioImages.length > 1 ? 'block' : 'none';
+}
+function openAboutBio(){
+  if(!aboutBioImages.length) return;
+  aboutBioIndex = 0;
+  renderAboutBio();
+  const v = document.getElementById('aboutBioViewer');
+  if(v){ v.classList.add('open'); v.setAttribute('aria-hidden','false'); }
+}
+function closeAboutBio(){
+  const v = document.getElementById('aboutBioViewer');
+  if(v){ v.classList.remove('open'); v.setAttribute('aria-hidden','true'); }
+}
+function nextAboutBio(){
+  if(aboutBioImages.length < 2) return;
+  aboutBioIndex = (aboutBioIndex + 1) % aboutBioImages.length;
+  renderAboutBio();
+}
+(function wireAboutBio(){
+  const btn   = document.getElementById('aboutBioBtn');
+  const stage = document.getElementById('aboutBioStage');
+  const close = document.getElementById('aboutBioClose');
+  const viewer= document.getElementById('aboutBioViewer');
+  if(btn)   btn.addEventListener('click', openAboutBio);
+  if(stage) stage.addEventListener('click', nextAboutBio);
+  if(close) close.addEventListener('click', closeAboutBio);
+  // Klick auf den dunklen Rand (nicht auf das Motiv) schließt den Viewer
+  if(viewer) viewer.addEventListener('click', e=>{ if(e.target === viewer) closeAboutBio(); });
+})();
 
 // ── DOM ──
 const audio        = document.getElementById('hjAudio');
@@ -5948,6 +6111,7 @@ function showHome(){
   if(screenAbout) screenAbout.classList.remove('active');
   if(aboutArtLightbox) aboutArtLightbox.classList.remove('open');
   if(aboutArtLightbox) aboutArtLightbox.setAttribute('aria-hidden','true');
+  closeAboutBio();
   if(screenKnw) screenKnw.style.display='none';
   if(screenSwf) screenSwf.style.display='none';
   hideLanguageScreens();

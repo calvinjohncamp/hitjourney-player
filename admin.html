@@ -7688,6 +7688,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ie-img-replace{position:absolute;right:12px;bottom:12px;padding:9px 14px;border:1px solid rgba(207,229,245,.5);border-radius:8px;background:rgba(6,20,32,.78);color:#cfe5f5;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .ie-img-replace:hover{background:rgba(6,20,32,.92)}
 .ie-img-progress{position:absolute;left:0;top:0;height:3px;width:0;background:#6fda9a;transition:width .2s;border-radius:0 3px 3px 0}
+.ie-bio-hint{font-size:12px;line-height:1.5;color:rgba(133,172,201,.6);margin:0 0 12px;padding-left:6px}
+.ie-bio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ie-bio-slot{position:relative;display:flex;flex-direction:column;gap:7px}
+.ie-bio-thumb{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#0B2A42;border:1px solid rgba(133,172,201,.18);display:flex;align-items:center;justify-content:center}
+.ie-bio-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ie-bio-thumb.empty img{display:none}
+.ie-bio-thumb .ie-bio-ph{position:absolute;font-size:30px;font-weight:800;color:rgba(133,172,201,.28)}
+.ie-bio-thumb:not(.empty) .ie-bio-ph{display:none}
+.ie-bio-acts{display:flex;gap:6px}
+.ie-bio-btn{flex:1;padding:7px 6px;border-radius:7px;border:1px solid rgba(133,172,201,.2);background:rgba(11,42,66,.7);color:#cfe5f5;font-size:12px;font-weight:700;cursor:pointer}
+.ie-bio-btn:hover{background:rgba(133,172,201,.18)}
+.ie-bio-btn.del{flex:0 0 38px;color:#e08080;border-color:rgba(220,80,80,.25)}
+.ie-bio-btn.del:hover{background:rgba(220,80,80,.14)}
 .ie-field-note{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:700;margin:22px 0 4px;padding-left:6px}
 </style>
 <div class="screen" id="tabInfo">
@@ -7745,6 +7758,39 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="ie-img-progress" id="ieAboutImgProg"></div>
       </div>
       <input type="file" id="ieAboutImgFile" accept="image/*" style="display:none" onchange="onInfoImagePicked(event)">
+
+      <div class="ie-about-divider"></div>
+      <div class="ie-field-note">BIO — quadratische Motive (2–3 Bilder)</div>
+      <div class="ie-bio-hint">Lädt man im Player auf den BIO-Knopf, erscheinen diese quadratischen Motive zum Durchtippen (wie Cover/Lyrics/Beschreibung). Leere Felder werden ausgeblendet. Ohne Bild kein BIO-Knopf.</div>
+      <div class="ie-bio-grid">
+        <div class="ie-bio-slot" id="ieBioSlot0">
+          <div class="ie-bio-thumb empty" id="ieBioThumb0"><img id="ieBioImg0" alt="Bio-Motiv 1"><span class="ie-bio-ph">1</span></div>
+          <div class="ie-bio-acts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile0').click()">Bild</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(0)">×</button>
+          </div>
+          <div class="ie-img-progress" id="ieBioProg0"></div>
+          <input type="file" id="ieBioFile0" accept="image/*" style="display:none" onchange="onBioImagePicked(0,event)">
+        </div>
+        <div class="ie-bio-slot" id="ieBioSlot1">
+          <div class="ie-bio-thumb empty" id="ieBioThumb1"><img id="ieBioImg1" alt="Bio-Motiv 2"><span class="ie-bio-ph">2</span></div>
+          <div class="ie-bio-acts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile1').click()">Bild</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(1)">×</button>
+          </div>
+          <div class="ie-img-progress" id="ieBioProg1"></div>
+          <input type="file" id="ieBioFile1" accept="image/*" style="display:none" onchange="onBioImagePicked(1,event)">
+        </div>
+        <div class="ie-bio-slot" id="ieBioSlot2">
+          <div class="ie-bio-thumb empty" id="ieBioThumb2"><img id="ieBioImg2" alt="Bio-Motiv 3"><span class="ie-bio-ph">3</span></div>
+          <div class="ie-bio-acts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile2').click()">Bild</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(2)">×</button>
+          </div>
+          <div class="ie-img-progress" id="ieBioProg2"></div>
+          <input type="file" id="ieBioFile2" accept="image/*" style="display:none" onchange="onBioImagePicked(2,event)">
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -9874,11 +9920,14 @@ const DEFAULT_ABOUT = {
     'All content on this website — including music, lyrics, artwork, graphics, animations and app elements — may not be copied, reproduced or redistributed without permission.<br><br>'+
     '© jörn kämper — all rights reserved',
   imageUrl:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg',
-  imageAlt:'hitjourney shaped by human choice powered by AI'
+  imageAlt:'hitjourney shaped by human choice powered by AI',
+  bioImages:[]   // 0–3 quadratische Bio-Motive (URLs)
 };
 
 let infoImageUrl = DEFAULT_ABOUT.imageUrl;   // aktuell gespeicherte Grafik-URL
 let infoImagePendingFile = null;             // neu gewählte, noch nicht hochgeladene Grafik
+let infoBioUrls = ['','',''];                // aktuell gespeicherte Bio-Motiv-URLs (3 Slots)
+let infoBioPending = [null,null,null];       // neu gewählte, noch nicht hochgeladene Bio-Motive
 
 // Erlaubte Inline-Style-Eigenschaften — genau die, die die Format-Leiste setzt.
 // Alles andere (z.B. aus Copy&Paste mitgeschleppte Hintergründe) wird entfernt,
@@ -9997,6 +10046,11 @@ async function initInfoEditor(){
   if(img){ img.src = data.imageUrl || DEFAULT_ABOUT.imageUrl; img.alt = data.imageAlt || ''; }
   infoImageUrl = data.imageUrl || DEFAULT_ABOUT.imageUrl;
   const prog = $('ieAboutImgProg'); if(prog) prog.style.width='0';
+  // Bio-Motive in die 3 Slots laden
+  const bio = Array.isArray(data.bioImages) ? data.bioImages : [];
+  infoBioUrls = [bio[0]||'', bio[1]||'', bio[2]||''];
+  infoBioPending = [null,null,null];
+  [0,1,2].forEach(ieRenderBioSlot);
   ieRegisterEditables();
   ieActiveEditable = $('ieAboutBody');
 }
@@ -10012,6 +10066,35 @@ function onInfoImagePicked(ev){
   ev.target.value = '';   // erlaubt erneutes Wählen derselben Datei
 }
 
+// ── BIO-Motive (3 Slots) ──
+function ieRenderBioSlot(i){
+  const thumb = document.getElementById('ieBioThumb'+i);
+  const img   = document.getElementById('ieBioImg'+i);
+  const url   = infoBioUrls[i];
+  if(url){
+    if(img) img.src = url;
+    if(thumb) thumb.classList.remove('empty');
+  } else {
+    if(img) img.removeAttribute('src');
+    if(thumb) thumb.classList.add('empty');
+  }
+  const prog = document.getElementById('ieBioProg'+i); if(prog) prog.style.width='0';
+}
+function onBioImagePicked(i, ev){
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  infoBioPending[i] = f;
+  infoBioUrls[i] = URL.createObjectURL(f);   // lokale Vorschau
+  ieRenderBioSlot(i);
+  toast('Bio-Motiv gewählt – mit „Speichern" übernehmen','ok');
+  ev.target.value = '';
+}
+function removeBioImage(i){
+  infoBioPending[i] = null;
+  infoBioUrls[i] = '';
+  ieRenderBioSlot(i);
+}
+
 async function saveInfoContent(){
   const btn = document.getElementById('infoSaveBtn');
   if(btn) btn.disabled = true;
@@ -10024,6 +10107,21 @@ async function saveInfoContent(){
       imageUrl = await uploadToS3(infoImagePendingFile, key, 'ieAboutImgProg');
     }
 
+    // Bio-Motive: neu gewählte Dateien hochladen, sonst bestehende URL behalten.
+    const bioImages = [];
+    for(let i=0;i<3;i++){
+      if(infoBioPending[i]){
+        const ext = (infoBioPending[i].name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+        const key = 'artwork/bio-motiv-'+(i+1)+'-'+Date.now()+'.'+ext;
+        const url = await uploadToS3(infoBioPending[i], key, 'ieBioProg'+i);
+        bioImages.push(url);
+        infoBioUrls[i] = url;
+        infoBioPending[i] = null;
+      } else if(infoBioUrls[i] && !infoBioUrls[i].startsWith('blob:')){
+        bioImages.push(infoBioUrls[i]);
+      }
+    }
+
     const $ = id => document.getElementById(id);
     const about = {
       type:'about',
@@ -10033,7 +10131,8 @@ async function saveInfoContent(){
       copyrightLabel: ieClean($('ieAboutCopyrightLabel')),
       copyrightHtml:  ieClean($('ieAboutCopyright')),
       imageUrl:       imageUrl,
-      imageAlt:       ($('ieAboutImg').alt||'') || DEFAULT_ABOUT.imageAlt
+      imageAlt:       ($('ieAboutImg').alt||'') || DEFAULT_ABOUT.imageAlt,
+      bioImages:      bioImages
     };
 
     // Bestehende About-Sonderzeile entfernen, dann neu schreiben.
@@ -10049,6 +10148,7 @@ async function saveInfoContent(){
     infoImageUrl = imageUrl;
     infoImagePendingFile = null;
     const img = $('ieAboutImg'); if(img) img.src = imageUrl;
+    [0,1,2].forEach(ieRenderBioSlot);
     toast('Info-Seite gespeichert ✓','ok');
   }catch(e){
     toast('Speichern fehlgeschlagen: '+e.message,'err');
