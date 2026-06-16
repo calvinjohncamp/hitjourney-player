@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v257-landingpage-selected-works -->
 <!-- Version: v256-bio-button-kontaktblock-fix -->
 <!-- Version: v255-bio-button-absolute-address-center-fix -->
 <!-- Version: v254-bio-finale-cover-songlink-cycle-fix -->
@@ -319,6 +320,26 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(min-width:900px){
   .home-info-footer{padding-left:32px;padding-right:32px}
 }
+
+
+/* ══ LANDINGPAGE / SELECTED WORKS ══ */
+#screenLanding{padding:20px 14px 120px;background:rgba(6,20,32,1)}
+#screenLanding.active{display:block;overflow-y:auto}
+.landing-wrap{max-width:1120px;margin:0 auto;width:100%}
+.landing-hero{padding:16px 2px 20px;text-align:center}
+.landing-kicker{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-bottom:8px}
+.landing-title{font-family:'Anton',sans-serif;font-size:clamp(32px,5.5vw,68px);letter-spacing:.04em;text-transform:uppercase;color:#f1ecdf;line-height:1}
+.landing-sub{font-size:clamp(14px,2.2vw,19px);color:rgba(207,229,245,.72);margin-top:12px;line-height:1.45}
+.landing-section{margin:26px 0 42px}
+.landing-section-head{text-align:center;margin-bottom:16px}
+.landing-section-title{font-family:'Anton',sans-serif;font-size:clamp(26px,4vw,48px);letter-spacing:.06em;text-transform:uppercase;color:#cfe5f5;line-height:1.05}
+.landing-section-sub{font-size:14px;color:rgba(133,172,201,.68);margin-top:8px}
+.landing-grid{display:grid;gap:12px}.landing-grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing-grid.cols-4{grid-template-columns:repeat(4,1fr)}.landing-grid.cols-5{grid-template-columns:repeat(5,1fr)}
+.landing-card{position:relative;border-radius:10px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
+.landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card-title{position:absolute;left:0;right:0;bottom:0;padding:24px 9px 8px;background:linear-gradient(transparent,rgba(6,20,32,.86));font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;text-align:center;color:#f1ecdf;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.landing-nav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:20px 0 8px}.landing-nav button{border:1px solid rgba(133,172,201,.35);background:rgba(133,172,201,.08);color:#85ACC9;border-radius:999px;padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.landing-nav button:hover{background:rgba(133,172,201,.16);color:#cfe5f5}
+@media(max-width:760px){.landing-grid.cols-5,.landing-grid.cols-4{grid-template-columns:repeat(2,1fr)}.landing-grid.cols-3{grid-template-columns:repeat(2,1fr)}.landing-card-title{font-size:10px}}
+@media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
@@ -4252,6 +4273,23 @@ body.album-open #hjPlayerSpacer{
 </footer>
 </div>
 
+
+<!-- LANDINGPAGE / SELECTED WORKS -->
+<div class="screen" id="screenLanding">
+  <div class="landing-wrap">
+    <div class="landing-hero">
+      <div class="landing-kicker">Songwriter Portfolio</div>
+      <div class="landing-title">Selected Works</div>
+      <div class="landing-sub">Ausgewählte Songs von Jörn Kämper · Deutsch und Englisch</div>
+    </div>
+    <div id="landingSections"></div>
+    <div class="landing-nav">
+      <button type="button" onclick="showAbout()">Vom Vorstand zum Songwriter</button>
+      <button type="button" onclick="showHome()">Home</button>
+    </div>
+  </div>
+</div>
+
 <!-- LANGUAGE SONGS -->
 <div class="screen" id="screenLanguageGerman">
   <div class="language-wrap">
@@ -5806,6 +5844,7 @@ const screenSwf  = document.getElementById('screenSongwritersFavorites');
 const screenLangDe = document.getElementById('screenLanguageGerman');
 const screenLangEn = document.getElementById('screenLanguageEnglish');
 const screenAbout = document.getElementById('screenAbout');
+const screenLanding = document.getElementById('screenLanding');
 const aboutFinalArt = document.getElementById('aboutFinalArt');
 const aboutArtLightbox = document.getElementById('aboutArtLightbox');
 const homeInfoBtn = document.getElementById('homeInfoBtn');
@@ -6470,6 +6509,7 @@ function showSongwritersFavorites(){
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
+  if(screenLanding) screenLanding.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
   hideLanguageScreens();
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
@@ -6494,6 +6534,7 @@ function showAbout(){
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
+  if(screenLanding) screenLanding.classList.remove('active');
   if(screenKnw) screenKnw.style.display='none';
   if(screenSwf) screenSwf.style.display='none';
   hideLanguageScreens();
@@ -6517,6 +6558,7 @@ function showHome(){
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
+  if(screenLanding) screenLanding.classList.remove('active');
   if(aboutArtLightbox) aboutArtLightbox.classList.remove('open');
   if(aboutArtLightbox) aboutArtLightbox.setAttribute('aria-hidden','true');
   closeAboutBio();
@@ -6570,6 +6612,7 @@ function showAlbum(key){
   screenHome.classList.remove('active');
   screenNP.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenLanding) screenLanding.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   hideLanguageScreens();
   screenTL.classList.add('active');
@@ -6596,6 +6639,7 @@ function showNowPlaying(){
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
+  if(screenLanding) screenLanding.classList.remove('active');
   hideLanguageScreens();
   screenNP.classList.add('active');
   mainHeader.style.display='none';
@@ -6623,6 +6667,7 @@ function hideNowPlaying(){
   else if(prevScreen==='songwritersFavorites'){ if(screenSwf) screenSwf.style.display='block'; }
   else if(prevScreen==='languageGerman'){ if(screenLangDe) screenLangDe.classList.add('active'); updateLanguageHighlight(); }
   else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); updateLanguageHighlight(); }
+  else if(prevScreen==='landing'){ if(screenLanding) screenLanding.classList.add('active'); }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
 }
 
@@ -7837,11 +7882,91 @@ function initApp() {
 
   // Home-Layout dynamisch rendern
   renderHomeLayout();
+  renderLandingPage();
+  routeLandingIfNeeded();
 
   // Statische Spotlight-Diashow initialisieren (hardcoded, kein Supabase-Slug-Lookup)
   initFeaturedTeaser();
 
 } // END initApp()
+
+
+// ══ LANDINGPAGE RENDERER ═════════════════════════════════════════════════
+function landingConfig(){
+  const row = (window._homeLayoutRows || []).find(r => r && r.cells && r.cells[0] && r.cells[0].type === 'landing');
+  return row && row.cells && row.cells[0] ? row.cells[0] : null;
+}
+function renderLandingPage(){
+  const root = document.getElementById('landingSections');
+  if(!root) return;
+  const cfg = landingConfig();
+  if(!cfg || !Array.isArray(cfg.sections) || !cfg.sections.length){
+    root.innerHTML = '<div style="text-align:center;color:rgba(133,172,201,.45);padding:28px">Noch keine Landingpage-Inhalte gepflegt.</div>';
+    return;
+  }
+  root.innerHTML = '';
+  const flatSongs = [];
+  const bySlug = new Map((SUPABASE_SONGS||[]).map(s=>[s.slug,s]));
+  cfg.sections.forEach(sec=>{
+    const title = sec.title || 'Selected Works';
+    const subtitle = sec.subtitle || '';
+    const columns = Math.max(3, Math.min(5, Number(sec.columns)||5));
+    const songs = (sec.songs||[]).map(slug=>bySlug.get(slug)).filter(Boolean);
+    if(!songs.length) return;
+    const section = document.createElement('section');
+    section.className = 'landing-section';
+    section.innerHTML = `<div class="landing-section-head"><div class="landing-section-title">${escapeHtml(title)}</div>${subtitle?`<div class="landing-section-sub">${escapeHtml(subtitle)}</div>`:''}</div>`;
+    const grid = document.createElement('div');
+    grid.className = `landing-grid cols-${columns}`;
+    songs.forEach(song=>{
+      const landingIndex = flatSongs.length;
+      flatSongs.push(song);
+      const card = document.createElement('div');
+      card.className = 'landing-card';
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = song.title || '';
+      setImgSrcWithFallback(img, getImgUrls(song,'cover'));
+      const label = document.createElement('div');
+      label.className = 'landing-card-title';
+      label.textContent = song.title || '';
+      card.appendChild(img); card.appendChild(label);
+      const open = () => {
+        ALBUMS.landingPortfolio = { title:'Selected Works', meta:flatSongs.length + ' Songs', cover:(flatSongs[0] && flatSongs[0].cover) || '', songs:flatSongs.slice() };
+        curAlbum = 'landingPortfolio';
+        queue = buildQueue();
+        queueIdx = queue.indexOf(landingIndex);
+        if(queueIdx < 0) queueIdx = landingIndex;
+        playIdx(landingIndex);
+        prevScreen = 'landing';
+        setTimeout(()=>showNowPlaying(),120);
+      };
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    root.appendChild(section);
+  });
+}
+function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+function isLandingRoute(){
+  const p = (window.location && window.location.pathname ? window.location.pathname : '').toLowerCase();
+  return /\/(sony|warner|bmg|universal|publishing|landing)\/?$/.test(p);
+}
+function showLanding(){
+  if(!screenLanding) return;
+  if(tlTopBtn) tlTopBtn.classList.remove('visible');
+  if(arcTopBtn) arcTopBtn.classList.remove('visible');
+  screenHome.classList.remove('active'); screenTL.classList.remove('active'); screenArchive.classList.remove('active'); screenNP.classList.remove('active');
+  if(screenAbout) screenAbout.classList.remove('active');
+  if(screenKnw) screenKnw.style.display='none'; if(screenSwf) screenSwf.style.display='none'; hideLanguageScreens();
+  screenLanding.classList.add('active'); screenLanding.scrollTop = 0;
+  backBtn.classList.remove('visible'); logoHome.style.display=''; makingWaves.style.display=''; headerRight.textContent=''; mainHeader.style.display=''; prevScreen='landing';
+}
+function routeLandingIfNeeded(){ if(isLandingRoute()) setTimeout(showLanding, 0); }
 
 // ══ HOME LAYOUT RENDERER ══════════════════════════════════════════════════
 
@@ -7851,7 +7976,7 @@ function renderHomeLayout(){
 
   // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
   const rows = (window._homeLayoutRows || []).filter(r =>
-    !(r && r.cells && r.cells[0] && r.cells[0].type === 'about'));
+    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing')));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
