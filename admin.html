@@ -7688,19 +7688,25 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ie-img-replace{position:absolute;right:12px;bottom:12px;padding:9px 14px;border:1px solid rgba(207,229,245,.5);border-radius:8px;background:rgba(6,20,32,.78);color:#cfe5f5;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .ie-img-replace:hover{background:rgba(6,20,32,.92)}
 .ie-img-progress{position:absolute;left:0;top:0;height:3px;width:0;background:#6fda9a;transition:width .2s;border-radius:0 3px 3px 0}
-.ie-bio-hint{font-size:12px;line-height:1.5;color:rgba(133,172,201,.6);margin:0 0 12px;padding-left:6px}
-.ie-bio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.ie-bio-slot{position:relative;display:flex;flex-direction:column;gap:7px}
-.ie-bio-thumb{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#0B2A42;border:1px solid rgba(133,172,201,.18);display:flex;align-items:center;justify-content:center}
+.ie-bio-hint{font-size:12px;line-height:1.5;color:rgba(133,172,201,.6);margin:0 0 16px;padding-left:6px}
+.ie-bio-sec{border:1px solid rgba(133,172,201,.14);border-radius:12px;padding:14px;margin-bottom:16px;background:rgba(11,42,66,.22)}
+.ie-bio-sec-head{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;font-weight:800;margin-bottom:12px}
+.ie-bio-imgrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.ie-bio-thumb{position:relative;flex:0 0 116px;width:116px;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#0B2A42;border:1px solid rgba(133,172,201,.18);display:flex;align-items:center;justify-content:center}
 .ie-bio-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .ie-bio-thumb.empty img{display:none}
 .ie-bio-thumb .ie-bio-ph{position:absolute;font-size:30px;font-weight:800;color:rgba(133,172,201,.28)}
 .ie-bio-thumb:not(.empty) .ie-bio-ph{display:none}
-.ie-bio-acts{display:flex;gap:6px}
-.ie-bio-btn{flex:1;padding:7px 6px;border-radius:7px;border:1px solid rgba(133,172,201,.2);background:rgba(11,42,66,.7);color:#cfe5f5;font-size:12px;font-weight:700;cursor:pointer}
+.ie-bio-imgacts{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.ie-bio-btn{padding:9px 10px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(11,42,66,.7);color:#cfe5f5;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
 .ie-bio-btn:hover{background:rgba(133,172,201,.18)}
-.ie-bio-btn.del{flex:0 0 38px;color:#e08080;border-color:rgba(220,80,80,.25)}
+.ie-bio-btn.del{color:#e08080;border-color:rgba(220,80,80,.25)}
 .ie-bio-btn.del:hover{background:rgba(220,80,80,.14)}
+.ie-bio-input{width:100%;box-sizing:border-box;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.18);border-radius:8px;color:#f1ecdf;font-size:13px;padding:9px 11px;margin-bottom:9px;outline:none;font-family:inherit}
+.ie-bio-input:focus{border-color:#85ACC9}
+.ie-bio-textfield{min-height:64px;margin-bottom:9px;border:1px solid rgba(133,172,201,.14);border-radius:8px;padding:9px 11px;background:rgba(6,20,32,.35)}
+.ie-bio-textarea{width:100%;box-sizing:border-box;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.18);border-radius:8px;color:#e7eef5;font-size:13px;line-height:1.7;padding:9px 11px;margin-bottom:9px;outline:none;min-height:84px;resize:vertical;font-family:'Special Elite','Courier New',monospace}
+.ie-bio-textarea:focus{border-color:#85ACC9}
 .ie-field-note{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:700;margin:22px 0 4px;padding-left:6px}
 </style>
 <div class="screen" id="tabInfo">
@@ -7760,36 +7766,55 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <input type="file" id="ieAboutImgFile" accept="image/*" style="display:none" onchange="onInfoImagePicked(event)">
 
       <div class="ie-about-divider"></div>
-      <div class="ie-field-note">BIO — quadratische Motive (2–3 Bilder)</div>
-      <div class="ie-bio-hint">Lädt man im Player auf den BIO-Knopf, erscheinen diese quadratischen Motive zum Durchtippen (wie Cover/Lyrics/Beschreibung). Leere Felder werden ausgeblendet. Ohne Bild kein BIO-Knopf.</div>
-      <div class="ie-bio-grid">
-        <div class="ie-bio-slot" id="ieBioSlot0">
-          <div class="ie-bio-thumb empty" id="ieBioThumb0"><img id="ieBioImg0" alt="Bio-Motiv 1"><span class="ie-bio-ph">1</span></div>
-          <div class="ie-bio-acts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile0').click()">Bild</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(0)">×</button>
+      <div class="ie-field-note">BIO-Story (3 Abschnitte)</div>
+      <div class="ie-bio-hint">Tippt man im Player auf den BIO-Knopf, öffnet sich eine scrollbare Story: je Abschnitt ein Cover, eine Headline, der Text und ein Songtext-Zitat. Leere Abschnitte werden ausgeblendet. Erst ohne jeden Inhalt verschwindet der BIO-Knopf.</div>
+
+      <div class="ie-bio-sec" id="ieBioSec0">
+        <div class="ie-bio-sec-head">Abschnitt 1 · Bruch</div>
+        <div class="ie-bio-imgrow">
+          <div class="ie-bio-thumb empty" id="ieBioThumb0"><img id="ieBioImg0" alt="Cover 1"><span class="ie-bio-ph">1</span><div class="ie-img-progress" id="ieBioProg0"></div></div>
+          <div class="ie-bio-imgacts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile0').click()">Cover / Bild wählen</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(0)">Entfernen</button>
           </div>
-          <div class="ie-img-progress" id="ieBioProg0"></div>
           <input type="file" id="ieBioFile0" accept="image/*" style="display:none" onchange="onBioImagePicked(0,event)">
         </div>
-        <div class="ie-bio-slot" id="ieBioSlot1">
-          <div class="ie-bio-thumb empty" id="ieBioThumb1"><img id="ieBioImg1" alt="Bio-Motiv 2"><span class="ie-bio-ph">2</span></div>
-          <div class="ie-bio-acts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile1').click()">Bild</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(1)">×</button>
+        <input class="ie-bio-input" id="ieBioHeadline0" placeholder="Headline (z. B. Vom Vorstand zum Songwriter)">
+        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText0" contenteditable="true" spellcheck="false"></div>
+        <textarea class="ie-bio-textarea" id="ieBioQuote0" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
+        <input class="ie-bio-input" id="ieBioSrc0" placeholder="Songtitel (erscheint als „aus …")">
+      </div>
+
+      <div class="ie-bio-sec" id="ieBioSec1">
+        <div class="ie-bio-sec-head">Abschnitt 2 · Handwerk</div>
+        <div class="ie-bio-imgrow">
+          <div class="ie-bio-thumb empty" id="ieBioThumb1"><img id="ieBioImg1" alt="Cover 2"><span class="ie-bio-ph">2</span><div class="ie-img-progress" id="ieBioProg1"></div></div>
+          <div class="ie-bio-imgacts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile1').click()">Cover / Bild wählen</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(1)">Entfernen</button>
           </div>
-          <div class="ie-img-progress" id="ieBioProg1"></div>
           <input type="file" id="ieBioFile1" accept="image/*" style="display:none" onchange="onBioImagePicked(1,event)">
         </div>
-        <div class="ie-bio-slot" id="ieBioSlot2">
-          <div class="ie-bio-thumb empty" id="ieBioThumb2"><img id="ieBioImg2" alt="Bio-Motiv 3"><span class="ie-bio-ph">3</span></div>
-          <div class="ie-bio-acts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile2').click()">Bild</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(2)">×</button>
+        <input class="ie-bio-input" id="ieBioHeadline1" placeholder="Headline (z. B. Erst das Wort)">
+        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText1" contenteditable="true" spellcheck="false"></div>
+        <textarea class="ie-bio-textarea" id="ieBioQuote1" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
+        <input class="ie-bio-input" id="ieBioSrc1" placeholder="Songtitel (erscheint als „aus …")">
+      </div>
+
+      <div class="ie-bio-sec" id="ieBioSec2">
+        <div class="ie-bio-sec-head">Abschnitt 3 · Einladung</div>
+        <div class="ie-bio-imgrow">
+          <div class="ie-bio-thumb empty" id="ieBioThumb2"><img id="ieBioImg2" alt="Cover 3"><span class="ie-bio-ph">3</span><div class="ie-img-progress" id="ieBioProg2"></div></div>
+          <div class="ie-bio-imgacts">
+            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile2').click()">Cover / Bild wählen</button>
+            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(2)">Entfernen</button>
           </div>
-          <div class="ie-img-progress" id="ieBioProg2"></div>
           <input type="file" id="ieBioFile2" accept="image/*" style="display:none" onchange="onBioImagePicked(2,event)">
         </div>
+        <input class="ie-bio-input" id="ieBioHeadline2" placeholder="Headline (z. B. Es fehlt nur eine Stimme)">
+        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText2" contenteditable="true" spellcheck="false"></div>
+        <textarea class="ie-bio-textarea" id="ieBioQuote2" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
+        <input class="ie-bio-input" id="ieBioSrc2" placeholder="Songtitel (erscheint als „aus …")">
       </div>
     </div>
   </div>
@@ -9921,7 +9946,30 @@ const DEFAULT_ABOUT = {
     '© jörn kämper — all rights reserved',
   imageUrl:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg',
   imageAlt:'hitjourney shaped by human choice powered by AI',
-  bioImages:[]   // 0–3 quadratische Bio-Motive (URLs)
+  // BIO-Story: 3 Abschnitte, je Cover + Headline + Text + Songtext-Zitat.
+  bioSections:[
+    {
+      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg',
+      headline:'Vom Vorstand zum Songwriter',
+      html:`Jörn Kämper · Jahrgang 1966<br><br>15 Jahre lang habe ich als Vorstandsvorsitzender ein börsennotiertes Unternehmen geführt – Europas führenden Tapetenhersteller. Heute schreibe ich Songs.<br><br>Der Weg dorthin war alles andere als gerade. BWL-Studium in Köln, Marketing bei Volkswagen in Toronto und BMW in München, Unternehmensberater bei Kienbaum, danach 22 Jahre bei A.S. Création – vom Assistenten der Geschäftsleitung bis zum Vorstandsvorsitzenden und späteren Aufsichtsratsvorsitzenden.`,
+      quote:`Sie läuft vorbei - Ihr Sommerkleid wie ein Versprechen - Haare tanzen mit dem Abendwind - Und ich schau zu - Wenn Blicke Gin wären - Wär ich längst fertig, fix und fertig`,
+      quoteSource:'Bar am Meer'
+    },
+    {
+      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
+      headline:'Erst das Wort',
+      html:`Doch eine Sache hat mich nie losgelassen: das Schreiben. Schon als Jugendlicher habe ich Gedichte verfasst und dabei oft gedacht „Songtexte könntest du." Das Problem: Ich hatte nie gelernt, ein Instrument zu spielen. Die Ideen waren da, aber ihnen fehlte die Musik.<br><br>2024 änderte sich das. Mit Künstlicher Intelligenz als Werkzeug konnte ich zum ersten Mal hören, wie meine Texte als Songs klingen. Seitdem beginnt jedes Stück mit einer Idee, einem Bild oder einer Zeile. Erst kommt der Text. Dann das musikalische Konzept. Die Musik folgt dem Wort – nie umgekehrt.`,
+      quote:`They say he's no one, just passing through - Just one more ghost the city grew - But he holds a picture no one sees - Tucked behind his old IDs`,
+      quoteSource:'Pine & Snow'
+    },
+    {
+      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg',
+      headline:'Es fehlt nur eine Stimme',
+      html:`Mit derselben Neugier, mit der ich früher Unternehmen geführt habe, entwickle ich heute Songs, Cover, Websites und Software. Die Plattform hitjourney.com wurde von mir selbst konzipiert, gestaltet und programmiert. Texte, Musik, Artwork und Technik greifen ineinander.<br><br>Was noch fehlt? Die echten Stimmen. Bis heute schreibe und produziere ich meine Songs allein. Aber natürlich würde ich sie eines Tages gern von echten Sängerinnen und Sängern hören. Vielleicht wartet irgendwo da draußen bereits die passende Stimme auf den richtigen Song.`,
+      quote:`Berlin - Du alte müde Braut - Dein Kleid ist grau - Dein Herz zu laut - Ein Graffiti flüstert „Bleib noch hier" - Und wie immer träum ich nur von dir`,
+      quoteSource:'Berlin'
+    }
+  ]
 };
 
 let infoImageUrl = DEFAULT_ABOUT.imageUrl;   // aktuell gespeicherte Grafik-URL
@@ -9965,7 +10013,7 @@ function ieClean(el){
    Nutzt CSS-Inline-Styles, damit die Live-Seite es 1:1 gleich darstellt. */
 let ieActiveEditable = null;
 function ieRegisterEditables(){
-  ['ieAboutBody','ieAboutCopyright','ieAboutTitle','ieAboutDomain','ieAboutCopyrightLabel'].forEach(id=>{
+  ['ieAboutBody','ieAboutCopyright','ieAboutTitle','ieAboutDomain','ieAboutCopyrightLabel','ieBioText0','ieBioText1','ieBioText2'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && !el._ieWired){
       el._ieWired = true;
@@ -10046,11 +10094,22 @@ async function initInfoEditor(){
   if(img){ img.src = data.imageUrl || DEFAULT_ABOUT.imageUrl; img.alt = data.imageAlt || ''; }
   infoImageUrl = data.imageUrl || DEFAULT_ABOUT.imageUrl;
   const prog = $('ieAboutImgProg'); if(prog) prog.style.width='0';
-  // Bio-Motive in die 3 Slots laden
-  const bio = Array.isArray(data.bioImages) ? data.bioImages : [];
-  infoBioUrls = [bio[0]||'', bio[1]||'', bio[2]||''];
+  // BIO-Story: 3 Abschnitte in die Felder laden (abwärtskompatibel zu altem bioImages)
+  let secs = Array.isArray(data.bioSections) ? data.bioSections.slice(0,3) : [];
+  if(!secs.length && Array.isArray(data.bioImages)){
+    secs = data.bioImages.slice(0,3).map(u=>({image:u}));
+  }
   infoBioPending = [null,null,null];
-  [0,1,2].forEach(ieRenderBioSlot);
+  infoBioUrls = ['','',''];
+  for(let i=0;i<3;i++){
+    const s = secs[i] || {};
+    infoBioUrls[i] = s.image || '';
+    if($('ieBioHeadline'+i)) $('ieBioHeadline'+i).value = s.headline || '';
+    if($('ieBioText'+i))     $('ieBioText'+i).innerHTML = s.html || '';
+    if($('ieBioQuote'+i))    $('ieBioQuote'+i).value = s.quote || '';
+    if($('ieBioSrc'+i))      $('ieBioSrc'+i).value = s.quoteSource || '';
+    ieRenderBioSlot(i);
+  }
   ieRegisterEditables();
   ieActiveEditable = $('ieAboutBody');
 }
@@ -10107,22 +10166,29 @@ async function saveInfoContent(){
       imageUrl = await uploadToS3(infoImagePendingFile, key, 'ieAboutImgProg');
     }
 
-    // Bio-Motive: neu gewählte Dateien hochladen, sonst bestehende URL behalten.
-    const bioImages = [];
+    const $ = id => document.getElementById(id);
+
+    // BIO-Story: je Abschnitt Cover hochladen (falls neu), Felder einsammeln.
+    const bioSections = [];
     for(let i=0;i<3;i++){
       if(infoBioPending[i]){
         const ext = (infoBioPending[i].name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
         const key = 'artwork/bio-motiv-'+(i+1)+'-'+Date.now()+'.'+ext;
-        const url = await uploadToS3(infoBioPending[i], key, 'ieBioProg'+i);
-        bioImages.push(url);
-        infoBioUrls[i] = url;
+        infoBioUrls[i] = await uploadToS3(infoBioPending[i], key, 'ieBioProg'+i);
         infoBioPending[i] = null;
-      } else if(infoBioUrls[i] && !infoBioUrls[i].startsWith('blob:')){
-        bioImages.push(infoBioUrls[i]);
       }
+      const image = (infoBioUrls[i] && !infoBioUrls[i].startsWith('blob:')) ? infoBioUrls[i] : '';
+      const sec = {
+        image,
+        headline:    ($('ieBioHeadline'+i).value||'').trim(),
+        html:        ieClean($('ieBioText'+i)),
+        quote:       ($('ieBioQuote'+i).value||'').trim(),
+        quoteSource: ($('ieBioSrc'+i).value||'').trim()
+      };
+      // Abschnitt nur speichern, wenn er irgendeinen Inhalt hat
+      if(sec.image || sec.headline || sec.html || sec.quote) bioSections.push(sec);
     }
 
-    const $ = id => document.getElementById(id);
     const about = {
       type:'about',
       title:          ieClean($('ieAboutTitle')) || DEFAULT_ABOUT.title,
@@ -10132,7 +10198,7 @@ async function saveInfoContent(){
       copyrightHtml:  ieClean($('ieAboutCopyright')),
       imageUrl:       imageUrl,
       imageAlt:       ($('ieAboutImg').alt||'') || DEFAULT_ABOUT.imageAlt,
-      bioImages:      bioImages
+      bioSections:    bioSections
     };
 
     // Bestehende About-Sonderzeile entfernen, dann neu schreiben.

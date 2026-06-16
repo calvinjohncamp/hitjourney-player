@@ -2944,70 +2944,83 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   inset:0;
   z-index:9600;
   display:none;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-  padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px);
-  background:rgba(6,20,32,.97);
+  background:rgba(6,20,32,.985);
 }
-.about-bio-viewer.open{display:flex;}
+.about-bio-viewer.open{display:block;}
 .about-bio-close{
-  position:absolute;
+  position:fixed;
   top:calc(env(safe-area-inset-top,0px) + 14px);
   right:18px;
+  z-index:2;
   width:42px;height:42px;
   border:none;border-radius:50%;
-  background:rgba(133,172,201,.12);
+  background:rgba(6,20,32,.72);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   color:#cfe5f5;
   font-size:26px;line-height:1;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
 }
 .about-bio-close:active{transform:scale(.92);}
-.about-bio-stage{
-  position:relative;
-  width:min(86vw,520px);
+.about-bio-scroll{
+  position:absolute;
+  inset:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 0 calc(env(safe-area-inset-bottom,0px) + 80px);
+}
+.about-bio-scroll::-webkit-scrollbar{display:none;}
+.about-bio-inner{
+  max-width:560px;
+  margin:0 auto;
+  padding:0 22px;
+}
+.bio-sec{ padding-top:40px; }
+.bio-sec-cover{
+  width:100%;
   aspect-ratio:1/1;
   border-radius:14px;
   overflow:hidden;
   background:#0B2A42;
-  box-shadow:0 18px 60px rgba(0,0,0,.55);
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 16px 50px rgba(0,0,0,.5);
 }
-.about-bio-stage img{
-  width:100%;height:100%;
-  object-fit:cover;
-  display:block;
+.bio-sec-cover img{ width:100%;height:100%;object-fit:cover;display:block; }
+.bio-sec-headline{
+  font-family:'Anton',sans-serif;
+  font-size:clamp(22px,5.4vw,34px);
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  line-height:1.04;
+  color:#cfe5f5;
+  margin:22px 0 14px;
 }
-.about-bio-cue{
-  position:absolute;
-  right:12px;bottom:12px;
-  padding:6px 12px;
-  border-radius:999px;
-  background:rgba(6,20,32,.62);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  color:rgba(207,229,245,.92);
-  font-size:12px;font-weight:600;
-  pointer-events:none;
-  transition:opacity .25s;
+.bio-sec-text{
+  font-size:15px;
+  line-height:1.85;
+  color:rgba(207,229,245,.78);
 }
-.about-bio-dots{
-  display:flex;
-  gap:9px;
-  align-items:center;
+.bio-sec-text strong{color:#cfe5f5;font-weight:700;}
+.bio-quote{
+  margin:26px 0 6px;
+  padding:4px 0 4px 18px;
+  border-left:3px solid #85ACC9;
 }
-.about-bio-dots .bio-dot{
-  width:9px;height:9px;
-  border-radius:50%;
-  background:rgba(133,172,201,.3);
-  transition:background .2s,transform .2s;
+.bio-quote-lines{
+  font-family:'Special Elite','Courier New',monospace;
+  font-style:normal;
+  color:#e7eef5;
+  font-size:15px;
+  line-height:1.7;
 }
-.about-bio-dots .bio-dot.active{
-  background:#cfe5f5;
-  transform:scale(1.15);
+.bio-quote-src{
+  margin-top:10px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#5884A4;
+  font-weight:700;
 }
+.bio-end-pad{ height:30px; }
 
 /* Bottom pad after teaser */
 .about-bottom-pad{
@@ -4222,14 +4235,10 @@ body.album-open #hjPlayerSpacer{
   <img id="aboutArtLightboxImg" alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
 </div>
 
-<!-- BIO-Viewer: quadratische Motive, durchtippbar wie Cover/Lyrics/Beschreibung -->
+<!-- BIO-Story: scrollbares Pop-up – Cover + Headline + Text + Songtext-Zitat je Abschnitt -->
 <div class="about-bio-viewer" id="aboutBioViewer" aria-hidden="true">
   <button class="about-bio-close" id="aboutBioClose" type="button" aria-label="Bio schließen">×</button>
-  <div class="about-bio-stage" id="aboutBioStage" role="button" aria-label="Weiter zum nächsten Bio-Motiv">
-    <img id="aboutBioImg" alt="Bio" />
-    <div class="about-bio-cue" id="aboutBioCue">Tippen für weiter ›</div>
-  </div>
-  <div class="about-bio-dots" id="aboutBioDots"></div>
+  <div class="about-bio-scroll" id="aboutBioScroll"></div>
 </div>
 
 <!-- KURS NORDWEST -->
@@ -5281,58 +5290,74 @@ function applyAboutContent(a){
       if(lb)  lb.alt  = a.imageAlt;
     }
   }
-  // BIO-Motive: quadratische Bilder, durchtippbar im Viewer
-  aboutBioImages = Array.isArray(a.bioImages) ? a.bioImages.filter(u=>u) : [];
+  // BIO-Story: Abschnitte mit Cover + Headline + Text + Songtext-Zitat.
+  // Abwärtskompatibel: alte bioImages werden zu reinen Bild-Abschnitten.
+  if(Array.isArray(a.bioSections) && a.bioSections.length){
+    aboutBioSections = a.bioSections;
+  } else if(Array.isArray(a.bioImages) && a.bioImages.length){
+    aboutBioSections = a.bioImages.filter(u=>u).map(u=>({image:u}));
+  } else {
+    aboutBioSections = [];
+  }
+  const hasBio = aboutBioSections.some(s => s && (s.image || s.headline || s.html || s.quote));
   const bioBtn = document.getElementById('aboutBioBtn');
-  if(bioBtn) bioBtn.style.display = aboutBioImages.length ? 'inline-flex' : 'none';
+  if(bioBtn) bioBtn.style.display = hasBio ? 'inline-flex' : 'none';
 }
 
-// ── BIO-Viewer (quadratische Motive wie Cover/Lyrics/Beschreibung) ──
-let aboutBioImages = [];
-let aboutBioIndex = 0;
-function renderAboutBio(){
-  const img  = document.getElementById('aboutBioImg');
-  const dots = document.getElementById('aboutBioDots');
-  const cue  = document.getElementById('aboutBioCue');
-  if(!aboutBioImages.length) return;
-  if(img) img.src = aboutBioImages[aboutBioIndex];
-  if(dots){
-    dots.innerHTML = '';
-    aboutBioImages.forEach((_,i)=>{
-      const d = document.createElement('span');
-      d.className = 'bio-dot' + (i===aboutBioIndex ? ' active' : '');
-      dots.appendChild(d);
-    });
-    dots.style.display = aboutBioImages.length > 1 ? 'flex' : 'none';
-  }
-  if(cue) cue.style.display = aboutBioImages.length > 1 ? 'block' : 'none';
+// ── BIO-Story (scrollbares Pop-up wie eine kleine Magazin-Strecke) ──
+let aboutBioSections = [];
+function bioQuoteLinesHtml(quote){
+  // Verszeilen aus Zeilenumbrüchen ODER " - "-Trennern
+  return String(quote||'')
+    .split(/\n|\s+[-–]\s+/)
+    .map(l=>l.trim())
+    .filter(l=>l.length)
+    .map(l=>esc(l))
+    .join('<br>');
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function renderAboutBioStory(){
+  const wrap = document.getElementById('aboutBioScroll');
+  if(!wrap) return;
+  const inner = document.createElement('div');
+  inner.className = 'about-bio-inner';
+  aboutBioSections.forEach(sec=>{
+    if(!sec || !(sec.image || sec.headline || sec.html || sec.quote)) return;
+    const s = document.createElement('div');
+    s.className = 'bio-sec';
+    let html = '';
+    if(sec.image)    html += '<div class="bio-sec-cover"><img alt="'+esc(sec.headline||'Bio')+'" src="'+esc(sec.image)+'"></div>';
+    if(sec.headline) html += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
+    if(sec.html)     html += '<div class="bio-sec-text">'+sec.html+'</div>';
+    if(sec.quote){
+      html += '<div class="bio-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
+            + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
+            + '</div>';
+    }
+    s.innerHTML = html;
+    inner.appendChild(s);
+  });
+  const pad = document.createElement('div'); pad.className='bio-end-pad';
+  inner.appendChild(pad);
+  wrap.innerHTML = '';
+  wrap.appendChild(inner);
 }
 function openAboutBio(){
-  if(!aboutBioImages.length) return;
-  aboutBioIndex = 0;
-  renderAboutBio();
+  if(!aboutBioSections.length) return;
+  renderAboutBioStory();
   const v = document.getElementById('aboutBioViewer');
   if(v){ v.classList.add('open'); v.setAttribute('aria-hidden','false'); }
+  const sc = document.getElementById('aboutBioScroll'); if(sc) sc.scrollTop = 0;
 }
 function closeAboutBio(){
   const v = document.getElementById('aboutBioViewer');
   if(v){ v.classList.remove('open'); v.setAttribute('aria-hidden','true'); }
 }
-function nextAboutBio(){
-  if(aboutBioImages.length < 2) return;
-  aboutBioIndex = (aboutBioIndex + 1) % aboutBioImages.length;
-  renderAboutBio();
-}
 (function wireAboutBio(){
   const btn   = document.getElementById('aboutBioBtn');
-  const stage = document.getElementById('aboutBioStage');
   const close = document.getElementById('aboutBioClose');
-  const viewer= document.getElementById('aboutBioViewer');
   if(btn)   btn.addEventListener('click', openAboutBio);
-  if(stage) stage.addEventListener('click', nextAboutBio);
   if(close) close.addEventListener('click', closeAboutBio);
-  // Klick auf den dunklen Rand (nicht auf das Motiv) schließt den Viewer
-  if(viewer) viewer.addEventListener('click', e=>{ if(e.target === viewer) closeAboutBio(); });
 })();
 
 // ── DOM ──
