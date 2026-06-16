@@ -13,6 +13,8 @@
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
 <!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
+<!-- Version: v266-landing-teaser-ratio-fields -->
+<!-- Version: v265-landing-teaser-visible-5x1-2x1 -->
 <!-- Version: v263-landing-redbtn-only-nologo-nocrossfade-endlessplaylist -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
 <!-- Version: v258-multi-landingpages-routes -->
@@ -7967,10 +7969,19 @@ function renderLandingPage(page){
   const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  // Logo/Teaser oben aktuell komplett ausgeblendet. Die 4:1-/2:1-Bilder werden weiterhin
-  // im Admin gepflegt und kommen später als gestalteter Teaser-Banner zum Einsatz.
-  if(logoWrap) logoWrap.classList.remove('visible');
-  if(logoImg) logoImg.removeAttribute('src');
+  // Verlags-Teaser oben anzeigen: bevorzugt 5:1, sonst 2:1.
+  // Die alten Logo-Felder bleiben nur als Fallback für bestehende Daten erhalten.
+  const teaserUrl = page.logoFiveUrl || page.logoPanoUrl || page.logoWideUrl || '';
+  const teaserKind = (page.logoFiveUrl || page.logoPanoUrl) ? 'five' : (page.logoWideUrl ? 'wide' : '');
+  if(logoWrap && logoImg && teaserUrl){
+    logoImg.src = teaserUrl;
+    logoImg.className = 'landing-logo ' + teaserKind;
+    logoImg.alt = (page.name || 'Publisher') + ' Teaser';
+    logoWrap.classList.add('visible');
+  }else{
+    if(logoWrap) logoWrap.classList.remove('visible');
+    if(logoImg) logoImg.removeAttribute('src');
+  }
 
   root.innerHTML = '';
   const flatSongs = [];

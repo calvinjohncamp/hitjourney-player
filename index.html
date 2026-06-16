@@ -13,6 +13,8 @@
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
 <!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
+<!-- Version: v266-landing-teaser-ratio-fields -->
+<!-- Version: v265-landing-teaser-visible-5x1-2x1 -->
 <!-- Version: v263-landing-redbtn-only-nologo-nocrossfade-endlessplaylist -->
 <!-- Version: v260-landingpage-logo-1-2-4-left -->
 <!-- Version: v260-landingpage-logo-4x1-admin-compatible -->
@@ -338,8 +340,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-logo-wrap.visible{display:flex}
 .landing-logo{display:block;height:auto;object-fit:contain;border-radius:0;background:rgba(6,20,32,1)}
 .landing-logo.square{width:min(250px,46vw);aspect-ratio:1/1;object-fit:contain}
-.landing-logo.wide{width:min(560px,78vw);aspect-ratio:2/1;object-fit:contain}
+.landing-logo.wide{width:min(560px,78vw);aspect-ratio:2/1;object-fit:cover}
 .landing-logo.pano{width:100%;max-width:1120px;aspect-ratio:4/1;object-fit:contain}
+.landing-logo.five{width:100%;max-width:1120px;aspect-ratio:5/1;object-fit:cover}
 .landing-section{margin:22px 0 64px}
 .landing-section + .landing-section{margin-top:74px}
 .landing-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
@@ -7970,10 +7973,19 @@ function renderLandingPage(page){
   const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  // Logo/Teaser oben aktuell komplett ausgeblendet. Die 4:1-/2:1-Bilder werden weiterhin
-  // im Admin gepflegt und kommen später als gestalteter Teaser-Banner zum Einsatz.
-  if(logoWrap) logoWrap.classList.remove('visible');
-  if(logoImg) logoImg.removeAttribute('src');
+  // Verlags-Teaser oben anzeigen: bevorzugt 5:1, sonst 2:1.
+  // Die alten Logo-Felder bleiben nur als Fallback für bestehende Daten erhalten.
+  const teaserUrl = page.logoFiveUrl || page.logoPanoUrl || page.logoWideUrl || '';
+  const teaserKind = (page.logoFiveUrl || page.logoPanoUrl) ? 'five' : (page.logoWideUrl ? 'wide' : '');
+  if(logoWrap && logoImg && teaserUrl){
+    logoImg.src = teaserUrl;
+    logoImg.className = 'landing-logo ' + teaserKind;
+    logoImg.alt = (page.name || 'Publisher') + ' Teaser';
+    logoWrap.classList.add('visible');
+  }else{
+    if(logoWrap) logoWrap.classList.remove('visible');
+    if(logoImg) logoImg.removeAttribute('src');
+  }
 
   root.innerHTML = '';
   const flatSongs = [];
