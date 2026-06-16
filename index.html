@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v259-landingpage-cover-grid-logo-actions -->
 <!-- Version: v258-multi-landingpages-routes -->
 <!-- Version: v257-landingpage-selected-works -->
 <!-- Version: v256-bio-button-kontaktblock-fix -->
@@ -324,22 +325,26 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 
 
 /* ══ LANDINGPAGE / SELECTED WORKS ══ */
-#screenLanding{padding:20px 14px 120px;background:rgba(6,20,32,1)}
+#screenLanding{padding:26px 14px 120px;background:rgba(6,20,32,1)}
 #screenLanding.active{display:block;overflow-y:auto}
 .landing-wrap{max-width:1120px;margin:0 auto;width:100%}
-.landing-hero{padding:16px 2px 20px;text-align:center}
-.landing-kicker{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-bottom:8px}
-.landing-title{font-family:'Anton',sans-serif;font-size:clamp(32px,5.5vw,68px);letter-spacing:.04em;text-transform:uppercase;color:#f1ecdf;line-height:1}
-.landing-sub{font-size:clamp(14px,2.2vw,19px);color:rgba(207,229,245,.72);margin-top:12px;line-height:1.45}
-.landing-section{margin:26px 0 42px}
-.landing-section-head{text-align:center;margin-bottom:16px}
-.landing-section-title{font-family:'Anton',sans-serif;font-size:clamp(26px,4vw,48px);letter-spacing:.06em;text-transform:uppercase;color:#cfe5f5;line-height:1.05}
-.landing-section-sub{font-size:14px;color:rgba(133,172,201,.68);margin-top:8px}
+.landing-hero{padding:4px 2px 24px;text-align:center}
+.landing-kicker,.landing-title,.landing-sub{display:none!important}
+.landing-logo-wrap{display:none;align-items:center;justify-content:center;margin:0 auto 22px;max-width:min(520px,78vw)}
+.landing-logo-wrap.visible{display:flex}
+.landing-logo{display:block;width:100%;height:auto;object-fit:contain;border-radius:10px}
+.landing-logo.square{max-width:min(250px,46vw);aspect-ratio:1/1;object-fit:contain}
+.landing-logo.wide{max-width:min(520px,78vw);aspect-ratio:2/1;object-fit:contain}
+.landing-section{margin:22px 0 64px}
+.landing-section + .landing-section{margin-top:74px}
+.landing-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
+.landing-section-title{font-family:'Anton',sans-serif;font-size:clamp(19px,2.65vw,32px);letter-spacing:.065em;text-transform:uppercase;color:#cfe5f5;line-height:1.05;text-align:left}
+.landing-section-sub{font-size:clamp(18px,2.8vw,28px);font-weight:700;color:rgba(207,229,245,.78);line-height:1.05;text-align:right;white-space:nowrap}
 .landing-grid{display:grid;gap:12px}.landing-grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing-grid.cols-4{grid-template-columns:repeat(4,1fr)}.landing-grid.cols-5{grid-template-columns:repeat(5,1fr)}
-.landing-card{position:relative;border-radius:10px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
-.landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card-title{position:absolute;left:0;right:0;bottom:0;padding:24px 9px 8px;background:linear-gradient(transparent,rgba(6,20,32,.86));font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;text-align:center;color:#f1ecdf;text-shadow:0 1px 8px rgba(0,0,0,.7)}
-.landing-nav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:20px 0 8px}.landing-nav button{border:1px solid rgba(133,172,201,.35);background:rgba(133,172,201,.08);color:#85ACC9;border-radius:999px;padding:10px 16px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.landing-nav button:hover{background:rgba(133,172,201,.16);color:#cfe5f5}
-@media(max-width:760px){.landing-grid.cols-5,.landing-grid.cols-4{grid-template-columns:repeat(2,1fr)}.landing-grid.cols-3{grid-template-columns:repeat(2,1fr)}.landing-card-title{font-size:10px}}
+.landing-card{position:relative;border-radius:8px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
+.landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card.playing::after{content:'';position:absolute;inset:0;border-radius:8px;border:2px solid rgba(133,172,201,.60);pointer-events:none;animation:hcPulse 2s ease-in-out infinite}.landing-card-title{display:none!important}
+.landing-nav{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:center;padding:16px 0 8px}.landing-nav button{width:43px;height:43px;border-radius:50%;border:1.5px solid rgba(133,172,201,.72);background:rgba(6,20,32,.35);color:#85ACC9;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 18px rgba(0,0,0,.24),0 0 0 1px rgba(133,172,201,.08) inset;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s,border-color .15s,color .15s;padding:0;font-size:19px;font-weight:700;line-height:1}.landing-nav button:hover{background:rgba(133,172,201,.08);border-color:rgba(207,229,245,.82);color:#cfe5f5}.landing-nav button:active{transform:scale(.9)}.landing-nav .landing-home-icon{font-size:18px;transform:translateY(-1px)}
+@media(max-width:760px){.landing-grid.cols-5,.landing-grid.cols-4{grid-template-columns:repeat(2,1fr)}.landing-grid.cols-3{grid-template-columns:repeat(2,1fr)}.landing-section-head{align-items:flex-start;flex-direction:column;gap:8px}.landing-section-sub{text-align:left;white-space:normal}.landing-section + .landing-section{margin-top:58px}}
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 
 /* ══ ARCHIVE ══ */
@@ -4279,14 +4284,15 @@ body.album-open #hjPlayerSpacer{
 <div class="screen" id="screenLanding">
   <div class="landing-wrap">
     <div class="landing-hero">
+      <div class="landing-logo-wrap" id="landingLogoWrap"><img class="landing-logo wide" id="landingLogoImg" alt="Landingpage Logo"/></div>
       <div class="landing-kicker">Songwriter Portfolio</div>
       <div class="landing-title" id="landingMainTitle">Selected Works</div>
       <div class="landing-sub" id="landingMainSub">Ausgewählte Songs von Jörn Kämper · Deutsch und Englisch</div>
     </div>
     <div id="landingSections"></div>
     <div class="landing-nav">
-      <button type="button" onclick="showAbout()">Vom Vorstand zum Songwriter</button>
-      <button type="button" onclick="showHome()">Home</button>
+      <button type="button" onclick="showAbout()" aria-label="Biografie">i</button>
+      <button type="button" onclick="showHome()" aria-label="Home"><span class="landing-home-icon">⌂</span></button>
     </div>
   </div>
 </div>
@@ -7935,20 +7941,41 @@ function renderLandingPage(page){
   }
   const titleEl = document.getElementById('landingMainTitle');
   const subEl = document.getElementById('landingMainSub');
+  const logoWrap = document.getElementById('landingLogoWrap');
+  const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
+  if(logoWrap && logoImg){
+    const logoUrl = page.logoWideUrl || page.logoSquareUrl || '';
+    if(logoUrl){
+      logoImg.src = logoUrl;
+      logoImg.className = 'landing-logo ' + (page.logoWideUrl ? 'wide' : 'square');
+      logoWrap.classList.add('visible');
+    } else {
+      logoImg.removeAttribute('src');
+      logoWrap.classList.remove('visible');
+    }
+  }
   root.innerHTML = '';
   const flatSongs = [];
   const bySlug = new Map((SUPABASE_SONGS||[]).map(s=>[s.slug,s]));
+  const landingState = { slug:null, phase:0 };
+  function countLabel(n,title){
+    const t = String(title||'').toLowerCase();
+    if(t.includes('german') || t.includes('deutsch')) return n + ' deutsche Songs';
+    if(t.includes('english') || t.includes('englisch')) return n + ' English Songs';
+    return n + (n===1 ? ' Song' : ' Songs');
+  }
+  function clearLandingHighlights(){ root.querySelectorAll('.landing-card.playing').forEach(el=>el.classList.remove('playing')); }
   page.sections.forEach(sec=>{
     const title = sec.title || 'Selected Works';
-    const subtitle = sec.subtitle || '';
     const columns = Math.max(3, Math.min(5, Number(sec.columns)||5));
     const songs = (sec.songs||[]).map(slug=>bySlug.get(slug)).filter(Boolean);
     if(!songs.length) return;
     const section = document.createElement('section');
     section.className = 'landing-section';
-    section.innerHTML = `<div class="landing-section-head"><div class="landing-section-title">${escapeHtml(title)}</div>${subtitle?`<div class="landing-section-sub">${escapeHtml(subtitle)}</div>`:''}</div>`;
+    const subtitle = countLabel(songs.length, title);
+    section.innerHTML = `<div class="landing-section-head"><div class="landing-section-title">${escapeHtml(title)}</div><div class="landing-section-sub">${escapeHtml(subtitle)}</div></div>`;
     const grid = document.createElement('div');
     grid.className = `landing-grid cols-${columns}`;
     songs.forEach(song=>{
@@ -7962,19 +7989,32 @@ function renderLandingPage(page){
       img.loading = 'lazy';
       img.alt = song.title || '';
       setImgSrcWithFallback(img, getImgUrls(song,'cover'));
-      const label = document.createElement('div');
-      label.className = 'landing-card-title';
-      label.textContent = song.title || '';
-      card.appendChild(img); card.appendChild(label);
+      card.appendChild(img);
       const open = () => {
-        ALBUMS.landingPortfolio = { title: page.name || 'Selected Works', meta:flatSongs.length + ' Songs', cover:(flatSongs[0] && flatSongs[0].cover) || '', songs:flatSongs.slice() };
-        curAlbum = 'landingPortfolio';
-        queue = buildQueue();
-        queueIdx = queue.indexOf(landingIndex);
-        if(queueIdx < 0) queueIdx = landingIndex;
-        playIdx(landingIndex);
-        prevScreen = 'landing';
-        setTimeout(()=>showNowPlaying(),120);
+        const items = flatSongs.map((s,idx)=>({song:s, el: grid.querySelectorAll('.landing-card')[idx], _viewMode:'cover-lyrics'}));
+        const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
+        const same = cur && cur.song && cur.song.slug === song.slug && cur.audio && !cur.audio.paused;
+        if(same){
+          if(landingState.slug === song.slug && landingState.phase === 1){
+            if(typeof hjOpenChainViewer === 'function'){
+              hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
+              if(typeof hjChainViewerSetImage === 'function') hjChainViewerSetImage(song, {song, el:card, _viewMode:'cover-lyrics'}, 2);
+            }
+            landingState.phase = 2;
+            return;
+          }
+          if(window.HJChain && HJChain.stop) HJChain.stop();
+          clearLandingHighlights();
+          landingState.slug = null; landingState.phase = 0;
+          return;
+        }
+        if(window.HJChain && HJChain.startChain){
+          HJChain.startChain(items, landingIndex);
+          clearLandingHighlights();
+          card.classList.add('playing');
+          landingState.slug = song.slug; landingState.phase = 1;
+          prevScreen = 'landing';
+        }
       };
       card.addEventListener('click', open);
       card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
