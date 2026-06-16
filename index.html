@@ -13,6 +13,7 @@
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
 <!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
+<!-- Version: v268-landing-teaser32-deck-player -->
 <!-- Version: v267-landing-teaser-fullwidth-no-section-headlines -->
 <!-- Version: v266-landing-teaser-ratio-fields -->
 <!-- Version: v265-landing-teaser-visible-5x1-2x1 -->
@@ -336,6 +337,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenLanding.active{display:block;overflow-y:auto}
 .landing-wrap{max-width:1120px;margin:0 auto;width:100%}
 .landing-hero{padding:0 2px 0;text-align:center}
+
+/* v268: Publisher-Landingpage Topbereich: links 3:2 Teaser, rechts Plattenspieler */
+.landing-top-wrap{display:none;width:100%;margin:18px 0 18px}
+.landing-top-wrap.visible{display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:stretch}
+.landing-teaser32{aspect-ratio:3/2;border-radius:8px;overflow:hidden;background:rgba(11,42,66,.32);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.landing-teaser32 img{width:100%;height:100%;object-fit:cover;display:block}
+.landing-player-box{aspect-ratio:1/1;display:flex;align-items:stretch;justify-content:flex-end;min-width:0}
+.landing-player-box .tl-deck.deck{width:100%;max-width:none;height:auto;aspect-ratio:1/1;border-width:1.5px;border-color:rgba(133,172,201,.78);box-shadow:0 6px 18px rgba(0,0,0,.22)}
+.landing-player-box .tl-deck .deck-title{font-size:clamp(10px,1.15vw,14px)}
+.landing-player-box .tl-deck .deck-artist{font-size:clamp(8px,.9vw,11px)}
+.landing-player-box .tl-deck .deck-red-btn{width:8.4%;right:9.8%;bottom:8%}
+@media(max-width:760px){.landing-top-wrap.visible{grid-template-columns:1fr;gap:12px}.landing-player-box{width:min(62vw,260px);justify-self:center}}
+
 .landing-kicker,.landing-title,.landing-sub{display:none!important}
 .landing-logo-wrap{display:none;align-items:flex-start;justify-content:flex-start;margin:0 0 18px;width:100%;max-width:none}
 .landing-logo-wrap.visible{display:flex}
@@ -4306,6 +4320,18 @@ body.album-open #hjPlayerSpacer{
   <div class="landing-wrap">
     <div class="landing-hero">
       <div class="landing-logo-wrap" id="landingLogoWrap"><img class="landing-logo wide" id="landingLogoImg" alt="Landingpage Logo"/></div>
+      <div class="landing-top-wrap" id="landingTopWrap">
+        <div class="landing-teaser32" id="landingTeaser32"><img id="landingTeaser32Img" alt="Publisher Teaser"/></div>
+        <div class="landing-player-box" id="landingPlayerBox">
+          <div class="tl-deck deck" id="landingDeck">
+            <div class="deck-cover-wrap" id="landingDeckCoverWrap"><div class="deck-cover-inner"><div class="deck-cover-ph"></div><img class="deck-cover-img loaded" id="landingDeckCover" src="" alt=""/></div></div>
+            <img class="deck-tonearm" id="landingDeckTonearm" src="" alt=""/>
+            <span class="deck-center-pin" aria-hidden="true"></span>
+            <button class="deck-red-btn" id="landingDeckSignatureBtn" aria-label="Cover und Lyrics anzeigen" title="Cover und Lyrics"></button>
+            <div class="deck-info"><div class="deck-title" id="landingDeckTitle">—</div><div class="deck-artist" id="landingDeckArtist"></div></div>
+          </div>
+        </div>
+      </div>
       <div class="landing-kicker">Songwriter Portfolio</div>
       <div class="landing-title" id="landingMainTitle">Selected Works</div>
       <div class="landing-sub" id="landingMainSub">Ausgewählte Songs von Jörn Kämper · Deutsch und Englisch</div>
@@ -7971,20 +7997,21 @@ function renderLandingPage(page){
   const subEl = document.getElementById('landingMainSub');
   const logoWrap = document.getElementById('landingLogoWrap');
   const logoImg = document.getElementById('landingLogoImg');
+  const topWrap = document.getElementById('landingTopWrap');
+  const teaser32Img = document.getElementById('landingTeaser32Img');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  // Verlags-Teaser oben anzeigen: bevorzugt 5:1, sonst 2:1.
-  // Die alten Logo-Felder bleiben nur als Fallback für bestehende Daten erhalten.
-  const teaserUrl = page.logoFiveUrl || page.logoPanoUrl || page.logoWideUrl || '';
-  const teaserKind = (page.logoFiveUrl || page.logoPanoUrl) ? 'five' : (page.logoWideUrl ? 'wide' : '');
-  if(logoWrap && logoImg && teaserUrl){
-    logoImg.src = teaserUrl;
-    logoImg.className = 'landing-logo ' + teaserKind;
-    logoImg.alt = (page.name || 'Publisher') + ' Teaser';
-    logoWrap.classList.add('visible');
-  }else{
-    if(logoWrap) logoWrap.classList.remove('visible');
-    if(logoImg) logoImg.removeAttribute('src');
+  // v268: alte Logo-/5:1-/2:1-Zeile ausblenden; oben stattdessen 3:2-Teaser + Plattenspieler.
+  if(logoWrap) logoWrap.classList.remove('visible');
+  if(logoImg) logoImg.removeAttribute('src');
+  const teaserUrl = page.logo32Url || page.teaser32Url || page.logoWideUrl || page.logoFiveUrl || page.logoPanoUrl || '';
+  if(topWrap){
+    topWrap.classList.add('visible');
+    if(teaser32Img){
+      if(teaserUrl){ teaser32Img.src = teaserUrl; teaser32Img.alt = (page.name || 'Publisher') + ' Teaser'; }
+      else { teaser32Img.removeAttribute('src'); teaser32Img.alt = 'Publisher Teaser'; }
+    }
+    landingInitDeckTonearm();
   }
 
   root.innerHTML = '';
@@ -8025,16 +8052,8 @@ function renderLandingPage(page){
         const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
         const isThis = cur && cur.song && cur.song.slug === song.slug && window.HJChain && HJChain.isRunning && HJChain.isRunning();
         if(isThis){
-          // Dieser Song läuft bereits:
-          //  • Overlay offen (Cover → Lyrics) → weiterblättern. Der Klick aufs Lyric-Sheet
-          //    schließt das Overlay → alle Cover sind wieder sichtbar, der Song LÄUFT WEITER.
-          //  • Overlay zu (Cover sichtbar) → erneuter Klick auf das laufende Cover STOPPT.
-          if(typeof hjChainViewState !== 'undefined' && hjChainViewState.open){
-            hjAdvanceChainViewer();
-          } else {
-            HJChain.stop();
-            clearLandingHighlights();
-          }
+          // Läuft dieser Song bereits, bleibt die Wiedergabe bestehen; nur ein offener Viewer blättert weiter.
+          if(typeof hjChainViewState !== 'undefined' && hjChainViewState.open) hjAdvanceChainViewer();
           return;
         }
         if(window.HJChain && HJChain.startChain){
@@ -8045,9 +8064,7 @@ function renderLandingPage(page){
           clearLandingHighlights();
           card.classList.add('playing');
           prevScreen = 'landing';
-          // KEIN großes Cover-Overlay beim Start. Es erscheint nur der rote Signature-Button
-          // unten links auf dem Cover (via setHighlight → hjAttachCoverCue). Klick darauf öffnet
-          // Cover → Lyrics; ein Klick aufs laufende Cover (neben dem Button) stoppt.
+          // KEIN großes Cover-Overlay beim Start: Der Song läuft oben rechts im Plattenspieler.
         }
       };
       card.addEventListener('click', open);
@@ -8057,8 +8074,49 @@ function renderLandingPage(page){
     section.appendChild(grid);
     root.appendChild(section);
   });
+  // Initialzustand des Plattenspielers: erstes Cover zeigen, solange noch nichts läuft.
+  const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
+  if(cur && cur.song) landingUpdateDeck(cur.song, cur.item, window.HJChain && HJChain.isRunning && HJChain.isRunning());
+  else if(flatSongs.length) landingUpdateDeck(flatSongs[0], {song:flatSongs[0]}, false);
   // Keine sichtbaren Sektions-Headlines auf Verlags-Landingpages.
   landingFitHeadlines();
+}
+function landingInitDeckTonearm(){
+  const arm = document.getElementById('landingDeckTonearm');
+  if(!arm || arm.getAttribute('src')) return;
+  const srcArm = document.getElementById('tlDeckTonearm');
+  if(srcArm && srcArm.getAttribute('src')) arm.setAttribute('src', srcArm.getAttribute('src'));
+}
+function landingUpdateDeck(song, item, isPlaying){
+  const deck = document.getElementById('landingDeck');
+  if(!deck) return;
+  landingInitDeckTonearm();
+  const cover = document.getElementById('landingDeckCover');
+  const title = document.getElementById('landingDeckTitle');
+  const artist = document.getElementById('landingDeckArtist');
+  const btn = document.getElementById('landingDeckSignatureBtn');
+  const arm = document.getElementById('landingDeckTonearm');
+  if(song){
+    if(cover) setImgSrcWithFallback(cover, getImgUrls(song,'cover'));
+    if(title) title.textContent = song.title || '—';
+    if(artist) artist.textContent = song.artist || '';
+    deck._landingSong = song; deck._landingItem = item || {song};
+  }
+  deck.classList.toggle('is-playing', !!isPlaying);
+  if(arm) arm.style.setProperty('--arm-rot', isPlaying ? '-2.5deg' : '-9.5deg');
+  if(btn && !btn._landingBound){
+    btn._landingBound = true;
+    const open = (e)=>{
+      if(e){ e.preventDefault(); e.stopPropagation(); }
+      const cur = (window.HJChain && HJChain.getCurrent) ? HJChain.getCurrent() : null;
+      const s = (cur && cur.song) || deck._landingSong;
+      const it = (cur && cur.item) || deck._landingItem || (s ? {song:s} : null);
+      if(s && typeof hjOpenChainViewer === 'function') hjOpenChainViewer(s, it);
+    };
+    btn.addEventListener('click', open);
+    const wrap = document.getElementById('landingDeckCoverWrap');
+    if(wrap) wrap.addEventListener('click', open);
+  }
 }
 // Schriftgröße der Sektions-Headlines so wählen, dass der Text exakt von der linken
 // Kante des 1. Covers bis zur rechten Kante des 2. Covers reicht (auf dem Handy = 2
@@ -8441,7 +8499,8 @@ const HJChain = (function(){
     curHi = el || null;
     if(curHi){
       curHi.classList.add('playing');
-      if(typeof hjAttachCoverCue==='function'){
+      const isLandingCard = curHi.closest && curHi.closest('#landingSections');
+      if(!isLandingCard && typeof hjAttachCoverCue==='function'){
         hjAttachCoverCue(curHi, ()=>{
           const cur = getCurrent();
           if(cur && cur.song && typeof hjOpenChainViewer==='function') hjOpenChainViewer(cur.song, cur.item);
@@ -8449,6 +8508,7 @@ const HJChain = (function(){
       }
     }
     const cur = getCurrent();
+    try{ if(cur && cur.song && typeof landingUpdateDeck==='function') landingUpdateDeck(cur.song, cur.item, true); }catch(_){ }
     if(cur && cur.song){
       setMediaSessionForChain(cur.song);
       // Landingpage: Beim Start nicht automatisch das große Cover öffnen.
@@ -8456,7 +8516,7 @@ const HJChain = (function(){
       if(typeof hjSyncChainViewerToCurrent==='function') hjSyncChainViewerToCurrent(cur.song, cur.item);
     }
   }
-  function clearHighlight(){ if(curHi){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); } curHi=null; }
+  function clearHighlight(){ if(curHi){ curHi.classList.remove('playing'); if(typeof hjRemoveCoverCue==='function') hjRemoveCoverCue(curHi); } curHi=null; try{ if(typeof landingUpdateDeck==='function') landingUpdateDeck(null,null,false); }catch(_){ } }
 
   function syncDiashowSlide(item){
     try{
