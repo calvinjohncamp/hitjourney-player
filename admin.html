@@ -5,6 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
+<!-- Version: admin-v20260616b-multi-landingpages-routes -->
 <!-- Version: admin-v20260616-landingpage-editor -->
 <!-- Version: admin-v20260614c-describe-save-robust-fehlende-spalte-abgefangen -->
 <!-- Version: admin-v20260614b-describe-page-nach-lyrics -->
@@ -265,6 +266,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.08)}
 .lp-toolbar-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.4)}
 .lp-toolbar-actions{display:flex;gap:6px;align-items:center}
+.lp-pagebar{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1fr) minmax(160px,.8fr) auto;gap:10px;align-items:end;padding:10px 12px;border-bottom:1px solid rgba(133,172,201,.08);background:rgba(6,20,32,.96);flex-shrink:0}
+.lp-pagebar .lp-field label{display:block;font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:rgba(133,172,201,.42);margin:0 0 5px}
+.lp-pagebar .lp-field input,.lp-pagebar .lp-field select{width:100%;background:rgba(11,42,66,.72);border:1px solid rgba(133,172,201,.18);border-radius:9px;padding:10px 11px;color:#f1ecdf;font-size:13px;outline:none;font-family:inherit}
+.lp-pagebar .lp-field input:focus,.lp-pagebar .lp-field select:focus{border-color:rgba(133,172,201,.45);background:rgba(11,42,66,.94)}
+.lp-route-hint{align-self:end;border:1px solid rgba(133,172,201,.16);background:rgba(133,172,201,.06);color:rgba(207,229,245,.72);border-radius:9px;padding:10px 12px;font-size:12px;font-family:'SF Mono','Menlo',monospace;white-space:nowrap;min-width:120px;text-align:center}
+@media(max-width:820px){.lp-pagebar{grid-template-columns:1fr 1fr}.lp-route-hint{grid-column:1/-1;text-align:left}}
+
 .lp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 12px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.09);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s}
 .lp-btn:hover{background:rgba(133,172,201,.18)}
 .lp-btn.save{background:rgba(50,180,100,.12);border-color:rgba(50,180,100,.22);color:#6fda9a}
@@ -7529,14 +7537,33 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 <!-- ══ TAB: LANDINGPAGE ══ -->
 <div class="screen" id="tabLanding">
   <div class="lp-toolbar">
-    <span class="lp-toolbar-title">Landingpage-Editor</span>
+    <span class="lp-toolbar-title">Landingpages</span>
     <div class="lp-toolbar-actions">
-      <button class="lp-btn" onclick="landingAddSection()">＋ Sektion</button>
+      <button class="lp-btn" onclick="landingAddPage()">＋ Landingpage</button>
+      <button class="lp-btn" onclick="landingDuplicatePage()">Duplizieren</button>
+      <button class="lp-btn danger" onclick="landingDeletePage()">Löschen</button>
       <button class="lp-btn save" id="landingSaveBtn" onclick="saveLandingPage()">Speichern</button>
     </div>
   </div>
+
+  <div class="lp-pagebar">
+    <div class="lp-field lp-page-select">
+      <label>Aktive Landingpage</label>
+      <select id="landingPageSelect" onchange="landingSelectPage(this.value)"></select>
+    </div>
+    <div class="lp-field">
+      <label>Name intern</label>
+      <input id="landingPageName" placeholder="Sony Publishing" oninput="landingSetPageField('name',this.value)">
+    </div>
+    <div class="lp-field">
+      <label>Slash-Pfad / Route</label>
+      <input id="landingPageRoute" placeholder="sony" oninput="landingSetPageField('route',this.value)">
+    </div>
+    <div class="lp-route-hint" id="landingRouteHint">/sony</div>
+  </div>
+
   <div class="lp-editor-wrap" id="landingEditorWrap">
-    <div class="lp-empty">Landingpage wird geladen …</div>
+    <div class="lp-empty">Landingpages werden geladen …</div>
   </div>
 </div>
 
@@ -10205,19 +10232,46 @@ function ieSongTitleForSlug(slug){
 /* ═══════════════════════════════════════════════════════
    LANDINGPAGE EDITOR
    Speicherung als geschützte Sonderzeile in home_layout:
-   row_order = -2, cells[0].type = 'landing'
+   row_order = -2, cells[0].type = 'landingPages'
+   Struktur:
+   {
+     type:'landingPages',
+     activePageId:'...',
+     pages:[
+       { id,name,route,sections:[{title,subtitle,columns,rows,songs:[]}] }
+     ]
+   }
 ════════════════════════════════════════════════════════ */
 let landingData = null;
 let landingReady = false;
 
-function landingDefault(){
+function landingUid(){
+  return 'lp_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+}
+function landingSlugifyRoute(v){
+  return String(v||'')
+    .toLowerCase()
+    .trim()
+    .replace(/^\/+|\/+$/g,'')
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9\-]+/g,'-')
+    .replace(/\-+/g,'-')
+    .replace(/^\-|\-$/g,'');
+}
+function landingDefaultPage(route,name){
   return {
-    type:'landing',
+    id: landingUid(),
+    name: name || 'Sony Publishing',
+    route: landingSlugifyRoute(route || 'sony'),
     sections:[
       { title:'Selected German Works',  subtitle:'20 ausgewählte deutsche Songs', columns:5, rows:2, songs:[] },
       { title:'Selected English Works', subtitle:'20 selected English songs',      columns:5, rows:2, songs:[] }
     ]
   };
+}
+function landingDefault(){
+  const p = landingDefaultPage('sony','Sony Publishing');
+  return { type:'landingPages', activePageId:p.id, pages:[p] };
 }
 function landingNormSection(s){
   s = s || {};
@@ -10225,11 +10279,46 @@ function landingNormSection(s){
   const rows    = Math.max(1, Math.min(12, Number(s.rows)||2));
   return { title:s.title||'', subtitle:s.subtitle||'', columns, rows, songs:Array.isArray(s.songs)?s.songs.slice():[] };
 }
+function landingNormPage(p, fallbackIndex){
+  p = p || {};
+  const id = p.id || landingUid();
+  const route = landingSlugifyRoute(p.route || (fallbackIndex===0?'sony':'landing-'+(fallbackIndex+1)));
+  const name = p.name || (route ? route.charAt(0).toUpperCase()+route.slice(1) : 'Landingpage '+(fallbackIndex+1));
+  const sections = Array.isArray(p.sections) && p.sections.length ? p.sections.map(landingNormSection) : landingDefaultPage(route,name).sections;
+  return { id, name, route, sections };
+}
+function landingNormalizeData(obj){
+  // Rückwärtskompatibilität: alte Einzel-Landingpage {type:'landing',sections:[...]} in eine Seite umwandeln.
+  if(obj && obj.type === 'landing' && Array.isArray(obj.sections)){
+    const p = landingDefaultPage('sony','Sony Publishing');
+    p.sections = obj.sections.map(landingNormSection);
+    return { type:'landingPages', activePageId:p.id, pages:[p] };
+  }
+  let data = (obj && obj.type === 'landingPages') ? obj : landingDefault();
+  let pages = Array.isArray(data.pages) && data.pages.length ? data.pages.map(landingNormPage) : landingDefault().pages;
+  // Routen eindeutig halten
+  const seen = new Set();
+  pages = pages.map((p,idx)=>{
+    let base = landingSlugifyRoute(p.route) || 'landing-'+(idx+1);
+    let route = base, n = 2;
+    while(seen.has(route)){ route = base + '-' + n++; }
+    seen.add(route);
+    return {...p, route};
+  });
+  const activePageId = pages.some(p=>p.id===data.activePageId) ? data.activePageId : pages[0].id;
+  return { type:'landingPages', activePageId, pages };
+}
+function landingActivePage(){
+  if(!landingData) landingData = landingDefault();
+  if(!Array.isArray(landingData.pages) || !landingData.pages.length) landingData = landingDefault();
+  return landingData.pages.find(p=>p.id===landingData.activePageId) || landingData.pages[0];
+}
 function landingSongBySlug(slug){ return (allSongs||[]).find(s=>s.slug===slug); }
 function lpEsc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
 function landingSongOptions(selected){
+  const songs = Array.isArray(allSongs) ? allSongs.slice().sort((a,b)=>String(a.title||a.slug||'').localeCompare(String(b.title||b.slug||''),'de')) : [];
   const opts = ['<option value="">— leer —</option>'];
-  (allSongs||[]).forEach(s=>{
+  songs.forEach(s=>{
     const val = lpEsc(s.slug||'');
     const label = lpEsc(`${s.title||s.slug||''}${s.artist?' · '+s.artist:''}`);
     opts.push(`<option value="${val}" ${selected===s.slug?'selected':''}>${label}</option>`);
@@ -10248,23 +10337,41 @@ async function loadLandingPage(){
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
     const obj = rows && rows[0] && rows[0].cells && rows[0].cells[0];
-    landingData = (obj && obj.type==='landing') ? obj : landingDefault();
-    landingData.sections = (landingData.sections && landingData.sections.length ? landingData.sections : landingDefault().sections).map(landingNormSection);
+    landingData = landingNormalizeData(obj);
   }catch(e){
-    console.warn('Landingpage konnte nicht geladen werden:', e);
+    console.warn('Landingpages konnten nicht geladen werden:', e);
     landingData = landingDefault();
   }
   renderLandingEditor();
+}
+function renderLandingPageBar(){
+  const sel = document.getElementById('landingPageSelect');
+  const name = document.getElementById('landingPageName');
+  const route = document.getElementById('landingPageRoute');
+  const hint = document.getElementById('landingRouteHint');
+  if(!landingData) landingData = landingDefault();
+  landingData = landingNormalizeData(landingData);
+  const page = landingActivePage();
+  if(sel){
+    sel.innerHTML = landingData.pages.map(p=>`<option value="${lpEsc(p.id)}" ${p.id===page.id?'selected':''}>${lpEsc(p.name || p.route || p.id)} · /${lpEsc(p.route)}</option>`).join('');
+    sel.value = page.id;
+  }
+  if(name) name.value = page.name || '';
+  if(route) route.value = page.route || '';
+  if(hint) hint.textContent = page.route ? ('hitjourney.com/' + page.route) : 'Route fehlt';
 }
 function renderLandingEditor(){
   const wrap = document.getElementById('landingEditorWrap');
   if(!wrap) return;
   if(!landingData) landingData = landingDefault();
-  const sections = landingData.sections || [];
+  landingData = landingNormalizeData(landingData);
+  renderLandingPageBar();
+  const page = landingActivePage();
+  const sections = page.sections || [];
   if(!sections.length){ wrap.innerHTML='<div class="lp-empty">Noch keine Sektion angelegt.</div>'; return; }
   wrap.innerHTML = '';
   sections.forEach((sec, si)=>{
-    sec = landingData.sections[si] = landingNormSection(sec);
+    sec = page.sections[si] = landingNormSection(sec);
     const total = sec.columns * sec.rows;
     while(sec.songs.length < total) sec.songs.push('');
     if(sec.songs.length > total) sec.songs = sec.songs.slice(0,total);
@@ -10272,7 +10379,7 @@ function renderLandingEditor(){
     box.className = 'lp-section';
     box.innerHTML = `
       <div class="lp-section-head">
-        <div class="lp-section-name">Sektion ${si+1}</div>
+        <div class="lp-section-name">Sektion ${si+1} · /${lpEsc(page.route)}</div>
         <button class="lp-btn" onclick="landingMoveSection(${si},-1)" ${si===0?'disabled style="opacity:.35"':''}>↑</button>
         <button class="lp-btn" onclick="landingMoveSection(${si},1)" ${si===sections.length-1?'disabled style="opacity:.35"':''}>↓</button>
         <button class="lp-btn danger" onclick="landingDeleteSection(${si})">Löschen</button>
@@ -10280,7 +10387,7 @@ function renderLandingEditor(){
       <div class="lp-fields">
         <div class="lp-field wide"><label>Headline</label><input value="${lpEsc(sec.title)}" oninput="landingSet(${si},'title',this.value)"></div>
         <div class="lp-field wide"><label>Untertitel</label><input value="${lpEsc(sec.subtitle)}" oninput="landingSet(${si},'subtitle',this.value)"></div>
-        <div class="lp-field"><label>Pro Zeile</label><select onchange="landingSet(${si},'columns',this.value,true)"><option ${sec.columns===3?'selected':''}>3</option><option ${sec.columns===4?'selected':''}>4</option><option ${sec.columns===5?'selected':''}>5</option></select></div>
+        <div class="lp-field"><label>Pro Zeile</label><select onchange="landingSet(${si},'columns',this.value,true)"><option value="3" ${sec.columns===3?'selected':''}>3</option><option value="4" ${sec.columns===4?'selected':''}>4</option><option value="5" ${sec.columns===5?'selected':''}>5</option></select></div>
         <div class="lp-field"><label>Zeilen</label><select onchange="landingSet(${si},'rows',this.value,true)">${Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}" ${sec.rows===n?'selected':''}>${n}</option>`).join('')}</select></div>
       </div>`;
     const grid = document.createElement('div');
@@ -10305,28 +10412,85 @@ function renderLandingEditor(){
     wrap.appendChild(box);
   });
 }
+function landingSelectPage(id){
+  if(!landingData) return;
+  if(landingData.pages.some(p=>p.id===id)) landingData.activePageId = id;
+  renderLandingEditor();
+}
+function landingSetPageField(key,val){
+  const page = landingActivePage(); if(!page) return;
+  if(key === 'route'){
+    const old = page.route;
+    page.route = landingSlugifyRoute(val);
+    const routeInput = document.getElementById('landingPageRoute');
+    if(routeInput && routeInput.value !== page.route) routeInput.value = page.route;
+    // Routen-Kollisionen sofort vermeiden
+    const seen = new Set();
+    landingData.pages.forEach((p,idx)=>{
+      let base = landingSlugifyRoute(p.route) || 'landing-'+(idx+1);
+      let route = base, n = 2;
+      while(seen.has(route)){ route = base + '-' + n++; }
+      seen.add(route);
+      p.route = route;
+    });
+  } else {
+    page[key] = val;
+  }
+  renderLandingPageBar();
+}
 function landingSet(si,key,val,rerender){
-  const s = landingData.sections[si]; if(!s) return;
+  const page = landingActivePage(); const s = page && page.sections[si]; if(!s) return;
   s[key] = (key==='columns'||key==='rows') ? Number(val) : val;
   if(rerender) renderLandingEditor();
 }
-function landingSetSong(si,i,slug){ const s=landingData.sections[si]; if(!s) return; s.songs[i]=slug; renderLandingEditor(); }
-function landingMoveSong(si,i,dir){ const s=landingData.sections[si]; if(!s) return; const j=i+dir; if(j<0||j>=s.songs.length) return; [s.songs[i],s.songs[j]]=[s.songs[j],s.songs[i]]; renderLandingEditor(); }
-function landingAddSection(){ if(!landingData) landingData=landingDefault(); landingData.sections.push({title:'Selected Works',subtitle:'Ausgewählte Songs',columns:5,rows:2,songs:[]}); renderLandingEditor(); }
-function landingDeleteSection(si){ if(!landingData||!landingData.sections) return; if(!confirm('Diese Landingpage-Sektion löschen?')) return; landingData.sections.splice(si,1); renderLandingEditor(); }
-function landingMoveSection(si,dir){ const a=landingData.sections; const j=si+dir; if(j<0||j>=a.length) return; [a[si],a[j]]=[a[j],a[si]]; renderLandingEditor(); }
+function landingSetSong(si,i,slug){ const page=landingActivePage(); const s=page && page.sections[si]; if(!s) return; s.songs[i]=slug; renderLandingEditor(); }
+function landingMoveSong(si,i,dir){ const page=landingActivePage(); const s=page && page.sections[si]; if(!s) return; const j=i+dir; if(j<0||j>=s.songs.length) return; [s.songs[i],s.songs[j]]=[s.songs[j],s.songs[i]]; renderLandingEditor(); }
+function landingAddSection(){ const page=landingActivePage(); if(!page) return; page.sections.push({title:'Selected Works',subtitle:'Ausgewählte Songs',columns:5,rows:2,songs:[]}); renderLandingEditor(); }
+function landingDeleteSection(si){ const page=landingActivePage(); if(!page||!page.sections) return; if(!confirm('Diese Landingpage-Sektion löschen?')) return; page.sections.splice(si,1); renderLandingEditor(); }
+function landingMoveSection(si,dir){ const page=landingActivePage(); const a=page && page.sections; if(!a) return; const j=si+dir; if(j<0||j>=a.length) return; [a[si],a[j]]=[a[j],a[si]]; renderLandingEditor(); }
+function landingAddPage(){
+  if(!landingData) landingData = landingDefault();
+  const n = landingData.pages.length + 1;
+  const p = landingDefaultPage('landing-'+n, 'Landingpage '+n);
+  landingData.pages.push(p);
+  landingData.activePageId = p.id;
+  renderLandingEditor();
+}
+function landingDuplicatePage(){
+  const src = landingActivePage(); if(!src) return;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = landingUid();
+  copy.name = (src.name || src.route || 'Landingpage') + ' Kopie';
+  const base = landingSlugifyRoute((src.route || 'landing') + '-kopie');
+  const used = new Set(landingData.pages.map(p=>p.route));
+  let route = base, n = 2;
+  while(used.has(route)){ route = base + '-' + n++; }
+  copy.route = route;
+  landingData.pages.push(copy);
+  landingData.activePageId = copy.id;
+  renderLandingEditor();
+}
+function landingDeletePage(){
+  if(!landingData || !landingData.pages || !landingData.pages.length) return;
+  if(landingData.pages.length <= 1){ alert('Mindestens eine Landingpage muss bleiben.'); return; }
+  const page = landingActivePage();
+  if(!confirm('Landingpage "'+(page.name||page.route)+'" wirklich löschen?')) return;
+  landingData.pages = landingData.pages.filter(p=>p.id!==page.id);
+  landingData.activePageId = landingData.pages[0].id;
+  renderLandingEditor();
+}
 async function saveLandingPage(){
   const btn=document.getElementById('landingSaveBtn'); if(btn) btn.disabled=true;
   try{
     if(!landingData) landingData=landingDefault();
-    landingData.type='landing';
-    landingData.sections=(landingData.sections||[]).map(landingNormSection);
+    landingData = landingNormalizeData(landingData);
+    landingData.type='landingPages';
     const del=await fetch(SB_URL+'/rest/v1/home_layout?row_order=eq.-2&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
     if(!del.ok) throw new Error('DELETE '+del.status+': '+(await del.text()).slice(0,160));
-    const res=await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{method:'POST',headers:hdrsMin(),body:JSON.stringify({row_order:-2,cells:[landingData],caption:'__landing__'})});
+    const res=await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{method:'POST',headers:hdrsMin(),body:JSON.stringify({row_order:-2,cells:[landingData],caption:'__landing_pages__'})});
     if(!res.ok) throw new Error('POST '+res.status+': '+(await res.text()).slice(0,160));
-    toast('Landingpage gespeichert ✓','ok');
-  }catch(e){ toast('Landingpage speichern fehlgeschlagen: '+e.message,'err'); alert('Landingpage speichern fehlgeschlagen:\n\n'+e.message); }
+    toast('Landingpages gespeichert ✓','ok');
+  }catch(e){ toast('Landingpages speichern fehlgeschlagen: '+e.message,'err'); alert('Landingpages speichern fehlgeschlagen:\n\n'+e.message); }
   finally{ if(btn) btn.disabled=false; }
 }
 
