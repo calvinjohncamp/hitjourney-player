@@ -1,0 +1,24 @@
+name: Sync 404.html with index.html
+on:
+  push:
+    branches: [main]
+    paths: ['index.html']
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy index.html -> 404.html
+        run: |
+          if ! cmp -s index.html 404.html; then
+            cp index.html 404.html
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add 404.html
+            git commit -m "Auto-sync 404.html with index.html"
+            git push
+          else
+            echo "404.html ist bereits aktuell."
+          fi
