@@ -12,7 +12,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
-<!-- Version: v262-landing-single-logo-headline-2cover-fit-lyrics-keepplaying-bio -->
+<!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
+<!-- Version: v263-landing-redbtn-only-nologo-nocrossfade-endlessplaylist -->
 <!-- Version: v260-landingpage-logo-1-2-4-left -->
 <!-- Version: v260-landingpage-logo-4x1-admin-compatible -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
@@ -352,6 +353,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-sec-logo.wide{width:min(380px,66vw);aspect-ratio:2/1}
 .landing-sec-logo.pano{width:100%;max-width:1120px;aspect-ratio:4/1}
 .landing-sec-headline{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;color:#cfe5f5;line-height:1.25;text-align:left;white-space:nowrap;margin:0 0 26px;padding-bottom:3px;letter-spacing:-.01em}
+/* Roter Signature-Button auf dem laufenden Cover – auf der Landingpage ~1/3 kleiner */
+.landing-card .hj-cover-cue{width:22px;height:22px;left:7px;bottom:7px;pointer-events:auto}
+.landing-experience-note{margin:8px auto 20px;max-width:720px;text-align:center;color:rgba(207,229,245,.50);font-size:12px;line-height:1.45;letter-spacing:.01em}
+@media(max-width:760px){.landing-card .hj-cover-cue{width:18px;height:18px;left:6px;bottom:6px}.landing-experience-note{font-size:11px;margin-top:2px;padding:0 8px}}
 .landing-grid{display:grid;gap:12px}.landing-grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing-grid.cols-4{grid-template-columns:repeat(4,1fr)}.landing-grid.cols-5{grid-template-columns:repeat(5,1fr)}
 .landing-card{position:relative;border-radius:8px;overflow:hidden;background:#0B2A42;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .14s ease,opacity .14s ease}
 .landing-card:active{transform:scale(.96);opacity:.88}.landing-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.landing-card.playing::after{content:'';position:absolute;inset:0;border-radius:8px;border:2px solid rgba(133,172,201,.60);pointer-events:none;animation:hcPulse 2s ease-in-out infinite}.landing-card-title{display:none!important}
@@ -4302,6 +4307,7 @@ body.album-open #hjPlayerSpacer{
       <div class="landing-sub" id="landingMainSub">Ausgewählte Songs von Jörn Kämper · Deutsch und Englisch</div>
     </div>
     <div id="landingSections"></div>
+    <div class="landing-experience-note">Start a song by clicking its cover. The small red signature button opens the cover and lyrics experience; clicking the playing cover itself stops the song.</div>
     <div class="landing-nav">
       <button type="button" onclick="landingShowBio()" aria-label="Songwriter-Infos">Songwriter-Infos</button>
       <button type="button" onclick="showHome()" aria-label="Home">Home</button>
@@ -7964,19 +7970,10 @@ function renderLandingPage(page){
   const logoImg = document.getElementById('landingLogoImg');
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
-  // Logo erscheint genau EINMAL oben (Hero) — nicht pro Sektion.
-  if(logoWrap && logoImg){
-    const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
-    const logoUrl  = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
-    if(logoUrl){
-      logoImg.src = logoUrl;
-      logoImg.className = 'landing-logo ' + logoKind;
-      logoWrap.classList.add('visible');
-    } else {
-      logoImg.removeAttribute('src');
-      logoWrap.classList.remove('visible');
-    }
-  }
+  // Logo/Teaser oben aktuell komplett ausgeblendet. Die 4:1-/2:1-Bilder werden weiterhin
+  // im Admin gepflegt und kommen später als gestalteter Teaser-Banner zum Einsatz.
+  if(logoWrap) logoWrap.classList.remove('visible');
+  if(logoImg) logoImg.removeAttribute('src');
 
   root.innerHTML = '';
   const flatSongs = [];
@@ -7984,9 +7981,9 @@ function renderLandingPage(page){
   const bySlug = new Map((SUPABASE_SONGS||[]).map(s=>[s.slug,s]));
   function headlineLabel(n,title){
     const t = String(title||'').toLowerCase();
-    if(t.includes('german') || t.includes('deutsch'))  return n + ' selected German songs';
-    if(t.includes('english') || t.includes('englisch')) return n + ' selected English songs';
-    return n + (n===1 ? ' selected song' : ' selected songs');
+    if(t.includes('german') || t.includes('deutsch'))  return n + ' Selected German Songs';
+    if(t.includes('english') || t.includes('englisch')) return n + ' Selected English Songs';
+    return n + (n===1 ? ' Selected Song' : ' Selected Songs');
   }
   function clearLandingHighlights(){ root.querySelectorAll('.landing-card.playing').forEach(el=>el.classList.remove('playing')); }
   page.sections.forEach(sec=>{
@@ -8029,16 +8026,16 @@ function renderLandingPage(page){
           return;
         }
         if(window.HJChain && HJChain.startChain){
-          // Wie auf der Homeseite: ganze 20er-Playlist ab hier, läuft automatisch weiter.
-          const items = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics'}));
-          HJChain.startChain(items, landingIndex);
+          // Wie auf der Homeseite: ganze 20er-Playlist ab hier, läuft automatisch weiter –
+          // aber OHNE Überblendung (noFade), damit jeder Song komplett A–Z zu hören ist.
+          const items = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics', _noAutoViewer:true}));
+          HJChain.startChain(items, landingIndex, {noFade:true});
           clearLandingHighlights();
           card.classList.add('playing');
           prevScreen = 'landing';
-          // Cover sofort zeigen; Klick blättert Cover → Lyrics → zurück zu den Covern (Song läuft weiter).
-          if(typeof hjOpenChainViewer === 'function'){
-            hjOpenChainViewer(song, {song, el:card, _viewMode:'cover-lyrics'});
-          }
+          // KEIN großes Cover-Overlay beim Start. Es erscheint nur der rote Signature-Button
+          // unten links auf dem Cover (via setHighlight → hjAttachCoverCue). Klick darauf öffnet
+          // Cover → Lyrics; ein Klick aufs laufende Cover (neben dem Button) stoppt.
         }
       };
       card.addEventListener('click', open);
@@ -8344,7 +8341,7 @@ const HJChain = (function(){
   const audB = document.getElementById('hjChainB');
   const D = { A:{audio:audA, gain:null, song:null, item:null}, B:{audio:audB, gain:null, song:null, item:null} };
   let ctx=null, srcA=null, srcB=null, gainA=null, gainB=null, waReady=false;
-  let active='A', chain=[], idx=0, running=false, fadeActive=false, watchTimer=null, curHi=null;
+  let active='A', chain=[], idx=0, running=false, fadeActive=false, watchTimer=null, curHi=null, chainNoFade=false;
 
   function isPhone(){
     const touch=('ontouchstart' in window)||(navigator.maxTouchPoints&&navigator.maxTouchPoints>0);
@@ -8441,6 +8438,8 @@ const HJChain = (function(){
     const cur = getCurrent();
     if(cur && cur.song){
       setMediaSessionForChain(cur.song);
+      // Landingpage: Beim Start nicht automatisch das große Cover öffnen.
+      // Falls der Viewer bereits geöffnet ist, wird er weiter synchronisiert.
       if(typeof hjSyncChainViewerToCurrent==='function') hjSyncChainViewerToCurrent(cur.song, cur.item);
     }
   }
@@ -8476,7 +8475,7 @@ const HJChain = (function(){
       // Im Hintergrund (Display aus) UND auf iPhone KEIN vorgezogener Wechsel über den
       // setInterval-Watcher. iPhone soll den Song vollständig bis zum 'ended'-Event spielen;
       // erst dann folgt der nächste Titel direkt. Desktop/iPad behalten den weichen Crossfade.
-      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD && !isBgHidden() && !isPhone()) crossfadeNext();
+      if(hasNext && !fadeActive && rem>0 && rem<=AUTO_FADE_LEAD && !isBgHidden() && !isPhone() && !chainNoFade) crossfadeNext();
     }, 300);
   }
   function stopWatcher(){ if(watchTimer){ clearInterval(watchTimer); watchTimer=null; } }
@@ -8515,7 +8514,10 @@ const HJChain = (function(){
   function advanceNext(){
     if(!running || fadeActive) return;
     if(!chain.length){ stop(); return; }   // v211: kein Stop am Listenende mehr → Endlos-Loop
-    if(isBgHidden()) directNextSameElement();
+    // chainNoFade (Landingpage): jeden Song komplett bis zum Ende spielen, dann harter
+    // Schnitt zum nächsten – KEINE Überblendung, damit Publisher den Song voll hören.
+    if(chainNoFade) directNextSameElement();
+    else if(isBgHidden()) directNextSameElement();
     else if(isPhone()) directNextSameElement(); // v213: iPhone erst nach Songende, dann sicher auf demselben Audio-Element weiter
     else crossfadeNext();
   }
@@ -8650,7 +8652,7 @@ const HJChain = (function(){
     else a.pause();
   }
 
-  async function startChain(items, startIndex){
+  async function startChain(items, startIndex, opts){
     items=(items||[]).filter(it=>it && it.song && it.song.mp3);
     if(!items.length) return;
     startIndex=Math.max(0, Math.min(startIndex||0, items.length-1));
@@ -8669,7 +8671,7 @@ const HJChain = (function(){
     await resumeEngine();
 
     chain=rotate(items, startIndex);
-    idx=0; active='A'; running=true; fadeActive=false;
+    idx=0; active='A'; running=true; fadeActive=false; chainNoFade = !!(opts && opts.noFade);
     loadDeck('A', chain[0]);
     loadDeck('B', null);
     setGain('A',1); setGain('B',0);
