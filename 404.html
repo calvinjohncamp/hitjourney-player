@@ -18,6 +18,7 @@
 <!-- Version: v267-landing-teaser-fullwidth-no-section-headlines -->
 <!-- Version: v266-landing-teaser-ratio-fields -->
 <!-- Version: v265-landing-teaser-visible-5x1-2x1 -->
+<!-- Version: v271-landing-turntable-fast-album-switch -->
 <!-- Version: v270-landing-turntable-real-playback -->
 <!-- Version: v263-landing-redbtn-only-nologo-nocrossfade-endlessplaylist -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
@@ -4058,6 +4059,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenLanding #landingPlayerBox #landingDeck .deck-tonearm{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1!important;z-index:4!important}
 #screenLanding #landingPlayerBox #landingDeck .deck-red-btn{display:block!important;position:absolute!important;right:9.8%!important;bottom:8%!important;width:8.4%!important;aspect-ratio:1/1!important;z-index:8!important}
 #screenLanding #landingPlayerBox #landingDeck .deck-info{display:block!important;position:absolute!important;left:4%!important;bottom:3.5%!important;right:21%!important;z-index:7!important}
+#screenLanding #landingPlayerBox #landingDeck.quick-return .deck-tonearm{transition:transform .52s cubic-bezier(.22,.72,.18,1)!important}
 </style>
 </head>
 <body>
@@ -8134,21 +8136,29 @@ function landingStartAt(index, songs, cards){
     requestAnimationFrame(()=>landingUpdateDeck(next.song, next, true));
   };
 
-  // Wenn gerade eine andere Platte läuft, fährt der Arm erst zurück, dann startet die neue Platte.
+  // Wenn gerade eine andere Platte läuft, fährt der Arm wie in der Albumfunktion
+  // zügig zur Ausgangsposition zurück; direkt danach startet die neue Platte.
+  // Wichtig: kein langer 1.4s-End-of-song-Return bei manueller Neuwahl.
   if(cur && cur.song && cur.running){
     try{ if(cur.audio) cur.audio.pause(); }catch(_){ }
     const deck = document.getElementById('landingDeck');
-    if(deck) deck.classList.add('arm-returning');
+    if(deck){
+      deck.classList.remove('arm-returning');
+      deck.classList.add('quick-return');
+    }
     landingArmReturning = true;
     landingSetArmRot(LANDING_TONEARM_START_DEG);
     try{ HJChain.stop(); }catch(_){ }
     landingUpdateDeck(next.song, next, false);
     landingPendingStartTimer = setTimeout(()=>{
       const d = document.getElementById('landingDeck');
-      if(d) d.classList.remove('arm-returning');
+      if(d){
+        d.classList.remove('quick-return');
+        d.classList.remove('arm-returning');
+      }
       landingArmReturning = false;
       startNow();
-    }, 1450);
+    }, 540);
   } else {
     startNow();
   }
