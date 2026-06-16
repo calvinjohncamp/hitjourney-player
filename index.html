@@ -2944,14 +2944,15 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   inset:0;
   z-index:9600;
   display:none;
-  background:rgba(6,20,32,.985);
+  flex-direction:column;
+  background:#06141F;
 }
-.about-bio-viewer.open{display:block;}
+.about-bio-viewer.open{display:flex;}
 .about-bio-close{
   position:fixed;
   top:calc(env(safe-area-inset-top,0px) + 14px);
   right:18px;
-  z-index:2;
+  z-index:3;
   width:42px;height:42px;
   border:none;border-radius:50%;
   background:rgba(6,20,32,.72);
@@ -2962,37 +2963,38 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   display:flex;align-items:center;justify-content:center;
 }
 .about-bio-close:active{transform:scale(.92);}
-.about-bio-scroll{
-  position:absolute;
-  inset:0;
+.about-bio-viewport{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  position:relative;
+}
+.about-bio-track{
+  display:flex;
+  height:100%;
+  transition:transform .38s cubic-bezier(.4,0,.2,1);
+}
+.bio-page{
+  flex:0 0 100%;
+  width:100%;
+  height:100%;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  padding:0 0 calc(env(safe-area-inset-bottom,0px) + 80px);
 }
-.about-bio-scroll::-webkit-scrollbar{display:none;}
-.about-bio-inner{
+.bio-page::-webkit-scrollbar{display:none;}
+.bio-page-inner{
   max-width:560px;
   margin:0 auto;
-  padding:0 22px;
+  padding:calc(env(safe-area-inset-top,0px) + 66px) 24px 28px;
 }
-.bio-sec{ padding-top:40px; }
-.bio-sec-cover{
-  width:100%;
-  aspect-ratio:1/1;
-  border-radius:14px;
-  overflow:hidden;
-  background:#0B2A42;
-  box-shadow:0 16px 50px rgba(0,0,0,.5);
-}
-.bio-sec-cover img{ width:100%;height:100%;object-fit:cover;display:block; }
 .bio-sec-headline{
   font-family:'Anton',sans-serif;
-  font-size:clamp(22px,5.4vw,34px);
+  font-size:clamp(26px,6.6vw,40px);
   letter-spacing:.05em;
   text-transform:uppercase;
   line-height:1.04;
   color:#cfe5f5;
-  margin:22px 0 14px;
+  margin:0 0 18px;
 }
 .bio-sec-text{
   font-size:15px;
@@ -3000,16 +3002,37 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   color:rgba(207,229,245,.78);
 }
 .bio-sec-text strong{color:#cfe5f5;font-weight:700;}
-.bio-quote{
-  margin:26px 0 6px;
-  padding:4px 0 4px 18px;
+.bio-cq{
+  display:flex;
+  align-items:stretch;
+  gap:16px;
+  margin-top:28px;
+  min-height:118px;
+}
+.bio-cq-cover{
+  flex:0 0 auto;
+  align-self:stretch;
+  aspect-ratio:1/1;
+  max-height:168px;
+  border-radius:10px;
+  overflow:hidden;
+  background:#0B2A42;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+.bio-cq-cover img{ width:100%;height:100%;object-fit:cover;display:block; }
+.bio-cq-quote{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding-left:16px;
   border-left:3px solid #85ACC9;
 }
 .bio-quote-lines{
   font-family:'Special Elite','Courier New',monospace;
-  font-style:normal;
   color:#e7eef5;
-  font-size:15px;
+  font-size:14px;
   line-height:1.7;
 }
 .bio-quote-src{
@@ -3020,7 +3043,36 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   color:#5884A4;
   font-weight:700;
 }
-.bio-end-pad{ height:30px; }
+.about-bio-nav{
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  padding:14px 0 calc(env(safe-area-inset-bottom,0px) + 16px);
+}
+.about-bio-arrow{
+  width:48px;height:48px;
+  border-radius:50%;
+  border:1px solid rgba(133,172,201,.3);
+  background:rgba(133,172,201,.07);
+  color:#cfe5f5;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s,opacity .2s,transform .12s;
+}
+.about-bio-arrow:hover{background:rgba(133,172,201,.16);border-color:rgba(133,172,201,.5);}
+.about-bio-arrow:active{transform:scale(.92);}
+.about-bio-arrow svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.about-bio-arrow.is-disabled{opacity:.28;pointer-events:none;}
+.about-bio-dots{display:flex;gap:9px;align-items:center;}
+.about-bio-dots .bio-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(133,172,201,.3);
+  transition:background .2s,transform .2s;
+  cursor:pointer;
+}
+.about-bio-dots .bio-dot.active{background:#cfe5f5;transform:scale(1.25);}
 
 /* Bottom pad after teaser */
 .about-bottom-pad{
@@ -4235,10 +4287,21 @@ body.album-open #hjPlayerSpacer{
   <img id="aboutArtLightboxImg" alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
 </div>
 
-<!-- BIO-Story: scrollbares Pop-up – Cover + Headline + Text + Songtext-Zitat je Abschnitt -->
+<!-- BIO-Story: blätterbares Pop-up – je Ansicht Headline + Text + Cover/Zitat -->
 <div class="about-bio-viewer" id="aboutBioViewer" aria-hidden="true">
   <button class="about-bio-close" id="aboutBioClose" type="button" aria-label="Bio schließen">×</button>
-  <div class="about-bio-scroll" id="aboutBioScroll"></div>
+  <div class="about-bio-viewport" id="aboutBioViewport">
+    <div class="about-bio-track" id="aboutBioTrack"></div>
+  </div>
+  <div class="about-bio-nav" id="aboutBioNav">
+    <button class="about-bio-arrow" id="aboutBioPrev" type="button" aria-label="Zurück">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="about-bio-dots" id="aboutBioDots"></div>
+    <button class="about-bio-arrow" id="aboutBioNext" type="button" aria-label="Weiter">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
 </div>
 
 <!-- KURS NORDWEST -->
@@ -5304,8 +5367,10 @@ function applyAboutContent(a){
   if(bioBtn) bioBtn.style.display = hasBio ? 'inline-flex' : 'none';
 }
 
-// ── BIO-Story (scrollbares Pop-up wie eine kleine Magazin-Strecke) ──
+// ── BIO-Story (blätterbares Pop-up: je Ansicht Headline + Text + Cover/Zitat) ──
 let aboutBioSections = [];
+let aboutBioPages = [];   // gefilterte Abschnitte mit Inhalt
+let aboutBioPage = 0;
 function bioQuoteLinesHtml(quote){
   // Verszeilen aus Zeilenumbrüchen ODER " - "-Trennern
   return String(quote||'')
@@ -5316,38 +5381,73 @@ function bioQuoteLinesHtml(quote){
     .join('<br>');
 }
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-function renderAboutBioStory(){
-  const wrap = document.getElementById('aboutBioScroll');
-  if(!wrap) return;
-  const inner = document.createElement('div');
-  inner.className = 'about-bio-inner';
-  aboutBioSections.forEach(sec=>{
-    if(!sec || !(sec.image || sec.headline || sec.html || sec.quote)) return;
-    const s = document.createElement('div');
-    s.className = 'bio-sec';
-    let html = '';
-    if(sec.image)    html += '<div class="bio-sec-cover"><img alt="'+esc(sec.headline||'Bio')+'" src="'+esc(sec.image)+'"></div>';
-    if(sec.headline) html += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
-    if(sec.html)     html += '<div class="bio-sec-text">'+sec.html+'</div>';
-    if(sec.quote){
-      html += '<div class="bio-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
-            + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
-            + '</div>';
-    }
-    s.innerHTML = html;
-    inner.appendChild(s);
-  });
-  const pad = document.createElement('div'); pad.className='bio-end-pad';
-  inner.appendChild(pad);
-  wrap.innerHTML = '';
-  wrap.appendChild(inner);
+function buildBioPageHtml(sec){
+  let h = '<div class="bio-page-inner">';
+  if(sec.headline) h += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
+  if(sec.html)     h += '<div class="bio-sec-text">'+sec.html+'</div>';
+  if(sec.image || sec.quote){
+    h += '<div class="bio-cq">';
+    if(sec.image) h += '<div class="bio-cq-cover"><img alt="'+esc(sec.headline||'Cover')+'" src="'+esc(sec.image)+'"></div>';
+    if(sec.quote) h += '<div class="bio-cq-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
+                    + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
+                    + '</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
 }
+function renderAboutBioStory(){
+  const track = document.getElementById('aboutBioTrack');
+  const dots  = document.getElementById('aboutBioDots');
+  if(!track) return;
+  aboutBioPages = (aboutBioSections||[]).filter(s => s && (s.image || s.headline || s.html || s.quote));
+  track.innerHTML = '';
+  aboutBioPages.forEach(sec=>{
+    const p = document.createElement('div');
+    p.className = 'bio-page';
+    p.innerHTML = buildBioPageHtml(sec);
+    track.appendChild(p);
+  });
+  if(dots){
+    dots.innerHTML = '';
+    aboutBioPages.forEach((_,i)=>{
+      const d = document.createElement('span');
+      d.className = 'bio-dot' + (i===0 ? ' active' : '');
+      d.addEventListener('click', ()=>gotoBioPage(i));
+      dots.appendChild(d);
+    });
+    dots.style.display = aboutBioPages.length > 1 ? 'flex' : 'none';
+  }
+  aboutBioPage = 0;
+  updateBioPager(true);
+}
+function updateBioPager(noTransition){
+  const track = document.getElementById('aboutBioTrack');
+  if(!track) return;
+  if(noTransition){ track.style.transition='none'; }
+  track.style.transform = 'translateX(' + (-aboutBioPage*100) + '%)';
+  if(noTransition){ void track.offsetWidth; track.style.transition=''; }
+  const dots = document.querySelectorAll('#aboutBioDots .bio-dot');
+  dots.forEach((d,i)=> d.classList.toggle('active', i===aboutBioPage));
+  const prev = document.getElementById('aboutBioPrev');
+  const next = document.getElementById('aboutBioNext');
+  if(prev) prev.classList.toggle('is-disabled', aboutBioPage===0);
+  if(next) next.classList.toggle('is-disabled', aboutBioPage>=aboutBioPages.length-1);
+  const cur = track.children[aboutBioPage];
+  if(cur) cur.scrollTop = 0;
+}
+function gotoBioPage(i){
+  if(i<0 || i>=aboutBioPages.length) return;
+  aboutBioPage = i;
+  updateBioPager(false);
+}
+function nextBioPage(){ gotoBioPage(aboutBioPage+1); }
+function prevBioPage(){ gotoBioPage(aboutBioPage-1); }
 function openAboutBio(){
   if(!aboutBioSections.length) return;
   renderAboutBioStory();
   const v = document.getElementById('aboutBioViewer');
   if(v){ v.classList.add('open'); v.setAttribute('aria-hidden','false'); }
-  const sc = document.getElementById('aboutBioScroll'); if(sc) sc.scrollTop = 0;
 }
 function closeAboutBio(){
   const v = document.getElementById('aboutBioViewer');
@@ -5356,8 +5456,23 @@ function closeAboutBio(){
 (function wireAboutBio(){
   const btn   = document.getElementById('aboutBioBtn');
   const close = document.getElementById('aboutBioClose');
+  const prev  = document.getElementById('aboutBioPrev');
+  const next  = document.getElementById('aboutBioNext');
+  const vp    = document.getElementById('aboutBioViewport');
   if(btn)   btn.addEventListener('click', openAboutBio);
   if(close) close.addEventListener('click', closeAboutBio);
+  if(prev)  prev.addEventListener('click', prevBioPage);
+  if(next)  next.addEventListener('click', nextBioPage);
+  // Wischen zum Blättern (nur klar horizontale Gesten)
+  if(vp){
+    let sx=0, sy=0, tracking=false;
+    vp.addEventListener('touchstart', e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; tracking=true; }, {passive:true});
+    vp.addEventListener('touchend', e=>{
+      if(!tracking) return; tracking=false;
+      const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.6){ dx<0 ? nextBioPage() : prevBioPage(); }
+    }, {passive:true});
+  }
 })();
 
 // ── DOM ──
