@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v260-landingpage-logo-1-2-4-left -->
 <!-- Version: v259-landingpage-cover-grid-logo-actions -->
 <!-- Version: v258-multi-landingpages-routes -->
 <!-- Version: v257-landingpage-selected-works -->
@@ -330,11 +331,12 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-wrap{max-width:1120px;margin:0 auto;width:100%}
 .landing-hero{padding:4px 2px 24px;text-align:center}
 .landing-kicker,.landing-title,.landing-sub{display:none!important}
-.landing-logo-wrap{display:none;align-items:center;justify-content:center;margin:0 auto 22px;max-width:min(520px,78vw)}
+.landing-logo-wrap{display:none;align-items:flex-start;justify-content:flex-start;margin:0 0 34px;width:100%;max-width:none}
 .landing-logo-wrap.visible{display:flex}
-.landing-logo{display:block;width:100%;height:auto;object-fit:contain;border-radius:10px}
-.landing-logo.square{max-width:min(250px,46vw);aspect-ratio:1/1;object-fit:contain}
-.landing-logo.wide{max-width:min(520px,78vw);aspect-ratio:2/1;object-fit:contain}
+.landing-logo{display:block;height:auto;object-fit:contain;border-radius:0;background:rgba(6,20,32,1)}
+.landing-logo.square{width:min(250px,46vw);aspect-ratio:1/1;object-fit:contain}
+.landing-logo.wide{width:min(560px,78vw);aspect-ratio:2/1;object-fit:contain}
+.landing-logo.pano{width:100%;max-width:1120px;aspect-ratio:4/1;object-fit:contain}
 .landing-section{margin:22px 0 64px}
 .landing-section + .landing-section{margin-top:74px}
 .landing-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
@@ -7946,10 +7948,11 @@ function renderLandingPage(page){
   if(titleEl) titleEl.textContent = page.name || 'Songwriter Portfolio';
   if(subEl) subEl.textContent = page.route ? ('hitjourney.com/' + page.route) : '';
   if(logoWrap && logoImg){
-    const logoUrl = page.logoWideUrl || page.logoSquareUrl || '';
+    const logoKind = page.logoPanoUrl ? 'pano' : (page.logoWideUrl ? 'wide' : (page.logoSquareUrl ? 'square' : ''));
+    const logoUrl = page.logoPanoUrl || page.logoWideUrl || page.logoSquareUrl || '';
     if(logoUrl){
       logoImg.src = logoUrl;
-      logoImg.className = 'landing-logo ' + (page.logoWideUrl ? 'wide' : 'square');
+      logoImg.className = 'landing-logo ' + logoKind;
       logoWrap.classList.add('visible');
     } else {
       logoImg.removeAttribute('src');

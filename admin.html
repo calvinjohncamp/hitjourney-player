@@ -6,7 +6,7 @@
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
 <!-- Version: admin-v20260616b-multi-landingpages-routes -->
-<!-- Version: admin-v20260616b-multi-landingpage-logos -->
+<!-- Version: admin-v20260616b-multi-landing-logo-1-2-4 -->
 <!-- Version: admin-v20260616-landingpage-editor -->
 <!-- Version: admin-v20260614c-describe-save-robust-fehlende-spalte-abgefangen -->
 <!-- Version: admin-v20260614b-describe-page-nach-lyrics -->
@@ -273,13 +273,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-pagebar .lp-field input:focus,.lp-pagebar .lp-field select:focus{border-color:rgba(133,172,201,.45);background:rgba(11,42,66,.94)}
 .lp-route-hint{align-self:end;border:1px solid rgba(133,172,201,.16);background:rgba(133,172,201,.06);color:rgba(207,229,245,.72);border-radius:9px;padding:10px 12px;font-size:12px;font-family:'SF Mono','Menlo',monospace;white-space:nowrap;min-width:120px;text-align:center}
 @media(max-width:820px){.lp-pagebar{grid-template-columns:1fr 1fr}.lp-route-hint{grid-column:1/-1;text-align:left}}
-.lp-logo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(133,172,201,.08);background:rgba(6,20,32,.92)}
-.lp-logo-upload{border:1.5px dashed rgba(133,172,201,.22);background:rgba(11,42,66,.42);border-radius:12px;min-height:92px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;color:rgba(133,172,201,.45);font-size:11px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;text-align:center;padding:8px}
-.lp-logo-upload.wide{aspect-ratio:2/1}.lp-logo-upload.square{aspect-ratio:1/1;min-height:128px;max-height:180px;justify-self:start;width:min(180px,100%)}
-.lp-logo-upload:hover{border-color:rgba(133,172,201,.46);background:rgba(11,42,66,.7)}
-.lp-logo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}.lp-logo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:rgba(6,20,32,.55);display:none}.lp-logo-upload.has-img img{display:block}.lp-logo-upload.has-img span{display:none}
-.lp-logo-clear{position:absolute;right:7px;top:7px;width:22px;height:22px;border-radius:50%;border:1px solid rgba(133,172,201,.25);background:rgba(6,20,32,.78);color:#e08080;z-index:2;display:none;align-items:center;justify-content:center;font-size:14px;line-height:1}.lp-logo-upload.has-img .lp-logo-clear{display:flex}
-@media(max-width:820px){.lp-logo-row{grid-template-columns:1fr}.lp-logo-upload.square{justify-self:stretch;width:100%;max-height:none}}
+
+.lp-logo-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px 12px;border-bottom:1px solid rgba(133,172,201,.08);background:rgba(6,20,32,.96);flex-shrink:0}
+.lp-logo-box{border:1px solid rgba(133,172,201,.14);border-radius:12px;background:rgba(133,172,201,.035);overflow:hidden;min-width:0}
+.lp-logo-box-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;border-bottom:1px solid rgba(133,172,201,.08)}
+.lp-logo-box-title{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(133,172,201,.48)}
+.lp-logo-remove{border:0;background:rgba(220,80,80,.10);color:#e08080;border-radius:7px;font-size:11px;font-weight:800;padding:5px 7px;cursor:pointer}
+.lp-logo-remove:hover{background:rgba(220,80,80,.22)}
+.lp-logo-drop{position:relative;margin:9px;border:1.5px dashed rgba(133,172,201,.25);border-radius:10px;background:rgba(11,42,66,.38);display:flex;align-items:center;justify-content:center;overflow:hidden;color:rgba(133,172,201,.38);font-size:12px;font-weight:700;text-align:center;cursor:pointer;min-height:72px}
+.lp-logo-drop.logo-square{aspect-ratio:1/1}.lp-logo-drop.logo-wide{aspect-ratio:2/1}.lp-logo-drop.logo-pano{aspect-ratio:4/1}
+.lp-logo-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}.lp-logo-drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:rgba(6,20,32,1)}
+.lp-logo-note{grid-column:1/-1;color:rgba(133,172,201,.42);font-size:11px;line-height:1.4;padding:0 2px 2px}
+@media(max-width:820px){.lp-logo-panel{grid-template-columns:1fr}.lp-logo-note{grid-column:auto}}
+
 
 .lp-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 12px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.09);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,opacity .15s}
 .lp-btn:hover{background:rgba(133,172,201,.18)}
@@ -7569,11 +7575,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     </div>
     <div class="lp-route-hint" id="landingRouteHint">/sony</div>
   </div>
-
-  <div class="lp-logo-row">
-    <label class="lp-logo-upload wide" id="landingLogoWideBox"><span>Logo 2:1 hochladen</span><img id="landingLogoWidePreview" alt=""><button class="lp-logo-clear" type="button" onclick="landingClearLogo('wide',event)">×</button><input type="file" accept="image/png,image/jpeg,image/webp" onchange="landingPickLogo('wide',this.files&&this.files[0])"></label>
-    <label class="lp-logo-upload square" id="landingLogoSquareBox"><span>Logo quadratisch hochladen</span><img id="landingLogoSquarePreview" alt=""><button class="lp-logo-clear" type="button" onclick="landingClearLogo('square',event)">×</button><input type="file" accept="image/png,image/jpeg,image/webp" onchange="landingPickLogo('square',this.files&&this.files[0])"></label>
-  </div>
+  <div class="lp-logo-panel" id="landingLogoPanel"></div>
 
   <div class="lp-editor-wrap" id="landingEditorWrap">
     <div class="lp-empty">Landingpages werden geladen …</div>
@@ -10257,7 +10259,7 @@ function ieSongTitleForSlug(slug){
 ════════════════════════════════════════════════════════ */
 let landingData = null;
 let landingReady = false;
-let landingLogoPending = {}; // pageId -> {wide:File|null, square:File|null}
+let landingLogoPending = {}; // pageId -> {square|wide|pano: File}
 
 function landingUid(){
   return 'lp_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
@@ -10277,11 +10279,12 @@ function landingDefaultPage(route,name){
     id: landingUid(),
     name: name || 'Sony Publishing',
     route: landingSlugifyRoute(route || 'sony'),
-    logoWideUrl:'',
     logoSquareUrl:'',
+    logoWideUrl:'',
+    logoPanoUrl:'',
     sections:[
-      { title:'Selected German Works',  subtitle:'', columns:5, rows:2, songs:[] },
-      { title:'Selected English Works', subtitle:'', columns:5, rows:2, songs:[] }
+      { title:'Selected German Works',  subtitle:'20 ausgewählte deutsche Songs', columns:5, rows:2, songs:[] },
+      { title:'Selected English Works', subtitle:'20 selected English songs',      columns:5, rows:2, songs:[] }
     ]
   };
 }
@@ -10301,7 +10304,7 @@ function landingNormPage(p, fallbackIndex){
   const route = landingSlugifyRoute(p.route || (fallbackIndex===0?'sony':'landing-'+(fallbackIndex+1)));
   const name = p.name || (route ? route.charAt(0).toUpperCase()+route.slice(1) : 'Landingpage '+(fallbackIndex+1));
   const sections = Array.isArray(p.sections) && p.sections.length ? p.sections.map(landingNormSection) : landingDefaultPage(route,name).sections;
-  return { id, name, route, logoWideUrl:p.logoWideUrl||p.logoWide||'', logoSquareUrl:p.logoSquareUrl||p.logoSquare||'', sections };
+  return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', sections };
 }
 function landingNormalizeData(obj){
   // Rückwärtskompatibilität: alte Einzel-Landingpage {type:'landing',sections:[...]} in eine Seite umwandeln.
@@ -10375,46 +10378,50 @@ function renderLandingPageBar(){
   if(name) name.value = page.name || '';
   if(route) route.value = page.route || '';
   if(hint) hint.textContent = page.route ? ('hitjourney.com/' + page.route) : 'Route fehlt';
-  landingRenderLogoPreviews(page);
+  renderLandingLogoPanel(page);
 }
-
-function landingRenderLogoPreviews(page){
-  const wideBox=document.getElementById('landingLogoWideBox'), sqBox=document.getElementById('landingLogoSquareBox');
-  const wideImg=document.getElementById('landingLogoWidePreview'), sqImg=document.getElementById('landingLogoSquarePreview');
-  if(!page) page=landingActivePage();
-  if(wideBox&&wideImg){
-    if(page && page.logoWideUrl){ wideImg.src=page.logoWideUrl; wideBox.classList.add('has-img'); }
-    else { wideImg.removeAttribute('src'); wideBox.classList.remove('has-img'); }
-  }
-  if(sqBox&&sqImg){
-    if(page && page.logoSquareUrl){ sqImg.src=page.logoSquareUrl; sqBox.classList.add('has-img'); }
-    else { sqImg.removeAttribute('src'); sqBox.classList.remove('has-img'); }
-  }
+function landingLogoUrlFor(page, kind){
+  page = page || landingActivePage();
+  if(!page) return '';
+  const pending = landingLogoPending[page.id] && landingLogoPending[page.id][kind];
+  if(pending) return URL.createObjectURL(pending);
+  if(kind==='square') return page.logoSquareUrl || '';
+  if(kind==='wide') return page.logoWideUrl || '';
+  if(kind==='pano') return page.logoPanoUrl || '';
+  return '';
 }
-function landingPickLogo(kind,file){
-  if(!file) return;
-  const page=landingActivePage(); if(!page) return;
-  const k = kind === 'square' ? 'square' : 'wide';
-  if(!landingLogoPending[page.id]) landingLogoPending[page.id] = {wide:null, square:null};
-  landingLogoPending[page.id][k]=file;
-  const url = URL.createObjectURL(file);
-  if(k==='wide') page.logoWideUrl = url; else page.logoSquareUrl = url;
-  landingRenderLogoPreviews(page);
+function renderLandingLogoPanel(page){
+  const panel = document.getElementById('landingLogoPanel');
+  if(!panel) return;
+  page = page || landingActivePage();
+  if(!page){ panel.innerHTML=''; return; }
+  const items = [
+    {kind:'square', title:'Logo 1:1', cls:'logo-square'},
+    {kind:'wide', title:'Logo 2:1', cls:'logo-wide'},
+    {kind:'pano', title:'Logo 4:1', cls:'logo-pano'}
+  ];
+  panel.innerHTML = items.map(it=>{
+    const url = landingLogoUrlFor(page,it.kind);
+    return `<div class="lp-logo-box"><div class="lp-logo-box-head"><span class="lp-logo-box-title">${it.title}</span><button class="lp-logo-remove" onclick="landingRemoveLogo('${it.kind}')">Löschen</button></div><label class="lp-logo-drop ${it.cls}">${url ? `<img src="${lpEsc(url)}" alt="">` : 'PNG/JPG hochladen'}<input type="file" accept="image/*" onchange="landingLogoPicked('${it.kind}',event)"></label></div>`;
+  }).join('') + '<div class="lp-logo-note">Für Verlags-Landingpages ist 4:1 ideal. Das Bild darf den leeren Raum über und unter dem Schriftzug bereits enthalten; es wird linksbündig und unverzerrt eingebunden.</div>';
 }
-function landingClearLogo(kind,e){
-  if(e){ e.preventDefault(); e.stopPropagation(); }
-  const page=landingActivePage(); if(!page) return;
-  const k = kind === 'square' ? 'square' : 'wide';
-  if(!landingLogoPending[page.id]) landingLogoPending[page.id] = {wide:null, square:null};
-  landingLogoPending[page.id][k]=null;
-  if(k==='wide') page.logoWideUrl=''; else page.logoSquareUrl='';
-  landingRenderLogoPreviews(page);
+function landingLogoPicked(kind, ev){
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  const page = landingActivePage(); if(!page) return;
+  if(!landingLogoPending[page.id]) landingLogoPending[page.id] = {};
+  landingLogoPending[page.id][kind] = f;
+  renderLandingPageBar();
+  toast('Logo gewählt – mit „Speichern“ übernehmen','ok');
+  ev.target.value='';
 }
-function landingLogoS3Key(file, kind){
-  const page=landingActivePage();
-  const route=landingSlugifyRoute((page&&page.route)||'landing') || 'landing';
-  const ext=(file && file.name && file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g,'') || 'png';
-  return `artwork/landing-${route}-logo-${kind}.${ext}`;
+function landingRemoveLogo(kind){
+  const page = landingActivePage(); if(!page) return;
+  if(landingLogoPending[page.id]) delete landingLogoPending[page.id][kind];
+  if(kind==='square') page.logoSquareUrl='';
+  if(kind==='wide') page.logoWideUrl='';
+  if(kind==='pano') page.logoPanoUrl='';
+  renderLandingPageBar();
 }
 
 function renderLandingEditor(){
@@ -10443,7 +10450,7 @@ function renderLandingEditor(){
       </div>
       <div class="lp-fields">
         <div class="lp-field wide"><label>Headline</label><input value="${lpEsc(sec.title)}" oninput="landingSet(${si},'title',this.value)"></div>
-        <div class="lp-field wide"><label>Untertitel</label><input value="wird automatisch aus der Songanzahl erzeugt" disabled></div>
+        <div class="lp-field wide"><label>Untertitel</label><input value="${lpEsc(sec.subtitle)}" oninput="landingSet(${si},'subtitle',this.value)"></div>
         <div class="lp-field"><label>Pro Zeile</label><select onchange="landingSet(${si},'columns',this.value,true)"><option value="3" ${sec.columns===3?'selected':''}>3</option><option value="4" ${sec.columns===4?'selected':''}>4</option><option value="5" ${sec.columns===5?'selected':''}>5</option></select></div>
         <div class="lp-field"><label>Zeilen</label><select onchange="landingSet(${si},'rows',this.value,true)">${Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}" ${sec.rows===n?'selected':''}>${n}</option>`).join('')}</select></div>
       </div>`;
@@ -10540,22 +10547,22 @@ async function saveLandingPage(){
   const btn=document.getElementById('landingSaveBtn'); if(btn) btn.disabled=true;
   try{
     if(!landingData) landingData=landingDefault();
-    // Alle noch nicht gespeicherten Logos jeder Landingpage hochladen.
-    for(const p of (landingData.pages||[])){
-      const pend = landingLogoPending[p.id];
-      if(!pend) continue;
-      const oldActive = landingData.activePageId;
-      landingData.activePageId = p.id;
-      if(pend.wide){
-        p.logoWideUrl = await uploadToS3(pend.wide, landingLogoS3Key(pend.wide,'wide'), null);
-        pend.wide = null;
+    // Ausgewählte Logo-Dateien pro Landingpage hochladen
+    for(const p of (landingData.pages || [])){
+      const pend = landingLogoPending[p.id] || {};
+      for(const kind of ['square','wide','pano']){
+        const file = pend[kind];
+        if(file){
+          const ext = (file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'') || 'png';
+          const key = 'artwork/landing-logo-' + landingSlugifyRoute(p.route || p.name || p.id) + '-' + kind + '-' + Date.now() + '.' + ext;
+          const url = await uploadToS3(file, key, null);
+          if(kind==='square') p.logoSquareUrl = url;
+          if(kind==='wide') p.logoWideUrl = url;
+          if(kind==='pano') p.logoPanoUrl = url;
+        }
       }
-      if(pend.square){
-        p.logoSquareUrl = await uploadToS3(pend.square, landingLogoS3Key(pend.square,'square'), null);
-        pend.square = null;
-      }
-      landingData.activePageId = oldActive;
     }
+    landingLogoPending = {};
     landingData = landingNormalizeData(landingData);
     landingData.type='landingPages';
     const del=await fetch(SB_URL+'/rest/v1/home_layout?row_order=eq.-2&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()});
