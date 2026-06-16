@@ -7707,6 +7707,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ie-bio-textfield{min-height:64px;margin-bottom:9px;border:1px solid rgba(133,172,201,.14);border-radius:8px;padding:9px 11px;background:rgba(6,20,32,.35)}
 .ie-bio-textarea{width:100%;box-sizing:border-box;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.18);border-radius:8px;color:#e7eef5;font-size:13px;line-height:1.7;padding:9px 11px;margin-bottom:9px;outline:none;min-height:84px;resize:vertical;font-family:'Special Elite','Courier New',monospace}
 .ie-bio-textarea:focus{border-color:#85ACC9}
+
+.ie-bio-finale-row{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:start;margin:12px 0;padding:12px;border:1px solid rgba(133,172,201,.12);border-radius:10px;background:rgba(6,20,32,.25)}
+.ie-bio-finale-cover{width:160px;aspect-ratio:1/1;border-radius:10px;object-fit:cover;background:#0B2A42;border:1px solid rgba(133,172,201,.16);display:block}
+.ie-bio-finale-placeholder{width:160px;aspect-ratio:1/1;border-radius:10px;background:#0B2A42;border:1px solid rgba(133,172,201,.16);display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.35);font-size:30px;font-weight:800}
+.ie-bio-finale-fields{min-width:0}
+@media(max-width:599px){.ie-bio-finale-row{grid-template-columns:1fr}.ie-bio-finale-cover,.ie-bio-finale-placeholder{width:116px}}
+
 .ie-field-note{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:700;margin:22px 0 4px;padding-left:6px}
 </style>
 <div class="screen" id="tabInfo">
@@ -7766,8 +7773,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <input type="file" id="ieAboutImgFile" accept="image/*" style="display:none" onchange="onInfoImagePicked(event)">
 
       <div class="ie-about-divider"></div>
-      <div class="ie-field-note">BIO-Story (3 Abschnitte)</div>
-      <div class="ie-bio-hint">Tippt man im Player auf den BIO-Knopf, öffnet sich eine scrollbare Story: je Abschnitt ein Cover, eine Headline, der Text und ein Songtext-Zitat. Leere Abschnitte werden ausgeblendet. Erst ohne jeden Inhalt verschwindet der BIO-Knopf.</div>
+      <div class="ie-field-note">BIO-Story (3 Abschnitte + Finale)</div>
+      <div class="ie-bio-hint">Tippt man im Player auf den BIO-Knopf, öffnet sich eine scrollbare Story: drei klassische Bio-Abschnitte plus optional eine vierte Seite „Noch lange nicht alles“ mit drei Songs aus der Gesamtauswahl. Leere Abschnitte werden ausgeblendet. Erst ohne jeden Inhalt verschwindet der BIO-Knopf.</div>
 
       <div class="ie-bio-sec" id="ieBioSec0">
         <div class="ie-bio-sec-head">Abschnitt 1 · Bruch</div>
@@ -7815,6 +7822,34 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText2" contenteditable="true" spellcheck="false"></div>
         <textarea class="ie-bio-textarea" id="ieBioQuote2" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
         <input class="ie-bio-input" id="ieBioSrc2" placeholder="Songtitel (erscheint als „aus …")">
+      </div>
+
+      <div class="ie-bio-sec" id="ieBioFinalSec">
+        <div class="ie-bio-sec-head">Abschnitt 4 · Noch lange nicht alles</div>
+        <input class="ie-bio-input" id="ieBioFinalHeadline" placeholder="Headline" value="Noch lange nicht alles">
+        <div class="ie-bio-hint" style="margin-top:0">Wähle hier bis zu drei Songs aus der Gesamtauswahl. Die Cover kommen automatisch aus dem Songarchiv; die Songtexte fügst du selbst daneben ein.</div>
+
+        <div class="ie-bio-finale-row">
+          <div id="ieBioFinalCover0" class="ie-bio-finale-placeholder">1</div>
+          <div class="ie-bio-finale-fields">
+            <select class="ie-bio-input" id="ieBioFinalSong0" onchange="ieRenderFinaleSong(0)"><option value="">Song 1 auswählen …</option></select>
+            <textarea class="ie-bio-textarea" id="ieBioFinalQuote0" placeholder="Songtext für Song 1 — eine Zeile pro Vers"></textarea>
+          </div>
+        </div>
+        <div class="ie-bio-finale-row">
+          <div id="ieBioFinalCover1" class="ie-bio-finale-placeholder">2</div>
+          <div class="ie-bio-finale-fields">
+            <select class="ie-bio-input" id="ieBioFinalSong1" onchange="ieRenderFinaleSong(1)"><option value="">Song 2 auswählen …</option></select>
+            <textarea class="ie-bio-textarea" id="ieBioFinalQuote1" placeholder="Songtext für Song 2 — eine Zeile pro Vers"></textarea>
+          </div>
+        </div>
+        <div class="ie-bio-finale-row">
+          <div id="ieBioFinalCover2" class="ie-bio-finale-placeholder">3</div>
+          <div class="ie-bio-finale-fields">
+            <select class="ie-bio-input" id="ieBioFinalSong2" onchange="ieRenderFinaleSong(2)"><option value="">Song 3 auswählen …</option></select>
+            <textarea class="ie-bio-textarea" id="ieBioFinalQuote2" placeholder="Songtext für Song 3 — eine Zeile pro Vers"></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -10072,6 +10107,48 @@ document.addEventListener('mousedown', function(e){
   }
 }, true);
 
+
+async function ensureInfoSongsLoaded(){
+  if(Array.isArray(allSongs) && allSongs.length) return;
+  try{
+    const r = await fetch(sbUrl('/rest/v1/songs?select=slug,title,artist,cover_url&order=title.asc'),{headers:hdrs()});
+    if(r.ok) allSongs = await r.json();
+  }catch(e){ console.warn('Info-Editor: Songs konnten nicht geladen werden', e); }
+}
+function iePopulateFinaleSongSelects(){
+  const songs = Array.isArray(allSongs) ? allSongs.slice().sort((a,b)=>String(a.title||a.slug||'').localeCompare(String(b.title||b.slug||''),'de')) : [];
+  for(let i=0;i<3;i++){
+    const sel = document.getElementById('ieBioFinalSong'+i);
+    if(!sel) continue;
+    const current = sel.value || sel.dataset.value || '';
+    sel.innerHTML = '<option value="">Song '+(i+1)+' auswählen …</option>' + songs.map(s=>{
+      const title = (s.title||s.slug||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const artist = (s.artist||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const label = artist ? title+' · '+artist : title;
+      return '<option value="'+String(s.slug||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+label+'</option>';
+    }).join('');
+    if(current) sel.value = current;
+    ieRenderFinaleSong(i);
+  }
+}
+function ieRenderFinaleSong(i){
+  const sel = document.getElementById('ieBioFinalSong'+i);
+  const box = document.getElementById('ieBioFinalCover'+i);
+  if(!sel || !box) return;
+  const s = (allSongs||[]).find(x=>String(x.slug||'')===String(sel.value||''));
+  if(s && s.cover_url){
+    box.className = '';
+    box.outerHTML = '<img id="ieBioFinalCover'+i+'" class="ie-bio-finale-cover" src="'+String(s.cover_url).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" alt="Cover">';
+  } else {
+    box.className = 'ie-bio-finale-placeholder';
+    box.textContent = String(i+1);
+  }
+}
+function ieSongTitleForSlug(slug){
+  const s = (allSongs||[]).find(x=>String(x.slug||'')===String(slug||''));
+  return s ? (s.title||s.slug||'') : '';
+}
+
 async function initInfoEditor(){
   infoImagePendingFile = null;
   let data = DEFAULT_ABOUT;
@@ -10094,8 +10171,12 @@ async function initInfoEditor(){
   if(img){ img.src = data.imageUrl || DEFAULT_ABOUT.imageUrl; img.alt = data.imageAlt || ''; }
   infoImageUrl = data.imageUrl || DEFAULT_ABOUT.imageUrl;
   const prog = $('ieAboutImgProg'); if(prog) prog.style.width='0';
+  await ensureInfoSongsLoaded();
+  iePopulateFinaleSongSelects();
   // BIO-Story: 3 Abschnitte in die Felder laden (abwärtskompatibel zu altem bioImages)
-  let secs = Array.isArray(data.bioSections) ? data.bioSections.slice(0,3) : [];
+  const allBioSecs = Array.isArray(data.bioSections) ? data.bioSections : [];
+  let finaleSec = allBioSecs.find(s=>s && s.kind==='finale') || {};
+  let secs = allBioSecs.filter(s=>!s || s.kind!=='finale').slice(0,3);
   if(!secs.length && Array.isArray(data.bioImages)){
     secs = data.bioImages.slice(0,3).map(u=>({image:u}));
   }
@@ -10109,6 +10190,15 @@ async function initInfoEditor(){
     if($('ieBioQuote'+i))    $('ieBioQuote'+i).value = s.quote || '';
     if($('ieBioSrc'+i))      $('ieBioSrc'+i).value = s.quoteSource || '';
     ieRenderBioSlot(i);
+  }
+  if($('ieBioFinalHeadline')) $('ieBioFinalHeadline').value = finaleSec.headline || 'Noch lange nicht alles';
+  const finaleItems = Array.isArray(finaleSec.items) ? finaleSec.items : [];
+  for(let i=0;i<3;i++){
+    const it = finaleItems[i] || {};
+    const sel = $('ieBioFinalSong'+i);
+    if(sel){ sel.dataset.value = it.songSlug || ''; sel.value = it.songSlug || ''; }
+    if($('ieBioFinalQuote'+i)) $('ieBioFinalQuote'+i).value = it.quote || '';
+    ieRenderFinaleSong(i);
   }
   ieRegisterEditables();
   ieActiveEditable = $('ieAboutBody');
@@ -10187,6 +10277,23 @@ async function saveInfoContent(){
       };
       // Abschnitt nur speichern, wenn er irgendeinen Inhalt hat
       if(sec.image || sec.headline || sec.html || sec.quote) bioSections.push(sec);
+    }
+
+    const finaleItems = [];
+    for(let i=0;i<3;i++){
+      const slug = ($('ieBioFinalSong'+i).value||'').trim();
+      const quote = ($('ieBioFinalQuote'+i).value||'').trim();
+      if(slug || quote){
+        finaleItems.push({
+          songSlug: slug,
+          quote,
+          quoteSource: ieSongTitleForSlug(slug)
+        });
+      }
+    }
+    const finaleHeadline = ($('ieBioFinalHeadline').value||'Noch lange nicht alles').trim();
+    if(finaleItems.length){
+      bioSections.push({ kind:'finale', headline: finaleHeadline || 'Noch lange nicht alles', items: finaleItems });
     }
 
     const about = {

@@ -2587,7 +2587,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 }
 .swf-top-btn:active{transform:translateY(0) scale(.9);opacity:.78}
 .swf-top-btn svg{
-  width:22px;height:22px;
+  width:18px;height:18px;
   stroke:currentColor;stroke-width:2.2;
   fill:none;stroke-linecap:round;stroke-linejoin:round;
 }
@@ -2918,16 +2918,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .about-bio-btn{
   display:inline-flex;
   align-items:center;
-  gap:9px;
+  gap:7px;
   margin-top:26px;
-  padding:11px 18px 11px 14px;
+  padding:9px 14px 9px 11px;
   border:1px solid rgba(133,172,201,.28);
   border-radius:999px;
   background:rgba(133,172,201,.07);
   color:#cfe5f5;
-  font-size:13px;
+  font-size:11px;
   font-weight:700;
-  letter-spacing:.14em;
+  letter-spacing:.13em;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:background .15s,border-color .15s,transform .12s;
@@ -2939,6 +2939,19 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   fill:none;stroke:currentColor;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;
 }
+.about-bio-anchor{display:inline-flex;align-items:center;margin-left:18px;vertical-align:middle;}
+.about-bio-anchor .about-bio-btn{margin-top:0;transform:translateY(-2px);}
+.about-bio-anchor .about-bio-btn:active{transform:translateY(-2px) scale(.96);}
+.bio-home-btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  margin:32px auto 0;padding:12px 20px;border-radius:999px;
+  border:1px solid rgba(133,172,201,.32);background:rgba(133,172,201,.08);
+  color:#cfe5f5;font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  cursor:pointer;transition:background .15s,border-color .15s,transform .12s;
+}
+.bio-home-btn:hover{background:rgba(133,172,201,.16);border-color:rgba(133,172,201,.5)}
+.bio-home-btn:active{transform:scale(.96)}
+.bio-home-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .about-bio-viewer{
   position:fixed;
   inset:0;
@@ -5371,6 +5384,30 @@ async function loadFromSupabase() {
   } catch(e){ console.warn('[hitjourney] About-Inhalt konnte nicht angewendet werden:', e); }
 }
 
+
+function placeAboutBioButton(hasBio){
+  const btn  = document.getElementById('aboutBioBtn');
+  const body = document.getElementById('aboutBodyText');
+  const wrap = document.querySelector('#screenAbout .about-wrap');
+  const divider = document.querySelector('#screenAbout .about-divider');
+  if(!btn) return;
+  let anchor = document.getElementById('aboutBioAnchor');
+  if(anchor && !anchor.contains(btn)) anchor.remove();
+  if(hasBio && body){
+    // BIO-Knopf neben der Adresse platzieren: rechts von „tulpenweg 11“, vor „51674 wiehl“.
+    if(!body.querySelector('#aboutBioAnchor')){
+      const html = body.innerHTML;
+      const next = html.replace(/(tulpenweg\s*11)(\s*<br\s*\/?\s*>)/i, '$1 <span id="aboutBioAnchor" class="about-bio-anchor"></span>$2');
+      body.innerHTML = (next !== html) ? next : html + '<br><span id="aboutBioAnchor" class="about-bio-anchor"></span>';
+    }
+    anchor = document.getElementById('aboutBioAnchor');
+    if(anchor) anchor.appendChild(btn);
+  } else if(wrap && divider && btn.parentElement !== wrap){
+    wrap.insertBefore(btn, divider);
+  }
+  btn.style.display = hasBio ? 'inline-flex' : 'none';
+}
+
 // Befüllt die About-/Info-Seite mit im Admin gepflegten Inhalten.
 // Fehlende Felder bleiben auf dem im HTML hinterlegten Standard.
 function applyAboutContent(a){
@@ -5400,9 +5437,12 @@ function applyAboutContent(a){
   } else {
     aboutBioSections = [];
   }
-  const hasBio = aboutBioSections.some(s => s && (s.image || s.headline || s.html || s.quote));
-  const bioBtn = document.getElementById('aboutBioBtn');
-  if(bioBtn) bioBtn.style.display = hasBio ? 'inline-flex' : 'none';
+  const hasBio = aboutBioSections.some(s => s && (
+    s.kind === 'finale'
+      ? (s.headline || (Array.isArray(s.items) && s.items.some(it => it && (it.songSlug || it.image || it.quote))))
+      : (s.image || s.songSlug || s.headline || s.html || s.quote)
+  ));
+  placeAboutBioButton(hasBio);
 }
 
 // ── BIO-Story (blätterbares Pop-up: je Ansicht Headline + Text + Cover/Zitat) ──
@@ -5419,22 +5459,49 @@ function bioQuoteLinesHtml(quote){
     .join('<br>');
 }
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+// Cover-URL eines Abschnitts/Items: eigenes Bild, sonst Cover des verknüpften Songs.
+function bioCoverUrl(sec){
+  if(sec && sec.image) return sec.image;
+  const s = resolveBioSong(sec);
+  return (s && s.cover) ? s.cover : '';
+}
+function bioCqHtml(sec, dataAttr){
+  const song = resolveBioSong(sec);
+  const cover = bioCoverUrl(sec);
+  if(!cover && !sec.quote) return '';
+  let h = '<div class="bio-cq">';
+  if(cover){
+    h += '<div class="bio-cq-cover'+(song?' is-playable':'')+'" '+dataAttr+'>'
+       + '<img alt="'+esc(sec.quoteSource||sec.headline||'Cover')+'" src="'+esc(cover)+'"></div>';
+  }
+  if(sec.quote) h += '<div class="bio-cq-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
+                  + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
+                  + '</div>';
+  h += '</div>';
+  return h;
+}
 function buildBioPageHtml(sec, idx){
+  if(sec.kind === 'finale') return buildBioFinaleHtml(sec, idx);
   let h = '<div class="bio-page-inner">';
   if(sec.headline) h += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
   if(sec.html)     h += '<div class="bio-sec-text">'+sec.html+'</div>';
-  if(sec.image || sec.quote){
-    h += '<div class="bio-cq">';
-    if(sec.image){
-      const playable = !!resolveBioSong(sec);
-      h += '<div class="bio-cq-cover'+(playable?' is-playable':'')+'" data-bioidx="'+idx+'">'
-         + '<img alt="'+esc(sec.headline||'Cover')+'" src="'+esc(sec.image)+'"></div>';
-    }
-    if(sec.quote) h += '<div class="bio-cq-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
-                    + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
-                    + '</div>';
-    h += '</div>';
-  }
+  h += bioCqHtml(sec, 'data-bioidx="'+idx+'"');
+  h += '</div>';
+  return h;
+}
+// Finale-Seite: Headline + bis zu 3 Cover+Songtext-Reihen + Home-Button.
+function buildBioFinaleHtml(sec, idx){
+  let h = '<div class="bio-page-inner">';
+  if(sec.headline) h += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
+  const items = Array.isArray(sec.items) ? sec.items : [];
+  items.forEach((it,i)=>{
+    if(!it) return;
+    if(!bioCoverUrl(it) && !it.quote) return;
+    h += bioCqHtml(it, 'data-biofinale="'+i+'"');
+  });
+  h += '<button class="bio-home-btn" id="bioHomeBtn" type="button">'
+     + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>'
+     + '<span>Home</span></button>';
   h += '</div>';
   return h;
 }
@@ -5444,7 +5511,8 @@ function resolveBioSong(sec){
   if(!sec) return null;
   const songs = (typeof SUPABASE_SONGS!=='undefined' && SUPABASE_SONGS) ? SUPABASE_SONGS : [];
   if(!songs.length) return null;
-  let s = sec.image ? songs.find(x => x.cover === sec.image) : null;
+  let s = sec.songSlug ? songs.find(x => x.slug === sec.songSlug) : null;
+  if(!s && sec.image) s = songs.find(x => x.cover === sec.image);
   if(!s && sec.quoteSource){
     const q = sec.quoteSource.trim().toLowerCase();
     s = songs.find(x => (x.title||'').trim().toLowerCase() === q);
@@ -5455,7 +5523,11 @@ function renderAboutBioStory(){
   const track = document.getElementById('aboutBioTrack');
   const dots  = document.getElementById('aboutBioDots');
   if(!track) return;
-  aboutBioPages = (aboutBioSections||[]).filter(s => s && (s.image || s.headline || s.html || s.quote));
+  aboutBioPages = (aboutBioSections||[]).filter(s => s && (
+    s.kind === 'finale'
+      ? (s.headline || (Array.isArray(s.items) && s.items.some(it => it && (it.songSlug || it.image || it.quote))))
+      : (s.image || s.songSlug || s.headline || s.html || s.quote)
+  ));
   track.innerHTML = '';
   aboutBioPages.forEach((sec,idx)=>{
     const p = document.createElement('div');
@@ -5577,6 +5649,8 @@ function closeAboutBio(){
   // Cover anklicken → Song starten / Cover / Lyrics
   const track = document.getElementById('aboutBioTrack');
   if(track) track.addEventListener('click', e=>{
+    const homeBtn = e.target.closest && e.target.closest('.bio-home-btn');
+    if(homeBtn){ e.preventDefault(); closeAboutBio(); showHome(); return; }
     const cover = e.target.closest && e.target.closest('.bio-cq-cover.is-playable');
     if(cover) onBioCoverClick(parseInt(cover.dataset.bioidx,10) || 0);
   });
