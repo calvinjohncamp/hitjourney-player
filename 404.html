@@ -79,6 +79,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
+.hj-landing-back{margin-left:22px;font-weight:700}
+.hj-landing-back span{text-transform:uppercase;letter-spacing:.04em}
 .hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
 
 /* ── Screens ── */
@@ -253,6 +255,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
 @media(max-width:600px){ .home-heading{ margin:30px 0 22px; } }
+/* ── Leerstreifen (Abstandhalter) ── */
+.home-spacer{ grid-column:1/-1; width:100%; }
 .home-trio--equal .home-card{
   grid-area:unset !important;
   display:flex;
@@ -394,7 +398,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 /* Freie Home-Zeilen auf Landingpages: kantenbündig + gleiche Abstände wie die Section-Cover darüber.
    #landingSections erhöht die Spezifität, damit die spätere Desktop-.home-grid-Regel (padding/margin) nicht gewinnt. */
-#landingSections .landing-freeform{padding:0;gap:12px;margin:0 0 30px;max-width:none}
+#landingSections .landing-freeform{padding:0;gap:12px;margin:0 0 88px;max-width:none}
 #landingSections .landing-freeform .home-row3sq{gap:12px}
 @media(min-width:1000px){#landingSections .landing-freeform{gap:16px}#landingSections .landing-freeform .home-row3sq{gap:16px}}
 
@@ -4283,6 +4287,10 @@ body.album-open #hjPlayerSpacer{
 <svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
 <span>HOME</span>
 </div>
+<div class="hj-back-btn hj-landing-back" id="landingBackBtn" onclick="showLanding()" role="button" tabindex="0">
+<svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
+<span id="landingBackLabel">Landingpage</span>
+</div>
 <div class="hj-logo" id="logoHome">
 <img class="hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/>
 </div>
@@ -6671,6 +6679,8 @@ function showHome(){
   mainHeader.style.display='';
   closeLanguageImageFrame(false);
   languageCoverClickState = { key:null, idx:-1, phase:0 };
+  albumLandingReturn = null;
+  updateLandingBackBtn();
   prevScreen='home';
 }
 function showAlbum(key){
@@ -6679,6 +6689,13 @@ function showAlbum(key){
   const alb=ALBUMS[key];
   if(!alb || !alb.songs || !alb.songs.length){ console.warn('[hitjourney] Album nicht gefunden:', key); return; }
   curAlbum=key;
+  // Landing-Kontext merken: wurde das Album von einer Verlags-Landingpage aus geöffnet?
+  if(isLandingRoute()){
+    const _lp = activeLandingPage();
+    albumLandingReturn = _lp ? {route:_lp.route, name:(_lp.name||_lp.route||'Landingpage')} : null;
+  } else {
+    albumLandingReturn = null;
+  }
   if(tlCover) setImgSrcWithFallback(tlCover, [alb.cover]);
   if(tlTitle) tlTitle.textContent=alb.title;
   if(tlMeta) tlMeta.textContent=alb.meta;
@@ -6729,6 +6746,7 @@ function showAlbum(key){
   screenTL.scrollTop = 0;
   requestAnimationFrame(()=>{ screenTL.scrollTop = 0; });
   setTimeout(()=>{ screenTL.scrollTop = 0; updateAlbumTopButton(); }, 80);
+  updateLandingBackBtn();
   prevScreen='tracklist';
 }
 function showNowPlaying(){
@@ -6768,6 +6786,7 @@ function hideNowPlaying(){
   else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); updateLanguageHighlight(); }
   else if(prevScreen==='landing'){ if(screenLanding) screenLanding.classList.add('active'); }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
+  updateLandingBackBtn();
 }
 
 
@@ -8311,6 +8330,21 @@ function landingShowBio(){
   if(typeof showAbout === 'function') showAbout();
 }
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+// Merkt sich die Landingpage, von der aus ein Album geöffnet wurde, damit man
+// per Header-Button (neben HOME) zur Verlags-Landingpage zurückkehren kann.
+let albumLandingReturn = null;
+function updateLandingBackBtn(){
+  const btn = document.getElementById('landingBackBtn');
+  if(!btn) return;
+  const onAlbum = screenTL && screenTL.classList.contains('active');
+  if(albumLandingReturn && onAlbum){
+    const lbl = document.getElementById('landingBackLabel');
+    if(lbl) lbl.textContent = albumLandingReturn.name || 'Landingpage';
+    btn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+  }
+}
 function isLandingRoute(){
   const route = currentLandingRoute();
   if(!route) return false;
@@ -8328,6 +8362,7 @@ function showLanding(){
   if(screenKnw) screenKnw.style.display='none'; if(screenSwf) screenSwf.style.display='none'; hideLanguageScreens();
   screenLanding.classList.add('active'); screenLanding.scrollTop = 0;
   backBtn.classList.remove('visible'); logoHome.style.display=''; makingWaves.style.display=''; headerRight.textContent=''; mainHeader.style.display=''; prevScreen='landing';
+  const _lbb=document.getElementById('landingBackBtn'); if(_lbb) _lbb.classList.remove('visible');
   // Headlines erst bei sichtbarer Bühne korrekt auf Cover-Breite skalieren.
   requestAnimationFrame(()=>{ if(typeof landingFitHeadlines==='function') landingFitHeadlines(); });
 }
@@ -8360,6 +8395,15 @@ function headingLineStyle(l){
     'letter-spacing:'+(l.font==='anton'?'.04em':'normal'),
     'line-height:1.12','margin:0'
   ].join(';');
+}
+/* ── Leerstreifen (Abstandhalter) – Höhen identisch zum Admin ── */
+const SPACER_SIZES = { s:'40px', m:'80px', l:'160px' };
+function buildSpacerEl(cell){
+  const h = SPACER_SIZES[(cell && cell.spacerSize)] || SPACER_SIZES.m;
+  const d = document.createElement('div');
+  d.className = 'home-spacer';
+  d.style.height = h;
+  return d;
 }
 function buildHeadingEl(cell){
   cell = cell || {};
@@ -8447,6 +8491,12 @@ function renderHomeRowInto(grid, row){
     if(t0 === 'heading'){
       const el = buildHeadingEl(cells[0]);
       if(el) grid.appendChild(el);
+      return;
+    }
+
+    // ── Leerstreifen (Abstandhalter) ────────────────────────────────
+    if(t0 === 'spacer'){
+      grid.appendChild(buildSpacerEl(cells[0]));
       return;
     }
 
