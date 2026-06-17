@@ -250,7 +250,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-row3sq{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:stretch; }
 .home-row3sq .home-card img{ aspect-ratio:1/1; }
 /* ── Überschrift-Zeile (Text 1–3 Zeilen) ── */
-.home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0 4px; }
+.home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
 @media(max-width:600px){ .home-heading{ margin:30px 0 22px; } }
 .home-trio--equal .home-card{
@@ -392,6 +392,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-nav{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center;padding:6px 0 10px}.landing-nav button{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:999px;border:1.5px solid rgba(133,172,201,.72);background:rgba(6,20,32,.35);color:#85ACC9;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.24),0 0 0 1px rgba(133,172,201,.08) inset;transition:background .15s,transform .1s,box-shadow .15s,border-color .15s,color .15s}.landing-nav button:hover{background:rgba(133,172,201,.08);border-color:rgba(207,229,245,.82);color:#cfe5f5}.landing-nav button:active{transform:scale(.95)}
 @media(max-width:760px){.landing-grid.cols-5,.landing-grid.cols-4{grid-template-columns:repeat(2,1fr)}.landing-grid.cols-3{grid-template-columns:repeat(2,1fr)}.landing-section-head{align-items:flex-start;flex-direction:column;gap:8px}.landing-section-sub{text-align:left;white-space:normal}.landing-section + .landing-section{margin-top:58px}}
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
+/* Freie Home-Zeilen auf Landingpages: kantenbündig + gleiche Abstände wie die Section-Cover darüber.
+   #landingSections erhöht die Spezifität, damit die spätere Desktop-.home-grid-Regel (padding/margin) nicht gewinnt. */
+#landingSections .landing-freeform{padding:0;gap:12px;margin:0 0 30px;max-width:none}
+#landingSections .landing-freeform .home-row3sq{gap:12px}
+@media(min-width:1000px){#landingSections .landing-freeform{gap:16px}#landingSections .landing-freeform .home-row3sq{gap:16px}}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
