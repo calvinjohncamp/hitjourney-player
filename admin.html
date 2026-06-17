@@ -699,6 +699,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-heading-placeholder{color:rgba(133,172,201,.4);font-size:14px;font-style:italic}
 .he-heading-edit{position:absolute;top:8px;right:8px;border:0;border-radius:6px;background:rgba(133,172,201,.12);color:#85ACC9;font-size:10px;font-weight:700;padding:5px 8px;cursor:pointer}
 .he-heading-edit:hover{background:rgba(133,172,201,.24)}
+/* ── Leerstreifen-Zelle im Editor ── */
+.he-spacer-cell{width:100%;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:8px;aspect-ratio:auto!important;min-height:0!important;display:block}
+.he-spacer-strip{width:100%;border:1px dashed rgba(133,172,201,.22);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.4);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.he-spacer-seg{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.he-spacer-seg button{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:#85ACC9;border-radius:7px;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer}
+.he-spacer-seg button.active{background:rgba(133,172,201,.26);color:#cfe5f5;border-color:rgba(133,172,201,.4)}
+/* Teaser-Panel scrollt mit im Editor-Bereich */
+.lp-logo-inscroll{position:static;background:transparent;border-bottom:1px solid rgba(133,172,201,.08)}
 /* ── Überschrift-Modal ── */
 #headingModal{display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
 #headingModal.open{display:flex}
@@ -8330,6 +8338,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">Überschrift — Text 1–3 Zeilen</div>
       </div>
 
+      <!-- Leerstreifen (Abstandhalter) -->
+      <div class="lpm-option full" data-layout="spacer" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center;align-items:center;min-height:48px">
+          <div style="width:100%;height:18px;border:1px dashed rgba(133,172,201,.35);border-radius:6px"></div>
+        </div>
+        <div class="lpm-label">Leerstreifen — Abstand (schmal/mittel/doppelt)</div>
+      </div>
+
     </div>
     <button class="lpm-cancel" onclick="closeLpm()">Abbrechen</button>
   </div>
@@ -10143,6 +10159,14 @@ const HEADING_COLORS = [
 function makeHeadingLine(){
   return { text:'', font:'anton', upper:true, size:'l', bold:false, italic:false, underline:false, color:'#cfe5f5' };
 }
+
+/* ── Leerstreifen (Abstandhalter) – Höhen identisch zum Live-Rendering ── */
+const SPACER_SIZES = {
+  s: { label:'Schmal',  css:'40px' },
+  m: { label:'Mittel',  css:'80px' },
+  l: { label:'Doppelt', css:'160px' }
+};
+function normalizeSpacerSize(v){ return SPACER_SIZES[v] ? v : 'm'; }
 function normalizeHeadingLine(l){
   l = l || {};
   return {
@@ -10709,8 +10733,20 @@ function renderLandingEditor(){
   renderLandingPageBar();
   const page = landingActivePage();
   const sections = page.sections || [];
-  if(!sections.length){ wrap.innerHTML='<div class="lp-empty">Noch keine Sektion angelegt.</div>'; return; }
+  // Teaser-Panel scrollt mit (statt fix oben zu kleben): wir verschieben es in den
+  // scrollbaren Editor-Bereich. Referenz vor dem Leeren sichern, dann als erstes Kind
+  // wieder einhängen, damit es beim Hochscrollen hinter der Pagebar verschwindet.
+  const _logoPanel = document.getElementById('landingLogoPanel');
+  if(_logoPanel) _logoPanel.classList.add('lp-logo-inscroll');
+  if(!sections.length){
+    wrap.innerHTML='';
+    if(_logoPanel) wrap.appendChild(_logoPanel);
+    const em=document.createElement('div'); em.className='lp-empty'; em.textContent='Noch keine Sektion angelegt.';
+    wrap.appendChild(em);
+    return;
+  }
   wrap.innerHTML = '';
+  if(_logoPanel) wrap.appendChild(_logoPanel);
   sections.forEach((sec, si)=>{
     sec = page.sections[si] = landingNormSection(sec);
     const total = sec.columns * sec.rows;
@@ -11134,7 +11170,8 @@ function cellHasContent(c){
   return !!(c.imageUrl || c.bgUrl
     || (c.type === 'slideshow' && c.slides && c.slides.length > 0)
     || (c.type === 'silbertablett' && c.stPlaylistSlug)
-    || (c.type === 'heading' && c.headingLines && c.headingLines.some(l => (l.text||'').trim())));
+    || (c.type === 'heading' && c.headingLines && c.headingLines.some(l => (l.text||'').trim()))
+    || c.type === 'spacer');
 }
 function rowIsFullyFilled(row){
   const visible = rowVisibleCells(row);
@@ -11268,6 +11305,10 @@ function buildCells(row, grid){
   } else if(t0 === 'heading'){
     grid.classList.add('layout-heading');
     grid.appendChild(buildHeadingAdminCell(row));
+
+  } else if(t0 === 'spacer'){
+    grid.classList.add('layout-heading');
+    grid.appendChild(buildSpacerAdminCell(row));
 
   } else if(t0 === 'silbertablett'){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
@@ -11406,6 +11447,42 @@ function buildHeadingAdminCell(row){
   edit.onclick = (e)=>{ e.stopPropagation(); openHeadingModal(row.id); };
   el.appendChild(edit);
   return el;
+}
+
+/* ── Leerstreifen-Zelle im Editor (leere Höhe + Größenwahl) ── */
+function buildSpacerAdminCell(row){
+  const cell = row.cells[0] || {};
+  const size = normalizeSpacerSize(cell.spacerSize);
+  const el = document.createElement('div');
+  el.className = 'he-cell he-spacer-cell';
+  el.dataset.rowId = row.id;
+  el.dataset.cellIdx = 0;
+
+  const strip = document.createElement('div');
+  strip.className = 'he-spacer-strip';
+  strip.style.height = SPACER_SIZES[size].css;
+  strip.innerHTML = '<span>Leerstreifen · '+SPACER_SIZES[size].label+'</span>';
+  el.appendChild(strip);
+
+  const seg = document.createElement('div');
+  seg.className = 'he-spacer-seg';
+  Object.keys(SPACER_SIZES).forEach(k=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = SPACER_SIZES[k].label;
+    if(k===size) b.classList.add('active');
+    b.onclick = (e)=>{ e.stopPropagation(); setSpacerSize(row.id, k); };
+    seg.appendChild(b);
+  });
+  el.appendChild(seg);
+  return el;
+}
+function setSpacerSize(rowId, size){
+  const row = rowById(rowId);
+  if(!row) return;
+  markHomeAction();
+  row.cells[0].spacerSize = normalizeSpacerSize(size);
+  renderHomeEditor();
 }
 
 /* ── Überschrift-Modal ── */
@@ -11638,8 +11715,14 @@ function buildCell(row, cellIdx, extraClass, editing){
     }
   };
 
-  // In editing mode: wrap cell + move bar in a flex column container
-  if(editing){
+  // Reorder-Pfeile: im Bearbeiten-Modus immer; außerhalb auch dauerhaft sichtbar,
+  // sobald eine Zeile ≥2 gefüllte Cover hat (3er/4er/Trio …) — damit man die
+  // Reihenfolge der Cover jederzeit ändern kann, ohne erst „Bearbeiten" zu klicken.
+  const REORDER_TYPES = new Set(['1x1','1x1-big','1x1-third','trio-a','trio-b','trio-c','2x1-half']);
+  const _visFilled = row.cells.filter(cc => cc.type!=='hidden' && cc.type!=='empty'
+    && (cc.imageUrl || cc.bgUrl || (cc.type==='slideshow' && cc.slides && cc.slides.length>0))).length;
+  const showMoveBar = editing || (isFilled && _visFilled >= 2 && REORDER_TYPES.has(cell.type));
+  if(showMoveBar){
     const wrap = document.createElement('div');
     wrap.classList.add('he-cell-wrap');
     wrap.style.cssText = el.style.cssText;
@@ -11697,6 +11780,7 @@ const LPM_TYPE_MAP = {
   'slideshow':   'slideshow',
   'silbertablett': 'silbertablett',  // rotierendes Cover + Diashow
   'heading':     'heading',          // Text-Überschrift, 1–3 Zeilen
+  'spacer':      'spacer',           // leerer Abstandstreifen
 };
 
 function lpmPick(optionEl){
@@ -11920,6 +12004,12 @@ function applyType(rowId, cellIdx, type, pos){
     };
     while(row.cells[0].headingLines.length < 3) row.cells[0].headingLines.push(makeHeadingLine());
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
+
+  } else if(type === 'spacer'){
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'spacer', spacerSize: normalizeSpacerSize(old0.spacerSize)};
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
   }
 
   renderHomeEditor();
@@ -11999,6 +12089,8 @@ function openCellEdit(rowId, cellIdx){
     openSilbertablettModal(rowId);
   } else if(cell.type === 'heading'){
     openHeadingModal(rowId);
+  } else if(cell.type === 'spacer'){
+    return; // Leerstreifen wird über die Größen-Buttons gesteuert, kein Modal
   } else {
     openHomeTileModal(rowId, cellIdx);
   }
