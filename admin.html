@@ -321,6 +321,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-slot-body select{width:100%;min-width:0;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.14);border-radius:8px;color:#f1ecdf;font-size:12px;padding:8px 7px;outline:none}
 .lp-slot-actions{display:flex;gap:5px}.lp-slot-actions button{flex:1;border:0;border-radius:7px;background:rgba(133,172,201,.10);color:#85ACC9;font-size:12px;font-weight:800;padding:6px;cursor:pointer}.lp-slot-actions button:hover{background:rgba(133,172,201,.2)}.lp-slot-actions button.clear{color:#e08080;background:rgba(220,80,80,.09)}
 .lp-empty{padding:44px 20px;text-align:center;color:rgba(133,172,201,.35);font-size:14px}
+.lp-freeform-note{padding:0 10px 8px;color:rgba(133,172,201,.5);font-size:11px;line-height:1.45}
+.lp-freeform-rows{padding:4px 10px 8px}
+.lp-freeform-empty{padding:22px 12px;text-align:center;color:rgba(133,172,201,.35);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
 @media(max-width:720px){.lp-fields{grid-template-columns:1fr 1fr}.lp-field.wide{grid-column:1/-1}.lp-slot-grid.cols-5,.lp-slot-grid.cols-4,.lp-slot-grid.cols-3{grid-template-columns:repeat(2,1fr)}}
 
 /* ══ EDIT SCREEN ══ */
@@ -685,6 +688,44 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* 2× große 1:1 */
 .he-row-grid.layout-2big{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .he-cell.cell-1x1big{aspect-ratio:1/1;width:100%}
+.he-row-grid.layout-3sq{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:8px}
+.he-cell.cell-1x1third{aspect-ratio:1/1;width:100%}
+/* ── Überschrift-Zeile im Editor ── */
+.he-row-grid.layout-heading{display:block;padding:8px}
+.he-heading-cell{position:relative;width:100%;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:26px 18px;cursor:pointer;aspect-ratio:auto!important;min-height:0!important;display:block}
+.he-heading-cell:hover{border-color:rgba(133,172,201,.32)}
+.he-heading-preview{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.he-heading-preview>div{width:100%}
+.he-heading-placeholder{color:rgba(133,172,201,.4);font-size:14px;font-style:italic}
+.he-heading-edit{position:absolute;top:8px;right:8px;border:0;border-radius:6px;background:rgba(133,172,201,.12);color:#85ACC9;font-size:10px;font-weight:700;padding:5px 8px;cursor:pointer}
+.he-heading-edit:hover{background:rgba(133,172,201,.24)}
+/* ── Überschrift-Modal ── */
+#headingModal{display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+#headingModal.open{display:flex}
+.hm-inner{background:#0B1E2D;border:1px solid rgba(133,172,201,.22);border-radius:16px;width:100%;max-width:600px;padding:22px 20px 18px;margin:auto}
+.hm-title{font-size:16px;font-weight:800;color:#cfe5f5;margin-bottom:4px}
+.hm-sub{font-size:11px;color:rgba(133,172,201,.45);margin-bottom:16px;line-height:1.45}
+.hm-toprow{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:14px}
+.hm-label{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.5);margin:0 0 6px}
+.hm-seg{display:inline-flex;border:1px solid rgba(133,172,201,.18);border-radius:9px;overflow:hidden}
+.hm-seg button{border:0;background:rgba(133,172,201,.05);color:#85ACC9;font-size:14px;font-weight:700;padding:8px 14px;cursor:pointer;min-width:42px}
+.hm-seg button+button{border-left:1px solid rgba(133,172,201,.14)}
+.hm-seg button.active{background:rgba(133,172,201,.26);color:#cfe5f5}
+.hm-line{border:1px solid rgba(133,172,201,.12);border-radius:10px;padding:10px;margin-bottom:10px;background:rgba(133,172,201,.025)}
+.hm-line-head{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(133,172,201,.4);margin-bottom:7px}
+.hm-text{width:100%;box-sizing:border-box;background:rgba(11,42,66,.72);border:1px solid rgba(133,172,201,.18);border-radius:8px;padding:10px 11px;color:#f1ecdf;font-size:14px;outline:none;font-family:inherit;margin-bottom:8px}
+.hm-text:focus{border-color:rgba(133,172,201,.45)}
+.hm-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hm-sel{background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.16);border-radius:8px;color:#f1ecdf;font-size:12px;padding:8px 8px;outline:none;cursor:pointer}
+.hm-toggle{width:34px;height:34px;border:1px solid rgba(133,172,201,.18);border-radius:8px;background:rgba(133,172,201,.05);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer}
+.hm-toggle.active{background:rgba(133,172,201,.28);color:#cfe5f5;border-color:rgba(133,172,201,.4)}
+.hm-preview-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.4);margin:6px 0 6px}
+.hm-preview{background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:24px 16px;display:flex;flex-direction:column;gap:6px;min-height:60px}
+.hm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.hm-btn{border:0;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer}
+.hm-btn.cancel{background:rgba(133,172,201,.1);color:#85ACC9}
+.hm-btn.save{background:rgba(50,180,100,.18);color:#6fda9a}
+.hm-btn.save:hover{background:rgba(50,180,100,.3)}
 
 /* 1:2 Hochformat entfernt */
 
@@ -8198,6 +8239,16 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">4× 1:1<br>Quadrat</div>
       </div>
 
+      <!-- 3× 1:1 Quadrat -->
+      <div class="lpm-option" data-layout="3x1x1" onclick="lpmPick(this)">
+        <div class="lpm-option-preview">
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+          <div class="lpm-sq h1"></div>
+        </div>
+        <div class="lpm-label">3× 1:1<br>Quadrat</div>
+      </div>
+
       <!-- 2× 1:1 groß -->
       <div class="lpm-option" data-layout="2x1x1" onclick="lpmPick(this)">
         <div class="lpm-option-preview">
@@ -8270,8 +8321,54 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
         <div class="lpm-label">Silbertablett — Diashow + rotierendes Cover</div>
       </div>
 
+      <!-- Überschrift -->
+      <div class="lpm-option full" data-layout="heading" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center;align-items:center;flex-direction:column;gap:2px;min-height:48px">
+          <div style="font-family:'Anton',sans-serif;color:#cfe5f5;font-size:18px;letter-spacing:.04em;line-height:1">ABC</div>
+          <div style="font-size:10px;color:rgba(133,172,201,.5)">Aa · 1–3 Zeilen</div>
+        </div>
+        <div class="lpm-label">Überschrift — Text 1–3 Zeilen</div>
+      </div>
+
     </div>
     <button class="lpm-cancel" onclick="closeLpm()">Abbrechen</button>
+  </div>
+</div>
+
+<!-- ══ ÜBERSCHRIFT (HEADING) MODAL ══ -->
+<div id="headingModal">
+  <div class="hm-inner">
+    <div class="hm-title">Überschrift bearbeiten</div>
+    <div class="hm-sub">1–3 Textzeilen auf dem dunklen Seitenhintergrund. Schrift, Größe, Stil und Farbe je Zeile frei wählbar.</div>
+
+    <div class="hm-toprow">
+      <div>
+        <label class="hm-label">Anzahl Zeilen</label>
+        <div class="hm-seg" id="hmCountSeg">
+          <button type="button" data-c="1" onclick="hmSetCount(1)">1</button>
+          <button type="button" data-c="2" onclick="hmSetCount(2)">2</button>
+          <button type="button" data-c="3" onclick="hmSetCount(3)">3</button>
+        </div>
+      </div>
+      <div>
+        <label class="hm-label">Ausrichtung</label>
+        <div class="hm-seg" id="hmAlignSeg">
+          <button type="button" data-a="left" onclick="hmSetAlign('left')" title="Linksbündig">↤</button>
+          <button type="button" data-a="center" onclick="hmSetAlign('center')" title="Zentriert">↔</button>
+          <button type="button" data-a="right" onclick="hmSetAlign('right')" title="Rechtsbündig">↦</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="hmLines"></div>
+
+    <div class="hm-preview-label">Vorschau (dunkler Seitenhintergrund)</div>
+    <div id="hmPreview" class="hm-preview"></div>
+
+    <div class="hm-actions">
+      <button class="hm-btn cancel" onclick="closeHeadingModal()">Abbrechen</button>
+      <button class="hm-btn save" onclick="saveHeadingModal()">Übernehmen</button>
+    </div>
   </div>
 </div>
 
@@ -9978,11 +10075,99 @@ function cancelHomeEdits(){
 
 /* ── helpers ── */
 function uid(){ return Math.random().toString(36).slice(2,9); }
-function rowById(id){ return homeLayout.find(r=>r.id===id); }
+// Alle Zeilen-Arrays, in denen eine Zeile leben kann: Home-Layout + die freien
+// Zeilen der aktuell aktiven Landingpage.
+function allEditorRowArrays(){
+  const arrs = [homeLayout];
+  try{ const p = landingActivePage && landingActivePage(); if(p && Array.isArray(p.rows)) arrs.push(p.rows); }catch(_){}
+  return arrs;
+}
+function rowById(id){
+  for(const arr of allEditorRowArrays()){ const r = arr.find(x=>x.id===id); if(r) return r; }
+  return undefined;
+}
+// Liefert das Array, das die Zeile besitzt (homeLayout ODER page.rows).
+function ownerArrayOf(id){
+  for(const arr of allEditorRowArrays()){ if(arr.some(x=>x.id===id)) return arr; }
+  return homeLayout;
+}
 function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
+
+// Eine geladene/rohe Zelle auf den vollen Feldsatz normalisieren (Defaults + Altfeld-Kompat).
+function normalizeHomeCell(c){
+  const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, describeCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
+  const bv = (v, fallback=true) => {
+    if(v === undefined || v === null || v === '') return fallback;
+    if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
+    return true;
+  };
+  cc.coverFitSquare = bv(cc.coverFitSquare, false);
+  cc.lyricsCycle = bv(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
+  cc.describeCycle = bv(cc.describeCycle ?? cc.describeOnClick, false);
+  if(cc.describeCycle) cc.lyricsCycle = true;
+  cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
+  cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
+  cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
+  return cc;
+}
+// Eine rohe Zeile (aus Supabase/Blob) in eine Editor-Zeile normalisieren.
+function normalizeHomeRow(row){
+  row = row || {};
+  const cells = (row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+  return { id: row.id || uid(), editing: !!row.editing, caption: row.caption || undefined, cells: cells.map(normalizeHomeCell) };
+}
 
 function makeRow(){
   return { id:uid(), editing:true, cells:[emptyCell(),emptyCell(),emptyCell(),emptyCell()] };
+}
+
+/* ── Überschrift (Heading) – geteilte Design-Tokens der Website ── */
+const HEADING_FONTS = {
+  anton:  { label:'Display (Anton)',     css:"'Anton',sans-serif" },
+  system: { label:'Standard (Helvetica)', css:"-apple-system,'Helvetica Neue',Arial,sans-serif" },
+  elite:  { label:'Schreibmaschine',     css:"'Special Elite','Courier New',monospace" }
+};
+const HEADING_SIZES = {
+  s:  { label:'Klein',      css:'clamp(15px,2vw,20px)' },
+  m:  { label:'Mittel',     css:'clamp(19px,2.6vw,30px)' },
+  l:  { label:'Groß',       css:'clamp(26px,4vw,44px)' },
+  xl: { label:'Sehr groß',  css:'clamp(34px,6vw,60px)' }
+};
+const HEADING_COLORS = [
+  { v:'#cfe5f5', label:'Hellblau' },
+  { v:'#85ACC9', label:'Blau' },
+  { v:'#f1ecdf', label:'Creme' },
+  { v:'#ffffff', label:'Weiß' },
+  { v:'#C90019', label:'Rot' }
+];
+function makeHeadingLine(){
+  return { text:'', font:'anton', upper:true, size:'l', bold:false, italic:false, underline:false, color:'#cfe5f5' };
+}
+function normalizeHeadingLine(l){
+  l = l || {};
+  return {
+    text: String(l.text||''),
+    font: HEADING_FONTS[l.font] ? l.font : 'anton',
+    upper: !!l.upper,
+    size: HEADING_SIZES[l.size] ? l.size : 'l',
+    bold: !!l.bold, italic: !!l.italic, underline: !!l.underline,
+    color: /^#[0-9a-fA-F]{6}$/.test(l.color||'') ? l.color : '#cfe5f5'
+  };
+}
+// Inline-CSS-String für eine Heading-Zeile (Admin-Vorschau + Live identisch).
+function headingLineStyle(l){
+  l = normalizeHeadingLine(l);
+  return [
+    'font-family:'+HEADING_FONTS[l.font].css,
+    'font-size:'+HEADING_SIZES[l.size].css,
+    'color:'+l.color,
+    'text-transform:'+(l.upper?'uppercase':'none'),
+    'font-weight:'+(l.bold?'700':(l.font==='anton'?'400':'600')),
+    'font-style:'+(l.italic?'italic':'normal'),
+    'text-decoration:'+(l.underline?'underline':'none'),
+    'letter-spacing:'+(l.font==='anton'?'.04em':'normal'),
+    'line-height:1.12','margin:0'
+  ].join(';');
 }
 
 /* ── Load / Save Supabase ── */
@@ -9996,28 +10181,7 @@ async function loadHomeLayout(){
     // geladen und beim nächsten Home-Speichern überschrieben → Landingpages verloren.
     const rows = (await r.json()).filter(row =>
       !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages')));
-    homeLayout = rows.map(row=>({
-      id:      row.id,
-      editing: false,
-      caption: row.caption || undefined,
-      cells:   ((row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()]).map(c=>{
-        const cc = {startColor:'#0A0A0A', coverFitSquare:false, lyricsCycle:false, describeCycle:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94, ...c};
-        // Kompatibilität mit älteren Feldnamen/Strings
-        const bv = (v, fallback=true) => {
-          if(v === undefined || v === null || v === '') return fallback;
-          if(v === false || v === 'false' || v === 0 || v === '0' || v === 'no' || v === 'off') return false;
-          return true;
-        };
-        cc.coverFitSquare = bv(cc.coverFitSquare, false);
-        cc.lyricsCycle = bv(cc.lyricsCycle ?? cc.showLyrics ?? cc.lyricsOnClick, false);
-        cc.describeCycle = bv(cc.describeCycle ?? cc.describeOnClick, false);
-        if(cc.describeCycle) cc.lyricsCycle = true; // 3-Seiten-Modus enthält Lyrics
-        cc.showSongTitle = bv(cc.showSongTitle ?? cc.showTitle ?? cc.titleVisible, true);
-        cc.showSongNumber = bv(cc.showSongNumber ?? cc.showNumber ?? cc.numberVisible, true);
-        cc.coverAngleOffset = Math.max(-25, Math.min(25, parseFloat(cc.coverAngleOffset ?? 0) || 0));
-        return cc;
-      })
-    }));
+    homeLayout = rows.map(normalizeHomeRow);
   } catch(e){
     homeLayout = [];
   }
@@ -10399,7 +10563,8 @@ function landingDefaultPage(route,name){
     sections:[
       { title:'Selected German Songs',  subtitle:'20 Selected German Songs', columns:5, rows:2, songs:[] },
       { title:'Selected English Songs', subtitle:'20 Selected English Songs', columns:5, rows:2, songs:[] }
-    ]
+    ],
+    rows:[]
   };
 }
 function landingDefault(){
@@ -10418,7 +10583,8 @@ function landingNormPage(p, fallbackIndex){
   const route = landingSlugifyRoute(p.route || (fallbackIndex===0?'sony':'landing-'+(fallbackIndex+1)));
   const name = p.name || (route ? route.charAt(0).toUpperCase()+route.slice(1) : 'Landingpage '+(fallbackIndex+1));
   const sections = Array.isArray(p.sections) && p.sections.length ? p.sections.map(landingNormSection) : landingDefaultPage(route,name).sections;
-  return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logo32Url:p.logo32Url||p.teaser32Url||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', logoFiveUrl:p.logoFiveUrl||'', sections };
+  const rows = Array.isArray(p.rows) ? p.rows.map(normalizeHomeRow) : [];
+  return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logo32Url:p.logo32Url||p.teaser32Url||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', logoFiveUrl:p.logoFiveUrl||'', sections, rows };
 }
 function landingNormalizeData(obj){
   // Rückwärtskompatibilität: alte Einzel-Landingpage {type:'landing',sections:[...]} in eine Seite umwandeln.
@@ -10584,6 +10750,45 @@ function renderLandingEditor(){
     box.appendChild(grid);
     wrap.appendChild(box);
   });
+
+  // ── Freie Zeilen unterhalb der Sektionen (wie die Homeseite gestaltbar) ──
+  const ff = document.createElement('div');
+  ff.className = 'lp-section lp-freeform-section';
+  ff.innerHTML = `
+    <div class="lp-section-head">
+      <div class="lp-section-name">Weitere Zeilen · frei gestaltbar</div>
+    </div>
+    <div class="lp-freeform-note">Erscheinen live unterhalb der beiden Blöcke. Alle Home-Formate verfügbar; jede Zeile per ↑/↓ verschiebbar.</div>
+    <div id="landingFreeformRows" class="lp-freeform-rows"></div>
+    <div class="he-add-bar"><button class="he-add-btn" onclick="landingAddRow()">＋ Neue Zeile hinzufügen</button></div>`;
+  wrap.appendChild(ff);
+  renderLandingFreeform();
+}
+
+/* ── Freie Home-Zeilen der aktiven Landingpage rendern ── */
+function renderLandingFreeform(){
+  const cont = document.getElementById('landingFreeformRows');
+  if(!cont) return;
+  const page = landingActivePage();
+  const rows = (page && Array.isArray(page.rows)) ? page.rows : [];
+  cont.innerHTML = '';
+  if(!rows.length){
+    cont.innerHTML = '<div class="lp-freeform-empty">Noch keine freien Zeilen. Mit „＋ Neue Zeile hinzufügen" beginnen.</div>';
+    return;
+  }
+  rows.forEach((row,idx)=> cont.appendChild(buildRowEl(row, idx, rows, 'L')));
+}
+
+function landingAddRow(){
+  const page = landingActivePage();
+  if(!page) return;
+  if(!Array.isArray(page.rows)) page.rows = [];
+  page.rows.push(makeRow());
+  renderLandingFreeform();
+  setTimeout(()=>{
+    const w = document.getElementById('landingEditorWrap');
+    if(w) w.scrollTop = w.scrollHeight;
+  },60);
 }
 function landingSelectPage(id){
   if(!landingData) return;
@@ -10672,6 +10877,8 @@ async function saveLandingPage(){
     landingLogoPending = {};
     landingData = landingNormalizeData(landingData);
     landingData.type='landingPages';
+    // Bearbeiten-Status nicht persistieren (freie Zeilen sonst beim Reload im Edit-Modus).
+    (landingData.pages||[]).forEach(p=>(p.rows||[]).forEach(r=>{ r.editing=false; }));
 
     // 1) Bestehende Landing-Zeile(n) lesen — dient als Backup und liefert die vorhandene
     //    id, damit wir per Upsert genau diese Zeile aktualisieren statt sie zu löschen.
@@ -10914,16 +11121,25 @@ function renderHomeEditor(){
   bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile unten hinzufügen</button>';
   wrap.appendChild(bar);
   updateHomeUndoUi();
+  // Geteilte Mutatoren (applyType, Zell-/Diashow-Speichern …) rufen renderHomeEditor.
+  // Falls gerade freie Landing-Zeilen sichtbar sind, diese mit auffrischen.
+  if(typeof renderLandingFreeform === 'function') renderLandingFreeform();
 }
 
 /* ── Check if all visible cells in a row are filled ── */
 function rowVisibleCells(row){
   return row.cells.filter(c => c.type !== 'hidden' && c.type !== 'empty');
 }
+function cellHasContent(c){
+  return !!(c.imageUrl || c.bgUrl
+    || (c.type === 'slideshow' && c.slides && c.slides.length > 0)
+    || (c.type === 'silbertablett' && c.stPlaylistSlug)
+    || (c.type === 'heading' && c.headingLines && c.headingLines.some(l => (l.text||'').trim())));
+}
 function rowIsFullyFilled(row){
   const visible = rowVisibleCells(row);
   if(visible.length === 0) return false;
-  return visible.every(c => c.imageUrl || c.bgUrl || (c.type === 'slideshow' && c.slides && c.slides.length > 0) || (c.type==='silbertablett' && c.stPlaylistSlug));
+  return visible.every(cellHasContent);
 }
 
 /* ── Reorder cells within a row ── */
@@ -10971,7 +11187,9 @@ function moveCellInRow(rowId, cellIdx, dir){
 }
 
 /* ── Row element ── */
-function buildRowEl(row, idx){
+function buildRowEl(row, idx, arr, labelPrefix){
+  arr = arr || homeLayout;
+  labelPrefix = labelPrefix || 'Z';
   const el = document.createElement('div');
   el.className = 'he-row' + (row.editing ? ' editing' : '');
   el.dataset.rowId = row.id;
@@ -10982,12 +11200,12 @@ function buildRowEl(row, idx){
 
   const label = document.createElement('span');
   label.className = 'he-row-label';
-  label.textContent = 'Z' + (idx+1);
+  label.textContent = labelPrefix + (idx+1);
 
   const btnUp = makeBarBtn('↑','move','Nach oben', ()=>moveRow(row.id,-1));
   btnUp.disabled = idx===0;
   const btnDn = makeBarBtn('↓','move','Nach unten', ()=>moveRow(row.id,1));
-  btnDn.disabled = idx===homeLayout.length-1;
+  btnDn.disabled = idx===arr.length-1;
   const btnDel = makeBarBtn('×','del','Zeile löschen', ()=>deleteRow(row.id));
 
   bar.appendChild(label);
@@ -10998,7 +11216,7 @@ function buildRowEl(row, idx){
   if(row.editing){
     // Show fill status
     const visible = rowVisibleCells(row);
-    const filled  = visible.filter(c => c.imageUrl || c.bgUrl || (c.type==='slideshow'&&c.slides?.length>0)).length;
+    const filled  = visible.filter(cellHasContent).length;
     const total   = visible.length;
     if(total > 0 && filled < total){
       const status = document.createElement('span');
@@ -11046,6 +11264,10 @@ function buildCells(row, grid){
   if(t0 === 'language'){
     // Language Teaser: immer volle Breite 2:1, read-only (nicht im Admin änderbar)
     grid.appendChild(buildCell(row, 0, 'span-4 language-cell', editing));
+
+  } else if(t0 === 'heading'){
+    grid.classList.add('layout-heading');
+    grid.appendChild(buildHeadingAdminCell(row));
 
   } else if(t0 === 'silbertablett'){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
@@ -11110,6 +11332,13 @@ function buildCells(row, grid){
     grid.appendChild(buildCell(row, 0, 'cell-1x1big', editing));
     grid.appendChild(buildCell(row, 1, 'cell-1x1big', editing));
 
+  } else if(t0 === '1x1-third'){
+    // 3× 1:1 Quadrate nebeneinander
+    grid.classList.add('layout-3sq');
+    grid.appendChild(buildCell(row, 0, 'cell-1x1third', editing));
+    grid.appendChild(buildCell(row, 1, 'cell-1x1third', editing));
+    grid.appendChild(buildCell(row, 2, 'cell-1x1third', editing));
+
   } else if(t0 === 'trio-a'){
     grid.classList.add('trio-grid');
     // In edit mode: always render all 3 slots (empty ones show '+' to allow filling).
@@ -11139,6 +11368,145 @@ function buildCells(row, grid){
       grid.appendChild(buildCell(row,i,'',editing));
     }
   }
+}
+
+/* ── Überschrift-Zelle im Editor (Vorschau + Bearbeiten) ── */
+function buildHeadingAdminCell(row){
+  const cell = row.cells[0] || {};
+  const count = Math.max(1, Math.min(3, cell.headingCount || 1));
+  const lines = (cell.headingLines || []).slice(0, count).filter(l => (l.text||'').trim());
+  const align = cell.headingAlign || 'center';
+  const el = document.createElement('div');
+  el.className = 'he-cell he-heading-cell';
+  el.dataset.rowId = row.id;
+  el.dataset.cellIdx = 0;
+  el.onclick = ()=>openHeadingModal(row.id);
+
+  const preview = document.createElement('div');
+  preview.className = 'he-heading-preview';
+  preview.style.textAlign = align;
+  if(lines.length){
+    lines.forEach(l=>{
+      const p = document.createElement('div');
+      p.setAttribute('style', headingLineStyle(l));
+      p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');
+      preview.appendChild(p);
+    });
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'he-heading-placeholder';
+    ph.textContent = 'Überschrift eingeben …';
+    preview.appendChild(ph);
+  }
+  el.appendChild(preview);
+
+  const edit = document.createElement('button');
+  edit.className = 'he-heading-edit';
+  edit.textContent = '✎ Bearbeiten';
+  edit.onclick = (e)=>{ e.stopPropagation(); openHeadingModal(row.id); };
+  el.appendChild(edit);
+  return el;
+}
+
+/* ── Überschrift-Modal ── */
+let headingModalRowId = null;
+let headingDraft = null;
+function hmEsc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openHeadingModal(rowId){
+  const row = rowById(rowId);
+  if(!row) return;
+  const cell = row.cells[0] || {};
+  headingModalRowId = rowId;
+  const lines = (cell.headingLines && cell.headingLines.length ? cell.headingLines : [makeHeadingLine()]).map(normalizeHeadingLine);
+  while(lines.length < 3) lines.push(makeHeadingLine());
+  headingDraft = {
+    count: Math.max(1, Math.min(3, cell.headingCount || 1)),
+    align: cell.headingAlign || 'center',
+    lines: lines.slice(0,3)
+  };
+  hmBuildLineBlocks();
+  hmSyncSegs();
+  renderHeadingPreview();
+  const m = document.getElementById('headingModal');
+  if(m) m.classList.add('open');
+}
+function closeHeadingModal(){
+  const m = document.getElementById('headingModal');
+  if(m) m.classList.remove('open');
+  headingModalRowId = null; headingDraft = null;
+}
+function hmFontOptions(sel){ return Object.keys(HEADING_FONTS).map(k=>`<option value="${k}" ${sel===k?'selected':''}>${hmEsc(HEADING_FONTS[k].label)}</option>`).join(''); }
+function hmSizeOptions(sel){ return Object.keys(HEADING_SIZES).map(k=>`<option value="${k}" ${sel===k?'selected':''}>${hmEsc(HEADING_SIZES[k].label)}</option>`).join(''); }
+function hmColorOptions(sel){ return HEADING_COLORS.map(c=>`<option value="${c.v}" ${sel===c.v?'selected':''}>${hmEsc(c.label)}</option>`).join(''); }
+function hmBuildLineBlocks(){
+  const wrap = document.getElementById('hmLines');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  headingDraft.lines.forEach((l,i)=>{
+    const blk = document.createElement('div');
+    blk.className = 'hm-line';
+    blk.dataset.i = i;
+    blk.style.display = (i < headingDraft.count) ? '' : 'none';
+    blk.innerHTML = `
+      <div class="hm-line-head">Zeile ${i+1}</div>
+      <input class="hm-text" type="text" placeholder="Text dieser Zeile …" value="${hmEsc(l.text)}" oninput="hmSetLine(${i},'text',this.value)">
+      <div class="hm-controls">
+        <select class="hm-sel" onchange="hmSetLine(${i},'font',this.value)">${hmFontOptions(l.font)}</select>
+        <select class="hm-sel" onchange="hmSetLine(${i},'size',this.value)">${hmSizeOptions(l.size)}</select>
+        <select class="hm-sel" onchange="hmSetLine(${i},'color',this.value)">${hmColorOptions(l.color)}</select>
+        <button type="button" class="hm-toggle ${l.upper?'active':''}" title="Großbuchstaben" onclick="hmToggle(${i},'upper',this)">AA</button>
+        <button type="button" class="hm-toggle ${l.bold?'active':''}" title="Fett" style="font-weight:800" onclick="hmToggle(${i},'bold',this)">B</button>
+        <button type="button" class="hm-toggle ${l.italic?'active':''}" title="Kursiv" style="font-style:italic" onclick="hmToggle(${i},'italic',this)">I</button>
+        <button type="button" class="hm-toggle ${l.underline?'active':''}" title="Unterstrichen" style="text-decoration:underline" onclick="hmToggle(${i},'underline',this)">U</button>
+      </div>`;
+    wrap.appendChild(blk);
+  });
+}
+function hmSyncSegs(){
+  document.querySelectorAll('#hmCountSeg button').forEach(b=>b.classList.toggle('active', Number(b.dataset.c)===headingDraft.count));
+  document.querySelectorAll('#hmAlignSeg button').forEach(b=>b.classList.toggle('active', b.dataset.a===headingDraft.align));
+}
+function hmSetCount(n){
+  headingDraft.count = Math.max(1, Math.min(3, n));
+  document.querySelectorAll('#hmLines .hm-line').forEach((blk,i)=>{ blk.style.display = (i < headingDraft.count) ? '' : 'none'; });
+  hmSyncSegs(); renderHeadingPreview();
+}
+function hmSetAlign(a){ headingDraft.align = a; hmSyncSegs(); renderHeadingPreview(); }
+function hmSetLine(i,key,val){ if(!headingDraft.lines[i]) return; headingDraft.lines[i][key] = val; renderHeadingPreview(); }
+function hmToggle(i,key,btn){ if(!headingDraft.lines[i]) return; headingDraft.lines[i][key] = !headingDraft.lines[i][key]; btn.classList.toggle('active', headingDraft.lines[i][key]); renderHeadingPreview(); }
+function renderHeadingPreview(){
+  const pv = document.getElementById('hmPreview');
+  if(!pv || !headingDraft) return;
+  pv.style.textAlign = headingDraft.align;
+  pv.innerHTML = '';
+  let any = false;
+  headingDraft.lines.slice(0, headingDraft.count).forEach(l=>{
+    const txt = (l.text||'').trim();
+    if(!txt) return;
+    any = true;
+    const p = document.createElement('div');
+    p.setAttribute('style', headingLineStyle(l));
+    p.textContent = l.upper ? txt.toUpperCase() : txt;
+    pv.appendChild(p);
+  });
+  if(!any){
+    const ph = document.createElement('div');
+    ph.style.cssText = 'color:rgba(133,172,201,.4);font-size:13px';
+    ph.textContent = 'Noch kein Text eingegeben.';
+    pv.appendChild(ph);
+  }
+}
+function saveHeadingModal(){
+  const row = rowById(headingModalRowId);
+  if(!row || !headingDraft){ closeHeadingModal(); return; }
+  markHomeAction();
+  const cell = row.cells[0];
+  cell.type = 'heading';
+  cell.headingCount = headingDraft.count;
+  cell.headingAlign = headingDraft.align;
+  cell.headingLines = headingDraft.lines.map(normalizeHeadingLine);
+  closeHeadingModal();
+  renderHomeEditor();
 }
 
 /* ── Single cell ── */
@@ -11319,6 +11687,7 @@ function closeLpm(){
 // Map layout key → applyType key
 const LPM_TYPE_MAP = {
   '4x1x1':      '1x1',
+  '3x1x1':      '3big',
   '2x1x1':      '2big',
   '1x2x1-full': '4x1-wide',   // 2:1 full width (maps to span-4 with 2:1 aspect)
   '2x2x1-half': '2x2half',    // 2× 2:1 side by side
@@ -11327,6 +11696,7 @@ const LPM_TYPE_MAP = {
   '1x2x1-plus2':'2x1plus2',   // 2:1 half + 2×1:1
   'slideshow':   'slideshow',
   'silbertablett': 'silbertablett',  // rotierendes Cover + Diashow
+  'heading':     'heading',          // Text-Überschrift, 1–3 Zeilen
 };
 
 function lpmPick(optionEl){
@@ -11398,6 +11768,12 @@ document.getElementById('layoutPickerModal').addEventListener('click', e=>{
   if(e.target === document.getElementById('layoutPickerModal')) closeLpm();
 });
 
+// Backdrop click closes heading modal
+(function(){
+  const hm = document.getElementById('headingModal');
+  if(hm) hm.addEventListener('click', e=>{ if(e.target === hm) closeHeadingModal(); });
+})();
+
 /* ── Type menu (appears on click on empty cell in edit mode) ── */
 function toggleTypeMenu(cellEl, rowId, cellIdx){
   // Open the new layout picker modal instead of the old dropdown menu
@@ -11424,6 +11800,16 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells[0] = {...row.cells[0], ...old[0], type:'1x1-big'};
     row.cells[1] = {...row.cells[1], ...old[1], type:'1x1-big'};
     row.cells[2].type = 'hidden';
+    row.cells[3].type = 'hidden';
+    if(row.caption === undefined) row.caption = '';
+
+  } else if(type === '3big'){
+    // 3× 1:1 Quadrate nebeneinander (je 1/3 Breite)
+    const old = row.cells.map(c=>({...c}));
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old[0], type:'1x1-third'};
+    row.cells[1] = {...row.cells[1], ...old[1], type:'1x1-third'};
+    row.cells[2] = {...row.cells[2], ...old[2], type:'1x1-third'};
     row.cells[3].type = 'hidden';
     if(row.caption === undefined) row.caption = '';
 
@@ -11521,6 +11907,19 @@ function applyType(rowId, cellIdx, type, pos){
     row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
     row.cells[0] = {...row.cells[0], ...old0, type:'slideshow'};
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
+
+  } else if(type === 'heading'){
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'heading',
+      headingCount: (old0.headingLines && old0.headingLines.length) ? Math.min(3, old0.headingLines.length) : 1,
+      headingAlign: old0.headingAlign || 'center',
+      headingLines: (old0.headingLines && old0.headingLines.length)
+        ? old0.headingLines.map(normalizeHeadingLine)
+        : [makeHeadingLine(), makeHeadingLine(), makeHeadingLine()]
+    };
+    while(row.cells[0].headingLines.length < 3) row.cells[0].headingLines.push(makeHeadingLine());
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
   }
 
   renderHomeEditor();
@@ -11530,6 +11929,9 @@ function applyType(rowId, cellIdx, type, pos){
   }
   if(type === 'silbertablett'){
     setTimeout(()=>openSilbertablettModal(rowId), 80);
+  }
+  if(type === 'heading'){
+    setTimeout(()=>openHeadingModal(rowId), 80);
   }
   // No auto-openCellEdit: user sees the row layout and clicks individual cells themselves
 }
@@ -11557,18 +11959,22 @@ function addRowAtTop(){
 }
 
 function deleteRow(id){
-  if(homeLayout.length===1){ toast('Letzte Zeile kann nicht gelöscht werden','err'); return; }
-  markHomeAction();
-  homeLayout = homeLayout.filter(r=>r.id!==id);
+  const arr = ownerArrayOf(id);
+  if(arr === homeLayout && homeLayout.length===1){ toast('Letzte Zeile kann nicht gelöscht werden','err'); return; }
+  const idx = arr.findIndex(r=>r.id===id);
+  if(idx<0) return;
+  if(arr === homeLayout) markHomeAction();
+  arr.splice(idx,1);
   renderHomeEditor();
 }
 
 function moveRow(id, dir){
-  const idx = homeLayout.findIndex(r=>r.id===id);
+  const arr = ownerArrayOf(id);
+  const idx = arr.findIndex(r=>r.id===id);
   const ni  = idx + dir;
-  if(ni<0||ni>=homeLayout.length) return;
-  markHomeAction();
-  [homeLayout[idx],homeLayout[ni]] = [homeLayout[ni],homeLayout[idx]];
+  if(idx<0 || ni<0 || ni>=arr.length) return;
+  if(arr === homeLayout) markHomeAction();
+  [arr[idx],arr[ni]] = [arr[ni],arr[idx]];
   renderHomeEditor();
 }
 
@@ -11591,6 +11997,8 @@ function openCellEdit(rowId, cellIdx){
     openSlideshowModal(rowId);
   } else if(cell.type === 'silbertablett'){
     openSilbertablettModal(rowId);
+  } else if(cell.type === 'heading'){
+    openHeadingModal(rowId);
   } else {
     openHomeTileModal(rowId, cellIdx);
   }
@@ -11695,7 +12103,7 @@ function htmSaveLanguageTeaser(){
 
 /* ── Step 2: source / motif ── */
 // Types where Song/Album cover makes sense (1:1 aspect ratio)
-const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','trio-a','trio-b','trio-c','span-2']);
+const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','1x1-third','trio-a','trio-b','trio-c','span-2']);
 // Types with 2:1 aspect ratio
 const HTM_WIDE_TYPES = new Set(['2x1-half','2x1-full','span-4','4x1','lyrics21']);
 
