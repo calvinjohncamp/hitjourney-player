@@ -5,6 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
+<!-- Version: admin-v20260617a-landing-spacers-scroll-order-return -->
 <!-- Version: admin-v20260616n-safe-home-save-no-delete-first -->
 <!-- Version: admin-v20260616h-landing-teaser32-only -->
 <!-- Version: admin-v20260616c-landingpage-teaser-5x1-2x1 -->
@@ -269,14 +270,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
 
 /* ══ LANDINGPAGE TAB ══ */
-#tabLanding{padding:0;flex-direction:column;overflow:hidden}
+#tabLanding{padding:0;flex-direction:column;overflow-y:auto;overflow-x:hidden}
 #tabLanding.active{display:flex}
-.lp-editor-wrap{flex:1;overflow-y:auto;padding:12px 12px 110px}
+.lp-editor-wrap{flex:0 0 auto;overflow:visible;padding:12px 12px 110px}
 .lp-editor-wrap::-webkit-scrollbar{display:none}
 .lp-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;flex-shrink:0;border-bottom:1px solid rgba(133,172,201,.08)}
 .lp-toolbar-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.4)}
 .lp-toolbar-actions{display:flex;gap:6px;align-items:center}
-.lp-pagebar{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1fr) minmax(160px,.8fr) auto;gap:10px;align-items:end;padding:10px 12px;border-bottom:1px solid rgba(133,172,201,.08);background:rgba(6,20,32,.96);flex-shrink:0}
+.lp-pagebar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1fr) minmax(160px,.8fr) auto;gap:10px;align-items:end;padding:10px 12px;border-bottom:1px solid rgba(133,172,201,.08);background:rgba(6,20,32,.96);flex-shrink:0}
 .lp-pagebar .lp-field label{display:block;font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:rgba(133,172,201,.42);margin:0 0 5px}
 .lp-pagebar .lp-field input,.lp-pagebar .lp-field select{width:100%;background:rgba(11,42,66,.72);border:1px solid rgba(133,172,201,.18);border-radius:9px;padding:10px 11px;color:#f1ecdf;font-size:13px;outline:none;font-family:inherit}
 .lp-pagebar .lp-field input:focus,.lp-pagebar .lp-field select:focus{border-color:rgba(133,172,201,.45);background:rgba(11,42,66,.94)}
@@ -692,6 +693,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.cell-1x1third{aspect-ratio:1/1;width:100%}
 /* ── Überschrift-Zeile im Editor ── */
 .he-row-grid.layout-heading{display:block;padding:8px}
+.he-row-grid.layout-spacer{display:block;padding:8px}.he-spacer-cell{border:1px dashed rgba(133,172,201,.24);border-radius:10px;background:rgba(133,172,201,.035);display:flex;align-items:center;justify-content:center;color:rgba(207,229,245,.58);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.he-spacer-cell.spacer-s{height:64px}.he-spacer-cell.spacer-m{height:112px}.he-spacer-cell.spacer-l{height:192px}
 .he-heading-cell{position:relative;width:100%;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:26px 18px;cursor:pointer;aspect-ratio:auto!important;min-height:0!important;display:block}
 .he-heading-cell:hover{border-color:rgba(133,172,201,.32)}
 .he-heading-preview{display:flex;flex-direction:column;gap:6px;align-items:stretch}
@@ -7609,6 +7611,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
     <span class="lp-toolbar-title">Landingpages</span>
     <div class="lp-toolbar-actions">
       <button class="lp-btn" onclick="landingAddPage()">＋ Landingpage</button>
+      <button class="lp-btn" onclick="landingMovePage(-1)" title="Landingpage nach oben">↑ Seite</button>
+      <button class="lp-btn" onclick="landingMovePage(1)" title="Landingpage nach unten">↓ Seite</button>
       <button class="lp-btn" onclick="landingDuplicatePage()">Duplizieren</button>
       <button class="lp-btn danger" onclick="landingDeletePage()">Löschen</button>
       <button class="lp-btn save" id="landingSaveBtn" onclick="saveLandingPage()">Speichern</button>
@@ -8328,6 +8332,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
           <div style="font-size:10px;color:rgba(133,172,201,.5)">Aa · 1–3 Zeilen</div>
         </div>
         <div class="lpm-label">Überschrift — Text 1–3 Zeilen</div>
+      </div>
+
+      <div class="lpm-option full" data-layout="spacer-s" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center;align-items:center;min-height:30px"><div style="height:10px;width:78%;border:1px dashed rgba(133,172,201,.42);border-radius:999px"></div></div>
+        <div class="lpm-label">Leerstreifen schmal</div>
+      </div>
+      <div class="lpm-option full" data-layout="spacer-m" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center;align-items:center;min-height:42px"><div style="height:18px;width:78%;border:1px dashed rgba(133,172,201,.42);border-radius:999px"></div></div>
+        <div class="lpm-label">Leerstreifen mittel</div>
+      </div>
+      <div class="lpm-option full" data-layout="spacer-l" onclick="lpmPick(this)">
+        <div class="lpm-option-preview" style="justify-content:center;align-items:center;min-height:56px"><div style="height:30px;width:78%;border:1px dashed rgba(133,172,201,.42);border-radius:999px"></div></div>
+        <div class="lpm-label">Leerstreifen doppelt</div>
       </div>
 
     </div>
@@ -10776,7 +10793,7 @@ function renderLandingFreeform(){
     cont.innerHTML = '<div class="lp-freeform-empty">Noch keine freien Zeilen. Mit „＋ Neue Zeile hinzufügen" beginnen.</div>';
     return;
   }
-  rows.forEach((row,idx)=> cont.appendChild(buildRowEl(row, idx, rows, 'L')));
+  rows.forEach((row,idx)=>{ row.editing = true; cont.appendChild(buildRowEl(row, idx, rows, 'L')); });
 }
 
 function landingAddRow(){
@@ -10790,6 +10807,17 @@ function landingAddRow(){
     if(w) w.scrollTop = w.scrollHeight;
   },60);
 }
+function landingMovePage(dir){
+  if(!landingData || !Array.isArray(landingData.pages)) return;
+  const id = landingData.activePageId;
+  const i = landingData.pages.findIndex(p=>p.id===id);
+  const j = i + dir;
+  if(i<0 || j<0 || j>=landingData.pages.length) return;
+  [landingData.pages[i], landingData.pages[j]] = [landingData.pages[j], landingData.pages[i]];
+  landingData.activePageId = id;
+  renderLandingEditor();
+}
+
 function landingSelectPage(id){
   if(!landingData) return;
   if(landingData.pages.some(p=>p.id===id)) landingData.activePageId = id;
@@ -11269,6 +11297,10 @@ function buildCells(row, grid){
     grid.classList.add('layout-heading');
     grid.appendChild(buildHeadingAdminCell(row));
 
+  } else if(t0 === 'spacer'){
+    grid.classList.add('layout-spacer');
+    grid.appendChild(buildSpacerAdminCell(row));
+
   } else if(t0 === 'silbertablett'){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
     grid.classList.add('layout-silbertablett');
@@ -11409,6 +11441,22 @@ function buildHeadingAdminCell(row){
 }
 
 /* ── Überschrift-Modal ── */
+function buildSpacerAdminCell(row){
+  const cell = row.cells && row.cells[0] ? row.cells[0] : {};
+  const size = ['s','m','l'].includes(cell.spacerSize) ? cell.spacerSize : 's';
+  const labels = {s:'Leerstreifen · schmal', m:'Leerstreifen · mittel', l:'Leerstreifen · doppelt'};
+  const el = document.createElement('div');
+  el.className = 'he-spacer-cell spacer-' + size;
+  el.textContent = labels[size];
+  el.onclick = ()=>{
+    const next = size === 's' ? 'm' : (size === 'm' ? 'l' : 's');
+    row.cells[0].spacerSize = next;
+    renderHomeEditor();
+    if(typeof renderLandingFreeform === 'function') renderLandingFreeform();
+  };
+  return el;
+}
+
 let headingModalRowId = null;
 let headingDraft = null;
 function hmEsc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -11697,6 +11745,9 @@ const LPM_TYPE_MAP = {
   'slideshow':   'slideshow',
   'silbertablett': 'silbertablett',  // rotierendes Cover + Diashow
   'heading':     'heading',          // Text-Überschrift, 1–3 Zeilen
+  'spacer-s':     'spacer-s',
+  'spacer-m':     'spacer-m',
+  'spacer-l':     'spacer-l',
 };
 
 function lpmPick(optionEl){
@@ -11919,6 +11970,12 @@ function applyType(rowId, cellIdx, type, pos){
         : [makeHeadingLine(), makeHeadingLine(), makeHeadingLine()]
     };
     while(row.cells[0].headingLines.length < 3) row.cells[0].headingLines.push(makeHeadingLine());
+    [1,2,3].forEach(i=>row.cells[i].type='hidden');
+
+  } else if(type === 'spacer-s' || type === 'spacer-m' || type === 'spacer-l'){
+    const old0 = {...row.cells[0]};
+    row.cells = [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
+    row.cells[0] = {...row.cells[0], ...old0, type:'spacer', spacerSize:type.replace('spacer-','')};
     [1,2,3].forEach(i=>row.cells[i].type='hidden');
   }
 
