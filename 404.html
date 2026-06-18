@@ -416,6 +416,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #landingSections .landing-section + .landing-section{margin-top:0}
 .landing-nav{margin:0;padding-top:0}
 #landingRowsTop:empty{display:none}
+.landing-nav.align-left{justify-content:flex-start}
 @media(min-width:1000px){.landing-wrap{gap:16px}.landing-hero{gap:16px}#landingSections{gap:16px}}
 
 /* ══ ARCHIVE ══ */
@@ -8078,6 +8079,9 @@ function renderLandingPage(page){
     root.innerHTML = '<div style="text-align:center;color:rgba(133,172,201,.45);padding:28px">Noch keine Landingpage-Inhalte gepflegt.</div>';
     return;
   }
+  // Ausrichtung der unteren Navigation (Songwriter-Infos / Home): mittig oder linksbündig.
+  const navEl = document.querySelector('#screenLanding .landing-nav');
+  if(navEl) navEl.classList.toggle('align-left', page.navAlign === 'left');
   const titleEl = document.getElementById('landingMainTitle');
   const subEl = document.getElementById('landingMainSub');
   const logoWrap = document.getElementById('landingLogoWrap');
@@ -8439,7 +8443,7 @@ function headingLineStyle(l){
   ].join(';');
 }
 /* ── Leerstreifen (Abstandhalter) – Höhen identisch zum Admin ── */
-const SPACER_SIZES = { s:'40px', m:'80px', l:'160px' };
+const SPACER_SIZES = { s:'32px', m:'64px', l:'128px' };
 function buildSpacerEl(cell){
   const h = SPACER_SIZES[(cell && cell.spacerSize)] || SPACER_SIZES.m;
   const d = document.createElement('div');
