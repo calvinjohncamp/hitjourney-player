@@ -65,7 +65,7 @@
 <!-- Version: v197-panorama-4x1-album-target-robust-fix -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton|Special+Elite|Dancing+Script:wght@600&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:rgba(6,20,32,1);color:#f1ecdf;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;overflow:hidden}
@@ -8174,9 +8174,10 @@ function routeLandingIfNeeded(){ if(isLandingRoute()) setTimeout(showLanding, 0)
 
 /* ── Überschrift (Heading) – Design-Tokens identisch zum Admin ── */
 const HEADING_FONTS = {
-  anton:  "'Anton',sans-serif",
-  system: "-apple-system,'Helvetica Neue',Arial,sans-serif",
-  elite:  "'Special Elite','Courier New',monospace"
+  anton:   "'Anton',sans-serif",
+  system:  "-apple-system,'Helvetica Neue',Arial,sans-serif",
+  elite:   "'Special Elite','Courier New',monospace",
+  cursive: "'Dancing Script',cursive"
 };
 const HEADING_SIZES = {
   s:'clamp(15px,2vw,20px)', m:'clamp(19px,2.6vw,30px)', l:'clamp(26px,4vw,44px)', xl:'clamp(34px,6vw,60px)'
@@ -8207,21 +8208,63 @@ function buildSpacerEl(cell){
   d.style.height = h;
   return d;
 }
-function buildHeadingEl(cell){
-  cell = cell || {};
-  const count = Math.max(1, Math.min(3, cell.headingCount || 1));
-  const lines = (cell.headingLines || []).slice(0, count).filter(l => (l.text||'').trim());
-  const wrap = document.createElement('div');
-  wrap.className = 'home-heading';
-  wrap.style.textAlign = cell.headingAlign || 'center';
-  lines.forEach(l=>{
-    const p = document.createElement('div');
-    p.className = 'home-heading-line';
-    p.setAttribute('style', headingLineStyle(l));
-    p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');
-    wrap.appendChild(p);
-  });
-  return lines.length ? wrap : null;
+function buildHeadingEl(cell){\
+  cell = cell || {};\
+  const count = Math.max(1, Math.min(3, cell.headingCount || 1));\
+  const lines = (cell.headingLines || []).slice(0, count).filter(l => (l.text||'').trim());\
+  const wrap = document.createElement('div');\
+  wrap.className = 'home-heading';\
+  wrap.style.textAlign = cell.headingAlign || 'center';\
+\
+  // Optional: right-side note (noteRight)\
+  const noteRight = (cell.noteRight || '').trim();\
+  const noteFont = cell.noteRightFont || 'system';\
+  const noteColor = /^#[0-9a-fA-F]{6}$/.test(cell.noteRightColor||'') ? cell.noteRightColor : '#C90019';\
+  const noteFontCss = HEADING_FONTS[noteFont] || HEADING_FONTS.system;\
+\
+  if(noteRight && lines.length){\
+    // Wrap first line + note in a flex row\
+    const firstLine = lines[0];\
+    const row = document.createElement('div');\
+    row.className = 'home-heading-line home-heading-row';\
+    row.style.cssText = 'display:flex;align-items:flex-end;justify-content:space-between;gap:12px;width:100%';\
+    const leftEl = document.createElement('span');\
+    leftEl.setAttribute('style', headingLineStyle(firstLine));\
+    leftEl.textContent = firstLine.upper ? (firstLine.text||'').toUpperCase() : (firstLine.text||'');\
+    const rightEl = document.createElement('span');\
+    rightEl.style.cssText = [\
+      'font-family:'+noteFontCss,\
+      'font-size:clamp(10px,1.1vw,13px)',\
+      'color:'+noteColor,\
+      'text-align:right',\
+      'line-height:1.3',\
+      'white-space:pre-line',\
+      'flex-shrink:0',\
+      'font-style:italic',\
+      'margin:0 0 2px'\
+    ].join(';');\
+    rightEl.textContent = noteRight;\
+    row.appendChild(leftEl);\
+    row.appendChild(rightEl);\
+    wrap.appendChild(row);\
+    // Remaining lines (2+3) rendered normally\
+    lines.slice(1).forEach(l=>{\
+      const p = document.createElement('div');\
+      p.className = 'home-heading-line';\
+      p.setAttribute('style', headingLineStyle(l));\
+      p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');\
+      wrap.appendChild(p);\
+    });\
+  } else {\
+    lines.forEach(l=>{\
+      const p = document.createElement('div');\
+      p.className = 'home-heading-line';\
+      p.setAttribute('style', headingLineStyle(l));\
+      p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');\
+      wrap.appendChild(p);\
+    });\
+  }\
+  return lines.length ? wrap : null;\
 }
 
 function renderHomeLayout(){
