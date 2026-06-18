@@ -366,7 +366,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-player-box .tl-deck .deck-title{font-size:clamp(10px,1.15vw,14px);text-align:left!important;width:100%}
 .landing-player-box .tl-deck .deck-artist{font-size:clamp(8px,.9vw,11px);text-align:left!important;width:100%}
 .landing-player-box .tl-deck .deck-red-btn{width:8.4%;right:9.8%;bottom:8%}
-@media(max-width:760px){.landing-top-wrap.visible{grid-template-columns:1fr;gap:12px}.landing-player-box{width:min(62vw,260px);justify-self:center}}
+/* Teaser-Option 1:1 — Teaser genauso groß wie der Plattenspieler, mehr Luft dazwischen */
+.landing-top-wrap.teaser-square.visible{grid-template-columns:1fr 1fr;gap:40px}
+.landing-top-wrap.teaser-square .landing-teaser32{aspect-ratio:1/1}
+@media(max-width:760px){.landing-top-wrap.visible{grid-template-columns:1fr;gap:12px}.landing-player-box{width:min(62vw,260px);justify-self:center}.landing-top-wrap.teaser-square.visible{grid-template-columns:1fr;gap:18px}.landing-top-wrap.teaser-square .landing-teaser32{width:min(62vw,260px);justify-self:center}}
 
 .landing-kicker,.landing-title,.landing-sub{display:none!important}
 .landing-logo-wrap{display:none;align-items:flex-start;justify-content:flex-start;margin:0 0 18px;width:100%;max-width:none}
@@ -5543,7 +5546,9 @@ async function loadFromSupabase() {
   try {
     const aboutRow = (window._homeLayoutRows || []).find(r =>
       r && r.cells && r.cells[0] && r.cells[0].type === 'about');
-    if(aboutRow) applyAboutContent(aboutRow.cells[0]);
+    // Immer anwenden: ohne gespeicherte „about“-Zeile greift die eingebaute Standard-Bio,
+    // damit der BIO-Button trotzdem erscheint.
+    applyAboutContent(aboutRow ? aboutRow.cells[0] : {});
   } catch(e){ console.warn('[hitjourney] About-Inhalt konnte nicht angewendet werden:', e); }
 }
 
@@ -5611,8 +5616,34 @@ function positionAboutBioButton(){
 
 // Befüllt die About-/Info-Seite mit im Admin gepflegten Inhalten.
 // Fehlende Felder bleiben auf dem im HTML hinterlegten Standard.
+// Eingebaute Bio-Story (Fallback). Erscheint, solange im Admin keine eigene Bio
+// gespeichert ist – damit der BIO-Button auf der About-Seite immer sichtbar ist
+// und „Songwriter-Infos“ auf den Landingpages immer zur Bio führt.
+const DEFAULT_ABOUT_BIO = [
+  {
+    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg',
+    headline:'Vom Vorstand zum Songwriter',
+    html:`Jörn Kämper · Jahrgang 1966<br><br>15 Jahre lang habe ich als Vorstandsvorsitzender ein börsennotiertes Unternehmen geführt – Europas führenden Tapetenhersteller. Heute schreibe ich Songs.<br><br>Der Weg dorthin war alles andere als gerade. BWL-Studium in Köln, Marketing bei Volkswagen in Toronto und BMW in München, Unternehmensberater bei Kienbaum, danach 22 Jahre bei A.S. Création – vom Assistenten der Geschäftsleitung bis zum Vorstandsvorsitzenden und späteren Aufsichtsratsvorsitzenden.`,
+    quote:`Sie läuft vorbei - Ihr Sommerkleid wie ein Versprechen - Haare tanzen mit dem Abendwind - Und ich schau zu - Wenn Blicke Gin wären - Wär ich längst fertig, fix und fertig`,
+    quoteSource:'Bar am Meer'
+  },
+  {
+    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
+    headline:'Erst das Wort',
+    html:`Doch eine Sache hat mich nie losgelassen: das Schreiben. Schon als Jugendlicher habe ich Gedichte verfasst und dabei oft gedacht „Songtexte könntest du." Das Problem: Ich hatte nie gelernt, ein Instrument zu spielen. Die Ideen waren da, aber ihnen fehlte die Musik.<br><br>2024 änderte sich das. Mit Künstlicher Intelligenz als Werkzeug konnte ich zum ersten Mal hören, wie meine Texte als Songs klingen. Seitdem beginnt jedes Stück mit einer Idee, einem Bild oder einer Zeile. Erst kommt der Text. Dann das musikalische Konzept. Die Musik folgt dem Wort – nie umgekehrt.`,
+    quote:`They say he's no one, just passing through - Just one more ghost the city grew - But he holds a picture no one sees - Tucked behind his old IDs`,
+    quoteSource:'Pine & Snow'
+  },
+  {
+    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg',
+    headline:'Es fehlt nur eine Stimme',
+    html:`Mit derselben Neugier, mit der ich früher Unternehmen geführt habe, entwickle ich heute Songs, Cover, Websites und Software. Die Plattform hitjourney.com wurde von mir selbst konzipiert, gestaltet und programmiert. Texte, Musik, Artwork und Technik greifen ineinander.<br><br>Was noch fehlt? Die echten Stimmen. Bis heute schreibe und produziere ich meine Songs allein. Aber natürlich würde ich sie eines Tages gern von echten Sängerinnen und Sängern hören. Vielleicht wartet irgendwo da draußen bereits die passende Stimme auf den richtigen Song.`,
+    quote:`Berlin - Du alte müde Braut - Dein Kleid ist grau - Dein Herz zu laut - Ein Graffiti flüstert „Bleib noch hier" - Und wie immer träum ich nur von dir`,
+    quoteSource:'Berlin'
+  }
+];
 function applyAboutContent(a){
-  if(!a) return;
+  a = a || {};
   const set = (id, html)=>{ const el=document.getElementById(id); if(el && html!=null && html!=='') el.innerHTML = html; };
   set('aboutTitle',         a.title);
   set('aboutDomain',        a.domain);
@@ -5636,7 +5667,8 @@ function applyAboutContent(a){
   } else if(Array.isArray(a.bioImages) && a.bioImages.length){
     aboutBioSections = a.bioImages.filter(u=>u).map(u=>({image:u}));
   } else {
-    aboutBioSections = [];
+    // Keine eigene Bio gespeichert → eingebaute Standard-Bio anzeigen.
+    aboutBioSections = DEFAULT_ABOUT_BIO;
   }
   const hasBio = aboutBioSections.some(s => s && (
     s.kind === 'finale'
@@ -8096,6 +8128,8 @@ function renderLandingPage(page){
   const teaserUrl = page.logo32Url || page.teaser32Url || ''; // v269: nur echter 3:2-Teaser, keine alten 2:1/5:1-Fallbacks
   if(topWrap){
     topWrap.classList.add('visible');
+    // Teaser-Form: 3:2 (Standard) oder 1:1 (genauso groß wie der Plattenspieler, mehr Luft).
+    topWrap.classList.toggle('teaser-square', page.teaserShape === '1:1');
     if(teaser32Img){
       if(teaserUrl){ teaser32Img.src = teaserUrl; teaser32Img.alt = (page.name || 'Publisher') + ' Teaser'; }
       else { teaser32Img.removeAttribute('src'); teaser32Img.alt = 'Publisher Teaser'; }
