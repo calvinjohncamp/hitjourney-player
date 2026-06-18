@@ -368,8 +368,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .landing-player-box .tl-deck .deck-artist{font-size:clamp(8px,.9vw,11px);text-align:left!important;width:100%}
 .landing-player-box .tl-deck .deck-red-btn{width:8.4%;right:9.8%;bottom:8%}
 /* Teaser-Option 1:1 — Teaser genauso groß wie der Plattenspieler, mehr Luft dazwischen */
-.landing-top-wrap.teaser-square.visible{grid-template-columns:1fr 1fr;gap:40px}
-.landing-top-wrap.teaser-square .landing-teaser32{aspect-ratio:1/1}
+.landing-top-wrap.teaser-square.visible{grid-template-columns:repeat(5,1fr);gap:12px}
+.landing-top-wrap.teaser-square .landing-teaser32{aspect-ratio:1/1;grid-column:1/3}
+.landing-top-wrap.teaser-square .landing-player-box{grid-column:4/6}
 @media(max-width:760px){.landing-top-wrap.visible{grid-template-columns:1fr;gap:12px}.landing-player-box{width:min(62vw,260px);justify-self:center}.landing-top-wrap.teaser-square.visible{grid-template-columns:1fr;gap:18px}.landing-top-wrap.teaser-square .landing-teaser32{width:min(62vw,260px);justify-self:center}}
 
 .landing-kicker,.landing-title,.landing-sub{display:none!important}
