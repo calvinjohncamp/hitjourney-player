@@ -401,10 +401,22 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 /* Freie Home-Zeilen auf Landingpages: kantenbündig + gleiche Abstände wie die Section-Cover darüber.
    #landingSections erhöht die Spezifität, damit die spätere Desktop-.home-grid-Regel (padding/margin) nicht gewinnt. */
-.landing-wrap .landing-freeform{padding:0;gap:12px;margin:-10px 0 40px;max-width:none}
-.landing-wrap .landing-freeform .home-heading{margin-top:0}
+.landing-wrap .landing-freeform{padding:0;gap:12px;margin:0;max-width:none}
+.landing-wrap .landing-freeform .home-heading{margin:0}
 .landing-wrap .landing-freeform .home-row3sq{gap:12px}
 @media(min-width:1000px){.landing-wrap .landing-freeform{gap:16px}.landing-wrap .landing-freeform .home-row3sq{gap:16px}}
+/* ── Einheitliche Bereichsabstände = Cover-Zeilenabstand (12px mobil / 16px Desktop) ──
+   Teaser, Cover-Blöcke und alle freien Zeilen/Zonen liegen im selben gleichmäßigen Raster.
+   Für mehr Luft fügt der Admin gezielt Leerstreifen ein. */
+.landing-wrap{display:flex;flex-direction:column;gap:12px}
+.landing-hero{display:flex;flex-direction:column;gap:12px}
+#landingSections{display:flex;flex-direction:column;gap:12px}
+.landing-hero .landing-top-wrap{margin:0}
+#landingSections .landing-section{margin:0}
+#landingSections .landing-section + .landing-section{margin-top:0}
+.landing-nav{margin:0;padding-top:0}
+#landingRowsTop:empty{display:none}
+@media(min-width:1000px){.landing-wrap{gap:16px}.landing-hero{gap:16px}#landingSections{gap:16px}}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
