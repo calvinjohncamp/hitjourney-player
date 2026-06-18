@@ -322,8 +322,11 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-slot-actions{display:flex;gap:5px}.lp-slot-actions button{flex:1;border:0;border-radius:7px;background:rgba(133,172,201,.10);color:#85ACC9;font-size:12px;font-weight:800;padding:6px;cursor:pointer}.lp-slot-actions button:hover{background:rgba(133,172,201,.2)}.lp-slot-actions button.clear{color:#e08080;background:rgba(220,80,80,.09)}
 .lp-empty{padding:44px 20px;text-align:center;color:rgba(133,172,201,.35);font-size:14px}
 .lp-freeform-note{padding:0 10px 8px;color:rgba(133,172,201,.5);font-size:11px;line-height:1.45}
-.lp-freeform-rows{padding:4px 10px 8px}
+.lp-freeform-rows{padding:4px 10px 0}
 .lp-freeform-empty{padding:22px 12px;text-align:center;color:rgba(133,172,201,.35);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
+.lp-freeform-zone{margin:2px 0 6px}
+.lp-freeform-zone .he-add-bar{padding:4px 10px 8px}
+.lp-freeform-zone .he-add-btn{background:rgba(133,172,201,.06);font-size:10px;letter-spacing:.03em}
 @media(max-width:720px){.lp-fields{grid-template-columns:1fr 1fr}.lp-field.wide{grid-column:1/-1}.lp-slot-grid.cols-5,.lp-slot-grid.cols-4,.lp-slot-grid.cols-3{grid-template-columns:repeat(2,1fr)}}
 
 /* ══ EDIT SCREEN ══ */
@@ -10093,9 +10096,19 @@ function cancelHomeEdits(){
 function uid(){ return Math.random().toString(36).slice(2,9); }
 // Alle Zeilen-Arrays, in denen eine Zeile leben kann: Home-Layout + die freien
 // Zeilen der aktuell aktiven Landingpage.
+// Zonen für freie Landing-Zeilen: über Teaser, unter Teaser, zwischen Blöcken, unten.
+const LANDING_ZONES = { top:'rowsTop', afterTeaser:'rowsAfterTeaser', mid:'rowsMid', bottom:'rows' };
+function landingZoneArr(page, zone){
+  const key = LANDING_ZONES[zone] || 'rows';
+  if(!Array.isArray(page[key])) page[key] = [];
+  return page[key];
+}
 function allEditorRowArrays(){
   const arrs = [homeLayout];
-  try{ const p = landingActivePage && landingActivePage(); if(p && Array.isArray(p.rows)) arrs.push(p.rows); }catch(_){}
+  try{
+    const p = landingActivePage && landingActivePage();
+    if(p) Object.values(LANDING_ZONES).forEach(k=>{ if(Array.isArray(p[k])) arrs.push(p[k]); });
+  }catch(_){}
   return arrs;
 }
 function rowById(id){
@@ -10588,7 +10601,7 @@ function landingDefaultPage(route,name){
       { title:'Selected German Songs',  subtitle:'20 Selected German Songs', columns:5, rows:2, songs:[] },
       { title:'Selected English Songs', subtitle:'20 Selected English Songs', columns:5, rows:2, songs:[] }
     ],
-    rows:[]
+    rowsTop:[], rowsAfterTeaser:[], rowsMid:[], rows:[]
   };
 }
 function landingDefault(){
@@ -10607,8 +10620,9 @@ function landingNormPage(p, fallbackIndex){
   const route = landingSlugifyRoute(p.route || (fallbackIndex===0?'sony':'landing-'+(fallbackIndex+1)));
   const name = p.name || (route ? route.charAt(0).toUpperCase()+route.slice(1) : 'Landingpage '+(fallbackIndex+1));
   const sections = Array.isArray(p.sections) && p.sections.length ? p.sections.map(landingNormSection) : landingDefaultPage(route,name).sections;
-  const rows = Array.isArray(p.rows) ? p.rows.map(normalizeHomeRow) : [];
-  return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logo32Url:p.logo32Url||p.teaser32Url||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', logoFiveUrl:p.logoFiveUrl||'', sections, rows };
+  const normRows = a => Array.isArray(a) ? a.map(normalizeHomeRow) : [];
+  return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logo32Url:p.logo32Url||p.teaser32Url||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', logoFiveUrl:p.logoFiveUrl||'', sections,
+    rowsTop: normRows(p.rowsTop), rowsAfterTeaser: normRows(p.rowsAfterTeaser), rowsMid: normRows(p.rowsMid), rows: normRows(p.rows) };
 }
 function landingNormalizeData(obj){
   // Rückwärtskompatibilität: alte Einzel-Landingpage {type:'landing',sections:[...]} in eine Seite umwandeln.
@@ -10746,7 +10760,9 @@ function renderLandingEditor(){
     return;
   }
   wrap.innerHTML = '';
+  wrap.appendChild(buildLandingZoneEl('top','Zeile über dem Teaser hinzufügen'));
   if(_logoPanel) wrap.appendChild(_logoPanel);
+  wrap.appendChild(buildLandingZoneEl('afterTeaser','Zeile unter dem Teaser hinzufügen'));
   sections.forEach((sec, si)=>{
     sec = page.sections[si] = landingNormSection(sec);
     const total = sec.columns * sec.rows;
@@ -10785,46 +10801,55 @@ function renderLandingEditor(){
     });
     box.appendChild(grid);
     wrap.appendChild(box);
+    // Zone: zwischen den beiden Blöcken (nach dem ersten Block)
+    if(si === 0 && sections.length > 1) wrap.appendChild(buildLandingZoneEl('mid','Zeile zwischen den Blöcken hinzufügen'));
   });
 
-  // ── Freie Zeilen unterhalb der Sektionen (wie die Homeseite gestaltbar) ──
-  const ff = document.createElement('div');
-  ff.className = 'lp-section lp-freeform-section';
-  ff.innerHTML = `
-    <div class="lp-section-head">
-      <div class="lp-section-name">Weitere Zeilen · frei gestaltbar</div>
-    </div>
-    <div class="lp-freeform-note">Erscheinen live unterhalb der beiden Blöcke. Alle Home-Formate verfügbar; jede Zeile per ↑/↓ verschiebbar.</div>
-    <div id="landingFreeformRows" class="lp-freeform-rows"></div>
-    <div class="he-add-bar"><button class="he-add-btn" onclick="landingAddRow()">＋ Neue Zeile hinzufügen</button></div>`;
-  wrap.appendChild(ff);
-  renderLandingFreeform();
+  // Zone: unten (unterhalb des letzten Blocks)
+  wrap.appendChild(buildLandingZoneEl('bottom','Neue Zeile unten hinzufügen'));
 }
 
-/* ── Freie Home-Zeilen der aktiven Landingpage rendern ── */
-function renderLandingFreeform(){
-  const cont = document.getElementById('landingFreeformRows');
-  if(!cont) return;
+/* ── Eine Freeform-Zone (Zeilenliste + Hinzufügen-Button) im Editor bauen ── */
+function buildLandingZoneEl(zone, label){
   const page = landingActivePage();
-  const rows = (page && Array.isArray(page.rows)) ? page.rows : [];
-  cont.innerHTML = '';
-  if(!rows.length){
-    cont.innerHTML = '<div class="lp-freeform-empty">Noch keine freien Zeilen. Mit „＋ Neue Zeile hinzufügen" beginnen.</div>';
-    return;
-  }
-  rows.forEach((row,idx)=> cont.appendChild(buildRowEl(row, idx, rows, 'L')));
+  const arr = landingZoneArr(page, zone);
+  const box = document.createElement('div');
+  box.className = 'lp-freeform-zone';
+  box.dataset.zone = zone;
+  const rowsCont = document.createElement('div');
+  rowsCont.className = 'lp-freeform-rows';
+  rowsCont.id = 'landingZone_' + zone;
+  arr.forEach((row,idx)=> rowsCont.appendChild(buildRowEl(row, idx, arr, 'L')));
+  box.appendChild(rowsCont);
+  const addBar = document.createElement('div');
+  addBar.className = 'he-add-bar';
+  addBar.innerHTML = '<button class="he-add-btn" onclick="landingAddRow(\''+zone+'\')">＋ '+lpEsc(label)+'</button>';
+  box.appendChild(addBar);
+  return box;
 }
 
-function landingAddRow(){
+/* ── Freie Home-Zeilen aller Zonen neu rendern (z. B. nach Zell-Edit) ── */
+function renderLandingFreeform(){
   const page = landingActivePage();
   if(!page) return;
-  if(!Array.isArray(page.rows)) page.rows = [];
-  page.rows.push(makeRow());
+  Object.keys(LANDING_ZONES).forEach(zone=>{
+    const cont = document.getElementById('landingZone_' + zone);
+    if(!cont) return;
+    const arr = landingZoneArr(page, zone);
+    cont.innerHTML = '';
+    arr.forEach((row,idx)=> cont.appendChild(buildRowEl(row, idx, arr, 'L')));
+  });
+}
+
+function landingAddRow(zone){
+  const page = landingActivePage();
+  if(!page) return;
+  const arr = landingZoneArr(page, zone || 'bottom');
+  arr.push(makeRow());
   renderLandingFreeform();
-  setTimeout(()=>{
-    const w = document.getElementById('landingEditorWrap');
-    if(w) w.scrollTop = w.scrollHeight;
-  },60);
+  if(zone === 'bottom' || !zone){
+    setTimeout(()=>{ const w = document.getElementById('landingEditorWrap'); if(w) w.scrollTop = w.scrollHeight; },60);
+  }
 }
 function landingSelectPage(id){
   if(!landingData) return;
@@ -10914,7 +10939,7 @@ async function saveLandingPage(){
     landingData = landingNormalizeData(landingData);
     landingData.type='landingPages';
     // Bearbeiten-Status nicht persistieren (freie Zeilen sonst beim Reload im Edit-Modus).
-    (landingData.pages||[]).forEach(p=>(p.rows||[]).forEach(r=>{ r.editing=false; }));
+    (landingData.pages||[]).forEach(p=>['rowsTop','rowsAfterTeaser','rowsMid','rows'].forEach(k=>(p[k]||[]).forEach(r=>{ r.editing=false; })));
 
     // 1) Bestehende Landing-Zeile(n) lesen — dient als Backup und liefert die vorhandene
     //    id, damit wir per Upsert genau diese Zeile aktualisieren statt sie zu löschen.

@@ -79,8 +79,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
-.hj-landing-back{margin-left:22px;font-weight:700}
-.hj-landing-back span{text-transform:uppercase;letter-spacing:.04em}
+/* Landing-Rücksprung-Button: mittig in der Kopfzeile (Album = ← BMG, Home = BMG →) */
+.hj-landing-back{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;font-weight:700;white-space:nowrap;z-index:2}
+.hj-landing-back span{text-transform:uppercase;letter-spacing:.08em}
+.hj-landing-back.arrow-right{flex-direction:row-reverse}
+@media(max-width:560px){.hj-landing-back span{font-size:12px}}
 .hj-header-right{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.5);z-index:1}
 
 /* ── Screens ── */
@@ -398,9 +401,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(min-width:1000px){#screenLanding{padding-left:26px;padding-right:26px}.landing-grid{gap:16px}}
 /* Freie Home-Zeilen auf Landingpages: kantenbündig + gleiche Abstände wie die Section-Cover darüber.
    #landingSections erhöht die Spezifität, damit die spätere Desktop-.home-grid-Regel (padding/margin) nicht gewinnt. */
-#landingSections .landing-freeform{padding:0;gap:12px;margin:0 0 88px;max-width:none}
-#landingSections .landing-freeform .home-row3sq{gap:12px}
-@media(min-width:1000px){#landingSections .landing-freeform{gap:16px}#landingSections .landing-freeform .home-row3sq{gap:16px}}
+.landing-wrap .landing-freeform{padding:0;gap:12px;margin:-10px 0 40px;max-width:none}
+.landing-wrap .landing-freeform .home-heading{margin-top:0}
+.landing-wrap .landing-freeform .home-row3sq{gap:12px}
+@media(min-width:1000px){.landing-wrap .landing-freeform{gap:16px}.landing-wrap .landing-freeform .home-row3sq{gap:16px}}
 
 /* ══ ARCHIVE ══ */
 #screenArchive{padding-top:0}
@@ -4366,6 +4370,7 @@ body.album-open #hjPlayerSpacer{
   <div class="landing-wrap">
     <div class="landing-hero">
       <div class="landing-logo-wrap" id="landingLogoWrap"><img class="landing-logo wide" id="landingLogoImg" alt="Landingpage Logo"/></div>
+      <div id="landingRowsTop"></div>
       <div class="landing-top-wrap" id="landingTopWrap">
         <div class="landing-teaser32" id="landingTeaser32"><img id="landingTeaser32Img" alt="Publisher Teaser"/></div>
         <div class="landing-player-box" id="landingPlayerBox">
@@ -8041,6 +8046,17 @@ function activeLandingPage(){
   const route = currentLandingRoute();
   return landingPageForRoute(route) || (route === 'landing' ? cfg.pages[0] : null) || cfg.pages[0];
 }
+// Baut einen Freeform-Container (Home-Zeilen) für eine Landing-Zone; null wenn leer.
+function buildLandingFreeformRows(rowsArr){
+  if(!Array.isArray(rowsArr) || !rowsArr.length) return null;
+  const ff = document.createElement('div');
+  ff.className = 'home-grid landing-freeform';
+  rowsArr.forEach(row => {
+    if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages')) return;
+    renderHomeRowInto(ff, row);
+  });
+  return ff.children.length ? ff : null;
+}
 function renderLandingPage(page){
   const root = document.getElementById('landingSections');
   if(!root) return;
@@ -8082,7 +8098,17 @@ function renderLandingPage(page){
     return n + (n===1 ? ' Selected Song' : ' Selected Songs');
   }
   function clearLandingHighlights(){ root.querySelectorAll('.landing-card.playing').forEach(el=>el.classList.remove('playing')); }
-  page.sections.forEach(sec=>{
+  // Zone „über dem Teaser“ in den separaten Container oberhalb des Teasers rendern.
+  const topHost = document.getElementById('landingRowsTop');
+  if(topHost){
+    topHost.innerHTML = '';
+    const topEl = buildLandingFreeformRows(page.rowsTop);
+    if(topEl){ topHost.appendChild(topEl); wireHomeGrid(topEl); }
+  }
+  // Zone „unter dem Teaser / über dem 1. Block“ als erstes in #landingSections.
+  const afterTeaserEl = buildLandingFreeformRows(page.rowsAfterTeaser);
+  if(afterTeaserEl){ root.appendChild(afterTeaserEl); wireHomeGrid(afterTeaserEl); }
+  page.sections.forEach((sec, si)=>{
     const title = sec.title || 'Selected Works';
     const columns = Math.max(3, Math.min(5, Number(sec.columns)||5));
     const songs = (sec.songs||[]).map(slug=>bySlug.get(slug)).filter(Boolean);
@@ -8116,17 +8142,15 @@ function renderLandingPage(page){
     });
     section.appendChild(grid);
     root.appendChild(section);
+    // Zone „zwischen den beiden Blöcken“ nach dem ersten Block.
+    if(si === 0 && page.sections.length > 1){
+      const midEl = buildLandingFreeformRows(page.rowsMid);
+      if(midEl){ root.appendChild(midEl); wireHomeGrid(midEl); }
+    }
   });
-  // Freie Home-Zeilen unterhalb der Sektionen (frei gestaltbar wie die Homeseite).
-  if(Array.isArray(page.rows) && page.rows.length){
-    const ff = document.createElement('div');
-    ff.className = 'home-grid landing-freeform';
-    page.rows.forEach(row => {
-      if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages')) return;
-      renderHomeRowInto(ff, row);
-    });
-    if(ff.children.length){ root.appendChild(ff); wireHomeGrid(ff); }
-  }
+  // Zone „unten“ (unterhalb des letzten Blocks).
+  const bottomEl = buildLandingFreeformRows(page.rows);
+  if(bottomEl){ root.appendChild(bottomEl); wireHomeGrid(bottomEl); }
   // v270: Landing-Playlist global merken, damit der Plattenteller selbst Song 1 starten kann.
   window._landingChainItems = flatSongs.map((s,i)=>({song:s, el:flatCards[i], _viewMode:'cover-lyrics', _noAutoViewer:true}));
   window._landingFlatSongs = flatSongs;
@@ -8336,10 +8360,16 @@ let albumLandingReturn = null;
 function updateLandingBackBtn(){
   const btn = document.getElementById('landingBackBtn');
   if(!btn) return;
+  const lbl = document.getElementById('landingBackLabel');
+  const page = isLandingRoute() ? activeLandingPage() : null;
   const onAlbum = screenTL && screenTL.classList.contains('active');
-  if(albumLandingReturn && onAlbum){
-    const lbl = document.getElementById('landingBackLabel');
-    if(lbl) lbl.textContent = albumLandingReturn.name || 'Landingpage';
+  const onHome  = screenHome && screenHome.classList.contains('active');
+  if(page && (onAlbum || onHome)){
+    if(lbl) lbl.textContent = page.name || page.route || 'Landingpage';
+    // Home: Pfeil zeigt nach rechts (zur Verlagsseite hin); Album: Pfeil nach links (zurück).
+    btn.classList.toggle('arrow-right', !!onHome);
+    const poly = btn.querySelector('polyline');
+    if(poly) poly.setAttribute('points', onHome ? '9,18 15,12 9,6' : '15,18 9,12 15,6');
     btn.classList.add('visible');
   } else {
     btn.classList.remove('visible');
