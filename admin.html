@@ -327,6 +327,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-freeform-zone{margin:2px 0 6px}
 .lp-freeform-zone .he-add-bar{padding:4px 10px 8px}
 .lp-freeform-zone .he-add-btn{background:rgba(133,172,201,.06);font-size:10px;letter-spacing:.03em}
+/* Untere Navigation: Vorschau + Ausrichtung */
+.lp-nav-align{display:flex;align-items:center;gap:8px;padding:2px 10px 10px}
+.lp-nav-align-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.5);margin-right:4px}
+.lp-nav-align-btn{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.05);color:#85ACC9;border-radius:8px;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer}
+.lp-nav-align-btn.active{background:rgba(133,172,201,.26);color:#cfe5f5;border-color:rgba(133,172,201,.4)}
+.lp-nav-preview{display:flex;gap:12px;justify-content:center;padding:6px 10px 12px;flex-wrap:wrap}
+.lp-nav-preview.align-left{justify-content:flex-start}
+.lp-nav-pill{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:999px;border:1.5px solid rgba(133,172,201,.72);background:rgba(6,20,32,.35);color:#85ACC9;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;cursor:default}
 @media(max-width:720px){.lp-fields{grid-template-columns:1fr 1fr}.lp-field.wide{grid-column:1/-1}.lp-slot-grid.cols-5,.lp-slot-grid.cols-4,.lp-slot-grid.cols-3{grid-template-columns:repeat(2,1fr)}}
 
 /* ══ EDIT SCREEN ══ */
@@ -10175,9 +10183,9 @@ function makeHeadingLine(){
 
 /* ── Leerstreifen (Abstandhalter) – Höhen identisch zum Live-Rendering ── */
 const SPACER_SIZES = {
-  s: { label:'Schmal',  css:'40px' },
-  m: { label:'Mittel',  css:'80px' },
-  l: { label:'Doppelt', css:'160px' }
+  s: { label:'Schmal',  css:'32px' },
+  m: { label:'Mittel',  css:'64px' },
+  l: { label:'Doppelt', css:'128px' }
 };
 function normalizeSpacerSize(v){ return SPACER_SIZES[v] ? v : 'm'; }
 function normalizeHeadingLine(l){
@@ -10601,7 +10609,8 @@ function landingDefaultPage(route,name){
       { title:'Selected German Songs',  subtitle:'20 Selected German Songs', columns:5, rows:2, songs:[] },
       { title:'Selected English Songs', subtitle:'20 Selected English Songs', columns:5, rows:2, songs:[] }
     ],
-    rowsTop:[], rowsAfterTeaser:[], rowsMid:[], rows:[]
+    rowsTop:[], rowsAfterTeaser:[], rowsMid:[], rows:[],
+    navAlign:'center'
   };
 }
 function landingDefault(){
@@ -10622,7 +10631,8 @@ function landingNormPage(p, fallbackIndex){
   const sections = Array.isArray(p.sections) && p.sections.length ? p.sections.map(landingNormSection) : landingDefaultPage(route,name).sections;
   const normRows = a => Array.isArray(a) ? a.map(normalizeHomeRow) : [];
   return { id, name, route, logoSquareUrl:p.logoSquareUrl||'', logo32Url:p.logo32Url||p.teaser32Url||'', logoWideUrl:p.logoWideUrl||'', logoPanoUrl:p.logoPanoUrl||'', logoFiveUrl:p.logoFiveUrl||'', sections,
-    rowsTop: normRows(p.rowsTop), rowsAfterTeaser: normRows(p.rowsAfterTeaser), rowsMid: normRows(p.rowsMid), rows: normRows(p.rows) };
+    rowsTop: normRows(p.rowsTop), rowsAfterTeaser: normRows(p.rowsAfterTeaser), rowsMid: normRows(p.rowsMid), rows: normRows(p.rows),
+    navAlign: (p.navAlign === 'left' ? 'left' : 'center') };
 }
 function landingNormalizeData(obj){
   // Rückwärtskompatibilität: alte Einzel-Landingpage {type:'landing',sections:[...]} in eine Seite umwandeln.
@@ -10807,6 +10817,36 @@ function renderLandingEditor(){
 
   // Zone: unten (unterhalb des letzten Blocks)
   wrap.appendChild(buildLandingZoneEl('bottom','Neue Zeile unten hinzufügen'));
+
+  // Untere Navigation (Songwriter-Infos / Home) – Vorschau + Ausrichtung
+  const page2 = landingActivePage();
+  const navAlign = page2.navAlign === 'left' ? 'left' : 'center';
+  const navBox = document.createElement('div');
+  navBox.className = 'lp-section lp-nav-block';
+  navBox.innerHTML = `
+    <div class="lp-section-head"><div class="lp-section-name">Untere Navigation</div></div>
+    <div class="lp-freeform-note">Diese beiden Buttons erscheinen ganz unten auf der Live-Landingpage. „Songwriter-Infos“ öffnet die Bio-Diashow, „Home“ führt zu hitjourney.com.</div>
+    <div class="lp-nav-align">
+      <span class="lp-nav-align-label">Ausrichtung</span>
+      <button class="lp-nav-align-btn ${navAlign==='center'?'active':''}" onclick="landingSetNavAlign('center')">Mittig</button>
+      <button class="lp-nav-align-btn ${navAlign==='left'?'active':''}" onclick="landingSetNavAlign('left')">Linksbündig</button>
+    </div>
+    <div class="lp-nav-preview ${navAlign==='left'?'align-left':''}" id="landingNavPreview">
+      <button type="button" class="lp-nav-pill">Songwriter-Infos</button>
+      <button type="button" class="lp-nav-pill">Home</button>
+    </div>`;
+  wrap.appendChild(navBox);
+}
+
+function landingSetNavAlign(align){
+  const page = landingActivePage(); if(!page) return;
+  page.navAlign = (align === 'left') ? 'left' : 'center';
+  // Buttons + Vorschau ohne kompletten Re-Render aktualisieren
+  document.querySelectorAll('.lp-nav-align-btn').forEach(b=>{
+    b.classList.toggle('active', (b.textContent.trim()==='Linksbündig') === (page.navAlign==='left'));
+  });
+  const pv = document.getElementById('landingNavPreview');
+  if(pv) pv.classList.toggle('align-left', page.navAlign==='left');
 }
 
 /* ── Eine Freeform-Zone (Zeilenliste + Hinzufügen-Button) im Editor bauen ── */
