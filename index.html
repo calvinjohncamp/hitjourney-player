@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v274-songwriter-infos-10-kacheln-flipbook -->
 <!-- Version: v273-landing-deck-title-bottom-left -->
 <!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
 <!-- Version: v269-landing-teaser32-deck-force-visible-no-old-fallback -->
@@ -3051,16 +3052,6 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   margin-top:18px;
   line-height:1;
 }
-.bio-home-btn{
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  margin:32px auto 0;padding:12px 20px;border-radius:999px;
-  border:1px solid rgba(133,172,201,.32);background:rgba(133,172,201,.08);
-  color:#cfe5f5;font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
-  cursor:pointer;transition:background .15s,border-color .15s,transform .12s;
-}
-.bio-home-btn:hover{background:rgba(133,172,201,.16);border-color:rgba(133,172,201,.5)}
-.bio-home-btn:active{transform:scale(.96)}
-.bio-home-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .about-bio-viewer{
   position:fixed;
   inset:0;
@@ -3096,108 +3087,24 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   height:100%;
   transition:transform .38s cubic-bezier(.4,0,.2,1);
 }
+/* Bio-Kachel: jede Seite ist ein vollflächiges 1:1-Bild, Tippen blättert weiter. */
 .bio-page{
   flex:0 0 100%;
   width:100%;
   height:100%;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-}
-.bio-page::-webkit-scrollbar{display:none;}
-.bio-page-inner{
-  max-width:560px;
-  margin:0 auto;
-  padding:calc(env(safe-area-inset-top,0px) + 66px) 24px 28px;
-}
-.bio-sec-headline{
-  font-family:'Anton',sans-serif;
-  font-size:clamp(26px,6.6vw,40px);
-  letter-spacing:.05em;
-  text-transform:uppercase;
-  line-height:1.04;
-  color:#cfe5f5;
-  margin:0 0 30px;
-}
-.bio-sec-text{
-  font-size:15px;
-  line-height:1.85;
-  color:rgba(207,229,245,.78);
-}
-.bio-sec-text strong{color:#cfe5f5;font-weight:700;}
-.bio-cq{
   display:flex;
-  align-items:stretch;
-  gap:16px;
-  margin-top:30px;
-  min-height:118px;
-}
-.bio-cq-cover{
-  position:relative;
-  flex:0 0 auto;
-  align-self:stretch;
-  aspect-ratio:1/1;
-  max-height:168px;
-  border-radius:10px;
-  overflow:hidden;
-  background:#0B2A42;
-  box-shadow:0 10px 30px rgba(0,0,0,.45);
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  transition:transform .12s;
-}
-.bio-cq-cover.is-playable:active{ transform:scale(.97); }
-.bio-cq-cover img{ width:100%;height:100%;object-fit:cover;display:block; }
-.about-bio-stage{
-  position:fixed;
-  inset:0;
-  z-index:2;
-  display:none;
   align-items:center;
   justify-content:center;
   background:#06141F;
   cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
 }
-.about-bio-stage.open{ display:flex; }
-.about-bio-stage img{
-  max-width:100vw;
-  max-height:100vh;
+.bio-page img{
+  max-width:100%;
+  max-height:100%;
   width:auto;height:auto;
   object-fit:contain;
   display:block;
-}
-.about-bio-stage-cue{
-  position:fixed;
-  right:18px;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
-  padding:7px 14px;
-  border-radius:999px;
-  background:rgba(133,172,201,.16);
-  color:#cfe5f5;
-  font-size:12px;font-weight:700;letter-spacing:.06em;
-  pointer-events:none;
-}
-.bio-cq-quote{
-  flex:1;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  padding-left:16px;
-  border-left:3px solid #85ACC9;
-}
-.bio-quote-lines{
-  font-family:'Special Elite','Courier New',monospace;
-  color:#e7eef5;
-  font-size:14px;
-  line-height:1.7;
-}
-.bio-quote-src{
-  margin-top:10px;
-  font-size:11px;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#5884A4;
-  font-weight:700;
 }
 .about-bio-nav{
   flex-shrink:0;
@@ -4500,15 +4407,11 @@ body.album-open #hjPlayerSpacer{
   <img id="aboutArtLightboxImg" alt="hitjourney shaped by human choice powered by AI" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg"/>
 </div>
 
-<!-- BIO-Story: blätterbares Pop-up – je Ansicht Headline + Text + Cover/Zitat -->
+<!-- Songwriter-Infos: vollflächige Kacheln – Tippen blättert zur nächsten -->
 <div class="about-bio-viewer" id="aboutBioViewer" aria-hidden="true">
-  <button class="about-bio-close" id="aboutBioClose" type="button" aria-label="Bio schließen">×</button>
+  <button class="about-bio-close" id="aboutBioClose" type="button" aria-label="Schließen">×</button>
   <div class="about-bio-viewport" id="aboutBioViewport">
     <div class="about-bio-track" id="aboutBioTrack"></div>
-  </div>
-  <div class="about-bio-stage" id="aboutBioStage" aria-hidden="true" role="button" aria-label="Weiter">
-    <img id="aboutBioStageImg" alt="">
-    <div class="about-bio-stage-cue" id="aboutBioStageCue">Tippen ›</div>
   </div>
   <div class="about-bio-nav" id="aboutBioNav">
     <button class="about-bio-arrow" id="aboutBioPrev" type="button" aria-label="Zurück">
@@ -5619,28 +5522,11 @@ function positionAboutBioButton(){
 // Eingebaute Bio-Story (Fallback). Erscheint, solange im Admin keine eigene Bio
 // gespeichert ist – damit der BIO-Button auf der About-Seite immer sichtbar ist
 // und „Songwriter-Infos“ auf den Landingpages immer zur Bio führt.
+// Standard-Kacheln (Bild-URLs), falls noch keine eigenen Songwriter-Infos gespeichert sind.
 const DEFAULT_ABOUT_BIO = [
-  {
-    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg',
-    headline:'Vom Vorstand zum Songwriter',
-    html:`Jörn Kämper · Jahrgang 1966<br><br>15 Jahre lang habe ich als Vorstandsvorsitzender ein börsennotiertes Unternehmen geführt – Europas führenden Tapetenhersteller. Heute schreibe ich Songs.<br><br>Der Weg dorthin war alles andere als gerade. BWL-Studium in Köln, Marketing bei Volkswagen in Toronto und BMW in München, Unternehmensberater bei Kienbaum, danach 22 Jahre bei A.S. Création – vom Assistenten der Geschäftsleitung bis zum Vorstandsvorsitzenden und späteren Aufsichtsratsvorsitzenden.`,
-    quote:`Sie läuft vorbei - Ihr Sommerkleid wie ein Versprechen - Haare tanzen mit dem Abendwind - Und ich schau zu - Wenn Blicke Gin wären - Wär ich längst fertig, fix und fertig`,
-    quoteSource:'Bar am Meer'
-  },
-  {
-    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
-    headline:'Erst das Wort',
-    html:`Doch eine Sache hat mich nie losgelassen: das Schreiben. Schon als Jugendlicher habe ich Gedichte verfasst und dabei oft gedacht „Songtexte könntest du." Das Problem: Ich hatte nie gelernt, ein Instrument zu spielen. Die Ideen waren da, aber ihnen fehlte die Musik.<br><br>2024 änderte sich das. Mit Künstlicher Intelligenz als Werkzeug konnte ich zum ersten Mal hören, wie meine Texte als Songs klingen. Seitdem beginnt jedes Stück mit einer Idee, einem Bild oder einer Zeile. Erst kommt der Text. Dann das musikalische Konzept. Die Musik folgt dem Wort – nie umgekehrt.`,
-    quote:`They say he's no one, just passing through - Just one more ghost the city grew - But he holds a picture no one sees - Tucked behind his old IDs`,
-    quoteSource:'Pine & Snow'
-  },
-  {
-    image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg',
-    headline:'Es fehlt nur eine Stimme',
-    html:`Mit derselben Neugier, mit der ich früher Unternehmen geführt habe, entwickle ich heute Songs, Cover, Websites und Software. Die Plattform hitjourney.com wurde von mir selbst konzipiert, gestaltet und programmiert. Texte, Musik, Artwork und Technik greifen ineinander.<br><br>Was noch fehlt? Die echten Stimmen. Bis heute schreibe und produziere ich meine Songs allein. Aber natürlich würde ich sie eines Tages gern von echten Sängerinnen und Sängern hören. Vielleicht wartet irgendwo da draußen bereits die passende Stimme auf den richtigen Song.`,
-    quote:`Berlin - Du alte müde Braut - Dein Kleid ist grau - Dein Herz zu laut - Ein Graffiti flüstert „Bleib noch hier" - Und wie immer träum ich nur von dir`,
-    quoteSource:'Berlin'
-  }
+  'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg',
+  'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
+  'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg'
 ];
 function applyAboutContent(a){
   a = a || {};
@@ -5660,123 +5546,52 @@ function applyAboutContent(a){
       if(lb)  lb.alt  = a.imageAlt;
     }
   }
-  // BIO-Story: Abschnitte mit Cover + Headline + Text + Songtext-Zitat.
-  // Abwärtskompatibel: alte bioImages werden zu reinen Bild-Abschnitten.
-  if(Array.isArray(a.bioSections) && a.bioSections.length){
-    aboutBioSections = a.bioSections;
+  // Songwriter-Infos: bis zu 10 Kachel-Bilder.
+  // Abwärtskompatibel: altes bioSections (Bilder der Abschnitte) bzw. bioImages.
+  if(Array.isArray(a.bioTiles)){
+    // bioTiles ist gepflegt (auch leer = bewusst keine Kacheln) → respektieren.
+    aboutBioTiles = a.bioTiles.filter(u=>u).slice(0,10);
+  } else if(Array.isArray(a.bioSections) && a.bioSections.length){
+    aboutBioTiles = a.bioSections.filter(s=>s && s.kind!=='finale').map(s=>s.image||'').filter(u=>u).slice(0,10);
   } else if(Array.isArray(a.bioImages) && a.bioImages.length){
-    aboutBioSections = a.bioImages.filter(u=>u).map(u=>({image:u}));
+    aboutBioTiles = a.bioImages.filter(u=>u).slice(0,10);
   } else {
-    // Keine eigene Bio gespeichert → eingebaute Standard-Bio anzeigen.
-    aboutBioSections = DEFAULT_ABOUT_BIO;
+    aboutBioTiles = DEFAULT_ABOUT_BIO.slice();
   }
-  const hasBio = aboutBioSections.some(s => s && (
-    s.kind === 'finale'
-      ? (s.headline || (Array.isArray(s.items) && s.items.some(it => it && (it.songSlug || it.image || it.quote))))
-      : (s.image || s.songSlug || s.headline || s.html || s.quote)
-  ));
-  placeAboutBioButton(hasBio);
+  placeAboutBioButton(aboutBioTiles.length > 0);
 }
 
-// ── BIO-Story (blätterbares Pop-up: je Ansicht Headline + Text + Cover/Zitat) ──
-let aboutBioSections = [];
-let aboutBioPages = [];   // gefilterte Abschnitte mit Inhalt
+// ── Songwriter-Infos (vollflächige Kacheln, Tippen blättert weiter) ──
+let aboutBioTiles = [];
 let aboutBioPage = 0;
-function bioQuoteLinesHtml(quote){
-  // Verszeilen aus Zeilenumbrüchen ODER " - "-Trennern
-  return String(quote||'')
-    .split(/\n|\s+[-–]\s+/)
-    .map(l=>l.trim())
-    .filter(l=>l.length)
-    .map(l=>esc(l))
-    .join('<br>');
-}
-function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-// Cover-URL eines Abschnitts/Items: eigenes Bild, sonst Cover des verknüpften Songs.
-function bioCoverUrl(sec){
-  if(sec && sec.image) return sec.image;
-  const s = resolveBioSong(sec);
-  return (s && s.cover) ? s.cover : '';
-}
-function bioCqHtml(sec, dataAttr){
-  const song = resolveBioSong(sec);
-  const cover = bioCoverUrl(sec);
-  if(!cover && !sec.quote) return '';
-  let h = '<div class="bio-cq">';
-  if(cover){
-    h += '<div class="bio-cq-cover'+(song?' is-playable':'')+'" '+dataAttr+'>'
-       + '<img alt="'+esc(sec.quoteSource||sec.headline||'Cover')+'" src="'+esc(cover)+'"></div>';
-  }
-  if(sec.quote) h += '<div class="bio-cq-quote"><div class="bio-quote-lines">'+bioQuoteLinesHtml(sec.quote)+'</div>'
-                  + (sec.quoteSource ? '<div class="bio-quote-src">aus „'+esc(sec.quoteSource)+'"</div>' : '')
-                  + '</div>';
-  h += '</div>';
-  return h;
-}
-function buildBioPageHtml(sec, idx){
-  if(sec.kind === 'finale') return buildBioFinaleHtml(sec, idx);
-  let h = '<div class="bio-page-inner">';
-  if(sec.headline) h += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
-  if(sec.html)     h += '<div class="bio-sec-text">'+sec.html+'</div>';
-  h += bioCqHtml(sec, 'data-bioidx="'+idx+'"');
-  h += '</div>';
-  return h;
-}
-// Finale-Seite: Headline + bis zu 3 Cover+Songtext-Reihen + Home-Button.
-function buildBioFinaleHtml(sec, idx){
-  let h = '<div class="bio-page-inner">';
-  if(sec.headline) h += '<div class="bio-sec-headline">'+esc(sec.headline)+'</div>';
-  const items = Array.isArray(sec.items) ? sec.items : [];
-  items.forEach((it,i)=>{
-    if(!it) return;
-    if(!bioCoverUrl(it) && !it.quote) return;
-    h += bioCqHtml(it, 'data-bioidx="'+idx+'" data-biofinale="'+i+'"');
-  });
-  h += '<button class="bio-home-btn" id="bioHomeBtn" type="button">'
-     + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>'
-     + '<span>Home</span></button>';
-  h += '</div>';
-  return h;
-}
-// Verknüpft einen Bio-Abschnitt mit dem echten Song (über die Cover-URL,
-// hilfsweise über den Songtitel = quoteSource). Liefert mp3 / cover / lyrics.
-function resolveBioSong(sec){
-  if(!sec) return null;
-  const songs = (typeof SUPABASE_SONGS!=='undefined' && SUPABASE_SONGS) ? SUPABASE_SONGS : [];
-  if(!songs.length) return null;
-  let s = sec.songSlug ? songs.find(x => x.slug === sec.songSlug) : null;
-  if(!s && sec.image) s = songs.find(x => x.cover === sec.image);
-  if(!s && sec.quoteSource){
-    const q = sec.quoteSource.trim().toLowerCase();
-    s = songs.find(x => (x.title||'').trim().toLowerCase() === q);
-  }
-  return (s && s.mp3) ? s : null;
-}
+
 function renderAboutBioStory(){
   const track = document.getElementById('aboutBioTrack');
   const dots  = document.getElementById('aboutBioDots');
   if(!track) return;
-  aboutBioPages = (aboutBioSections||[]).filter(s => s && (
-    s.kind === 'finale'
-      ? (s.headline || (Array.isArray(s.items) && s.items.some(it => it && (it.songSlug || it.image || it.quote))))
-      : (s.image || s.songSlug || s.headline || s.html || s.quote)
-  ));
   track.innerHTML = '';
-  aboutBioPages.forEach((sec,idx)=>{
+  aboutBioTiles.forEach((url, idx)=>{
     const p = document.createElement('div');
     p.className = 'bio-page';
-    p.innerHTML = buildBioPageHtml(sec, idx);
+    const img = document.createElement('img');
+    img.src = url; img.alt = 'Songwriter-Info ' + (idx+1);
+    p.appendChild(img);
+    // Tippen → nächste Kachel; auf der letzten Kachel schließen.
+    p.addEventListener('click', ()=>{
+      if(aboutBioPage >= aboutBioTiles.length - 1) closeAboutBio();
+      else nextBioPage();
+    });
     track.appendChild(p);
   });
   if(dots){
     dots.innerHTML = '';
-    aboutBioPages.forEach((_,i)=>{
+    aboutBioTiles.forEach((_,i)=>{
       const d = document.createElement('span');
       d.className = 'bio-dot' + (i===0 ? ' active' : '');
       d.addEventListener('click', ()=>gotoBioPage(i));
       dots.appendChild(d);
     });
-    dots.style.display = aboutBioPages.length > 1 ? 'flex' : 'none';
+    dots.style.display = aboutBioTiles.length > 1 ? 'flex' : 'none';
   }
   aboutBioPage = 0;
   updateBioPager(true);
@@ -5792,103 +5607,23 @@ function updateBioPager(noTransition){
   const prev = document.getElementById('aboutBioPrev');
   const next = document.getElementById('aboutBioNext');
   if(prev) prev.classList.toggle('is-disabled', aboutBioPage===0);
-  if(next) next.classList.toggle('is-disabled', aboutBioPage>=aboutBioPages.length-1);
-  const cur = track.children[aboutBioPage];
-  if(cur) cur.scrollTop = 0;
+  if(next) next.classList.toggle('is-disabled', aboutBioPage>=aboutBioTiles.length-1);
 }
 function gotoBioPage(i){
-  if(i<0 || i>=aboutBioPages.length) return;
+  if(i<0 || i>=aboutBioTiles.length) return;
   aboutBioPage = i;
   updateBioPager(false);
 }
 function nextBioPage(){ gotoBioPage(aboutBioPage+1); }
 function prevBioPage(){ gotoBioPage(aboutBioPage-1); }
 
-// ── BIO-Cover: Play + Cover/Lyrics-Zyklus ──
-// phase: 0 = gestoppt/Start, 1 = spielt (Bio-Seite), 2 = großes Cover,
-//        3 = Lyrics, 4 = spielt (Bio-Seite, nächster Klick stoppt)
-let bioPlay = { idx:-1, item:-1, phase:0, song:null };
-function resolveBioSongAt(pageIdx, itemIdx){
-  const sec = aboutBioPages[pageIdx];
-  if(!sec) return null;
-  if(sec.kind === 'finale' && Number.isFinite(itemIdx) && itemIdx >= 0){
-    const items = Array.isArray(sec.items) ? sec.items : [];
-    return resolveBioSong(items[itemIdx]);
-  }
-  return resolveBioSong(sec);
-}
-function bioPlayableEntries(){
-  const entries = [];
-  aboutBioPages.forEach((sec,idx)=>{
-    if(sec && sec.kind === 'finale'){
-      const items = Array.isArray(sec.items) ? sec.items : [];
-      items.forEach((it,item)=>{ const song = resolveBioSong(it); if(song) entries.push({idx,item,song}); });
-    } else {
-      const song = resolveBioSong(sec); if(song) entries.push({idx,item:-1,song});
-    }
-  });
-  return entries;
-}
-function bioStartSong(idx, itemIdx=-1){
-  const startSong = resolveBioSongAt(idx, itemIdx);
-  if(!startSong) return false;
-  // Mini-Playlist aus allen verknüpften Bio-Songs (in Reihenfolge) – inklusive der 3 Finale-Cover.
-  const entries = bioPlayableEntries();
-  const list = entries.map(e=>e.song);
-  let startPos = entries.findIndex(e => e.idx===idx && e.item===itemIdx);
-  if(startPos < 0) startPos = list.findIndex(s => s === startSong);
-  if(!list.length || startPos < 0) return false;
-  ALBUMS.__bio = { title:'hitjourney', meta:'', songs:list };
-  curAlbum = '__bio';
-  queue = list.map((_,i)=>i);
-  queueIdx = startPos;
-  prevScreen = 'home';
-  loadPlay(queue[queueIdx]);
-  bioPlay = { idx, item:itemIdx, phase:1, song:startSong };
-  return true;
-}
-function bioStopSong(){
-  if(typeof audio !== 'undefined' && audio) audio.pause();
-  bioHideStage();
-  bioPlay.phase = 0;
-}
-function bioShowStage(kind){
-  const song = bioPlay.song || resolveBioSongAt(bioPlay.idx, bioPlay.item);
-  const stage = document.getElementById('aboutBioStage');
-  const img = document.getElementById('aboutBioStageImg');
-  const cue = document.getElementById('aboutBioStageCue');
-  if(!song || !stage || !img) return;
-  const lyr = getImgUrls(song,'lyrics');
-  const urls = (kind==='lyrics' && lyr.length) ? lyr : getImgUrls(song,'cover');
-  setImgSrcWithFallback(img, urls);
-  if(cue) cue.textContent = (kind==='cover') ? 'Lyrics ›' : 'Zurück zur Bio ›';
-  stage.classList.add('open'); stage.setAttribute('aria-hidden','false');
-}
-function bioHideStage(){
-  const stage = document.getElementById('aboutBioStage');
-  if(stage){ stage.classList.remove('open'); stage.setAttribute('aria-hidden','true'); }
-}
-function onBioCoverClick(idx, itemIdx=-1){
-  // Anderer Abschnitt/anderes Finale-Cover oder gestoppt → 1. Klick: richtigen Song starten.
-  if(bioPlay.idx !== idx || bioPlay.item !== itemIdx || bioPlay.phase === 0){ bioStartSong(idx, itemIdx); return; }
-  if(bioPlay.phase === 1){ bioShowStage('cover'); bioPlay.phase = 2; return; } // 2. Klick: großes Cover
-  if(bioPlay.phase === 4){ bioStopSong(); return; }                            // 5. Klick: Song stoppen
-}
-function onBioStageClick(){
-  if(bioPlay.phase === 2){ bioShowStage('lyrics'); bioPlay.phase = 3; }         // 3. Klick: Lyrics
-  else if(bioPlay.phase === 3){ bioHideStage(); bioPlay.phase = 4; }            // 4. Klick: zurück zur Bio
-}
 function openAboutBio(){
-  if(!aboutBioSections.length) return;
-  bioPlay = { idx:-1, item:-1, phase:0, song:null };
-  bioHideStage();
+  if(!aboutBioTiles.length) return;
   renderAboutBioStory();
   const v = document.getElementById('aboutBioViewer');
   if(v){ v.classList.add('open'); v.setAttribute('aria-hidden','false'); }
 }
 function closeAboutBio(){
-  bioHideStage();
-  bioPlay.phase = 0;
   const v = document.getElementById('aboutBioViewer');
   if(v){ v.classList.remove('open'); v.setAttribute('aria-hidden','true'); }
 }
@@ -5902,20 +5637,6 @@ function closeAboutBio(){
   if(close) close.addEventListener('click', closeAboutBio);
   if(prev)  prev.addEventListener('click', prevBioPage);
   if(next)  next.addEventListener('click', nextBioPage);
-  // Cover anklicken → Song starten / Cover / Lyrics
-  const track = document.getElementById('aboutBioTrack');
-  if(track) track.addEventListener('click', e=>{
-    const homeBtn = e.target.closest && e.target.closest('.bio-home-btn');
-    if(homeBtn){ e.preventDefault(); closeAboutBio(); showHome(); return; }
-    const cover = e.target.closest && e.target.closest('.bio-cq-cover.is-playable');
-    if(cover){
-      const idx = parseInt(cover.dataset.bioidx,10);
-      const item = cover.dataset.biofinale !== undefined ? parseInt(cover.dataset.biofinale,10) : -1;
-      onBioCoverClick(Number.isFinite(idx) ? idx : 0, Number.isFinite(item) ? item : -1);
-    }
-  });
-  const stage = document.getElementById('aboutBioStage');
-  if(stage) stage.addEventListener('click', onBioStageClick);
   // Wischen zum Blättern (nur klar horizontale Gesten)
   if(vp){
     let sx=0, sy=0, tracking=false;
@@ -8397,7 +8118,7 @@ window.addEventListener('resize', ()=>{
 // „Songwriter-Infos" öffnet direkt die Biografie (nicht das Impressum/die Info-Seite).
 function landingShowBio(){
   try{
-    if(typeof openAboutBio === 'function' && typeof aboutBioSections !== 'undefined' && aboutBioSections && aboutBioSections.length){
+    if(typeof openAboutBio === 'function' && typeof aboutBioTiles !== 'undefined' && aboutBioTiles && aboutBioTiles.length){
       openAboutBio(); return;
     }
   }catch(e){}

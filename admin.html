@@ -5,7 +5,7 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
 <meta content="#06141F" name="theme-color">
 <title>hitjourney · Admin</title>
-<!-- Version: admin-v20260616n-safe-home-save-no-delete-first -->
+<!-- Version: admin-v20260618a-songwriter-infos-10-kacheln -->
 <!-- Version: admin-v20260616h-landing-teaser32-only -->
 <!-- Version: admin-v20260616c-landingpage-teaser-5x1-2x1 -->
 <!-- Version: admin-v20260616d-teaser-2x1-5x1-visible-live -->
@@ -7861,30 +7861,17 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .ie-img-replace:hover{background:rgba(6,20,32,.92)}
 .ie-img-progress{position:absolute;left:0;top:0;height:3px;width:0;background:#6fda9a;transition:width .2s;border-radius:0 3px 3px 0}
 .ie-bio-hint{font-size:12px;line-height:1.5;color:rgba(133,172,201,.6);margin:0 0 16px;padding-left:6px}
-.ie-bio-sec{border:1px solid rgba(133,172,201,.14);border-radius:12px;padding:14px;margin-bottom:16px;background:rgba(11,42,66,.22)}
-.ie-bio-sec-head{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;font-weight:800;margin-bottom:12px}
-.ie-bio-imgrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
-.ie-bio-thumb{position:relative;flex:0 0 116px;width:116px;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#0B2A42;border:1px solid rgba(133,172,201,.18);display:flex;align-items:center;justify-content:center}
-.ie-bio-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.ie-bio-thumb.empty img{display:none}
-.ie-bio-thumb .ie-bio-ph{position:absolute;font-size:30px;font-weight:800;color:rgba(133,172,201,.28)}
-.ie-bio-thumb:not(.empty) .ie-bio-ph{display:none}
-.ie-bio-imgacts{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
-.ie-bio-btn{padding:9px 10px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:rgba(11,42,66,.7);color:#cfe5f5;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
-.ie-bio-btn:hover{background:rgba(133,172,201,.18)}
-.ie-bio-btn.del{color:#e08080;border-color:rgba(220,80,80,.25)}
-.ie-bio-btn.del:hover{background:rgba(220,80,80,.14)}
-.ie-bio-input{width:100%;box-sizing:border-box;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.18);border-radius:8px;color:#f1ecdf;font-size:13px;padding:9px 11px;margin-bottom:9px;outline:none;font-family:inherit}
-.ie-bio-input:focus{border-color:#85ACC9}
-.ie-bio-textfield{min-height:64px;margin-bottom:9px;border:1px solid rgba(133,172,201,.14);border-radius:8px;padding:9px 11px;background:rgba(6,20,32,.35)}
-.ie-bio-textarea{width:100%;box-sizing:border-box;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.18);border-radius:8px;color:#e7eef5;font-size:13px;line-height:1.7;padding:9px 11px;margin-bottom:9px;outline:none;min-height:84px;resize:vertical;font-family:'Special Elite','Courier New',monospace}
-.ie-bio-textarea:focus{border-color:#85ACC9}
-
-.ie-bio-finale-row{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:start;margin:12px 0;padding:12px;border:1px solid rgba(133,172,201,.12);border-radius:10px;background:rgba(6,20,32,.25)}
-.ie-bio-finale-cover{width:160px;aspect-ratio:1/1;border-radius:10px;object-fit:cover;background:#0B2A42;border:1px solid rgba(133,172,201,.16);display:block}
-.ie-bio-finale-placeholder{width:160px;aspect-ratio:1/1;border-radius:10px;background:#0B2A42;border:1px solid rgba(133,172,201,.16);display:flex;align-items:center;justify-content:center;color:rgba(133,172,201,.35);font-size:30px;font-weight:800}
-.ie-bio-finale-fields{min-width:0}
-@media(max-width:599px){.ie-bio-finale-row{grid-template-columns:1fr}.ie-bio-finale-cover,.ie-bio-finale-placeholder{width:116px}}
+/* Bio-Kacheln: 10 quadratische Upload-Felder in 2 Zeilen (5×2) */
+.ie-bio-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:8px}
+@media(max-width:599px){.ie-bio-grid{grid-template-columns:repeat(2,1fr)}}
+.ie-bio-tile{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#0B2A42;border:1px solid rgba(133,172,201,.18);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ie-bio-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.ie-bio-tile.empty img{display:none}
+.ie-bio-tile .ie-bio-ph{position:absolute;font-size:26px;font-weight:800;color:rgba(133,172,201,.28);pointer-events:none}
+.ie-bio-tile:not(.empty) .ie-bio-ph{display:none}
+.ie-bio-tile .ie-bio-del{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(6,20,32,.78);color:#e08080;font-size:16px;font-weight:800;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2}
+.ie-bio-tile:not(.empty) .ie-bio-del{display:flex}
+.ie-bio-tile .ie-bio-del:hover{background:rgba(220,80,80,.3);color:#fff}
 
 .ie-field-note{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(133,172,201,.45);font-weight:700;margin:22px 0 4px;padding-left:6px}
 
@@ -7948,83 +7935,20 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
       <input type="file" id="ieAboutImgFile" accept="image/*" style="display:none" onchange="onInfoImagePicked(event)">
 
       <div class="ie-about-divider"></div>
-      <div class="ie-field-note">BIO-Story (3 Abschnitte + Finale)</div>
-      <div class="ie-bio-hint">Tippt man im Player auf den BIO-Knopf, öffnet sich eine scrollbare Story: drei klassische Bio-Abschnitte plus optional eine vierte Seite „Noch lange nicht alles“ mit drei Songs aus der Gesamtauswahl. Leere Abschnitte werden ausgeblendet. Erst ohne jeden Inhalt verschwindet der BIO-Knopf.</div>
+      <div class="ie-field-note">Songwriter-Infos · 10 Kacheln</div>
+      <div class="ie-bio-hint">Lade bis zu 10 quadratische (1:1) JPG-Motive / Infoseiten hoch. Tippt man im Player auf „Songwriter-Infos" (Landingpage) bzw. „Bio" (i-Seite), erscheint Kachel 1 vollflächig – ein Tipp blättert zur nächsten Kachel, usw. (wie bei Plattencovern und Lyrics). Leere Kacheln werden übersprungen; ohne jede Kachel verschwindet der Button.</div>
 
-      <div class="ie-bio-sec" id="ieBioSec0">
-        <div class="ie-bio-sec-head">Abschnitt 1 · Bruch</div>
-        <div class="ie-bio-imgrow">
-          <div class="ie-bio-thumb empty" id="ieBioThumb0"><img id="ieBioImg0" alt="Cover 1"><span class="ie-bio-ph">1</span><div class="ie-img-progress" id="ieBioProg0"></div></div>
-          <div class="ie-bio-imgacts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile0').click()">Cover / Bild wählen</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(0)">Entfernen</button>
-          </div>
-          <input type="file" id="ieBioFile0" accept="image/*" style="display:none" onchange="onBioImagePicked(0,event)">
-        </div>
-        <input class="ie-bio-input" id="ieBioHeadline0" placeholder="Headline (z. B. Vom Vorstand zum Songwriter)">
-        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText0" contenteditable="true" spellcheck="false"></div>
-        <textarea class="ie-bio-textarea" id="ieBioQuote0" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
-        <input class="ie-bio-input" id="ieBioSrc0" placeholder="Songtitel (erscheint als „aus …")">
-      </div>
-
-      <div class="ie-bio-sec" id="ieBioSec1">
-        <div class="ie-bio-sec-head">Abschnitt 2 · Handwerk</div>
-        <div class="ie-bio-imgrow">
-          <div class="ie-bio-thumb empty" id="ieBioThumb1"><img id="ieBioImg1" alt="Cover 2"><span class="ie-bio-ph">2</span><div class="ie-img-progress" id="ieBioProg1"></div></div>
-          <div class="ie-bio-imgacts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile1').click()">Cover / Bild wählen</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(1)">Entfernen</button>
-          </div>
-          <input type="file" id="ieBioFile1" accept="image/*" style="display:none" onchange="onBioImagePicked(1,event)">
-        </div>
-        <input class="ie-bio-input" id="ieBioHeadline1" placeholder="Headline (z. B. Erst das Wort)">
-        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText1" contenteditable="true" spellcheck="false"></div>
-        <textarea class="ie-bio-textarea" id="ieBioQuote1" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
-        <input class="ie-bio-input" id="ieBioSrc1" placeholder="Songtitel (erscheint als „aus …")">
-      </div>
-
-      <div class="ie-bio-sec" id="ieBioSec2">
-        <div class="ie-bio-sec-head">Abschnitt 3 · Einladung</div>
-        <div class="ie-bio-imgrow">
-          <div class="ie-bio-thumb empty" id="ieBioThumb2"><img id="ieBioImg2" alt="Cover 3"><span class="ie-bio-ph">3</span><div class="ie-img-progress" id="ieBioProg2"></div></div>
-          <div class="ie-bio-imgacts">
-            <button type="button" class="ie-bio-btn" onclick="document.getElementById('ieBioFile2').click()">Cover / Bild wählen</button>
-            <button type="button" class="ie-bio-btn del" onclick="removeBioImage(2)">Entfernen</button>
-          </div>
-          <input type="file" id="ieBioFile2" accept="image/*" style="display:none" onchange="onBioImagePicked(2,event)">
-        </div>
-        <input class="ie-bio-input" id="ieBioHeadline2" placeholder="Headline (z. B. Es fehlt nur eine Stimme)">
-        <div class="ie-about-text ie-edit ie-bio-textfield" id="ieBioText2" contenteditable="true" spellcheck="false"></div>
-        <textarea class="ie-bio-textarea" id="ieBioQuote2" placeholder="Songtext-Zitat — eine Zeile pro Vers (oder mit  -  trennen)"></textarea>
-        <input class="ie-bio-input" id="ieBioSrc2" placeholder="Songtitel (erscheint als „aus …")">
-      </div>
-
-      <div class="ie-bio-sec" id="ieBioFinalSec">
-        <div class="ie-bio-sec-head">Abschnitt 4 · Noch lange nicht alles</div>
-        <input class="ie-bio-input" id="ieBioFinalHeadline" placeholder="Headline" value="Noch lange nicht alles">
-        <div class="ie-bio-hint" style="margin-top:0">Wähle hier bis zu drei Songs aus der Gesamtauswahl. Die Cover kommen automatisch aus dem Songarchiv; die Songtexte fügst du selbst daneben ein.</div>
-
-        <div class="ie-bio-finale-row">
-          <div id="ieBioFinalCover0" class="ie-bio-finale-placeholder">1</div>
-          <div class="ie-bio-finale-fields">
-            <select class="ie-bio-input" id="ieBioFinalSong0" onchange="ieRenderFinaleSong(0)"><option value="">Song 1 auswählen …</option></select>
-            <textarea class="ie-bio-textarea" id="ieBioFinalQuote0" placeholder="Songtext für Song 1 — eine Zeile pro Vers"></textarea>
-          </div>
-        </div>
-        <div class="ie-bio-finale-row">
-          <div id="ieBioFinalCover1" class="ie-bio-finale-placeholder">2</div>
-          <div class="ie-bio-finale-fields">
-            <select class="ie-bio-input" id="ieBioFinalSong1" onchange="ieRenderFinaleSong(1)"><option value="">Song 2 auswählen …</option></select>
-            <textarea class="ie-bio-textarea" id="ieBioFinalQuote1" placeholder="Songtext für Song 2 — eine Zeile pro Vers"></textarea>
-          </div>
-        </div>
-        <div class="ie-bio-finale-row">
-          <div id="ieBioFinalCover2" class="ie-bio-finale-placeholder">3</div>
-          <div class="ie-bio-finale-fields">
-            <select class="ie-bio-input" id="ieBioFinalSong2" onchange="ieRenderFinaleSong(2)"><option value="">Song 3 auswählen …</option></select>
-            <textarea class="ie-bio-textarea" id="ieBioFinalQuote2" placeholder="Songtext für Song 3 — eine Zeile pro Vers"></textarea>
-          </div>
-        </div>
+      <div class="ie-bio-grid">
+        <div class="ie-bio-tile empty" id="ieBioTile0" onclick="document.getElementById('ieBioFile0').click()"><img id="ieBioImg0" alt="Kachel 1"><span class="ie-bio-ph">1</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(0)">×</button><div class="ie-img-progress" id="ieBioProg0"></div><input type="file" id="ieBioFile0" accept="image/*" style="display:none" onchange="onBioImagePicked(0,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile1" onclick="document.getElementById('ieBioFile1').click()"><img id="ieBioImg1" alt="Kachel 2"><span class="ie-bio-ph">2</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(1)">×</button><div class="ie-img-progress" id="ieBioProg1"></div><input type="file" id="ieBioFile1" accept="image/*" style="display:none" onchange="onBioImagePicked(1,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile2" onclick="document.getElementById('ieBioFile2').click()"><img id="ieBioImg2" alt="Kachel 3"><span class="ie-bio-ph">3</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(2)">×</button><div class="ie-img-progress" id="ieBioProg2"></div><input type="file" id="ieBioFile2" accept="image/*" style="display:none" onchange="onBioImagePicked(2,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile3" onclick="document.getElementById('ieBioFile3').click()"><img id="ieBioImg3" alt="Kachel 4"><span class="ie-bio-ph">4</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(3)">×</button><div class="ie-img-progress" id="ieBioProg3"></div><input type="file" id="ieBioFile3" accept="image/*" style="display:none" onchange="onBioImagePicked(3,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile4" onclick="document.getElementById('ieBioFile4').click()"><img id="ieBioImg4" alt="Kachel 5"><span class="ie-bio-ph">5</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(4)">×</button><div class="ie-img-progress" id="ieBioProg4"></div><input type="file" id="ieBioFile4" accept="image/*" style="display:none" onchange="onBioImagePicked(4,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile5" onclick="document.getElementById('ieBioFile5').click()"><img id="ieBioImg5" alt="Kachel 6"><span class="ie-bio-ph">6</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(5)">×</button><div class="ie-img-progress" id="ieBioProg5"></div><input type="file" id="ieBioFile5" accept="image/*" style="display:none" onchange="onBioImagePicked(5,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile6" onclick="document.getElementById('ieBioFile6').click()"><img id="ieBioImg6" alt="Kachel 7"><span class="ie-bio-ph">7</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(6)">×</button><div class="ie-img-progress" id="ieBioProg6"></div><input type="file" id="ieBioFile6" accept="image/*" style="display:none" onchange="onBioImagePicked(6,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile7" onclick="document.getElementById('ieBioFile7').click()"><img id="ieBioImg7" alt="Kachel 8"><span class="ie-bio-ph">8</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(7)">×</button><div class="ie-img-progress" id="ieBioProg7"></div><input type="file" id="ieBioFile7" accept="image/*" style="display:none" onchange="onBioImagePicked(7,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile8" onclick="document.getElementById('ieBioFile8').click()"><img id="ieBioImg8" alt="Kachel 9"><span class="ie-bio-ph">9</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(8)">×</button><div class="ie-img-progress" id="ieBioProg8"></div><input type="file" id="ieBioFile8" accept="image/*" style="display:none" onchange="onBioImagePicked(8,event)"></div>
+        <div class="ie-bio-tile empty" id="ieBioTile9" onclick="document.getElementById('ieBioFile9').click()"><img id="ieBioImg9" alt="Kachel 10"><span class="ie-bio-ph">10</span><button type="button" class="ie-bio-del" onclick="event.stopPropagation();removeBioImage(9)">×</button><div class="ie-img-progress" id="ieBioProg9"></div><input type="file" id="ieBioFile9" accept="image/*" style="display:none" onchange="onBioImagePicked(9,event)"></div>
       </div>
     </div>
   </div>
@@ -10401,36 +10325,14 @@ const DEFAULT_ABOUT = {
     '© jörn kämper — all rights reserved',
   imageUrl:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/powered%20by%20ai.jpg',
   imageAlt:'hitjourney shaped by human choice powered by AI',
-  // BIO-Story: 3 Abschnitte, je Cover + Headline + Text + Songtext-Zitat.
-  bioSections:[
-    {
-      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Bar%20am%20Meer%20-%20Cover.jpg',
-      headline:'Vom Vorstand zum Songwriter',
-      html:`Jörn Kämper · Jahrgang 1966<br><br>15 Jahre lang habe ich als Vorstandsvorsitzender ein börsennotiertes Unternehmen geführt – Europas führenden Tapetenhersteller. Heute schreibe ich Songs.<br><br>Der Weg dorthin war alles andere als gerade. BWL-Studium in Köln, Marketing bei Volkswagen in Toronto und BMW in München, Unternehmensberater bei Kienbaum, danach 22 Jahre bei A.S. Création – vom Assistenten der Geschäftsleitung bis zum Vorstandsvorsitzenden und späteren Aufsichtsratsvorsitzenden.`,
-      quote:`Sie läuft vorbei - Ihr Sommerkleid wie ein Versprechen - Haare tanzen mit dem Abendwind - Und ich schau zu - Wenn Blicke Gin wären - Wär ich längst fertig, fix und fertig`,
-      quoteSource:'Bar am Meer'
-    },
-    {
-      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Pine%20%26%20Snow%20-%20Cover.jpg',
-      headline:'Erst das Wort',
-      html:`Doch eine Sache hat mich nie losgelassen: das Schreiben. Schon als Jugendlicher habe ich Gedichte verfasst und dabei oft gedacht „Songtexte könntest du." Das Problem: Ich hatte nie gelernt, ein Instrument zu spielen. Die Ideen waren da, aber ihnen fehlte die Musik.<br><br>2024 änderte sich das. Mit Künstlicher Intelligenz als Werkzeug konnte ich zum ersten Mal hören, wie meine Texte als Songs klingen. Seitdem beginnt jedes Stück mit einer Idee, einem Bild oder einer Zeile. Erst kommt der Text. Dann das musikalische Konzept. Die Musik folgt dem Wort – nie umgekehrt.`,
-      quote:`They say he's no one, just passing through - Just one more ghost the city grew - But he holds a picture no one sees - Tucked behind his old IDs`,
-      quoteSource:'Pine & Snow'
-    },
-    {
-      image:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Berlin%20%28Alte%20Braut%29%20-%20Cover.jpg',
-      headline:'Es fehlt nur eine Stimme',
-      html:`Mit derselben Neugier, mit der ich früher Unternehmen geführt habe, entwickle ich heute Songs, Cover, Websites und Software. Die Plattform hitjourney.com wurde von mir selbst konzipiert, gestaltet und programmiert. Texte, Musik, Artwork und Technik greifen ineinander.<br><br>Was noch fehlt? Die echten Stimmen. Bis heute schreibe und produziere ich meine Songs allein. Aber natürlich würde ich sie eines Tages gern von echten Sängerinnen und Sängern hören. Vielleicht wartet irgendwo da draußen bereits die passende Stimme auf den richtigen Song.`,
-      quote:`Berlin - Du alte müde Braut - Dein Kleid ist grau - Dein Herz zu laut - Ein Graffiti flüstert „Bleib noch hier" - Und wie immer träum ich nur von dir`,
-      quoteSource:'Berlin'
-    }
-  ]
+  // Songwriter-Infos: bis zu 10 quadratische Kachel-Motive (Bild-URLs in Slot-Reihenfolge).
+  bioTiles:['','','','','','','','','','']
 };
 
 let infoImageUrl = DEFAULT_ABOUT.imageUrl;   // aktuell gespeicherte Grafik-URL
 let infoImagePendingFile = null;             // neu gewählte, noch nicht hochgeladene Grafik
-let infoBioUrls = ['','',''];                // aktuell gespeicherte Bio-Motiv-URLs (3 Slots)
-let infoBioPending = [null,null,null];       // neu gewählte, noch nicht hochgeladene Bio-Motive
+let infoBioUrls = ['','','','','','','','','',''];                        // gespeicherte Kachel-URLs (10 Slots)
+let infoBioPending = [null,null,null,null,null,null,null,null,null,null]; // neu gewählte, noch nicht hochgeladene Kacheln
 
 // Erlaubte Inline-Style-Eigenschaften — genau die, die die Format-Leiste setzt.
 // Alles andere (z.B. aus Copy&Paste mitgeschleppte Hintergründe) wird entfernt,
@@ -10468,7 +10370,7 @@ function ieClean(el){
    Nutzt CSS-Inline-Styles, damit die Live-Seite es 1:1 gleich darstellt. */
 let ieActiveEditable = null;
 function ieRegisterEditables(){
-  ['ieAboutBody','ieAboutCopyright','ieAboutTitle','ieAboutDomain','ieAboutCopyrightLabel','ieBioText0','ieBioText1','ieBioText2'].forEach(id=>{
+  ['ieAboutBody','ieAboutCopyright','ieAboutTitle','ieAboutDomain','ieAboutCopyrightLabel'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && !el._ieWired){
       el._ieWired = true;
@@ -10535,40 +10437,6 @@ async function ensureInfoSongsLoaded(){
     if(r.ok) allSongs = await r.json();
   }catch(e){ console.warn('Info-Editor: Songs konnten nicht geladen werden', e); }
 }
-function iePopulateFinaleSongSelects(){
-  const songs = Array.isArray(allSongs) ? allSongs.slice().sort((a,b)=>String(a.title||a.slug||'').localeCompare(String(b.title||b.slug||''),'de')) : [];
-  for(let i=0;i<3;i++){
-    const sel = document.getElementById('ieBioFinalSong'+i);
-    if(!sel) continue;
-    const current = sel.value || sel.dataset.value || '';
-    sel.innerHTML = '<option value="">Song '+(i+1)+' auswählen …</option>' + songs.map(s=>{
-      const title = (s.title||s.slug||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      const artist = (s.artist||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      const label = artist ? title+' · '+artist : title;
-      return '<option value="'+String(s.slug||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+label+'</option>';
-    }).join('');
-    if(current) sel.value = current;
-    ieRenderFinaleSong(i);
-  }
-}
-function ieRenderFinaleSong(i){
-  const sel = document.getElementById('ieBioFinalSong'+i);
-  const box = document.getElementById('ieBioFinalCover'+i);
-  if(!sel || !box) return;
-  const s = (allSongs||[]).find(x=>String(x.slug||'')===String(sel.value||''));
-  if(s && s.cover_url){
-    box.className = '';
-    box.outerHTML = '<img id="ieBioFinalCover'+i+'" class="ie-bio-finale-cover" src="'+String(s.cover_url).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" alt="Cover">';
-  } else {
-    box.className = 'ie-bio-finale-placeholder';
-    box.textContent = String(i+1);
-  }
-}
-function ieSongTitleForSlug(slug){
-  const s = (allSongs||[]).find(x=>String(x.slug||'')===String(slug||''));
-  return s ? (s.title||s.slug||'') : '';
-}
-
 
 /* ═══════════════════════════════════════════════════════
    LANDINGPAGE EDITOR
@@ -11060,34 +10928,23 @@ async function initInfoEditor(){
   if(img){ img.src = data.imageUrl || DEFAULT_ABOUT.imageUrl; img.alt = data.imageAlt || ''; }
   infoImageUrl = data.imageUrl || DEFAULT_ABOUT.imageUrl;
   const prog = $('ieAboutImgProg'); if(prog) prog.style.width='0';
-  await ensureInfoSongsLoaded();
-  iePopulateFinaleSongSelects();
-  // BIO-Story: 3 Abschnitte in die Felder laden (abwärtskompatibel zu altem bioImages)
-  const allBioSecs = Array.isArray(data.bioSections) ? data.bioSections : [];
-  let finaleSec = allBioSecs.find(s=>s && s.kind==='finale') || {};
-  let secs = allBioSecs.filter(s=>!s || s.kind!=='finale').slice(0,3);
-  if(!secs.length && Array.isArray(data.bioImages)){
-    secs = data.bioImages.slice(0,3).map(u=>({image:u}));
+  // Songwriter-Infos: bis zu 10 Kacheln laden.
+  // bioTiles vorhanden (auch leer) → respektieren; nur ohne das Feld altes bioSections/bioImages übernehmen.
+  let tiles;
+  if(Array.isArray(data.bioTiles)){
+    tiles = data.bioTiles.slice(0,10);
+  } else if(Array.isArray(data.bioSections)){
+    tiles = data.bioSections.filter(s=>s && s.kind!=='finale').map(s=>s.image||'').filter(u=>u).slice(0,10);
+  } else if(Array.isArray(data.bioImages)){
+    tiles = data.bioImages.filter(u=>u).slice(0,10);
+  } else {
+    tiles = [];
   }
-  infoBioPending = [null,null,null];
-  infoBioUrls = ['','',''];
-  for(let i=0;i<3;i++){
-    const s = secs[i] || {};
-    infoBioUrls[i] = s.image || '';
-    if($('ieBioHeadline'+i)) $('ieBioHeadline'+i).value = s.headline || '';
-    if($('ieBioText'+i))     $('ieBioText'+i).innerHTML = s.html || '';
-    if($('ieBioQuote'+i))    $('ieBioQuote'+i).value = s.quote || '';
-    if($('ieBioSrc'+i))      $('ieBioSrc'+i).value = s.quoteSource || '';
+  infoBioPending = [null,null,null,null,null,null,null,null,null,null];
+  infoBioUrls = ['','','','','','','','','',''];
+  for(let i=0;i<10;i++){
+    infoBioUrls[i] = tiles[i] || '';
     ieRenderBioSlot(i);
-  }
-  if($('ieBioFinalHeadline')) $('ieBioFinalHeadline').value = finaleSec.headline || 'Noch lange nicht alles';
-  const finaleItems = Array.isArray(finaleSec.items) ? finaleSec.items : [];
-  for(let i=0;i<3;i++){
-    const it = finaleItems[i] || {};
-    const sel = $('ieBioFinalSong'+i);
-    if(sel){ sel.dataset.value = it.songSlug || ''; sel.value = it.songSlug || ''; }
-    if($('ieBioFinalQuote'+i)) $('ieBioFinalQuote'+i).value = it.quote || '';
-    ieRenderFinaleSong(i);
   }
   ieRegisterEditables();
   ieActiveEditable = $('ieAboutBody');
@@ -11104,17 +10961,17 @@ function onInfoImagePicked(ev){
   ev.target.value = '';   // erlaubt erneutes Wählen derselben Datei
 }
 
-// ── BIO-Motive (3 Slots) ──
+// ── Songwriter-Infos: Kacheln (10 Slots) ──
 function ieRenderBioSlot(i){
-  const thumb = document.getElementById('ieBioThumb'+i);
-  const img   = document.getElementById('ieBioImg'+i);
-  const url   = infoBioUrls[i];
+  const tile = document.getElementById('ieBioTile'+i);
+  const img  = document.getElementById('ieBioImg'+i);
+  const url  = infoBioUrls[i];
   if(url){
     if(img) img.src = url;
-    if(thumb) thumb.classList.remove('empty');
+    if(tile) tile.classList.remove('empty');
   } else {
     if(img) img.removeAttribute('src');
-    if(thumb) thumb.classList.add('empty');
+    if(tile) tile.classList.add('empty');
   }
   const prog = document.getElementById('ieBioProg'+i); if(prog) prog.style.width='0';
 }
@@ -11124,7 +10981,7 @@ function onBioImagePicked(i, ev){
   infoBioPending[i] = f;
   infoBioUrls[i] = URL.createObjectURL(f);   // lokale Vorschau
   ieRenderBioSlot(i);
-  toast('Bio-Motiv gewählt – mit „Speichern" übernehmen','ok');
+  toast('Kachel gewählt – mit „Speichern" übernehmen','ok');
   ev.target.value = '';
 }
 function removeBioImage(i){
@@ -11147,42 +11004,16 @@ async function saveInfoContent(){
 
     const $ = id => document.getElementById(id);
 
-    // BIO-Story: je Abschnitt Cover hochladen (falls neu), Felder einsammeln.
-    const bioSections = [];
-    for(let i=0;i<3;i++){
+    // Songwriter-Infos: bis zu 10 Kacheln. Neue Bilder hochladen, URLs in Slot-Reihenfolge sammeln.
+    const bioTiles = [];
+    for(let i=0;i<10;i++){
       if(infoBioPending[i]){
         const ext = (infoBioPending[i].name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
-        const key = 'artwork/bio-motiv-'+(i+1)+'-'+Date.now()+'.'+ext;
+        const key = 'artwork/bio-kachel-'+(i+1)+'-'+Date.now()+'.'+ext;
         infoBioUrls[i] = await uploadToS3(infoBioPending[i], key, 'ieBioProg'+i);
         infoBioPending[i] = null;
       }
-      const image = (infoBioUrls[i] && !infoBioUrls[i].startsWith('blob:')) ? infoBioUrls[i] : '';
-      const sec = {
-        image,
-        headline:    ($('ieBioHeadline'+i).value||'').trim(),
-        html:        ieClean($('ieBioText'+i)),
-        quote:       ($('ieBioQuote'+i).value||'').trim(),
-        quoteSource: ($('ieBioSrc'+i).value||'').trim()
-      };
-      // Abschnitt nur speichern, wenn er irgendeinen Inhalt hat
-      if(sec.image || sec.headline || sec.html || sec.quote) bioSections.push(sec);
-    }
-
-    const finaleItems = [];
-    for(let i=0;i<3;i++){
-      const slug = ($('ieBioFinalSong'+i).value||'').trim();
-      const quote = ($('ieBioFinalQuote'+i).value||'').trim();
-      if(slug || quote){
-        finaleItems.push({
-          songSlug: slug,
-          quote,
-          quoteSource: ieSongTitleForSlug(slug)
-        });
-      }
-    }
-    const finaleHeadline = ($('ieBioFinalHeadline').value||'Noch lange nicht alles').trim();
-    if(finaleItems.length){
-      bioSections.push({ kind:'finale', headline: finaleHeadline || 'Noch lange nicht alles', items: finaleItems });
+      bioTiles[i] = (infoBioUrls[i] && !infoBioUrls[i].startsWith('blob:')) ? infoBioUrls[i] : '';
     }
 
     const about = {
@@ -11194,7 +11025,7 @@ async function saveInfoContent(){
       copyrightHtml:  ieClean($('ieAboutCopyright')),
       imageUrl:       imageUrl,
       imageAlt:       ($('ieAboutImg').alt||'') || DEFAULT_ABOUT.imageAlt,
-      bioSections:    bioSections
+      bioTiles:       bioTiles
     };
 
     // Bestehende About-Sonderzeile entfernen, dann neu schreiben.
@@ -11210,7 +11041,7 @@ async function saveInfoContent(){
     infoImageUrl = imageUrl;
     infoImagePendingFile = null;
     const img = $('ieAboutImg'); if(img) img.src = imageUrl;
-    [0,1,2].forEach(ieRenderBioSlot);
+    for(let i=0;i<10;i++) ieRenderBioSlot(i);
     toast('Info-Seite gespeichert ✓','ok');
   }catch(e){
     toast('Speichern fehlgeschlagen: '+e.message,'err');
