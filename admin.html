@@ -10773,11 +10773,17 @@ function buildLandingZoneEl(zone, label){
   const box = document.createElement('div');
   box.className = 'lp-freeform-zone';
   box.dataset.zone = zone;
+  // Top add bar
+  const addBarTop = document.createElement('div');
+  addBarTop.className = 'he-add-bar top';
+  addBarTop.innerHTML = '<button class="he-add-btn" onclick="landingAddRowAt(\''+zone+'\',0)">＋ Neue Zeile oben</button>';
+  box.appendChild(addBarTop);
   const rowsCont = document.createElement('div');
   rowsCont.className = 'lp-freeform-rows';
   rowsCont.id = 'landingZone_' + zone;
   arr.forEach((row,idx)=> rowsCont.appendChild(buildRowEl(row, idx, arr, 'L')));
   box.appendChild(rowsCont);
+  // Bottom add bar
   const addBar = document.createElement('div');
   addBar.className = 'he-add-bar';
   addBar.innerHTML = '<button class="he-add-btn" onclick="landingAddRow(\''+zone+'\')">＋ '+lpEsc(label)+'</button>';
@@ -10807,6 +10813,13 @@ function landingAddRow(zone){
   if(zone === 'bottom' || !zone){
     setTimeout(()=>{ const w = document.getElementById('landingEditorWrap'); if(w) w.scrollTop = w.scrollHeight; },60);
   }
+}
+function landingAddRowAt(zone, pos){
+  const page = landingActivePage();
+  if(!page) return;
+  const arr = landingZoneArr(page, zone || 'bottom');
+  arr.splice(pos, 0, makeRow());
+  renderLandingFreeform();
 }
 function landingSelectPage(id){
   if(!landingData) return;
@@ -12065,7 +12078,7 @@ function deleteRow(id){
   if(idx<0) return;
   if(arr === homeLayout) markHomeAction();
   arr.splice(idx,1);
-  renderHomeEditor();
+  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
 }
 
 function moveRow(id, dir){
@@ -12075,17 +12088,23 @@ function moveRow(id, dir){
   if(idx<0 || ni<0 || ni>=arr.length) return;
   if(arr === homeLayout) markHomeAction();
   [arr[idx],arr[ni]] = [arr[ni],arr[idx]];
-  renderHomeEditor();
+  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
 }
 
 function editRow(id){
   const row = rowById(id);
-  if(row){ row.editing = true; renderHomeEditor(); }
+  if(!row) return;
+  row.editing = true;
+  const arr = ownerArrayOf(id);
+  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
 }
 
 function finishRow(id){
   const row = rowById(id);
-  if(row){ row.editing = false; renderHomeEditor(); }
+  if(!row) return;
+  row.editing = false;
+  const arr = ownerArrayOf(id);
+  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
 }
 
 /* ── Cell edit: route to tile modal or slideshow modal ── */
