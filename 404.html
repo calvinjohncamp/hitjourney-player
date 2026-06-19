@@ -81,7 +81,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
 /* Landing-Rücksprung-Button: mittig in der Kopfzeile (Album = ← BMG, Home = BMG →) */
-.hj-landing-back{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);margin:0;font-weight:700;white-space:nowrap;z-index:2}
+.hj-landing-back{position:absolute;left:50%;transform:translateX(-50%);margin:0;font-weight:700;white-space:nowrap;z-index:2;bottom:17px}
 .hj-landing-back span{text-transform:uppercase;letter-spacing:.08em}
 .hj-landing-back.arrow-right{flex-direction:row-reverse}
 @media(max-width:560px){.hj-landing-back span{font-size:12px}}
@@ -2763,7 +2763,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   /* Wider header */
   .hj-header{padding:14px 32px 12px}
   .hj-logo-img{height:38px}.hj-making-img{height:13px}
-  .hj-landing-back{bottom:12px}
+  .hj-landing-back{bottom:19px}
 
   /* Home grid: 4 columns */
   #screenHome{padding-top:12px}
@@ -3179,12 +3179,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .hj-logo-sub{
     margin-bottom:13px;
   }
+  .hj-landing-back{bottom:26px}
 }
 /* v213: iPhone Querformat (Home) — beide Logos +25% */
 @media (orientation:landscape) and (max-height:600px){
   .hj-logo-img{height:40px}
   .hj-making-img{height:14px}
   .hj-logo-sub{margin-bottom:9px}
+  .hj-landing-back{bottom:19px}
 }
 
 
