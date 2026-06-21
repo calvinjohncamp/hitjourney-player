@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v275-home-diashow-no-crossfade-songs-voll-ausspielen-fade-nur-mrdj -->
 <!-- Version: v274-songwriter-infos-10-kacheln-flipbook -->
 <!-- Version: v273-landing-deck-title-bottom-left -->
 <!-- Version: v264-landing-redcue-note-teaser-admin-ready-endlessplaylist -->
@@ -8862,7 +8863,7 @@ const HJChain = (function(){
       if(song) start=items.findIndex(it=>it.song && it.song.slug===song.slug);
     }
     if(start<0) start=0;
-    startChain(items, start);
+    startChain(items, start, {noFade:true});   // Home: Songs voll ausspielen, harter Wechsel (kein Crossfade) – Fade nur in Mr. DJ
   }
 
   function startDiashowFrom(wrap, slideIndex, slides, ssApi){
@@ -8877,7 +8878,7 @@ const HJChain = (function(){
     const start=Math.max(0, Math.min(slideIndex||0, arr.length-1));
     let mapped=items.findIndex(it=>it._slideIndex===start);
     if(mapped<0) mapped=0;
-    startChain(items, mapped);
+    startChain(items, mapped, {noFade:true});   // Diashow/Silbertablett: Songs voll ausspielen, harter Wechsel (kein Crossfade) – Fade nur in Mr. DJ
   }
 
   return { startHomeFrom, startDiashowFrom, startChain, stop, isRunning:()=>running, getCurrent };
