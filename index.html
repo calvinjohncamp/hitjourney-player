@@ -8214,12 +8214,32 @@ function buildHeadingEl(cell){
   const wrap = document.createElement('div');
   wrap.className = 'home-heading';
   wrap.style.textAlign = cell.headingAlign || 'center';
-  lines.forEach(l=>{
-    const p = document.createElement('div');
-    p.className = 'home-heading-line';
-    p.setAttribute('style', headingLineStyle(l));
-    p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');
-    wrap.appendChild(p);
+  // Roter Hinweis (z. B. „Red Button > Cover + Lyrics") rechts neben der 1. Zeile.
+  const noteRight = (cell.noteRight || '').trim();
+  const noteFontCss = HEADING_FONTS[cell.noteRightFont] || HEADING_FONTS.system || HEADING_FONTS.anton;
+  const noteColor = /^#[0-9a-fA-F]{6}$/.test(cell.noteRightColor||'') ? cell.noteRightColor : '#C90019';
+  const noteSizes = {xs:'clamp(9px,1vw,11px)',s:'clamp(10px,1.1vw,13px)',m:'clamp(13px,1.4vw,16px)',l:'clamp(16px,1.8vw,20px)'};
+  const noteSizeCss = noteSizes[cell.noteRightSize] || noteSizes.s;
+  lines.forEach((l,i)=>{
+    if(i === 0 && noteRight){
+      const p = document.createElement('div');
+      p.className = 'home-heading-line';
+      p.style.cssText = 'display:flex;align-items:flex-end;justify-content:space-between;gap:12px;width:100%';
+      const leftEl = document.createElement('span');
+      leftEl.setAttribute('style', headingLineStyle(l));
+      leftEl.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');
+      const rightEl = document.createElement('span');
+      rightEl.style.cssText = `font-family:${noteFontCss};font-size:${noteSizeCss};color:${noteColor};text-align:right;line-height:1.3;white-space:pre-line;flex-shrink:0;font-weight:${cell.noteRightBold?'700':'400'};font-style:${cell.noteRightItalic?'italic':'normal'};text-decoration:${cell.noteRightUnderline?'underline':'none'};margin:0 0 2px`;
+      rightEl.textContent = noteRight;
+      p.appendChild(leftEl); p.appendChild(rightEl);
+      wrap.appendChild(p);
+    } else {
+      const p = document.createElement('div');
+      p.className = 'home-heading-line';
+      p.setAttribute('style', headingLineStyle(l));
+      p.textContent = l.upper ? (l.text||'').toUpperCase() : (l.text||'');
+      wrap.appendChild(p);
+    }
   });
   return lines.length ? wrap : null;
 }
