@@ -15,6 +15,7 @@
 <!-- Version: admin-v20260616k-landing-turntable-player -->
 <!-- Version: admin-v20260616b-multi-landingpages-routes -->
 <!-- Version: admin-v20260616b-multi-landing-logo-1-2-4 -->
+<!-- Version: admin-v20260623-songedit-cover-lyrics-reupload-cachebust -->
 <!-- Version: admin-v20260616b-landingpage-logo-compact-sections-restored -->
 <!-- Version: admin-v20260616-landingpage-editor -->
 <!-- Version: admin-v20260614c-describe-save-robust-fehlende-spalte-abgefangen -->
@@ -9279,12 +9280,16 @@ async function saveEdit(){
   const navBtn = document.getElementById('editNavSaveBtn');
   if(btn) btn.disabled = true;
 
+  // Bild-Assets bekommen einen Zeitstempel im Key (wie Album-Cover). Sonst landet
+  // ein erneuter Upload unter demselben S3-Key → identische URL → Browser/CDN
+  // zeigen weiter das alte, gecachte Bild ("springt zurück auf die alte Version").
+  const stamp = Date.now();
   const eNames = {
     mp3:     `songs/${slug}.mp3`,
-    cover:   `artwork/${slug}-cover.jpg`,
-    cover21: `artwork/${slug}-cover-2-1.jpg`,
-    lyrics:  `artwork/${slug}-lyrics.jpg`,
-    describe:`artwork/${slug}-describe.jpg`,
+    cover:   `artwork/${slug}-cover-${stamp}.jpg`,
+    cover21: `artwork/${slug}-cover-2-1-${stamp}.jpg`,
+    lyrics:  `artwork/${slug}-lyrics-${stamp}.jpg`,
+    describe:`artwork/${slug}-describe-${stamp}.jpg`,
   };
   const urlKeys  = { mp3:'mp3_url', cover:'cover_url', cover21:'lyrics21_url', lyrics:'lyrics_url', describe:'describe_url' };
   const progIds  = { mp3:'eProgMp3', cover:'eProgCover', cover21:'eProgCover21', lyrics:'eProgLyrics', describe:'eProgDescribe' };
