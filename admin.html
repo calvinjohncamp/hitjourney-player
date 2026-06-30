@@ -12231,7 +12231,7 @@ function htmSaveLanguageTeaser(){
 // Types where Song/Album cover makes sense (1:1 aspect ratio)
 const HTM_SQUARE_TYPES = new Set(['1x1','1x1-big','1x1-third','trio-a','trio-b','trio-c','span-2']);
 // Types with 2:1 aspect ratio
-const HTM_WIDE_TYPES = new Set(['2x1-half','2x1-full','span-4','4x1','lyrics21']);
+const HTM_WIDE_TYPES = new Set(['2x1','2x1-half','2x1-full','span-4','4x1','lyrics21']);
 
 function htmInitStep2(){
   // Populate song list on first open
@@ -12245,11 +12245,13 @@ function htmInitStep2(){
   const isWide   = HTM_WIDE_TYPES.has(htmChosenType);
   const songTab  = document.querySelector('.htm-source-tab[onclick*="song"]');
   const albumTab = document.querySelector('.htm-source-tab[onclick*="album"]');
-  if(songTab)  songTab.style.display  = isSquare ? '' : 'none';
+  // Song tab: visible for square AND wide types. Bei 2:1-Kacheln wird das vorhandene
+  // 2:1-Artwork des Songs (lyrics21) genutzt — kein erneuter Upload nötig.
+  if(songTab)  songTab.style.display  = (isSquare || isWide) ? '' : 'none';
   // Album tab: visible for square AND wide types (album has cover21Url for 2:1)
   if(albumTab) albumTab.style.display = (isSquare || isWide) ? '' : 'none';
-  // If current source is song but type is not square → reset to upload
-  if(!isSquare && htmChosenSource === 'song'){
+  // If current source is song but type supports neither square nor wide → reset to upload
+  if(!isSquare && !isWide && htmChosenSource === 'song'){
     htmChosenSource = 'upload';
     const uploadTab = document.querySelector('.htm-source-tab[onclick*="upload"]');
     if(uploadTab) { uploadTab.click(); }
@@ -12352,10 +12354,13 @@ function openMotifConfirm(type, candidate){
   const sub   = document.getElementById('motifConfirmSub');
   const note  = document.getElementById('motifConfirmNote');
   if(!modal) return;
-  img.src        = candidate.coverUrl || '';
+  const isWideTile = HTM_WIDE_TYPES.has(htmChosenType);
+  img.src        = (type === 'song' && isWideTile ? (candidate.cover21Url || candidate.coverUrl) : candidate.coverUrl) || '';
   title.textContent = candidate.title || candidate.slug || '';
   sub.textContent   = type === 'song' ? (candidate.artist || '') : 'Album / Playlist';
-  note.textContent  = 'Dieses Cover wird als Kachelbild übernommen.';
+  note.textContent  = (type === 'song' && isWideTile)
+    ? 'Das vorhandene 2:1-Artwork dieses Songs wird als Kachelbild übernommen.'
+    : 'Dieses Cover wird als Kachelbild übernommen.';
   modal.style.display = 'flex';
 }
 
@@ -12375,10 +12380,22 @@ function motifConfirmOk(){
 
   if(type === 'song'){
     htmSelectedSong = candidate;
-    // Motiv-URL direkt in htmMotifUrl einschreiben → wird sicher in saveHomeTile() verwendet
-    htmMotifUrl = candidate.coverUrl || '';
+    // Motiv-URL direkt in htmMotifUrl einschreiben → wird sicher in saveHomeTile() verwendet.
+    // Bei 2:1-Kacheln das vorhandene 2:1-Artwork (lyrics21) bevorzugen, sonst 1:1-Cover.
+    const isWideTile = HTM_WIDE_TYPES.has(htmChosenType);
+    htmMotifUrl = (isWideTile ? (candidate.cover21Url || candidate.coverUrl) : candidate.coverUrl) || '';
     htmMotifFile = null;
     if(!htmChosenAction) htmChosenAction = 'play';
+    // Der Motiv-Song ist zugleich das Klick-/Play-Ziel. Beim Austausch eines bestehenden
+    // Streifens muss das alte (vorbefüllte) Play-Ziel überschrieben werden, sonst spielt
+    // die Kachel nach dem Speichern noch den alten Song unter dem neuen Bild.
+    if(htmChosenAction === 'play'){
+      htmActionSelectedSong = {
+        slug: candidate.slug, title: candidate.title, artist: candidate.artist || '',
+        coverUrl: candidate.coverUrl || '', cover21Url: candidate.cover21Url || candidate.coverUrl || ''
+      };
+      if(typeof htmRenderActionSelectedSong === 'function') htmRenderActionSelectedSong();
+    }
     htmRenderSelectedSong();
     // Vorschau im Upload-Zone-Frame aktualisieren
     const img = document.getElementById('prevHtmMotif');
