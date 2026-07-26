@@ -104,6 +104,10 @@ tr.selected td{background:rgba(133,172,201,.08)}
 .btn-alexa.on{background:rgba(40,199,230,.14);border-color:rgba(40,199,230,.5);color:#28c7e6}
 .btn-alexa.on .dot{opacity:1;box-shadow:0 0 6px rgba(40,199,230,.7)}
 .btn-alexa.busy{opacity:.5;pointer-events:none}
+/* Song ist über ein markiertes Album auf Alexa (berechnet, nicht klickbar) */
+.btn-alexa.viaalbum{cursor:default;background:rgba(40,199,230,.10);border-color:rgba(40,199,230,.35);color:#28c7e6}
+.btn-alexa.viaalbum .dot{opacity:1;border-radius:2px}
+.btn-alexa.viaalbum svg{width:11px;height:11px;stroke:currentColor;stroke-width:2;fill:none}
 .btn-del{background:rgba(220,80,80,.1);color:#e08080}
 .btn-del:hover{background:rgba(220,80,80,.22)}
 .btn-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -8848,6 +8852,8 @@ async function loadSongs(){
     allSongs = await r.json();
     populateArtistList();
     renderTable();
+    // Alben-Daten für die Alexa-Abdeckungsanzeige ("über Album") sicherstellen
+    if(!(albumsData && albumsData.length)){ loadPlaylists().then(()=>renderTable()).catch(()=>{}); }
     // Snapshot-Button freischalten (war beim Laden disabled)
     const snapBtn = document.querySelector('.snapshot-btn');
     if(snapBtn){ snapBtn.disabled = false; snapBtn.innerHTML = '📦 Snapshot'; }
@@ -8953,9 +8959,17 @@ document.querySelectorAll('th[data-sort]').forEach(th=>{
 document.getElementById('searchInput').addEventListener('input', renderTable);
 document.getElementById('filterLang').addEventListener('change', renderTable);
 
+// Slugs aller Songs, die in einer für Alexa markierten Playlist/Album stecken
+function alexaAlbumSongSet(){
+  const set = new Set();
+  (albumsData||[]).forEach(pl=>{ if(pl.alexa){ (pl.tracks||[]).forEach(t=>set.add(t.song_slug)); } });
+  return set;
+}
+
 function renderTable(){
   const q    = document.getElementById('searchInput').value.trim().toLowerCase();
   const lang = document.getElementById('filterLang').value;
+  const covered = alexaAlbumSongSet();
 
   let list = allSongs.filter(s=>{
     if(lang && s.language!==lang) return false;
@@ -9006,9 +9020,9 @@ function renderTable(){
       </td>
       <td>
         <div class="td-actions">
-          <button class="btn-alexa ${s.alexa?'on':''}" onclick="toggleSongAlexa(this,'${esc(s.slug)}')" title="Diesen Song einzeln auf Alexa abrufbar machen">
-            <span class="dot"></span>Alexa
-          </button>
+          ${covered.has(s.slug)
+            ? `<span class="btn-alexa viaalbum" title="Über ein markiertes Album schon auf Alexa – kein Extra-Häkchen nötig"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Album</span>`
+            : `<button class="btn-alexa ${s.alexa?'on':''}" onclick="toggleSongAlexa(this,'${esc(s.slug)}')" title="Diesen Song einzeln auf Alexa abrufbar machen"><span class="dot"></span>Alexa</button>`}
           <button class="btn-icon btn-edit" data-song-b64="${toB64(JSON.stringify(s))}" onclick="openEditFromBtn(this)" title="Bearbeiten">
             <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
@@ -9065,6 +9079,8 @@ async function togglePlaylistAlexa(event, slug){
     if(!r.ok) throw new Error(await r.text());
     al.alexa = next;
     if(btn){ btn.classList.toggle('on', next); btn.classList.remove('busy'); }
+    // Songliste aktualisieren, damit die "über Album"-Anzeige sofort stimmt
+    if(typeof renderTable==='function' && document.getElementById('songsBody') && allSongs && allSongs.length){ try{ renderTable(); }catch(_e){} }
     toast(next ? 'Auf Alexa verfügbar' : 'Von Alexa entfernt');
   }catch(e){
     if(btn) btn.classList.remove('busy');
