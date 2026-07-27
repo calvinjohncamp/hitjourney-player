@@ -9614,6 +9614,7 @@ function renderAlbums(){
 
 function renderAlbumSongs(al, q=''){
   const tracks = al.tracks.slice().sort((a,b)=>a.position-b.position);
+  const displayNumBySlug = new Map(tracks.map((t,i)=>[t.song_slug, i+1]));
   const filtered = q ? tracks.filter(t=>{
     const s = allSongs.find(x=>x.slug===t.song_slug);
     return s && ((s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q));
@@ -9635,7 +9636,7 @@ function renderAlbumSongs(al, q=''){
         ? `<img src="${s.cover_url}" loading="lazy" style="width:28px;height:28px;border-radius:4px;object-fit:cover;display:block" onerror="this.style.display='none'">`
         : `<div style="width:28px;height:28px;border-radius:4px;background:rgba(133,172,201,.08);display:flex;align-items:center;justify-content:center;font-size:12px">♪</div>`;
       return `<tr draggable="true" data-slug="${t.song_slug}" data-album="${al.slug}">
-        <td class="td-num">${t.position}</td>
+        <td class="td-num">${displayNumBySlug.get(t.song_slug) || idx+1}</td>
         <td class="td-cover">${coverHtml}</td>
         <td class="td-title">
           <div class="song-title">${esc(s.title||'—')}</div>
