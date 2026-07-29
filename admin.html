@@ -359,6 +359,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .sp-addrow{display:flex;gap:10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(133,172,201,.16)}
 .sp-addrow select{flex:1;padding:9px 11px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(6,20,32,.85);color:#cfe0ee;font-size:13px}
 .sp-songs-empty{padding:26px 12px;text-align:center;color:rgba(133,172,201,.4);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
+.sp-layout-toggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sp-layout-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.5);margin-right:4px}
+.sp-type-btn{padding:8px 14px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s}
+.sp-type-btn:hover{background:rgba(133,172,201,.14)}
+.sp-type-btn.active{background:rgba(88,150,220,.22);border-color:rgba(120,180,240,.5);color:#dcebfa}
+.sp-type-hint{color:rgba(133,172,201,.55);font-size:12px;line-height:1.5;margin:2px 0 12px}
 .lp-freeform-note{padding:0 10px 8px;color:rgba(133,172,201,.5);font-size:11px;line-height:1.45}
 .lp-freeform-rows{padding:4px 10px 0}
 .lp-freeform-empty{padding:22px 12px;text-align:center;color:rgba(133,172,201,.35);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
@@ -7699,7 +7705,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 <!-- ══ TAB: UNTERSEITEN ══ -->
 <div class="screen" id="tabSubpages">
   <div class="lp-toolbar">
-    <span class="lp-toolbar-title">Unterseiten · Lyric-Bühne</span>
+    <span class="lp-toolbar-title">Unterseiten</span>
     <div class="lp-toolbar-actions">
       <button class="lp-btn" onclick="subAddPage()">＋ Unterseite</button>
       <button class="lp-btn" onclick="subDuplicatePage()">Duplizieren</button>
@@ -7725,7 +7731,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 
   <div class="sp-help">
-    Jeder Song erscheint als <strong>Lyric-Sheet im Querformat</strong> mit einem Play-Button darunter — exakt wie auf „Kurs Nordwest". Reihenfolge per ↑ ↓ tauschen, neue Songs unten hinzufügen. Geöffnet wird die Unterseite über eine Home-Kachel mit der Aktion „Unterseite" und genau diesem Slug.
+    Wähle unten den <strong>Typ</strong>: <strong>Home-Stil</strong> (normale Home-Zeilen wie die Startseite) oder <strong>Lyric-Bühne</strong> (Lyric-Sheets im Querformat mit Player, wie „Kurs Nordwest"). Geöffnet wird die Unterseite über eine Home-Kachel: dort Aktion „Unterseite" wählen und genau diese Unterseite verknüpfen.
   </div>
 
   <div class="lp-editor-wrap" id="subEditorWrap">
@@ -8220,7 +8226,12 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
       <!-- Unterseite (action=subpage) -->
       <div class="htm-field" id="htmActionSubpageField" style="display:none;margin-top:10px">
-        <span class="htm-label">Unterseiten-Slug (wird neu angelegt)</span>
+        <span class="htm-label">Bestehende Unterseite wählen</span>
+        <select class="htm-input" id="htmSubpageSelect" onchange="htmPickSubpage(this.value)">
+          <option value="">— bestehende Unterseite wählen —</option>
+        </select>
+        <div class="htm-hint" style="margin:6px 0 4px;font-size:11px;color:rgba(133,172,201,.5)">Unterseiten legst du im Tab „Unterseiten" an und gestaltest sie dort (Home-Stil oder Lyric-Bühne). Oder unten einen neuen Slug eintippen — er erscheint dann dort zum Gestalten.</div>
+        <span class="htm-label" style="margin-top:6px">Unterseiten-Slug</span>
         <input class="htm-input" id="htmSubpageUrl" placeholder="z.B. meine-unterseite">
         <span class="htm-label" style="margin-top:8px">Label (Beschriftung auf der Kachel)</span>
         <input class="htm-input" id="htmSubpageAlt" placeholder="z.B. Kurs Nordwest">
@@ -10211,6 +10222,12 @@ function allEditorRowArrays(){
     const p = landingActivePage && landingActivePage();
     if(p) Object.values(LANDING_ZONES).forEach(k=>{ if(Array.isArray(p[k])) arrs.push(p[k]); });
   }catch(_){}
+  // Home-Stil-Zeilen der aktiven Unterseite mit aufnehmen, damit rowById/ownerArrayOf
+  // (und damit das Kachel-Modal) auch dort greifen.
+  try{
+    const s = (typeof subActiveRowsArr==='function') ? subActiveRowsArr() : null;
+    if(Array.isArray(s)) arrs.push(s);
+  }catch(_){}
   return arrs;
 }
 function rowById(id){
@@ -10221,6 +10238,14 @@ function rowById(id){
 function ownerArrayOf(id){
   for(const arr of allEditorRowArrays()){ if(arr.some(x=>x.id===id)) return arr; }
   return homeLayout;
+}
+// Nach einer Zeilen-Operation den richtigen Editor neu rendern (Home / Unterseite / Landing).
+function rerenderOwnerArr(arr){
+  if(arr === homeLayout){ renderHomeEditor(); return; }
+  try{
+    if(typeof subActiveRowsArr==='function'){ const s=subActiveRowsArr(); if(s && arr===s){ renderSubHomeRows(); return; } }
+  }catch(_){}
+  renderLandingFreeform();
 }
 function emptyCell(){ return {id:uid(),type:'empty',fn:'play',slug:'',url:'',imageUrl:'',alt:'',bgUrl:'',startColor:'#0A0A0A',overlayPos:'bottom-left',slides:[],coverFitSquare:false, showSongTitle:true, showSongNumber:true, showProgressDots:true, coverAngleOffset:0, coverFitLeft:'', coverFitTop:'', coverFitWidth:'', coverFitHeight:'', coverShape:'square', coverFitMode:'contain', titleStyleMode:'outline', titleColor:'#f1ecdf', titleSize:'normal', titleX:4, titleY:78, dotsX:4, dotsY:94}; }
 
@@ -11121,7 +11146,7 @@ function subDefault(){
   const songs = seedSlugs
     .map(sl => (allSongs||[]).find(s=>s.slug===sl))
     .filter(Boolean).map(subEntryFromSong);
-  const p = { id: subUid(), slug:'kurs-nordwest', title:'Kurs Nordwest', songs };
+  const p = { id: subUid(), slug:'kurs-nordwest', title:'Kurs Nordwest', layout:'lyrics', rows:[], songs };
   return { type:'subpages', activePageId:p.id, pages:[p] };
 }
 function subNormEntry(e){
@@ -11134,6 +11159,8 @@ function subNormPage(p, idx){
   p = p || {};
   return { id:p.id||subUid(), slug:subSlugify(p.slug||('unterseite-'+(idx+1))),
            title:p.title||p.name||('Unterseite '+(idx+1)),
+           layout:(p.layout==='home')?'home':'lyrics',
+           rows:Array.isArray(p.rows)?p.rows.map(normalizeHomeRow):[],
            songs:Array.isArray(p.songs)?p.songs.map(subNormEntry):[] };
 }
 function subNormalize(obj){
@@ -11201,13 +11228,70 @@ function renderSubPageBar(){
   const h=document.getElementById('subSlugHint');  if(h) h.textContent=page.slug||'';
 }
 
+// ── Home-Stil-Zeilen der aktiven Unterseite ──
+// Liefert das rows-Array nur, wenn die aktive Unterseite Typ 'home' ist —
+// so kann es sicher in allEditorRowArrays() aufgenommen werden (Kachel-Modal etc.).
+function subActiveRowsArr(){
+  if(!subData) return null;
+  const p = subActivePage();
+  if(!p || p.layout !== 'home') return null;
+  if(!Array.isArray(p.rows)) p.rows = [];
+  return p.rows;
+}
+function renderSubHomeRows(){
+  const host = document.getElementById('subHomeRowsHost');
+  if(!host) return;
+  const arr = subActiveRowsArr();
+  if(!arr) return;
+  host.innerHTML = '';
+  arr.forEach((row,idx)=> host.appendChild(buildRowEl(row, idx, arr, 'U')));
+}
+function subAddRow(){
+  const arr = subActiveRowsArr(); if(!arr) return;
+  arr.push(makeRow()); renderSubHomeRows();
+  setTimeout(()=>{ const w=document.getElementById('subEditorWrap'); if(w) w.scrollTop=w.scrollHeight; },60);
+}
+function subAddRowTop(){
+  const arr = subActiveRowsArr(); if(!arr) return;
+  arr.unshift(makeRow()); renderSubHomeRows();
+}
+function subSetLayout(layout){
+  const p = subActivePage();
+  p.layout = (layout==='home') ? 'home' : 'lyrics';
+  if(p.layout==='home'  && !Array.isArray(p.rows))  p.rows  = [];
+  if(p.layout==='lyrics'&& !Array.isArray(p.songs)) p.songs = [];
+  renderSubEditor();
+}
+
 function renderSubEditor(){
   renderSubPageBar();
   const wrap=document.getElementById('subEditorWrap');
   if(!wrap) return;
   const page=subActivePage();
+  const layout = page.layout==='home' ? 'home' : 'lyrics';
+
+  // Typ-Umschalter (immer sichtbar)
+  let html='<div class="sp-layout-toggle">'
+    +'<span class="sp-layout-label">Typ dieser Unterseite</span>'
+    +'<button class="sp-type-btn '+(layout==='lyrics'?'active':'')+'" onclick="subSetLayout(\'lyrics\')">◧ Lyric-Bühne</button>'
+    +'<button class="sp-type-btn '+(layout==='home'?'active':'')+'" onclick="subSetLayout(\'home\')">▦ Home-Stil</button>'
+    +'</div>';
+
+  // ── Typ „Home-Stil": normale Home-Zeilen-Editor (wie Startseite) ──
+  if(layout==='home'){
+    html+='<div class="sp-type-hint">Gestalte diese Unterseite mit normalen Home-Zeilen — beliebige Kachel-Aufteilungen, Songs, Alben, Links, genau wie die Startseite.</div>';
+    html+='<div class="he-add-bar top"><button class="he-add-btn" onclick="subAddRowTop()">＋ Neue Zeile oben</button></div>';
+    html+='<div id="subHomeRowsHost" class="lp-freeform-rows"></div>';
+    html+='<div class="he-add-bar"><button class="he-add-btn" onclick="subAddRow()">＋ Neue Zeile unten hinzufügen</button></div>';
+    wrap.innerHTML=html;
+    renderSubHomeRows();
+    return;
+  }
+
+  // ── Typ „Lyric-Bühne": Song-Liste (Lyric-Sheet + Player) ──
+  html+='<div class="sp-type-hint">Jeder Song erscheint als Lyric-Sheet im Querformat mit Play-Button darunter — wie auf „Kurs Nordwest".</div>';
   const songs=page.songs||[];
-  let html='<div class="sp-songlist">';
+  html+='<div class="sp-songlist">';
   if(!songs.length){
     html+='<div class="sp-songs-empty">Noch keine Songs auf dieser Unterseite. Unten einen Song hinzufügen.</div>';
   } else {
@@ -11245,7 +11329,7 @@ function subSetPageField(field,val){
 }
 function subSelectPage(id){ subData.activePageId=id; renderSubEditor(); }
 function subAddPage(){
-  const p={ id:subUid(), slug:subSlugify('unterseite-'+((subData.pages||[]).length+1)), title:'Neue Unterseite', songs:[] };
+  const p={ id:subUid(), slug:subSlugify('unterseite-'+((subData.pages||[]).length+1)), title:'Neue Unterseite', layout:'lyrics', rows:[], songs:[] };
   subData.pages.push(p); subData.activePageId=p.id; renderSubEditor();
 }
 function subDuplicatePage(){
@@ -11283,6 +11367,8 @@ async function saveSubpages(){
   try{
     if(!subData) subData=subDefault();
     subData=subNormalize(subData);
+    // Bearbeiten-Status der Home-Stil-Zeilen nicht persistieren (sonst Reload im Edit-Modus).
+    (subData.pages||[]).forEach(p=>(p.rows||[]).forEach(r=>{ r.editing=false; }));
     // 1) Bestehende Zeile lesen (Backup + id für sicheres Upsert)
     const readRes=await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-3'),{headers:hdrs()});
     if(!readRes.ok) throw new Error('READ '+readRes.status+': '+(await readRes.text()).slice(0,200));
@@ -11473,8 +11559,9 @@ function renderHomeEditor(){
   wrap.appendChild(bar);
   updateHomeUndoUi();
   // Geteilte Mutatoren (applyType, Zell-/Diashow-Speichern …) rufen renderHomeEditor.
-  // Falls gerade freie Landing-Zeilen sichtbar sind, diese mit auffrischen.
+  // Falls gerade freie Landing-Zeilen oder Unterseiten-Home-Zeilen sichtbar sind, mit auffrischen.
   if(typeof renderLandingFreeform === 'function') renderLandingFreeform();
+  if(typeof renderSubHomeRows === 'function') renderSubHomeRows();
 }
 
 /* ── Check if all visible cells in a row are filled ── */
@@ -12435,7 +12522,7 @@ function deleteRow(id){
   if(idx<0) return;
   if(arr === homeLayout) markHomeAction();
   arr.splice(idx,1);
-  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
+  rerenderOwnerArr(arr);
 }
 
 function moveRow(id, dir){
@@ -12445,7 +12532,7 @@ function moveRow(id, dir){
   if(idx<0 || ni<0 || ni>=arr.length) return;
   if(arr === homeLayout) markHomeAction();
   [arr[idx],arr[ni]] = [arr[ni],arr[idx]];
-  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
+  rerenderOwnerArr(arr);
 }
 
 function editRow(id){
@@ -12453,7 +12540,7 @@ function editRow(id){
   if(!row) return;
   row.editing = true;
   const arr = ownerArrayOf(id);
-  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
+  rerenderOwnerArr(arr);
 }
 
 function finishRow(id){
@@ -12461,7 +12548,7 @@ function finishRow(id){
   if(!row) return;
   row.editing = false;
   const arr = ownerArrayOf(id);
-  if(arr === homeLayout) renderHomeEditor(); else renderLandingFreeform();
+  rerenderOwnerArr(arr);
 }
 
 /* ── Cell edit: route to tile modal or slideshow modal ── */
@@ -13018,6 +13105,36 @@ function htmShowActionDetail(action){
   document.getElementById('htmActionAlbumField').style.display   = action==='album'   ? '' : 'none';
   document.getElementById('htmActionLinkField').style.display    = action==='link'    ? '' : 'none';
   document.getElementById('htmActionSubpageField').style.display = action==='subpage' ? '' : 'none';
+  if(action==='subpage'){
+    ensureSubpagesLoaded().then(()=>{
+      const cur = document.getElementById('htmSubpageUrl')?.value || '';
+      htmPopulateSubpageSelect(cur);
+    }).catch(()=>{});
+  }
+}
+// Unterseiten-Daten für das Kachel-Modal bereitstellen (im Home-Tab noch nicht geladen).
+async function ensureSubpagesLoaded(){
+  if(subData) return subData;
+  try{
+    const r=await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-3&limit=1'),{headers:hdrs()});
+    if(r.ok){ const rows=await r.json(); subData=subNormalize(rows&&rows[0]&&rows[0].cells&&rows[0].cells[0]); }
+    else subData=subNormalize(null);
+  }catch(_){ subData=subNormalize(null); }
+  return subData;
+}
+function htmPopulateSubpageSelect(currentUrl){
+  const sel=document.getElementById('htmSubpageSelect'); if(!sel) return;
+  const pages=(subData&&subData.pages)||[];
+  const cur=String(currentUrl||'').toLowerCase().replace(/\.html?$/,'').replace(/^#?\/?/,'').trim();
+  sel.innerHTML='<option value="">— bestehende Unterseite wählen —</option>'
+    + pages.map(p=>`<option value="${subEsc(p.slug)}" ${p.slug===cur?'selected':''}>${subEsc(p.title||p.slug)} · ${p.layout==='home'?'Home-Stil':'Lyric-Bühne'}</option>`).join('');
+}
+function htmPickSubpage(slug){
+  if(!slug) return;
+  const f=document.getElementById('htmSubpageUrl'); if(f) f.value=slug;
+  const p=((subData&&subData.pages)||[]).find(x=>x.slug===slug);
+  const la=document.getElementById('htmSubpageAlt');
+  if(p && la && !la.value.trim()) la.value=p.title||'';
 }
 
 /* Action song list */
