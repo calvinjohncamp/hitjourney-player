@@ -6385,6 +6385,9 @@ function normalizeSubpagesData(obj){
       id:    p.id || ('sp_'+Math.random().toString(36).slice(2,9)),
       slug:  String(p.slug||'').toLowerCase().trim(),
       title: p.title || p.name || '',
+      // Zwei Unterseiten-Typen: 'home' = normale Home-Zeilen, 'lyrics' = Lyric-Bühne (Player-Liste).
+      layout: (p.layout === 'home') ? 'home' : 'lyrics',
+      rows:  Array.isArray(p.rows) ? p.rows : [],
       songs: Array.isArray(p.songs) ? p.songs.map(s => ({
         slug:   s.slug || '',
         title:  s.title || '',
@@ -6423,10 +6426,64 @@ function resolveSubpageSong(entry){
     lyric
   };
 }
+// Baut ein Home-Grid (normale Home-Zeilen) für eine Home-Stil-Unterseite.
+// Wiederverwendung von renderHomeRowInto → exakt gleiche Optik/Logik wie die Homeseite.
+function buildSubpageHomeGrid(rowsArr){
+  if(!Array.isArray(rowsArr) || !rowsArr.length) return null;
+  const g = document.createElement('div');
+  g.className = 'home-grid';
+  rowsArr.forEach(row => {
+    if(row && row.cells && row.cells[0] && ['about','landing','landingPages','subpages'].includes(row.cells[0].type)) return;
+    renderHomeRowInto(g, row);
+  });
+  return g.children.length ? g : null;
+}
+// Host-Container für Home-Stil-Unterseiten im KNW-Screen (einmalig anlegen).
+function subHomeHostEl(){
+  const screen = document.getElementById('screenKursNordwest');
+  if(!screen) return null;
+  let host = document.getElementById('subHomeHost');
+  if(!host){
+    host = document.createElement('div');
+    host.id = 'subHomeHost';
+    host.style.display = 'none';
+    screen.insertBefore(host, screen.firstChild);
+  }
+  return host;
+}
+
 // Baut die Lyric-Sheet-/Player-Blöcke einer Unterseite in den KNW-Container.
 // Gleiche CSS-Klassen wie die ursprüngliche Kurs-Nordwest-Seite → identische Optik.
 function renderSubpageContent(slug){
   const page = findSubpage(slug);
+  currentSubpageTitle = (page && page.title) || 'Kurs Nordwest';
+
+  const container = document.querySelector('#screenKursNordwest .knw-container');
+  const host = subHomeHostEl();
+
+  // ── Typ 1: Home-Stil (normale Home-Zeilen) ──
+  if(page && page.layout === 'home'){
+    if(container) container.style.display = 'none';
+    if(host){
+      host.style.display = '';
+      host.innerHTML = '';
+      const grid = buildSubpageHomeGrid(page.rows);
+      if(grid){
+        host.appendChild(grid);
+        if(typeof wireHomeGrid === 'function') wireHomeGrid(grid);
+      } else {
+        host.innerHTML = '<div style="text-align:center;color:rgba(133,172,201,.4);padding:48px 20px;font-size:14px">Diese Unterseite ist noch leer.</div>';
+      }
+    }
+    currentKnwSongs = [];
+    knwActiveSongIdx = -1;
+    return;
+  }
+
+  // ── Typ 2: Lyric-Bühne (Player-Liste, bisheriges Verhalten) ──
+  if(host) host.style.display = 'none';
+  if(container) container.style.display = '';
+
   let songs;
   if(page && Array.isArray(page.songs) && page.songs.length){
     songs = page.songs.map(resolveSubpageSong).filter(s => s.lyric || s.mp3);
@@ -6435,10 +6492,8 @@ function renderSubpageContent(slug){
     // Live-Song (Supabase) auflösen — so bleibt die Anzeige exakt wie zuvor.
     songs = KNW_SONGS.map(s => resolveSubpageSong({ slug:s.slug, title:s.title, mp3:s.mp3, cover:s.cover, lyric:s.lyric }));
   }
-  currentKnwSongs     = songs;
-  currentSubpageTitle = (page && page.title) || 'Kurs Nordwest';
+  currentKnwSongs = songs;
 
-  const container = document.querySelector('#screenKursNordwest .knw-container');
   if(!container) return;
   container.querySelectorAll('.knw-song').forEach(el => el.remove());
   const pad = container.querySelector('.knw-bottom-pad');
