@@ -338,6 +338,27 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .lp-slot-body select{width:100%;min-width:0;background:rgba(6,20,32,.55);border:1px solid rgba(133,172,201,.14);border-radius:8px;color:#f1ecdf;font-size:12px;padding:8px 7px;outline:none}
 .lp-slot-actions{display:flex;gap:5px}.lp-slot-actions button{flex:1;border:0;border-radius:7px;background:rgba(133,172,201,.10);color:#85ACC9;font-size:12px;font-weight:800;padding:6px;cursor:pointer}.lp-slot-actions button:hover{background:rgba(133,172,201,.2)}.lp-slot-actions button.clear{color:#e08080;background:rgba(220,80,80,.09)}
 .lp-empty{padding:44px 20px;text-align:center;color:rgba(133,172,201,.35);font-size:14px}
+/* ── Unterseiten-Editor ── */
+.sp-help{padding:10px 14px;margin:0;color:rgba(133,172,201,.62);font-size:12px;line-height:1.5;background:rgba(6,20,32,.55);border-bottom:1px solid rgba(133,172,201,.08)}
+.sp-help strong{color:#85ACC9}
+.sp-songlist{display:flex;flex-direction:column;gap:10px}
+.sp-song{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid rgba(133,172,201,.14);border-radius:12px;background:rgba(133,172,201,.05)}
+.sp-song-thumb{width:132px;height:66px;flex-shrink:0;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center}
+.sp-song-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.sp-song-thumb.empty::after{content:'kein Lyric-Sheet';font-size:9px;color:rgba(133,172,201,.4);text-align:center;padding:4px}
+.sp-song-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.sp-song-select{width:100%;padding:8px 10px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(6,20,32,.85);color:#cfe0ee;font-size:13px}
+.sp-song-name{font-size:14px;font-weight:700;color:#cfe0ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-song-artist{font-size:11px;color:rgba(133,172,201,.65)}
+.sp-song-warn{font-size:11px;color:#e0a04a}
+.sp-song-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.sp-mini-btn{width:34px;height:28px;border-radius:8px;border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.09);color:#85ACC9;font-size:13px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+.sp-mini-btn:hover{background:rgba(133,172,201,.18)}
+.sp-mini-btn.del{color:#e07a7a;border-color:rgba(224,122,122,.3)}
+.sp-mini-btn:disabled{opacity:.28;cursor:default}
+.sp-addrow{display:flex;gap:10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(133,172,201,.16)}
+.sp-addrow select{flex:1;padding:9px 11px;border-radius:9px;border:1px solid rgba(133,172,201,.18);background:rgba(6,20,32,.85);color:#cfe0ee;font-size:13px}
+.sp-songs-empty{padding:26px 12px;text-align:center;color:rgba(133,172,201,.4);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
 .lp-freeform-note{padding:0 10px 8px;color:rgba(133,172,201,.5);font-size:11px;line-height:1.45}
 .lp-freeform-rows{padding:4px 10px 0}
 .lp-freeform-empty{padding:22px 12px;text-align:center;color:rgba(133,172,201,.35);font-size:12px;border:1px dashed rgba(133,172,201,.16);border-radius:10px}
@@ -874,6 +895,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   <div class="tab" data-tab="add">Song hinzufügen</div>
   <div class="tab" data-tab="playlists">Alben</div>
   <div class="tab active" data-tab="home">Home</div>
+  <div class="tab" data-tab="subpages">Unterseiten</div>
   <div class="tab" data-tab="landing">Landingpage</div>
   <div class="tab" data-tab="info">Info</div>
 </div>
@@ -7674,6 +7696,43 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
   </div>
 </div>
 
+<!-- ══ TAB: UNTERSEITEN ══ -->
+<div class="screen" id="tabSubpages">
+  <div class="lp-toolbar">
+    <span class="lp-toolbar-title">Unterseiten · Lyric-Bühne</span>
+    <div class="lp-toolbar-actions">
+      <button class="lp-btn" onclick="subAddPage()">＋ Unterseite</button>
+      <button class="lp-btn" onclick="subDuplicatePage()">Duplizieren</button>
+      <button class="lp-btn danger" onclick="subDeletePage()">Löschen</button>
+      <button class="lp-btn save" id="subSaveBtn" onclick="saveSubpages()">Speichern</button>
+    </div>
+  </div>
+
+  <div class="lp-pagebar">
+    <div class="lp-field lp-page-select">
+      <label>Aktive Unterseite</label>
+      <select id="subPageSelect" onchange="subSelectPage(this.value)"></select>
+    </div>
+    <div class="lp-field">
+      <label>Titel (Kopfzeile)</label>
+      <input id="subPageTitle" placeholder="Kurs Nordwest" oninput="subSetPageField('title',this.value)">
+    </div>
+    <div class="lp-field">
+      <label>Verknüpfungs-Slug</label>
+      <input id="subPageSlug" placeholder="kurs-nordwest" oninput="subSetPageField('slug',this.value)">
+    </div>
+    <div class="lp-route-hint" id="subSlugHint">kurs-nordwest</div>
+  </div>
+
+  <div class="sp-help">
+    Jeder Song erscheint als <strong>Lyric-Sheet im Querformat</strong> mit einem Play-Button darunter — exakt wie auf „Kurs Nordwest". Reihenfolge per ↑ ↓ tauschen, neue Songs unten hinzufügen. Geöffnet wird die Unterseite über eine Home-Kachel mit der Aktion „Unterseite" und genau diesem Slug.
+  </div>
+
+  <div class="lp-editor-wrap" id="subEditorWrap">
+    <div class="lp-empty">Unterseiten werden geladen …</div>
+  </div>
+</div>
+
 <!-- ══ TAB: HOME ══ -->
 <div class="screen active" id="tabHome">
   <div class="home-toolbar">
@@ -8707,6 +8766,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     if(tab.dataset.tab==='songs' && !songsLoaded){ songsLoaded=true; loadSongs(); }
     if(tab.dataset.tab==='playlists') loadPlaylists();
     if(tab.dataset.tab==='home') initHomeEditor();
+    if(tab.dataset.tab==='subpages') initSubpagesEditor();
     if(tab.dataset.tab==='landing') initLandingEditor();
     if(tab.dataset.tab==='info') initInfoEditor();
   });
@@ -10260,7 +10320,7 @@ async function loadHomeLayout(){
     // Home-Editor. Ohne diesen Filter würde die Landing-Zeile als leere Home-Zeile
     // geladen und beim nächsten Home-Speichern überschrieben → Landingpages verloren.
     const rows = (await r.json()).filter(row =>
-      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages')));
+      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages')));
     homeLayout = rows.map(normalizeHomeRow);
   } catch(e){
     homeLayout = [];
@@ -11022,6 +11082,226 @@ async function saveLandingPage(){
     }
     toast('Landingpages sicher gespeichert ✓','ok');
   }catch(e){ toast('Landingpages speichern fehlgeschlagen: '+e.message,'err'); alert('Landingpages speichern fehlgeschlagen:\n\n'+e.message); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+/* ════════════════════════════════════════════════════════
+   UNTERSEITEN-EDITOR (Lyric-Bühne)
+   Speicherung als geschützte Sonderzeile in home_layout:
+   row_order = -3, cells[0].type = 'subpages'.
+   Das normale Home-Speichern löscht nur row_order >= 0,
+   die Unterseiten bleiben also unangetastet.
+   Struktur:
+   { type:'subpages', activePageId, pages:[
+       { id, slug, title, songs:[ {slug,title,artist,mp3,cover,lyric} ] } ] }
+   Jeder Song = 2:1-Lyric-Sheet (lyrics21_url) + MP3, wie auf „Kurs Nordwest".
+════════════════════════════════════════════════════════ */
+let subData = null;
+let subReady = false;
+
+function subUid(){ return 'sp_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+function subSlugify(v){
+  return String(v||'').toLowerCase().trim()
+    .replace(/^\/+|\/+$/g,'')
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9\-]+/g,'-').replace(/\-+/g,'-').replace(/^\-|\-$/g,'');
+}
+function subEsc(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+// Song aus allSongs → Unterseiten-Eintrag (2:1-Lyric-Sheet + MP3)
+function subEntryFromSong(s){
+  if(!s) return { slug:'',title:'',artist:'',mp3:'',cover:'',lyric:'' };
+  return { slug:s.slug||'', title:s.title||'', artist:s.artist||'',
+           mp3:s.mp3_url||'', cover:s.cover_url||'', lyric:s.lyrics21_url||'' };
+}
+function subDefault(){
+  // Erstbelegung: „Kurs Nordwest" mit den beiden bereits live gepflegten Songs,
+  // damit der Admin sofort die bestehende Unterseite vor sich sieht.
+  const seedSlugs = ['mary-anne','six-hours-south-of-lighthouse-nine'];
+  const songs = seedSlugs
+    .map(sl => (allSongs||[]).find(s=>s.slug===sl))
+    .filter(Boolean).map(subEntryFromSong);
+  const p = { id: subUid(), slug:'kurs-nordwest', title:'Kurs Nordwest', songs };
+  return { type:'subpages', activePageId:p.id, pages:[p] };
+}
+function subNormEntry(e){
+  e = e || {};
+  return { slug:e.slug||'', title:e.title||'', artist:e.artist||'',
+           mp3:e.mp3||e.mp3_url||'', cover:e.cover||e.cover_url||'',
+           lyric:e.lyric||e.lyricUrl||e.lyrics21||e.lyrics21_url||'' };
+}
+function subNormPage(p, idx){
+  p = p || {};
+  return { id:p.id||subUid(), slug:subSlugify(p.slug||('unterseite-'+(idx+1))),
+           title:p.title||p.name||('Unterseite '+(idx+1)),
+           songs:Array.isArray(p.songs)?p.songs.map(subNormEntry):[] };
+}
+function subNormalize(obj){
+  if(!obj || obj.type!=='subpages' || !Array.isArray(obj.pages) || !obj.pages.length){
+    return subDefault();
+  }
+  let pages = obj.pages.map(subNormPage);
+  const seen=new Set();
+  pages = pages.map((p,i)=>{ let base=p.slug||('unterseite-'+(i+1)); let s=base,n=2; while(seen.has(s)){s=base+'-'+n++;} seen.add(s); return {...p,slug:s}; });
+  const activePageId = pages.some(p=>p.id===obj.activePageId)?obj.activePageId:pages[0].id;
+  return { type:'subpages', activePageId, pages };
+}
+function subActivePage(){
+  if(!subData) subData=subDefault();
+  if(!Array.isArray(subData.pages)||!subData.pages.length) subData=subDefault();
+  return subData.pages.find(p=>p.id===subData.activePageId)||subData.pages[0];
+}
+
+async function initSubpagesEditor(){
+  if(subReady){ renderSubEditor(); return; }
+  subReady = true;
+  if(!allSongs || !allSongs.length) await loadSongs();
+  await loadSubpages();
+}
+async function loadSubpages(){
+  try{
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-3&limit=1'), {headers:hdrs()});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows = await r.json();
+    const obj = rows && rows[0] && rows[0].cells && rows[0].cells[0];
+    subData = subNormalize(obj);
+  }catch(e){
+    console.warn('Unterseiten konnten nicht geladen werden:', e);
+    subData = subDefault();
+  }
+  renderSubEditor();
+}
+
+function subSongOptions(selected){
+  const songs = Array.isArray(allSongs) ? allSongs.slice().sort((a,b)=>String(a.title||a.slug||'').localeCompare(String(b.title||b.slug||''),'de')) : [];
+  const opts = ['<option value="">— Song wählen —</option>'];
+  songs.forEach(s=>{
+    opts.push(`<option value="${subEsc(s.slug||'')}" ${selected===s.slug?'selected':''}>${subEsc((s.title||s.slug||'')+(s.artist?' · '+s.artist:''))}</option>`);
+  });
+  return opts.join('');
+}
+// Eintrag zur Vorschau auflösen — Live-Song aus allSongs hat Vorrang für frische Assets.
+function subResolveEntry(e){
+  const live = e && e.slug ? (allSongs||[]).find(s=>s.slug===e.slug) : null;
+  return {
+    title:  e.title  || (live&&live.title)     || '',
+    artist: e.artist || (live&&live.artist)    || '',
+    mp3:    e.mp3    || (live&&live.mp3_url)    || '',
+    cover:  e.cover  || (live&&live.cover_url)  || '',
+    lyric:  e.lyric  || (live&&live.lyrics21_url) || ''
+  };
+}
+
+function renderSubPageBar(){
+  const sel=document.getElementById('subPageSelect');
+  const page=subActivePage();
+  if(sel){ sel.innerHTML=(subData.pages||[]).map(p=>`<option value="${p.id}" ${p.id===page.id?'selected':''}>${subEsc(p.title||p.slug||'Unterseite')}</option>`).join(''); }
+  const t=document.getElementById('subPageTitle'); if(t) t.value=page.title||'';
+  const s=document.getElementById('subPageSlug');  if(s) s.value=page.slug||'';
+  const h=document.getElementById('subSlugHint');  if(h) h.textContent=page.slug||'';
+}
+
+function renderSubEditor(){
+  renderSubPageBar();
+  const wrap=document.getElementById('subEditorWrap');
+  if(!wrap) return;
+  const page=subActivePage();
+  const songs=page.songs||[];
+  let html='<div class="sp-songlist">';
+  if(!songs.length){
+    html+='<div class="sp-songs-empty">Noch keine Songs auf dieser Unterseite. Unten einen Song hinzufügen.</div>';
+  } else {
+    songs.forEach((e,i)=>{
+      const r=subResolveEntry(e);
+      const thumb = r.lyric ? `<div class="sp-song-thumb"><img src="${subEsc(r.lyric)}" alt=""></div>` : `<div class="sp-song-thumb empty"></div>`;
+      const warn = r.lyric ? '' : `<div class="sp-song-warn">⚠ Kein 2:1-Lyric-Sheet hinterlegt — im Song-Editor „Cover21" ergänzen.</div>`;
+      html+=`<div class="sp-song">
+        ${thumb}
+        <div class="sp-song-main">
+          <select class="sp-song-select" onchange="subSetSongSlug(${i},this.value)">${subSongOptions(e.slug)}</select>
+          <div class="sp-song-artist">${subEsc(r.artist||'')}${r.mp3?'':' · ⚠ kein MP3'}</div>
+          ${warn}
+        </div>
+        <div class="sp-song-actions">
+          <button class="sp-mini-btn" title="Nach oben" onclick="subMoveSong(${i},-1)" ${i===0?'disabled':''}>↑</button>
+          <button class="sp-mini-btn" title="Nach unten" onclick="subMoveSong(${i},1)" ${i===songs.length-1?'disabled':''}>↓</button>
+          <button class="sp-mini-btn del" title="Entfernen" onclick="subRemoveSong(${i})">×</button>
+        </div>
+      </div>`;
+    });
+  }
+  html+='</div>';
+  html+=`<div class="sp-addrow">
+    <select id="subAddSelect">${subSongOptions('')}</select>
+    <button class="lp-btn" onclick="subAddSong()">＋ Song hinzufügen</button>
+  </div>`;
+  wrap.innerHTML=html;
+}
+
+function subSetPageField(field,val){
+  const p=subActivePage();
+  if(field==='slug'){ p.slug=subSlugify(val); const h=document.getElementById('subSlugHint'); if(h) h.textContent=p.slug; }
+  else if(field==='title'){ p.title=val; renderSubPageBar(); }
+}
+function subSelectPage(id){ subData.activePageId=id; renderSubEditor(); }
+function subAddPage(){
+  const p={ id:subUid(), slug:subSlugify('unterseite-'+((subData.pages||[]).length+1)), title:'Neue Unterseite', songs:[] };
+  subData.pages.push(p); subData.activePageId=p.id; renderSubEditor();
+}
+function subDuplicatePage(){
+  const src=subActivePage();
+  const copy=JSON.parse(JSON.stringify(src)); copy.id=subUid(); copy.slug=subSlugify((src.slug||'unterseite')+'-kopie'); copy.title=(src.title||'Unterseite')+' (Kopie)';
+  subData.pages.push(copy); subData.activePageId=copy.id; renderSubEditor();
+}
+function subDeletePage(){
+  if((subData.pages||[]).length<=1){ toast('Die letzte Unterseite kann nicht gelöscht werden.','err'); return; }
+  const p=subActivePage();
+  if(!confirm('Unterseite „'+(p.title||p.slug)+'" wirklich löschen?')) return;
+  subData.pages=subData.pages.filter(x=>x.id!==p.id);
+  subData.activePageId=subData.pages[0].id; renderSubEditor();
+}
+function subSetSongSlug(i,slug){
+  const p=subActivePage(); const s=(allSongs||[]).find(x=>x.slug===slug);
+  p.songs[i]= s ? subEntryFromSong(s) : { slug:'',title:'',artist:'',mp3:'',cover:'',lyric:'' };
+  renderSubEditor();
+}
+function subMoveSong(i,dir){
+  const p=subActivePage(); const j=i+dir;
+  if(j<0||j>=p.songs.length) return;
+  const t=p.songs[i]; p.songs[i]=p.songs[j]; p.songs[j]=t; renderSubEditor();
+}
+function subRemoveSong(i){ const p=subActivePage(); p.songs.splice(i,1); renderSubEditor(); }
+function subAddSong(){
+  const sel=document.getElementById('subAddSelect'); if(!sel) return;
+  const slug=sel.value; if(!slug){ toast('Bitte zuerst einen Song wählen.','err'); return; }
+  const s=(allSongs||[]).find(x=>x.slug===slug); if(!s) return;
+  subActivePage().songs.push(subEntryFromSong(s)); renderSubEditor();
+}
+
+async function saveSubpages(){
+  const btn=document.getElementById('subSaveBtn'); if(btn) btn.disabled=true;
+  try{
+    if(!subData) subData=subDefault();
+    subData=subNormalize(subData);
+    // 1) Bestehende Zeile lesen (Backup + id für sicheres Upsert)
+    const readRes=await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-3'),{headers:hdrs()});
+    if(!readRes.ok) throw new Error('READ '+readRes.status+': '+(await readRes.text()).slice(0,200));
+    const existing=await readRes.json();
+    const rowId=(existing[0]&&existing[0].id)||subUid();
+    // 2) Sicheres Upsert (kein vorheriges Löschen → kein Datenverlust bei Fehler)
+    const payload={ id:rowId, row_order:-3, cells:[subData], caption:'__subpages__' };
+    const up=await fetch(SB_URL+'/rest/v1/home_layout?on_conflict=id&apikey='+SB_KEY,{
+      method:'POST', headers:{...hdrsMin(),'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(!up.ok) throw new Error('UPSERT '+up.status+': '+(await up.text()).slice(0,200));
+    // 3) Etwaige doppelte Alt-Zeilen erst nach Erfolg entfernen
+    for(const r of existing){ if(r.id&&String(r.id)!==String(rowId)){ await fetch(SB_URL+'/rest/v1/home_layout?id=eq.'+encodeURIComponent(r.id)+'&apikey='+SB_KEY,{method:'DELETE',headers:hdrsMin()}); } }
+    // 4) Verifizieren
+    const ver=await fetch(sbUrl('/rest/v1/home_layout?select=id,cells&row_order=eq.-3'),{headers:hdrs()});
+    if(ver.ok){ const vr=await ver.json(); if(!vr.some(x=>x.cells&&x.cells[0]&&x.cells[0].type==='subpages')) throw new Error('VERIFY: Unterseiten-Zeile nach dem Speichern nicht gefunden.'); }
+    toast('Unterseiten sicher gespeichert ✓','ok');
+  }catch(e){ toast('Unterseiten speichern fehlgeschlagen: '+e.message,'err'); alert('Unterseiten speichern fehlgeschlagen:\n\n'+e.message); }
   finally{ if(btn) btn.disabled=false; }
 }
 
