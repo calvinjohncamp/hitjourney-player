@@ -5445,6 +5445,14 @@ async function loadFromSupabase() {
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
 
+  // 4a. Unterseiten (Lyric-Sheet-Unterseiten) aus der geschützten Sonderzeile
+  //     (row_order = -3, cells[0].type = 'subpages') übernehmen — falls im Admin gepflegt.
+  try {
+    const spRow = (window._homeLayoutRows || []).find(r =>
+      r && r.cells && r.cells[0] && r.cells[0].type === 'subpages');
+    window._subpagesData = normalizeSubpagesData(spRow ? spRow.cells[0] : null);
+  } catch(e){ window._subpagesData = { type:'subpages', pages:[] }; }
+
   // 4b. Info-/Impressum-Inhalt (About-Seite) aus der geschützten home_layout-Sonderzeile
   //     (row_order = -1, cells[0].type = 'about') anwenden — falls im Admin gepflegt.
   try {
@@ -6279,6 +6287,7 @@ function hjRemoveCoverCue(el){
 // ── KURS NORDWEST DATA ──
 const KNW_SONGS = [
   {
+    slug:  'mary-anne',
     title: 'Mary-Anne',
     mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/mary-anne.mp3',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Cover.jpg',
@@ -6286,6 +6295,7 @@ const KNW_SONGS = [
     lyrics: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Mary-Anne%20-%20Lyrics.jpg',
   },
   {
+    slug:  'six-hours-south-of-lighthouse-nine',
     title: 'Six Hours South of Lighthouse Nine',
     mp3:   'https://hitjourney.s3.eu-west-1.amazonaws.com/songs/six-hours-south-of-lighthouse-nine.mp3',
     cover: 'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Six%20Hours%20South%20of%20Lighthouse%20Nine%20-%20Cover.jpg',
@@ -6295,10 +6305,15 @@ const KNW_SONGS = [
   // Song 3 folgt
 ];
 
+// Aktuell angezeigte Unterseiten-Songs (datengetrieben; Fallback = KNW_SONGS)
+// und Titel der Unterseite — von renderSubpageContent() gesetzt.
+let currentKnwSongs    = KNW_SONGS;
+let currentSubpageTitle = 'Kurs Nordwest';
+
 let knwActiveSongIdx = -1;
 
 function knwPlaySong(idx){
-  const s = KNW_SONGS[idx];
+  const s = currentKnwSongs[idx];
   if(!s) return;
 
   const btn = document.getElementById('knwPlayBtn' + idx);
@@ -6341,7 +6356,7 @@ function knwPlaySong(idx){
   // NP-Screen vorbereiten
   setImgSrcWithFallback(npCover, [s.cover]);
   npTitle.textContent = s.title;
-  npAlbumLabel.textContent = 'Kurs Nordwest';
+  npAlbumLabel.textContent = currentSubpageTitle;
   prevScreen = 'kursNordwest';
   queueIdx = -1;
   arcQueueIdx = -1;
@@ -6358,13 +6373,111 @@ function knwCloseLightbox(){
   document.getElementById('knwLightbox').classList.remove('open');
 }
 
-function showKursNordwest(){
+// ── UNTERSEITEN (Lyric-Sheet-Unterseiten) ──────────────────────────────────
+// Datengetrieben aus der geschützten home_layout-Sonderzeile (row_order -3,
+// type 'subpages'). Solange im Admin nichts gepflegt ist, greift der eingebaute
+// Fallback (KNW_SONGS) — die Optik bleibt 1:1 die der Kurs-Nordwest-Seite.
+function normalizeSubpagesData(obj){
+  const pages = (obj && Array.isArray(obj.pages)) ? obj.pages : [];
+  return {
+    type:'subpages',
+    pages: pages.map(p => ({
+      id:    p.id || ('sp_'+Math.random().toString(36).slice(2,9)),
+      slug:  String(p.slug||'').toLowerCase().trim(),
+      title: p.title || p.name || '',
+      songs: Array.isArray(p.songs) ? p.songs.map(s => ({
+        slug:   s.slug || '',
+        title:  s.title || '',
+        artist: s.artist || '',
+        mp3:    s.mp3 || s.mp3_url || '',
+        cover:  s.cover || s.cover_url || '',
+        lyric:  s.lyric || s.lyricUrl || s.lyrics21 || s.lyrics21_url || ''
+      })) : []
+    }))
+  };
+}
+function findSubpage(slug){
+  const data = window._subpagesData;
+  slug = String(slug||'').toLowerCase().trim();
+  if(!data || !Array.isArray(data.pages)) return null;
+  return data.pages.find(p => p.slug === slug) || null;
+}
+// Fallback-Lyric-Sheet nach Slug aus den eingebauten KNW_SONGS (garantiert die
+// exakt gleiche Optik, falls ein Song kein lyrics21-Asset in Supabase hat).
+function knwBuiltinBySlug(slug){
+  return KNW_SONGS.find(s => s.slug === slug) || null;
+}
+// Einen Unterseiten-Eintrag zu anzeigefertigen Feldern auflösen. Der Live-Song
+// (songMap) hält MP3/Cover/Lyric-Sheet stets aktuell; gespeicherte Werte dienen
+// als Fallback, damit nichts verschwindet, falls ein Song später umbenannt wird.
+function resolveSubpageSong(entry){
+  const live    = entry && entry.slug && Array.isArray(SUPABASE_SONGS)
+    ? SUPABASE_SONGS.find(s => s.slug === entry.slug) : null;
+  const builtin = entry && entry.slug ? knwBuiltinBySlug(entry.slug) : null;
+  const lyric = entry.lyric || (live && (live.lyrics21 || live.cover)) || (builtin && builtin.lyric) || '';
+  return {
+    title:  entry.title  || (live && live.title)  || (builtin && builtin.title) || '',
+    artist: entry.artist || (live && live.artist) || '',
+    mp3:    entry.mp3    || (live && live.mp3)    || (builtin && builtin.mp3)   || '',
+    cover:  entry.cover  || (live && live.cover)  || (builtin && builtin.cover) || '',
+    lyric
+  };
+}
+// Baut die Lyric-Sheet-/Player-Blöcke einer Unterseite in den KNW-Container.
+// Gleiche CSS-Klassen wie die ursprüngliche Kurs-Nordwest-Seite → identische Optik.
+function renderSubpageContent(slug){
+  const page = findSubpage(slug);
+  let songs;
+  if(page && Array.isArray(page.songs) && page.songs.length){
+    songs = page.songs.map(resolveSubpageSong).filter(s => s.lyric || s.mp3);
+  } else {
+    // Fallback ohne Admin-Daten: eingebaute KNW_SONGS, Artist wie bisher aus dem
+    // Live-Song (Supabase) auflösen — so bleibt die Anzeige exakt wie zuvor.
+    songs = KNW_SONGS.map(s => resolveSubpageSong({ slug:s.slug, title:s.title, mp3:s.mp3, cover:s.cover, lyric:s.lyric }));
+  }
+  currentKnwSongs     = songs;
+  currentSubpageTitle = (page && page.title) || 'Kurs Nordwest';
+
+  const container = document.querySelector('#screenKursNordwest .knw-container');
+  if(!container) return;
+  container.querySelectorAll('.knw-song').forEach(el => el.remove());
+  const pad = container.querySelector('.knw-bottom-pad');
+  songs.forEach((s, idx) => {
+    const title  = escapeHtml(s.title || '');
+    const artist = escapeHtml(s.artist || 'BRO · Jörn Kämper');
+    const src    = escapeHtml(s.lyric || '');
+    const song = document.createElement('div');
+    song.className = 'knw-song';
+    song.id = 'knwSong'+idx;
+    song.innerHTML =
+      '<div class="knw-lyric-wrap" onclick="knwOpenLightbox(this.querySelector(\'img\').src)">'
+      +   '<img alt="'+title+' Lyric Sheet" loading="eager" src="'+src+'"/>'
+      + '</div>'
+      + '<div class="knw-play-row">'
+      +   '<button aria-label="'+title+' abspielen" class="knw-play-btn knw-play-btn-circle" id="knwPlayBtn'+idx+'" onclick="knwPlaySong('+idx+')">'
+      +     '<svg class="knw-icon-play" viewbox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>'
+      +     '<svg class="knw-icon-pause" style="display:none" viewbox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>'
+      +   '</button>'
+      +   '<div class="knw-play-info">'
+      +     '<div class="knw-play-name">'+title+'</div>'
+      +     '<div class="knw-play-artist" id="knwArtist'+idx+'">'+artist+'</div>'
+      +   '</div>'
+      + '</div>';
+    container.insertBefore(song, pad || null);
+  });
+  knwActiveSongIdx = -1;
+}
+
+// Generische Unterseite anzeigen (nutzt denselben Screen wie Kurs Nordwest).
+function showSubpage(slug){
+  renderSubpageContent(slug);
   screenHome.classList.remove('active');
   screenTL.classList.remove('active');
   screenArchive.classList.remove('active');
   screenNP.classList.remove('active');
   if(screenAbout) screenAbout.classList.remove('active');
   if(screenSwf) screenSwf.style.display='none';
+  if(screenLanding) screenLanding.classList.remove('active');
   hideLanguageScreens();
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
@@ -6372,11 +6485,12 @@ function showKursNordwest(){
   backBtn.classList.add('visible');
   logoHome.style.display = 'none';
   makingWaves.style.display = 'none';
-  headerRight.textContent = 'Kurs Nordwest';
+  headerRight.textContent = currentSubpageTitle;
   mainHeader.style.display = '';
   screenKnw.scrollTop = 0;
   prevScreen = 'kursNordwest';
 }
+function showKursNordwest(){ showSubpage('kurs-nordwest'); }
 function hideKursNordwest(){
   screenKnw.style.display = 'none';
   showHome();
@@ -7819,7 +7933,7 @@ function buildLandingFreeformRows(rowsArr){
   const ff = document.createElement('div');
   ff.className = 'home-grid landing-freeform';
   rowsArr.forEach(row => {
-    if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages')) return;
+    if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages')) return;
     renderHomeRowInto(ff, row);
   });
   return ff.children.length ? ff : null;
@@ -8250,7 +8364,7 @@ function renderHomeLayout(){
 
   // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
   const rows = (window._homeLayoutRows || []).filter(r =>
-    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages')));
+    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages')));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -9001,6 +9115,9 @@ function buildHomeCard(cell, extraClass){
     // Bestehende hardcoded Sonderseiten bleiben in der Haupt-App.
     if(slug === 'kurs-nordwest'){ showKursNordwest(); return true; }
     if(slug === 'songwriters-picks'){ showSongwritersFavorites(); return true; }
+
+    // Im Admin gepflegte Unterseiten (Lyric-Sheet-Unterseiten) im App-Screen öffnen.
+    if(findSubpage(slug)){ showSubpage(slug); return true; }
 
     // Externe Links oder explizite HTML-Dateien als normale Unterseiten öffnen.
     if(/^https?:\/\//i.test(raw)){ window.open(raw, '_blank', 'noopener'); return true; }
