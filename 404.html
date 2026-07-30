@@ -260,6 +260,17 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
 @media(max-width:600px){ .home-heading{ margin:30px 0 22px; } }
+/* ── Zeilen-Überschrift (pro Zeile: N-TV-Stil „einfach" / Kurz-notiert-Stil „modern") ── */
+.home-rowheading{ grid-column:1/-1; width:100%; }
+/* einfach — schlichte, kleine serifenlose Überschrift (optional kleine Akzent-Eyebrow) */
+.home-rowheading.simple{ margin:26px 0 14px; }
+.home-rowheading.simple .rh-eyebrow{ display:block; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#85ACC9; margin:0 0 4px; }
+.home-rowheading.simple .rh-title{ font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:clamp(16px,2vw,21px); line-height:1.2; color:#f1ecdf; margin:0; }
+/* modern — Rubrik-Kopf mit ◆-Raute und durchgehender Unterlinie (Kurz notiert, exakt wie Folio-today) */
+.home-rowheading.modern{ display:flex; align-items:baseline; gap:8px; margin:26px 0 14px; padding-bottom:8px; border-bottom:1px solid rgba(133,172,201,.42); }
+.home-rowheading.modern .rh-dot{ color:#85ACC9; font-size:10px; flex-shrink:0; }
+.home-rowheading.modern .rh-title{ font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:14px; letter-spacing:.13em; text-transform:uppercase; color:#85ACC9; }
+@media(max-width:600px){ .home-rowheading.simple{ margin:22px 0 12px; } .home-rowheading.modern{ margin:22px 0 12px; } }
 /* ── Leerstreifen (Abstandhalter) ── */
 .home-spacer{ grid-column:1/-1; width:100%; }
 .home-trio--equal .home-card{
@@ -8413,6 +8424,29 @@ function buildHeadingEl(cell){
   return lines.length ? wrap : null;
 }
 
+// Pro-Zeile-Überschrift (optional). Zwei Stile nach Folio-today-Vorbild:
+//   'simple' = N-TV-Stil (kleine Akzent-Eyebrow + große Serifen-Überschrift)
+//   'modern' = Kurz-notiert-Stil (◆-Rubrik mit Unterlinie)
+// Gespeichert auf cells[0].rowHeading = { style, title, eyebrow }.
+function buildRowHeadingEl(rh){
+  if(!rh || !rh.style) return null;
+  const title   = (rh.title   || '').trim();
+  const eyebrow = (rh.eyebrow || '').trim();
+  if(!title && !eyebrow) return null;
+  const wrap = document.createElement('div');
+  if(rh.style === 'modern'){
+    wrap.className = 'home-rowheading modern';
+    const dot = document.createElement('span'); dot.className = 'rh-dot'; dot.textContent = '◆';
+    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent = title.toUpperCase();
+    wrap.appendChild(dot); wrap.appendChild(t);
+  } else {
+    wrap.className = 'home-rowheading simple';
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); wrap.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    wrap.appendChild(t); }
+  }
+  return wrap;
+}
+
 function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
@@ -8449,6 +8483,18 @@ function renderHomeRowInto(grid, row){
     if(!cells.length) return;
     const t0 = cells[0] && cells[0].type;
     if(!t0 || t0 === 'empty') return;
+
+    // ── Optionale Zeilen-Überschrift über der Zeile (N-TV / Kurz-notiert) ──
+    // Nicht bei eigenständigen Überschrift-/Abstand-Zeilen. Nur rendern, wenn die
+    // Zeile auch Inhalt hat (sonst stünde die Überschrift verwaist ohne Kachel da).
+    if(cells[0].rowHeading && t0 !== 'heading' && t0 !== 'spacer'){
+      const rowHasContent = cells.some(c => c && c.imageUrl) ||
+                            ['language','slideshow','silbertablett'].includes(t0);
+      if(rowHasContent){
+        const rhEl = buildRowHeadingEl(cells[0].rowHeading);
+        if(rhEl) grid.appendChild(rhEl);
+      }
+    }
 
     // ── Language Teaser (German / English Split) ──────────────────
     if(t0 === 'language'){
