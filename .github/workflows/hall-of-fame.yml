@@ -1,0 +1,25 @@
+name: Hall of Fame Auto-Sort
+
+# Hält die Alben "Hall of Fame" und "Top 100" täglich aktuell,
+# sortiert nach SoundCloud-Streams. Kein Secret nötig (öffentlicher Key).
+
+on:
+  schedule:
+    - cron: '0 3 * * *'      # täglich 03:00 UTC (~04:00/05:00 DE)
+  workflow_dispatch:          # manueller Start per Knopf im Actions-Tab
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Alben nach SoundCloud-Streams sortieren
+        run: |
+          if [ -f scripts/update_hall_of_fame.py ]; then
+            python3 scripts/update_hall_of_fame.py
+          else
+            python3 update_hall_of_fame.py
+          fi
