@@ -151,7 +151,7 @@ def write_streams_json(streams):
     if DRY_RUN:
         print("  [DRY_RUN] streams.json: %d Songs (nicht geschrieben)" % len(streams))
         return
-    data = {"updated": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z", "streams": streams}
+    data = {"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "streams": streams}
     with open("streams.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print("  streams.json: %d Songs geschrieben" % len(streams))
