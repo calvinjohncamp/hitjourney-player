@@ -23,7 +23,8 @@ PLAYLIST_URL = "https://soundcloud.com/joern-kaemper/sets/hall-of-fame"
 HOF_SLUG     = "hall-of-fame"
 TOP100_SLUG  = "top-100"
 TOP100_N     = 100
-MIN_TRACKS   = 150   # Sicherheitsabbruch, falls Zuordnung unplausibel klein
+MIN_STREAMS  = 500   # Nur Songs ab dieser Stream-Zahl kommen in die Hall of Fame (später ggf. 400)
+MIN_TRACKS   = 80    # Sicherheitsabbruch, falls Zuordnung unplausibel klein (Schutz vor SoundCloud-Fehlern)
 # Manuelle Korrekturen: SC-Permalink -> HJ-Slug (z. B. Umlaut-Permalinks)
 OVERRIDE     = {"no-no": "noe-noe"}
 UA           = {"User-Agent": "Mozilla/5.0"}
@@ -129,6 +130,8 @@ def build_order(sc, songs):
 
     seen, order = set(), []
     for x in sorted(sc, key=lambda z: -(z["streams"] or 0)):
+        if (x["streams"] or 0) < MIN_STREAMS:
+            break   # Liste ist absteigend sortiert -> ab hier sind alle unter der Schwelle
         h = match(x)
         if not h or h["slug"] in seen:
             continue
