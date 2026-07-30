@@ -4076,9 +4076,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    2. iOS-Compositing-Hinweise: eigener Layer für den drehenden Innenteil und
       stabiler runder Beschnitt — verhindert das bekannte Einfrieren von
       Animationen in border-radius/overflow:hidden-Containern auf iPadOS. */
-@keyframes coverSpin{to{transform:rotate(360deg)}}
-.tl-deck .deck-cover-wrap{-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translateZ(0)}
-.tl-deck .deck-cover-inner{will-change:transform}
+@keyframes coverSpin{from{transform:translate3d(0,0,0) rotate(0deg)}to{transform:translate3d(0,0,0) rotate(360deg)}}
+.tl-deck .deck-cover-wrap{-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translate3d(0,0,0);backface-visibility:hidden;contain:paint}
+.tl-deck .deck-cover-inner{will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;transform-origin:50% 50%}
+.tl-deck .deck-cover-img{backface-visibility:hidden;transform:translate3d(0,0,0)}
 
 /* v245: Player-Bar auf der Albumseite zusätzlich per JS-Klasse verstecken.
    Bisher hing das Ausblenden allein an body:has(...) — falls der Browser
@@ -7802,11 +7803,13 @@ setInterval(updateAlbumDeckTonearm, 300);
 let _coverLastTransform = '', _coverStuck = 0;
 setInterval(()=>{
   if(!tlDeck || !tlDeck.classList.contains('is-playing')){ _coverLastTransform=''; _coverStuck=0; return; }
+  if(document.visibilityState !== 'visible'){ _coverLastTransform=''; _coverStuck=0; return; }
   const inner = tlDeck.querySelector('.deck-cover-inner');
   if(!inner) return;
   const t = getComputedStyle(inner).transform;
+  if(!t || t === 'none'){ _coverLastTransform=''; _coverStuck=0; return; }
   if(t === _coverLastTransform){
-    if(++_coverStuck >= 2){
+    if(++_coverStuck >= 6){
       inner.style.animation = 'none';
       void inner.offsetWidth; // Reflow erzwingen, damit der Neustart greift
       inner.style.animation = '';
@@ -7816,7 +7819,7 @@ setInterval(()=>{
     _coverStuck = 0;
   }
   _coverLastTransform = t;
-}, 1500);
+}, 1200);
 
 // ── Audio events ──
 // v248: Startet auf einer Unterseite (Album etc.) ein Song über #hjAudio,
