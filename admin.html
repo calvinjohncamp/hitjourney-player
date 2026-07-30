@@ -237,6 +237,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .album-songs-search svg{width:13px;height:13px;stroke:#85ACC9;stroke-width:2;fill:none;flex-shrink:0}
 .album-songs-search input{flex:1;background:none;border:none;outline:none;color:#f1ecdf;font-size:13px;caret-color:#85ACC9}
 .album-songs-search input::placeholder{color:rgba(133,172,201,.3)}
+.album-songs-sort{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.album-songs-sort button{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:rgba(133,172,201,.65);border-radius:7px;font-size:11px;font-weight:700;padding:7px 10px;cursor:pointer}
+.album-songs-sort button.active{background:rgba(133,172,201,.22);border-color:rgba(133,172,201,.45);color:#eaf3fb}
 .album-songs-table{width:100%;border-collapse:collapse;font-size:13px}
 .album-songs-table th{padding:6px 10px 7px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(133,172,201,.4);border-bottom:1px solid rgba(133,172,201,.08)}
 .album-songs-table td{padding:8px 10px;border-bottom:1px solid rgba(133,172,201,.05);vertical-align:middle}
@@ -510,13 +513,15 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-rhctrl-fields input:focus{outline:none;border-color:rgba(133,172,201,.4)}
 /* WYSIWYG-Überschrift über der Zeile im Editor — 1:1 wie auf der Live-Seite (.home-rowheading) */
 .rhwys{margin:16px 8px 6px}
+.rhwys.multi{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.rhwys .rh-side{min-width:0}
+.rhwys .rh-side.right{text-align:right;margin-left:auto}
 .rhwys.simple .rh-eyebrow{display:block;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;margin:0 0 4px}
 .rhwys.simple .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:clamp(16px,2vw,21px);line-height:1.2;color:#f1ecdf;margin:0}
-.rhwys.simple.split{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.rhwys.simple.split .rh-eyebrow{margin:0;flex-shrink:0}
-.rhwys.simple.split .rh-title{text-align:right;margin-left:auto}
 .rhwys.modern{display:flex;align-items:baseline;gap:8px;padding-bottom:8px;border-bottom:1px solid rgba(133,172,201,.42)}
-.rhwys.modern.split{justify-content:space-between}
+.rhwys.modern.multi{align-items:baseline}
+.rhwys.modern .rh-side{display:flex;align-items:baseline;gap:8px}
+.rhwys.modern .rh-side.right{justify-content:flex-end}
 .rhwys.modern .rh-dot{color:#85ACC9;font-size:10px;flex-shrink:0}
 .rhwys.modern .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;letter-spacing:.13em;text-transform:uppercase;color:#85ACC9}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
@@ -9624,6 +9629,9 @@ function showMsg(el,text,type){ el.textContent=text; el.className='form-msg '+ty
 /* ══ ALBEN ══ */
 let albumsData = [];      // [{slug, title, cover_url, tracks:[{song_slug, position}]}]
 let albumFileNew = null;  // file for new album cover upload
+let albumSortModes = {};
+let adminScStreams = {};
+let adminScLikes = {};
 
 async function loadPlaylists(){
   const list = document.getElementById('albumList');
@@ -9635,6 +9643,14 @@ async function loadPlaylists(){
     ]);
     const playlists = await plR.json();
     const tracks    = await trR.json();
+    try{
+      const sr = await fetch('streams.json', {cache:'no-store'});
+      if(sr.ok){
+        const sj = await sr.json();
+        adminScStreams = (sj && sj.streams) || {};
+        adminScLikes = (sj && sj.likes) || {};
+      }
+    }catch(_e){}
 
     // Group tracks by playlist
     const byPl = {};
@@ -9660,6 +9676,13 @@ function renderAlbums(){
     const coverHtml = al.cover_url
       ? `<img class="album-cover" src="${al.cover_url}" alt="" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="album-cover-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    const sortHtml = al.slug === 'songwriters-picks'
+      ? `<div class="album-songs-sort" id="alsort-${al.slug}">
+          <button type="button" class="${(albumSortModes[al.slug]||'album')==='album'?'active':''}" onclick="setAlbumSortMode(event,'${al.slug}','album')">Album</button>
+          <button type="button" class="${albumSortModes[al.slug]==='streams'?'active':''}" onclick="setAlbumSortMode(event,'${al.slug}','streams')">Streams</button>
+          <button type="button" class="${albumSortModes[al.slug]==='likes'?'active':''}" onclick="setAlbumSortMode(event,'${al.slug}','likes')">Likes</button>
+        </div>`
+      : '';
     return `
     <div class="album-card" id="album-${al.slug}">
       <div class="album-card-head" onclick="toggleAlbum('${al.slug}')">
@@ -9691,6 +9714,7 @@ function renderAlbums(){
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input placeholder="Song suchen …" oninput="filterAlbumSongs('${al.slug}', this.value)"/>
           </div>
+          ${sortHtml}
         </div>
         <button class="btn-sort-save" id="savesort-${al.slug}" onclick="saveOrder('${al.slug}')">✓ Reihenfolge speichern</button>
         <div id="altable-${al.slug}">${renderAlbumSongs(al)}</div>
@@ -9707,13 +9731,37 @@ function renderAlbums(){
   }).join('');
 }
 
+function setAlbumSortMode(event, albumSlug, mode){
+  if(event) event.stopPropagation();
+  if(albumSlug !== 'songwriters-picks') return;
+  albumSortModes[albumSlug] = mode || 'album';
+  const btn = document.getElementById('savesort-'+albumSlug);
+  if(btn) btn.classList.remove('visible');
+  document.querySelectorAll('#alsort-'+CSS.escape(albumSlug)+' button').forEach(b=>{
+    b.classList.toggle('active', b.textContent.trim().toLowerCase() === albumSortModes[albumSlug]);
+  });
+  reloadAlbumSongs(albumSlug);
+}
+
 function renderAlbumSongs(al, q=''){
   const tracks = al.tracks.slice().sort((a,b)=>a.position-b.position);
   const displayNumBySlug = new Map(tracks.map((t,i)=>[t.song_slug, i+1]));
-  const filtered = q ? tracks.filter(t=>{
+  const mode = al.slug === 'songwriters-picks' ? (albumSortModes[al.slug] || 'album') : 'album';
+  let filtered = q ? tracks.filter(t=>{
     const s = allSongs.find(x=>x.slug===t.song_slug);
     return s && ((s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q));
   }) : tracks;
+  if(al.slug === 'songwriters-picks' && (mode === 'streams' || mode === 'likes')){
+    const map = mode === 'likes' ? adminScLikes : adminScStreams;
+    filtered = filtered.slice().sort((a,b)=>{
+      const va = Number(map[a.song_slug]); const vb = Number(map[b.song_slug]);
+      const na = isNaN(va) ? -1 : va, nb = isNaN(vb) ? -1 : vb;
+      if(nb !== na) return nb - na;
+      const sa = allSongs.find(x=>x.slug===a.song_slug) || {};
+      const sb = allSongs.find(x=>x.slug===b.song_slug) || {};
+      return String(sa.title||a.song_slug).localeCompare(String(sb.title||b.song_slug),'de',{sensitivity:'base'});
+    });
+  }
   if(!filtered.length) return `<div style="padding:12px 14px;font-size:13px;color:rgba(133,172,201,.35)">Keine Songs.</div>`;
   return `<table class="album-songs-table" id="dragtable-${al.slug}">
     <thead><tr>
@@ -9730,7 +9778,8 @@ function renderAlbumSongs(al, q=''){
       const coverHtml = s.cover_url
         ? `<img src="${s.cover_url}" loading="lazy" style="width:28px;height:28px;border-radius:4px;object-fit:cover;display:block" onerror="this.style.display='none'">`
         : `<div style="width:28px;height:28px;border-radius:4px;background:rgba(133,172,201,.08);display:flex;align-items:center;justify-content:center;font-size:12px">♪</div>`;
-      return `<tr draggable="true" data-slug="${t.song_slug}" data-album="${al.slug}">
+      const draggableAttr = mode === 'album' ? ' draggable="true"' : '';
+      return `<tr${draggableAttr} data-slug="${t.song_slug}" data-album="${al.slug}">
         <td class="td-num">${displayNumBySlug.get(t.song_slug) || idx+1}</td>
         <td class="td-cover">${coverHtml}</td>
         <td class="td-title">
@@ -11719,7 +11768,7 @@ function buildRowEl(row, idx, arr, labelPrefix){
 }
 
 /* ── Bedienelement: optionale Überschrift über einer Zeile ──
-   Speicherung auf row.cells[0].rowHeading = { style:'simple'|'modern', title, eyebrow, splitAlign }.
+   Speicherung auf row.cells[0].rowHeading = { style:'simple'|'modern', title, eyebrow, alignLeft, alignRight }.
    Reist automatisch durch Home-, Unterseiten- und Landing-Persistenz (cells = JSONB). */
 function buildRowHeadingControl(row){
   const cell = row.cells[0];
@@ -11749,13 +11798,23 @@ function buildRowHeadingControl(row){
   box.appendChild(top);
 
   if(cur !== 'none'){
-    const split = document.createElement('label');
-    split.className = 'he-rhcheck';
-    split.innerHTML = '<input type="checkbox"> links + rechtsbündig';
-    const splitInput = split.querySelector('input');
-    splitInput.checked = !!(rh && rh.splitAlign);
-    splitInput.onchange = ()=> setRowHeadingSplit(row.id, splitInput.checked);
-    top.appendChild(split);
+    const left = document.createElement('label');
+    left.className = 'he-rhcheck';
+    left.innerHTML = '<input type="checkbox"> linksbündig';
+    const leftInput = left.querySelector('input');
+    leftInput.dataset.align = 'left';
+    leftInput.checked = rowHeadingAligns(rh).left;
+    leftInput.onchange = ()=> setRowHeadingAlign(row.id, 'left', leftInput.checked);
+    top.appendChild(left);
+
+    const right = document.createElement('label');
+    right.className = 'he-rhcheck';
+    right.innerHTML = '<input type="checkbox"> rechtsbündig';
+    const rightInput = right.querySelector('input');
+    rightInput.dataset.align = 'right';
+    rightInput.checked = rowHeadingAligns(rh).right;
+    rightInput.onchange = ()=> setRowHeadingAlign(row.id, 'right', rightInput.checked);
+    top.appendChild(right);
 
     const fields = document.createElement('div');
     fields.className = 'he-rhctrl-fields';
@@ -11782,22 +11841,36 @@ function buildRowHeadingControl(row){
 
 // WYSIWYG: gerenderte Zeilen-Überschrift für den Editor — optisch identisch zur Live-Seite.
 // Spiegelt buildRowHeadingEl aus index.html (gleiche innere Klassen rh-eyebrow/rh-title/rh-dot).
+function rowHeadingAligns(rh){
+  if(!rh) return {left:true, right:false};
+  return {
+    left: rh.alignLeft !== false,
+    right: !!(rh.alignRight || rh.splitAlign)
+  };
+}
+function appendRowHeadingSide(wrap, rh, side, title, eyebrow){
+  const group = document.createElement('div');
+  group.className = 'rh-side ' + side;
+  if(rh.style === 'modern'){
+    const dot = document.createElement('span'); dot.className = 'rh-dot';   dot.textContent = '◆';
+    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent   = title.toUpperCase();
+    group.appendChild(dot); group.appendChild(t);
+  } else {
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); group.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    group.appendChild(t); }
+  }
+  wrap.appendChild(group);
+}
 function adminBuildRowHeadingEl(rh){
   if(!rh || !rh.style) return null;
   const title   = (rh.title   || '').trim();
   const eyebrow = (rh.eyebrow || '').trim();
   if(!title && !eyebrow) return null;
+  const aligns = rowHeadingAligns(rh);
   const wrap = document.createElement('div');
-  if(rh.style === 'modern'){
-    wrap.className = 'rhwys modern' + (rh.splitAlign ? ' split' : '');
-    const dot = document.createElement('span'); dot.className = 'rh-dot';   dot.textContent = '◆';
-    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent   = title.toUpperCase();
-    wrap.appendChild(dot); wrap.appendChild(t);
-  } else {
-    wrap.className = 'rhwys simple' + (rh.splitAlign ? ' split' : '');
-    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); wrap.appendChild(e); }
-    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    wrap.appendChild(t); }
-  }
+  wrap.className = 'rhwys ' + (rh.style === 'modern' ? 'modern' : 'simple') + (aligns.right ? ' multi' : '');
+  if(aligns.left) appendRowHeadingSide(wrap, rh, 'left', title, eyebrow);
+  if(aligns.right) appendRowHeadingSide(wrap, rh, 'right', title, eyebrow);
   return wrap;
 }
 
@@ -11816,14 +11889,25 @@ function setRowHeadingStyle(rowId, style){
   rerenderOwnerArr(ownerArrayOf(rowId));
 }
 
-// Checkbox: Kicker/Raute links, Titel rechtsbündig über die Zeilenbreite verteilen.
-function setRowHeadingSplit(rowId, checked){
+// Checkboxen: dieselbe Überschrift links und/oder rechts als vollständige Gruppe anzeigen.
+function setRowHeadingAlign(rowId, side, checked){
   const row = rowById(rowId); if(!row) return;
   const rh = row.cells[0].rowHeading; if(!rh) return;
   markHomeAction();
-  rh.splitAlign = !!checked;
+  delete rh.splitAlign;
+  if(side === 'right') rh.alignRight = !!checked;
+  else rh.alignLeft = !!checked;
+  if(rh.alignLeft === false && !rh.alignRight){
+    if(side === 'right') rh.alignLeft = true;
+    else rh.alignRight = true;
+  }
   const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"]');
   if(rowEl){
+    const aligns = rowHeadingAligns(rh);
+    const leftInput = rowEl.querySelector('.he-rhcheck input[data-align="left"]');
+    const rightInput = rowEl.querySelector('.he-rhcheck input[data-align="right"]');
+    if(leftInput) leftInput.checked = aligns.left;
+    if(rightInput) rightInput.checked = aligns.right;
     const grid = rowEl.querySelector('.he-row-grid');
     const old = rowEl.querySelector(':scope > .rhwys');
     if(old) old.remove();
