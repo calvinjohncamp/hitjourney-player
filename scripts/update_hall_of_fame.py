@@ -61,6 +61,7 @@ def get_sc_tracks():
                 "permalink": t.get("permalink"),
                 "title":     t.get("title"),
                 "streams":   t.get("playback_count") or 0,
+                "likes":     t.get("likes_count") or t.get("favoritings_count") or 0,
                 "artist":    pm.get("artist") or (t.get("user") or {}).get("username"),
             })
         time.sleep(0.15)
@@ -128,33 +129,38 @@ def build_order(sc, songs):
             return by_base[best][0]
         return None
 
-    seen, order, streams_by_slug = set(), [], {}
+    seen, order = set(), []
+    streams_by_slug, likes_by_slug = {}, {}
     for x in sorted(sc, key=lambda z: -(z["streams"] or 0)):
         h = match(x)
         if not h:
             continue
         slug = h["slug"]
         st = x["streams"] or 0
-        # Streams-Map (für die Anzeige im Player): ALLE zugeordneten Songs, höchster Wert gewinnt
-        if st > streams_by_slug.get(slug, -1):
+        # Erster Treffer je Song = der mit den meisten Streams (Liste ist absteigend sortiert).
+        # Streams UND Likes stammen aus demselben (stärksten) Track. Für die Anzeige im Player:
+        # ALLE zugeordneten Songs, unabhängig von der Album-Schwelle.
+        if slug not in streams_by_slug:
             streams_by_slug[slug] = st
-        # Album-Reihenfolge: nur ab Schwelle, dedupliziert (Liste ist absteigend sortiert)
+            likes_by_slug[slug] = x.get("likes") or 0
+        # Album-Reihenfolge: nur ab Schwelle, dedupliziert
         if st >= MIN_STREAMS and slug not in seen:
             seen.add(slug); order.append(slug)
-    return order, streams_by_slug
+    return order, streams_by_slug, likes_by_slug
 
 
-def write_streams_json(streams):
-    """Schreibt streams.json (Slug -> Streams) für die dezente Anzeige im Player.
-    Wird von der GitHub-Action committet und von index.html geladen."""
+def write_streams_json(streams, likes):
+    """Schreibt streams.json (Slug -> Streams und Slug -> Likes) für die dezente
+    Anzeige im Player. Wird von der GitHub-Action committet und von index.html geladen."""
     import datetime
     if DRY_RUN:
         print("  [DRY_RUN] streams.json: %d Songs (nicht geschrieben)" % len(streams))
         return
-    data = {"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "streams": streams}
+    data = {"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "streams": streams, "likes": likes}
     with open("streams.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
-    print("  streams.json: %d Songs geschrieben" % len(streams))
+    print("  streams.json: %d Songs (Streams + Likes) geschrieben" % len(streams))
 
 
 # ---------- Schreiben (mit Restore-Sicherung) ----------
@@ -194,8 +200,8 @@ def main():
     print("Lese SoundCloud-Playlist …")
     sc = get_sc_tracks()
     print("  %d SC-Tracks" % len(sc))
-    order, streams_by_slug = build_order(sc, songs)
-    print("Zuordenbar: %d Songs ab %d Streams (Top: %s) | Streams-Map: %d Songs" % (
+    order, streams_by_slug, likes_by_slug = build_order(sc, songs)
+    print("Zuordenbar: %d Songs ab %d Streams (Top: %s) | Streams/Likes-Map: %d Songs" % (
         len(order), MIN_STREAMS, ", ".join(order[:3]), len(streams_by_slug)))
     if len(order) < MIN_TRACKS:
         print("ABBRUCH: nur %d Treffer (< %d) – vermutlich SoundCloud-Änderung. Nichts geschrieben." % (len(order), MIN_TRACKS))
@@ -203,7 +209,7 @@ def main():
     ensure_playlist_row(len(order))
     write_playlist(HOF_SLUG, order)
     write_playlist(TOP100_SLUG, order[:TOP100_N])
-    write_streams_json(streams_by_slug)
+    write_streams_json(streams_by_slug, likes_by_slug)
     print("Fertig.")
 
 
