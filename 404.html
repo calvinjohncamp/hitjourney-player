@@ -262,16 +262,18 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 @media(max-width:600px){ .home-heading{ margin:30px 0 22px; } }
 /* ── Zeilen-Überschrift (pro Zeile: N-TV-Stil „einfach" / Kurz-notiert-Stil „modern") ── */
 .home-rowheading{ grid-column:1/-1; width:100%; }
+.home-rowheading.multi{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.home-rowheading .rh-side{ min-width:0; }
+.home-rowheading .rh-side.right{ text-align:right; margin-left:auto; }
 /* einfach — schlichte, kleine serifenlose Überschrift (optional kleine Akzent-Eyebrow) */
 .home-rowheading.simple{ margin:26px 0 14px; }
 .home-rowheading.simple .rh-eyebrow{ display:block; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#85ACC9; margin:0 0 4px; }
 .home-rowheading.simple .rh-title{ font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:clamp(16px,2vw,21px); line-height:1.2; color:#f1ecdf; margin:0; }
-.home-rowheading.simple.split{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
-.home-rowheading.simple.split .rh-eyebrow{ margin:0; flex-shrink:0; }
-.home-rowheading.simple.split .rh-title{ text-align:right; margin-left:auto; }
 /* modern — Rubrik-Kopf mit ◆-Raute und durchgehender Unterlinie (Kurz notiert, exakt wie Folio-today) */
 .home-rowheading.modern{ display:flex; align-items:baseline; gap:8px; margin:26px 0 14px; padding-bottom:8px; border-bottom:1px solid rgba(133,172,201,.42); }
-.home-rowheading.modern.split{ justify-content:space-between; }
+.home-rowheading.modern.multi{ align-items:baseline; }
+.home-rowheading.modern .rh-side{ display:flex; align-items:baseline; gap:8px; }
+.home-rowheading.modern .rh-side.right{ justify-content:flex-end; }
 .home-rowheading.modern .rh-dot{ color:#85ACC9; font-size:10px; flex-shrink:0; }
 .home-rowheading.modern .rh-title{ font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; font-weight:700; font-size:14px; letter-spacing:.13em; text-transform:uppercase; color:#85ACC9; }
 @media(max-width:600px){ .home-rowheading.simple{ margin:22px 0 12px; } .home-rowheading.modern{ margin:22px 0 12px; } }
@@ -5353,8 +5355,10 @@ const PLAYLIST_MAP = {
 // Reihenfolge der Alben im Player
 const ALBUM_ORDER = ['hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
 
-// In diesen Alben zeigt der Player die SoundCloud-Streams dezent neben Titel/Interpret.
+// In diesen Alben zeigt der Player SoundCloud-Metriken. top50 ist ein Sonderfall:
+// default = Albumreihenfolge, optional Streams/Likes per Button.
 const SC_STREAM_ALBUMS = new Set(['hallOfFame','top100','top50']);
+const SC_DEFAULT_SORT = { hallOfFame:'streams', top100:'streams', top50:'album' };
 
 // Werden async befüllt
 let ALBUMS = {};
@@ -5737,6 +5741,7 @@ const tlDeckSignatureBtn = document.getElementById('tlDeckSignatureBtn');
 const tlAlbumHomeBrand = document.getElementById('tlAlbumHomeBrand');
 let tlAlbumAlpha = false;
 let tlMetricSort = 'streams';   // Sortierung in SC-Alben: 'streams' (default) oder 'likes'
+let tlSortModeByAlbum = {};
 let tlOriginalOrders = {};
 // Now Playing screen
 const npCover      = document.getElementById('npCover');
@@ -5768,7 +5773,8 @@ const aboutArtLightbox = document.getElementById('aboutArtLightbox');
 const homeInfoBtn = document.getElementById('homeInfoBtn');
 
 // ── State ──
-let curAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
+// curAlbum = aktuell sichtbares Album, playAlbum = Album der tatsächlich laufenden Queue.
+let curAlbum=null, playAlbum=null, queue=[], queueIdx=-1, shuffleOn=false, repeatMode='off';
 const durationCache={};
 let prevScreen = 'home'; // track where to go back from NP
 let arcQueue=[], arcQueueIdx=-1;
@@ -5785,12 +5791,47 @@ function isLanguageScreenActive(){
 // ── Helpers ──
 function fmt(s){if(!isFinite(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 function shuffleArr(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function buildQueue(keep){
-  const idxs=ALBUMS[curAlbum].songs.map((_,i)=>i);
+function buildQueue(keep, albumKey){
+  const key = albumKey || playAlbum || curAlbum;
+  if(!key || !ALBUMS[key] || !ALBUMS[key].songs) return [];
+  const idxs=ALBUMS[key].songs.map((_,i)=>i);
   if(!shuffleOn)return idxs;
   const q=shuffleArr(idxs);
   if(keep!==undefined){const p=q.indexOf(keep);if(p>0){q.splice(p,1);q.unshift(keep);}}
   return q;
+}
+function currentPlaybackSong(){
+  if(!playAlbum || !ALBUMS[playAlbum] || queueIdx < 0 || !queue || !queue.length) return null;
+  const album = ALBUMS[playAlbum];
+  const song = album.songs[queue[queueIdx]] || null;
+  const src = audio && (audio.currentSrc || audio.src);
+  if(song && src && song.mp3 && typeof sameAudioUrl === 'function' && !sameAudioUrl(src, song.mp3)){
+    const actualIdx = album.songs.findIndex(s => s && s.mp3 && sameAudioUrl(src, s.mp3));
+    if(actualIdx >= 0){
+      let pos = queue.indexOf(actualIdx);
+      if(pos < 0){
+        queue = buildQueue(actualIdx, playAlbum);
+        pos = queue.indexOf(actualIdx);
+      }
+      if(pos >= 0) queueIdx = pos;
+      return album.songs[actualIdx] || null;
+    }
+    return null;
+  }
+  return song;
+}
+function clearInvalidAlbumPlayback(){
+  if(playAlbum && !currentPlaybackSong()){
+    playAlbum=null;
+    queue=[];
+    queueIdx=-1;
+  }
+}
+function updateAlbumDeckSong(song, fallbackArtist){
+  if(!song) return;
+  if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, getImgUrls(song,'cover'));
+  if(tlDeckTitle) tlDeckTitle.textContent=song.title||'';
+  if(tlDeckArtist) tlDeckArtist.textContent=song.artist||fallbackArtist||'';
 }
 
 function getImgUrls(song, field){
@@ -6662,22 +6703,30 @@ function showHome(){
   updateLandingBackBtn();
   prevScreen='home';
 }
-// Sortier-Kopfzeile (Streams / Likes) für die SC-Alben aufbauen und verdrahten.
-function renderTlSortHeader(isSc, key){
+function currentTlSortMode(key){
+  if(!SC_STREAM_ALBUMS.has(key)) return 'album';
+  return tlSortModeByAlbum[key] || SC_DEFAULT_SORT[key] || 'streams';
+}
+// Sortier-Kopfzeile für Metrik-Alben. top50 zeigt zusätzlich "Album".
+function renderTlSortHeader(isSc, key, mode){
   const hdr = document.getElementById('tlSortHeader');
   if(!hdr) return;
   if(!isSc){ hdr.classList.remove('visible'); hdr.innerHTML=''; return; }
-  const sActive = !tlAlbumAlpha && tlMetricSort==='streams';
-  const lActive = !tlAlbumAlpha && tlMetricSort==='likes';
+  const showAlbumBtn = key === 'top50';
+  const aActive = mode === 'album';
+  const sActive = mode === 'streams';
+  const lActive = mode === 'likes';
   hdr.classList.add('visible');
   hdr.innerHTML =
     '<span class="tl-sort-lbl">Sortieren:</span>'+
+    (showAlbumBtn ? '<button type="button" class="tl-sort-btn'+(aActive?' active':'')+'" data-sort="album">Album'+(aActive?' ▾':'')+'</button>' : '')+
     '<button type="button" class="tl-sort-btn'+(sActive?' active':'')+'" data-sort="streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Streams'+(sActive?' ▾':'')+'</button>'+
     '<button type="button" class="tl-sort-btn'+(lActive?' active':'')+'" data-sort="likes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Likes'+(lActive?' ▾':'')+'</button>';
   hdr.querySelectorAll('.tl-sort-btn').forEach(b=>{
     b.addEventListener('click',()=>{
       tlAlbumAlpha=false;
       if(typeof tlDeckABCBtn!=='undefined' && tlDeckABCBtn) tlDeckABCBtn.classList.remove('active');
+      tlSortModeByAlbum[key]=b.dataset.sort;
       tlMetricSort=b.dataset.sort;
       if(curAlbum) showAlbum(curAlbum);
     });
@@ -6700,18 +6749,24 @@ function showAlbum(key){
   if(tlCover) setImgSrcWithFallback(tlCover, [alb.cover]);
   if(tlTitle) tlTitle.textContent=alb.title;
   if(tlMeta) tlMeta.textContent=alb.meta;
-  if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, [alb.cover]);
-  if(tlDeckTitle) tlDeckTitle.textContent=alb.title||'';
-  if(tlDeckArtist) tlDeckArtist.textContent=alb.meta||'';
+  if(!currentPlaybackSong()){
+    if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, [alb.cover]);
+    if(tlDeckTitle) tlDeckTitle.textContent=alb.title||'';
+    if(tlDeckArtist) tlDeckArtist.textContent=alb.meta||'';
+  } else {
+    updateAlbumDeckSong(currentPlaybackSong(), ALBUMS[playAlbum] && ALBUMS[playAlbum].meta);
+  }
   if(!tlOriginalOrders[key]) tlOriginalOrders[key]=alb.songs.slice();
   const _isScAlbum = SC_STREAM_ALBUMS.has(key);
+  const sortMode = currentTlSortMode(key);
+  tlMetricSort = sortMode;
   const _alphaCmp = (a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'});
   let songsForView;
   if(tlAlbumAlpha){
     songsForView = tlOriginalOrders[key].slice().sort(_alphaCmp);
-  } else if(_isScAlbum && (tlMetricSort==='streams' || tlMetricSort==='likes')){
+  } else if(_isScAlbum && (sortMode==='streams' || sortMode==='likes')){
     // Absteigend nach Streams bzw. Likes; bei Gleichstand alphabetisch nach Titel.
-    const map = tlMetricSort==='likes' ? (window._scLikes||{}) : (window._scStreams||{});
+    const map = sortMode==='likes' ? (window._scLikes||{}) : (window._scStreams||{});
     songsForView = tlOriginalOrders[key].slice().sort((a,b)=>{
       const va=Number(map[a.slug]); const vb=Number(map[b.slug]);
       const na=isNaN(va)?-1:va, nb=isNaN(vb)?-1:vb;
@@ -6720,8 +6775,8 @@ function showAlbum(key){
   } else {
     songsForView = tlOriginalOrders[key].slice();
   }
-  // Sortier-Kopfzeile (Streams / Likes) nur in den SC-Alben anzeigen
-  renderTlSortHeader(_isScAlbum, key);
+  // Sortier-Kopfzeile nur in den Metrik-Alben anzeigen; top50 startet auf Albumreihenfolge.
+  renderTlSortHeader(_isScAlbum, key, sortMode);
   alb.songs = songsForView;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
@@ -6747,7 +6802,7 @@ function showAlbum(key){
     row.addEventListener('dragstart',e=>{ row.classList.add('is-dragging'); e.dataTransfer.setData('text/plain', row.dataset.idx); e.dataTransfer.effectAllowed='move'; });
     row.addEventListener('dragend',()=>row.classList.remove('is-dragging'));
     row.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; });
-    row.addEventListener('drop',e=>{ e.preventDefault(); const from=parseInt(e.dataTransfer.getData('text/plain')); const to=parseInt(row.dataset.idx); if(isNaN(from)||isNaN(to)||from===to)return; const arr=ALBUMS[curAlbum].songs; const [moved]=arr.splice(from,1); arr.splice(to,0,moved); tlOriginalOrders[curAlbum]=arr.slice(); queue=buildQueue(); queueIdx=queue.indexOf(to); showAlbum(curAlbum); });
+    row.addEventListener('drop',e=>{ e.preventDefault(); const from=parseInt(e.dataTransfer.getData('text/plain')); const to=parseInt(row.dataset.idx); if(isNaN(from)||isNaN(to)||from===to)return; const arr=ALBUMS[curAlbum].songs; const [moved]=arr.splice(from,1); arr.splice(to,0,moved); tlOriginalOrders[curAlbum]=arr.slice(); if(playAlbum===curAlbum){ queue=buildQueue(undefined, playAlbum); queueIdx=queue.indexOf(to); } showAlbum(curAlbum); });
     tlList.appendChild(row);
   });
   screenHome.classList.remove('active');
@@ -6763,7 +6818,8 @@ function showAlbum(key){
   headerRight.textContent=alb.title;
   mainHeader.style.display='';
   screenTL.scrollTop=0;
-  previewSong(0);
+  if(currentPlaybackSong()) updateAlbumDeckSong(currentPlaybackSong(), ALBUMS[playAlbum] && ALBUMS[playAlbum].meta);
+  else previewSong(0);
   showNowStrip();
   playerBar.classList.add('visible');
   refreshHighlight(false); // beim Album-Öffnen kein automatisches Scrollen
@@ -6899,6 +6955,7 @@ function toggleLanguagePlayFromStart(lang){
     return;
   }
   curAlbum = key;
+  playAlbum = key;
   shuffleOn = false;
   btnShuffle.classList.remove('active');
   npBtnShuffle.classList.remove('active');
@@ -6914,6 +6971,7 @@ function shuffleLanguage(lang){
   const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
   if(!ALBUMS[key] || !ALBUMS[key].songs || !ALBUMS[key].songs.length) return;
   curAlbum = key;
+  playAlbum = key;
   shuffleOn = true;
   btnShuffle.classList.add('active');
   npBtnShuffle.classList.add('active');
@@ -6960,6 +7018,7 @@ function findHomeSongByCell(cell){
 
 function openHomeCoverFrame(song){
   curAlbum = '__homeLyricsCycle';
+  playAlbum = '__homeLyricsCycle';
   ALBUMS.__homeLyricsCycle = { title:'hitjourney', songs:[song] };
   queue = [0];
   queueIdx = 0;
@@ -7050,13 +7109,14 @@ function playLanguageSong(lang, idx){
   clearHomeLyricsContext();
   const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
   const sameCard = languageCoverClickState.key === key && languageCoverClickState.idx === idx;
-  const isCurrent = curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx;
+  const isCurrent = playAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx;
 
   // 1. Klick auf neues Cover: Song starten und das Cover im bisherigen großen Lyrics-Rahmen zeigen.
   if(!sameCard || !isCurrent){
     closeLanguageImageFrame(false);
     curAlbum = key;
-    queue = buildQueue(idx);
+    playAlbum = key;
+    queue = buildQueue(idx, playAlbum);
     queueIdx = queue.indexOf(idx);
     prevScreen = lang === 'de' ? 'languageGerman' : 'languageEnglish';
     languageCoverClickState = { key, idx, phase:1 };
@@ -7110,7 +7170,7 @@ function updateLanguageHighlight(){
     const lang = card.dataset.lang;
     const key = lang === 'de' ? 'languageGerman' : 'languageEnglish';
     const idx = parseInt(card.dataset.idx,10);
-    card.classList.toggle('active', curAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx && !audio.paused);
+    card.classList.toggle('active', playAlbum === key && queueIdx >= 0 && queue[queueIdx] === idx && !audio.paused);
   });
 }
 
@@ -7153,9 +7213,7 @@ if(homeInfoBtn) homeInfoBtn.addEventListener('click',showAbout);
 
 // nowStrip tap → showNowPlaying handled in swipe block below
 function getCurrentAlbumSignatureSong(){
-  if(!curAlbum || !ALBUMS[curAlbum] || queueIdx < 0 || !queue || !queue.length) return null;
-  const idx = queue[queueIdx];
-  return ALBUMS[curAlbum].songs[idx] || null;
+  return currentPlaybackSong();
 }
 function toggleAlbumSignatureView(e){
   if(e){ e.preventDefault(); e.stopPropagation(); }
@@ -7184,9 +7242,9 @@ function updateNPScreen(){
     s=arcQueue[arcQueueIdx];
     npAlbumLabel.textContent='the archive';
   } else {
-    if(!curAlbum||queueIdx<0)return;
-    s=ALBUMS[curAlbum].songs[queue[queueIdx]];
-    npAlbumLabel.textContent=ALBUMS[curAlbum].title;
+    s=currentPlaybackSong();
+    if(!s||!playAlbum)return;
+    npAlbumLabel.textContent=ALBUMS[playAlbum].title;
   }
   setImgSrcWithFallback(npCover, getImgUrls(s,'cover'));
   npTitle.textContent=s.title;
@@ -7206,6 +7264,7 @@ function loadArchiveSongByIndex(idx){
   arcQueueIdx=(idx+arcQueue.length)%arcQueue.length;
   const s=arcQueue[arcQueueIdx];
   curAlbum=s.albumKey||curAlbum;
+  playAlbum=null;
   queueIdx=-1;
   if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
@@ -7365,7 +7424,7 @@ function _resolveCycleSong(){
   if(isArchiveMode()) return arcQueue[arcQueueIdx];
   if(prevScreen === 'kursNordwest' && knwActiveSongIdx >= 0) return KNW_SONGS[knwActiveSongIdx];
   if(isHomeLyricsContextActive()) return window._hjHomeLyricsSong;
-  if(curAlbum && queueIdx >= 0) return ALBUMS[curAlbum].songs[queue[queueIdx]];
+  if(playAlbum && queueIdx >= 0) return currentPlaybackSong();
   if(curAlbum && ALBUMS[curAlbum]) return ALBUMS[curAlbum].songs[0]; // Preview-Fallback
   return null;
 }
@@ -7609,9 +7668,7 @@ playerBar.addEventListener('click',e=>{
 function previewSong(i){
   const s=ALBUMS[curAlbum].songs[i];
   setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
-  if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, getImgUrls(s,'cover'));
-  if(tlDeckTitle) tlDeckTitle.textContent=s.title||'';
-  if(tlDeckArtist) tlDeckArtist.textContent=s.artist||'';
+  if(!currentPlaybackSong()) updateAlbumDeckSong(s);
   nowNum.textContent=i+1;
 }
 function showNowStrip(){
@@ -7620,8 +7677,11 @@ function showNowStrip(){
 }
 function playIdx(songIdx){
   arcQueue=[]; arcQueueIdx=-1;
+  const albumChanged = playAlbum !== curAlbum;
+  playAlbum = curAlbum;
+  if(albumChanged) queue = buildQueue(songIdx, playAlbum);
   let pos=queue.indexOf(songIdx);
-  if(pos===-1){queue=buildQueue(songIdx);pos=queue.indexOf(songIdx);}
+  if(pos===-1){queue=buildQueue(songIdx, playAlbum);pos=queue.indexOf(songIdx);}
   queueIdx=pos; loadPlay(songIdx);
 }
 let suppressTrackScroll = false;
@@ -7634,13 +7694,14 @@ function loadPlayNoScroll(songIdx){
 function loadPlay(songIdx){
   clearHomeLyricsContext();
   featuredMode = false; // Featured-Modus beenden
-  const s=ALBUMS[curAlbum].songs[songIdx];
+  if(!playAlbum) playAlbum = curAlbum;
+  const album = ALBUMS[playAlbum];
+  if(!album || !album.songs || !album.songs[songIdx]) return;
+  const s=album.songs[songIdx];
   if(lyricsOpen) closeLyrics();
   audio.src=s.mp3; audio.load(); audio.play().catch(()=>{});
   setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
-  if(tlDeckCover) setImgSrcWithFallback(tlDeckCover, getImgUrls(s,'cover'));
-  if(tlDeckTitle) tlDeckTitle.textContent=s.title||'';
-  if(tlDeckArtist) tlDeckArtist.textContent=s.artist||'';
+  updateAlbumDeckSong(s, album.meta);
   nowNum.textContent=songIdx+1;
   showNowStrip();
   if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
@@ -7651,8 +7712,9 @@ function refreshHighlight(allowScroll){
   const cur=queueIdx>=0?queue[queueIdx]:-1;
   document.querySelectorAll('#tlList .tl-track').forEach(row=>{
     const i=parseInt(row.dataset.idx);
-    row.classList.toggle('active',i===cur);
-    row.classList.toggle('playing',i===cur&&!audio.paused);
+    const isCurrentVisibleTrack = playAlbum === curAlbum && i===cur;
+    row.classList.toggle('active',isCurrentVisibleTrack);
+    row.classList.toggle('playing',isCurrentVisibleTrack&&!audio.paused);
   });
   // scrollIntoView nur wenn explizit erlaubt (d.h. User hat Song gewählt / Prev/Next gedrückt)
   // NICHT bei play/pause-Events — das verhindert den Scroll-zurück-Bug bei langen Playlisten
@@ -7665,11 +7727,12 @@ let featuredMode = false; // true = Fokus-Song läuft, kein Player-Strip
 
 function updatePlayBtns(){
   if(featuredMode) return; // Featured-Modus: Strip bleibt versteckt
+  clearInvalidAlbumPlayback();
   const p=!audio.paused;
   btnPlay.classList.toggle('playing',p);
   npBtnPlay.classList.toggle('playing',p);
   if(tlDeckPlayBtn) tlDeckPlayBtn.classList.toggle('playing',p);
-  if(tlDeck) tlDeck.classList.toggle('is-playing',p);
+  if(tlDeck) tlDeck.classList.toggle('is-playing',p && !!currentPlaybackSong());
   // KNW Play-Buttons sync — nur aktiver Button, alle anderen aus
   document.querySelectorAll('.knw-play-btn-circle').forEach((b,i)=>{
     b.classList.toggle('playing', p && i === knwActiveSongIdx);
@@ -7798,7 +7861,7 @@ audio.addEventListener('ended',()=>{
   let next=queueIdx+1;
   if(next>=queue.length){
     // v211: komplette Playlist läuft als Endlos-Loop – nach dem letzten Song wieder der erste.
-    if(shuffleOn)queue=buildQueue();
+    if(shuffleOn)queue=buildQueue(undefined, playAlbum);
     next=0;
   }
   queueIdx=next; loadPlay(queue[queueIdx]);
@@ -7810,8 +7873,12 @@ btnPlay.addEventListener('click',()=>{
     audio.paused?audio.play().catch(()=>{}):audio.pause();
     return;
   }
-  if(!curAlbum)return;
-  if(queueIdx===-1){queue=buildQueue();queueIdx=0;loadPlay(queue[0]);return;}
+  clearInvalidAlbumPlayback();
+  if(!playAlbum){
+    if(!curAlbum)return;
+    playAlbum = curAlbum;
+  }
+  if(queueIdx===-1){queue=buildQueue(undefined, playAlbum);queueIdx=0;loadPlay(queue[0]);return;}
   audio.paused?audio.play().catch(()=>{}):audio.pause();
 });
 btnPrev.addEventListener('click',()=>{
@@ -7820,7 +7887,8 @@ btnPrev.addEventListener('click',()=>{
     loadArchiveSongByIndex(arcQueueIdx-1);
     return;
   }
-  if(queueIdx===-1)return;
+  clearInvalidAlbumPlayback();
+  if(!playAlbum||queueIdx===-1)return;
   if(audio.currentTime>3){audio.currentTime=0;if(audio.paused)audio.play().catch(()=>{});return;}
   queueIdx=queueIdx>0?queueIdx-1:queue.length-1;
   loadPlay(queue[queueIdx]);
@@ -7830,17 +7898,22 @@ btnNext.addEventListener('click',()=>{
     loadArchiveSongByIndex(arcQueueIdx+1);
     return;
   }
-  if(!curAlbum)return;
-  if(queueIdx===-1){queue=buildQueue();queueIdx=0;}
+  clearInvalidAlbumPlayback();
+  if(!playAlbum){
+    if(!curAlbum)return;
+    playAlbum = curAlbum;
+  }
+  if(queueIdx===-1){queue=buildQueue(undefined, playAlbum);queueIdx=0;}
   else queueIdx=(queueIdx+1)%queue.length;
   loadPlay(queue[queueIdx]);
 });
 tlAlbumShuffleBtn.addEventListener('click',()=>{
   if(!curAlbum)return;
+  playAlbum = curAlbum;
   shuffleOn = true;
   btnShuffle.classList.add('active');
   npBtnShuffle.classList.add('active');
-  queue = shuffleArr(ALBUMS[curAlbum].songs.map((_,i)=>i));
+  queue = shuffleArr(ALBUMS[playAlbum].songs.map((_,i)=>i));
   queueIdx = 0;
   prevScreen = 'tracklist';
   loadPlayNoScroll(queue[0]);
@@ -7864,13 +7937,17 @@ btnShuffle.addEventListener('click',()=>{
     updateNPScreen();
     return;
   }
-  if(!curAlbum)return;
+  clearInvalidAlbumPlayback();
+  if(!playAlbum){
+    if(!curAlbum)return;
+    playAlbum = curAlbum;
+  }
   if(shuffleOn){
-    queue=shuffleArr(ALBUMS[curAlbum].songs.map((_,i)=>i));
+    queue=shuffleArr(ALBUMS[playAlbum].songs.map((_,i)=>i));
     queueIdx=0; loadPlay(queue[0]);
   } else {
     const cur=queueIdx>=0?queue[queueIdx]:undefined;
-    queue=buildQueue(cur);
+    queue=buildQueue(cur, playAlbum);
     if(cur!==undefined)queueIdx=queue.indexOf(cur);
   }
 });
@@ -7891,11 +7968,11 @@ document.querySelector('.hj-prog-wrap').addEventListener('click',e=>{
 
 // ── MediaSession ──
 function updateMS(i){
-  if(!('mediaSession' in navigator)||!curAlbum)return;
-  const s=ALBUMS[curAlbum].songs[i];
+  if(!('mediaSession' in navigator)||!playAlbum)return;
+  const s=ALBUMS[playAlbum].songs[i];
   navigator.mediaSession.metadata=new MediaMetadata({
     title:s.title,artist:'BRO · Jörn Kämper',
-    album:ALBUMS[curAlbum].title,
+    album:ALBUMS[playAlbum].title,
     artwork:[{src:s.cover,sizes:'400x400',type:'image/jpeg'}]
   });
   navigator.mediaSession.setActionHandler('play',()=>audio.play());
@@ -8500,23 +8577,37 @@ function buildHeadingEl(cell){
 // Pro-Zeile-Überschrift (optional). Zwei Stile nach Folio-today-Vorbild:
 //   'simple' = N-TV-Stil (kleine Akzent-Eyebrow + große Serifen-Überschrift)
 //   'modern' = Kurz-notiert-Stil (◆-Rubrik mit Unterlinie)
-// Gespeichert auf cells[0].rowHeading = { style, title, eyebrow, splitAlign }.
+// Gespeichert auf cells[0].rowHeading = { style, title, eyebrow, alignLeft, alignRight }.
+function rowHeadingAligns(rh){
+  if(!rh) return {left:true, right:false};
+  return {
+    left: rh.alignLeft !== false,
+    right: !!(rh.alignRight || rh.splitAlign)
+  };
+}
+function appendRowHeadingSide(wrap, rh, side, title, eyebrow){
+  const group = document.createElement('div');
+  group.className = 'rh-side ' + side;
+  if(rh.style === 'modern'){
+    const dot = document.createElement('span'); dot.className = 'rh-dot'; dot.textContent = '◆';
+    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent = title.toUpperCase();
+    group.appendChild(dot); group.appendChild(t);
+  } else {
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); group.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    group.appendChild(t); }
+  }
+  wrap.appendChild(group);
+}
 function buildRowHeadingEl(rh){
   if(!rh || !rh.style) return null;
   const title   = (rh.title   || '').trim();
   const eyebrow = (rh.eyebrow || '').trim();
   if(!title && !eyebrow) return null;
+  const aligns = rowHeadingAligns(rh);
   const wrap = document.createElement('div');
-  if(rh.style === 'modern'){
-    wrap.className = 'home-rowheading modern' + (rh.splitAlign ? ' split' : '');
-    const dot = document.createElement('span'); dot.className = 'rh-dot'; dot.textContent = '◆';
-    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent = title.toUpperCase();
-    wrap.appendChild(dot); wrap.appendChild(t);
-  } else {
-    wrap.className = 'home-rowheading simple' + (rh.splitAlign ? ' split' : '');
-    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); wrap.appendChild(e); }
-    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    wrap.appendChild(t); }
-  }
+  wrap.className = 'home-rowheading ' + (rh.style === 'modern' ? 'modern' : 'simple') + (aligns.right ? ' multi' : '');
+  if(aligns.left) appendRowHeadingSide(wrap, rh, 'left', title, eyebrow);
+  if(aligns.right) appendRowHeadingSide(wrap, rh, 'right', title, eyebrow);
   return wrap;
 }
 
