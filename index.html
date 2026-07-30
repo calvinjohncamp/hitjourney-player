@@ -934,8 +934,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
 .tl-duration{font-size:13px;color:rgba(133,172,201,.38);flex-shrink:0;font-variant-numeric:tabular-nums;min-width:34px;text-align:right;padding-right:2px;}
-.tl-streams{font-size:13px;color:rgba(133,172,201,.5);flex-shrink:0;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;padding-right:2px}
-.tl-streams svg{width:11px;height:11px;fill:currentColor;opacity:.75;flex-shrink:0}
+.tl-streams,.tl-likes{font-size:13px;color:rgba(133,172,201,.5);flex-shrink:0;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;padding-right:2px}
+.tl-streams svg,.tl-likes svg{width:11px;height:11px;fill:currentColor;opacity:.75;flex-shrink:0}
+.tl-likes{min-width:44px;justify-content:flex-end}
 .tl-bottom-pad{height:90px}
 
 /* Tracklist container: max-width for iPad readability — definiert oben im Screen-Block */
@@ -5393,12 +5394,12 @@ async function loadFromSupabase() {
   const playlistsRaw = await playlistsRes.json();
   const tracksRaw = await tracksRes.json();
 
-  // SoundCloud-Streams (täglich vom GitHub-Action-Script erzeugt) für die dezente Anzeige im Player.
-  window._scStreams = {};
+  // SoundCloud-Streams + Likes (täglich vom GitHub-Action-Script erzeugt) für die dezente Anzeige im Player.
+  window._scStreams = {}; window._scLikes = {};
   try {
     const sres = await fetch('streams.json', { cache: 'no-store' });
-    if (sres.ok) { const sj = await sres.json(); window._scStreams = (sj && sj.streams) ? sj.streams : (sj || {}); }
-  } catch(e) { /* optional – ohne Streams läuft alles normal weiter */ }
+    if (sres.ok) { const sj = await sres.json(); window._scStreams = (sj && sj.streams) || {}; window._scLikes = (sj && sj.likes) || {}; }
+  } catch(e) { /* optional – ohne Streams/Likes läuft alles normal weiter */ }
 
   // 3. ALBUMS aufbauen
   ALBUMS = {};
@@ -6675,8 +6676,12 @@ function showAlbum(key){
     const row=document.createElement('div');
     row.className='tl-track'; row.dataset.idx=i; row.draggable=true;
     const cachedDur=durationCache[s.mp3]?fmt(durationCache[s.mp3]):'';
-    const _scv=(SC_STREAM_ALBUMS.has(key)&&window._scStreams)?window._scStreams[s.slug]:null;
+    const _isSc=SC_STREAM_ALBUMS.has(key);
+    const _scv=(_isSc&&window._scStreams)?window._scStreams[s.slug]:null;
+    const _lkv=(_isSc&&window._scLikes)?window._scLikes[s.slug]:null;
     const streamsHtml=(_scv!=null)?'<span class="tl-streams" title="SoundCloud-Streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'+Number(_scv).toLocaleString('de-DE')+'</span>':'';
+    const likesHtml=(_lkv!=null)?'<span class="tl-likes" title="SoundCloud-Likes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'+Number(_lkv).toLocaleString('de-DE')+'</span>':'';
+    const rightHtml=_isSc?likesHtml:('<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>');
     row.innerHTML=
       '<div class="tl-drag-handle" title="Reihenfolge ändern" aria-label="Song verschieben"><svg viewBox="0 0 24 24"><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>'+
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
@@ -6684,7 +6689,7 @@ function showAlbum(key){
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>'+
       streamsHtml+
-      '<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>';
+      rightHtml;
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playIdx(parseInt(row.dataset.idx)));
     row.addEventListener('dragstart',e=>{ row.classList.add('is-dragging'); e.dataTransfer.setData('text/plain', row.dataset.idx); e.dataTransfer.effectAllowed='move'; });
