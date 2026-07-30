@@ -506,12 +506,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-rhctrl-fields{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .he-rhctrl-fields input{width:100%;box-sizing:border-box;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:7px;color:#cfe5f5;font-size:12px;padding:7px 9px;font-family:inherit}
 .he-rhctrl-fields input:focus{outline:none;border-color:rgba(133,172,201,.4)}
-.he-rhctrl-prev{margin-top:9px;padding-top:9px;border-top:1px dashed rgba(133,172,201,.14)}
-.he-rhprev-simple .rhp-eye{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;margin-bottom:3px}
-.he-rhprev-simple .rhp-title{font-weight:700;font-size:15px;line-height:1.2;color:#f1ecdf}
-.he-rhprev-modern{display:flex;align-items:baseline;gap:6px;padding-bottom:5px;border-bottom:1px solid rgba(133,172,201,.42)}
-.he-rhprev-modern .rhp-dot{color:#85ACC9;font-size:8px}
-.he-rhprev-modern .rhp-title{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#85ACC9}
+/* WYSIWYG-Überschrift über der Zeile im Editor — 1:1 wie auf der Live-Seite (.home-rowheading) */
+.rhwys{margin:16px 8px 6px}
+.rhwys.simple .rh-eyebrow{display:block;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;margin:0 0 4px}
+.rhwys.simple .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:clamp(16px,2vw,21px);line-height:1.2;color:#f1ecdf;margin:0}
+.rhwys.modern{display:flex;align-items:baseline;gap:8px;padding-bottom:8px;border-bottom:1px solid rgba(133,172,201,.42)}
+.rhwys.modern .rh-dot{color:#85ACC9;font-size:10px;flex-shrink:0}
+.rhwys.modern .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;letter-spacing:.13em;text-transform:uppercase;color:#85ACC9}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
 .he-cell.editing-mode:hover{border-color:rgba(133,172,201,.45);background:#0d2436}
@@ -11696,6 +11697,12 @@ function buildRowEl(row, idx, arr, labelPrefix){
 
   // Caption-Block entfernt — Labels pro Kachel via cell.alt
 
+  // ── WYSIWYG: gerenderte Zeilen-Überschrift über der Zeile (immer sichtbar, wie live) ──
+  if(!['heading','spacer','language'].includes(row.cells[0] && row.cells[0].type)){
+    const wys = adminBuildRowHeadingEl(row.cells[0].rowHeading);
+    if(wys) el.appendChild(wys);
+  }
+
   // ── Grid ──
   const grid = document.createElement('div');
   grid.className = 'he-row-grid';
@@ -11753,36 +11760,31 @@ function buildRowHeadingControl(row){
     title.oninput = ()=> setRowHeadingField(row.id, 'title', title.value);
     fields.appendChild(title);
     box.appendChild(fields);
-
-    // Live-Vorschau
-    const prev = document.createElement('div');
-    prev.className = 'he-rhctrl-prev';
-    prev.appendChild(rowHeadingPreviewEl(cell.rowHeading));
-    box.appendChild(prev);
+    // Hinweis: die echte Vorschau erscheint als gerenderte Überschrift ÜBER der Zeile (WYSIWYG).
   }
 
   return box;
 }
 
-function rowHeadingPreviewEl(rh){
-  rh = rh || {};
-  const title = (rh.title || '').trim();
+// WYSIWYG: gerenderte Zeilen-Überschrift für den Editor — optisch identisch zur Live-Seite.
+// Spiegelt buildRowHeadingEl aus index.html (gleiche innere Klassen rh-eyebrow/rh-title/rh-dot).
+function adminBuildRowHeadingEl(rh){
+  if(!rh || !rh.style) return null;
+  const title   = (rh.title   || '').trim();
   const eyebrow = (rh.eyebrow || '').trim();
+  if(!title && !eyebrow) return null;
+  const wrap = document.createElement('div');
   if(rh.style === 'modern'){
-    const d = document.createElement('div');
-    d.className = 'he-rhprev-modern';
-    d.innerHTML = '<span class="rhp-dot">◆</span><span class="rhp-title"></span>';
-    d.querySelector('.rhp-title').textContent = (title || 'Rubrik').toUpperCase();
-    return d;
+    wrap.className = 'rhwys modern';
+    const dot = document.createElement('span'); dot.className = 'rh-dot';   dot.textContent = '◆';
+    const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent   = title.toUpperCase();
+    wrap.appendChild(dot); wrap.appendChild(t);
+  } else {
+    wrap.className = 'rhwys simple';
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); wrap.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    wrap.appendChild(t); }
   }
-  const d = document.createElement('div');
-  d.className = 'he-rhprev-simple';
-  const e = document.createElement('span'); e.className = 'rhp-eye';
-  const t = document.createElement('span'); t.className = 'rhp-title';
-  if(eyebrow){ e.textContent = eyebrow.toUpperCase(); d.appendChild(e); }
-  t.textContent = title || 'Überschrift';
-  d.appendChild(t);
-  return d;
+  return wrap;
 }
 
 // Stil umschalten (Chip-Klick) → Modell setzen, Editor neu rendern (Felder ein-/ausblenden).
@@ -11805,9 +11807,15 @@ function setRowHeadingField(rowId, key, val){
   const row = rowById(rowId); if(!row) return;
   const rh = row.cells[0].rowHeading; if(!rh) return;
   rh[key] = val;
-  // Nur die Vorschau der aktiven Zeile aktualisieren (kein voller Re-Render).
-  const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"] .he-rhctrl-prev');
-  if(rowEl){ rowEl.innerHTML = ''; rowEl.appendChild(rowHeadingPreviewEl(rh)); }
+  // Die gerenderte WYSIWYG-Überschrift über der Zeile live aktualisieren (kein voller Re-Render → Fokus bleibt).
+  const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"]');
+  if(rowEl){
+    const grid = rowEl.querySelector('.he-row-grid');
+    const old = rowEl.querySelector(':scope > .rhwys');
+    if(old) old.remove();
+    const wys = adminBuildRowHeadingEl(rh);
+    if(wys && grid) rowEl.insertBefore(wys, grid);
+  }
   updateHomeUndoUi();
 }
 
