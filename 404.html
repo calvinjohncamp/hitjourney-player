@@ -934,6 +934,16 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .tl-track.active .tl-title{color:#85ACC9}
 .tl-artist{font-size:14px;color:rgba(133,172,201,.45);margin-top:3px}
 .tl-duration{font-size:13px;color:rgba(133,172,201,.38);flex-shrink:0;font-variant-numeric:tabular-nums;min-width:34px;text-align:right;padding-right:2px;}
+.tl-streams,.tl-likes{font-size:13px;color:rgba(133,172,201,.5);flex-shrink:0;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;padding-right:2px}
+.tl-streams svg,.tl-likes svg{width:11px;height:11px;fill:currentColor;opacity:.75;flex-shrink:0}
+.tl-likes{min-width:44px;justify-content:flex-end}
+.tl-sort-header{display:none;justify-content:flex-end;align-items:center;gap:10px;padding:9px 16px 7px;border-bottom:1px solid rgba(133,172,201,.1)}
+.tl-sort-header.visible{display:flex}
+.tl-sort-lbl{font-size:11px;color:rgba(133,172,201,.4);margin-right:2px;letter-spacing:.02em}
+.tl-sort-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid transparent;cursor:pointer;font-size:12px;font-weight:600;color:rgba(133,172,201,.5);padding:4px 9px;border-radius:7px;font-family:inherit}
+.tl-sort-btn svg{width:12px;height:12px;fill:currentColor;opacity:.8;flex-shrink:0}
+.tl-sort-btn:hover{color:#cfe5f5}
+.tl-sort-btn.active{color:#85ACC9;background:rgba(133,172,201,.12);border-color:rgba(133,172,201,.25)}
 .tl-bottom-pad{height:90px}
 
 /* Tracklist container: max-width for iPad readability — definiert oben im Screen-Block */
@@ -5220,6 +5230,7 @@ body.album-open #hjPlayerSpacer{
 </div><!-- /tlLeftCol -->
 <!-- Rechte Spalte: Songliste (auf iPhone: volle Breite darunter) -->
 <div id="tlRightCol">
+<div id="tlSortHeader" class="tl-sort-header"></div>
 <div id="tlList"></div>
 <div class="tl-bottom-pad"></div>
 </div><!-- /tlRightCol -->
@@ -5332,10 +5343,14 @@ const PLAYLIST_MAP = {
   'poesie':         { key:'poesie',       title:'Poesie',          meta:'11 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/poesie-cover.jpg' },
   'buried-diamonds':{ key:'buriedDiamonds',title:'Buried Diamonds',meta:'66 Songs',                cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Buried%20Diamonds%20-%20Cover.jpg' },
   'top-100':        { key:'top100',       title:'Top 100',         meta:'100 Songs',               cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg' },
+  'hall-of-fame':   { key:'hallOfFame',   title:'Hall of Fame',    meta:'Nach Streams',            cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg' },
 };
 
 // Reihenfolge der Alben im Player
-const ALBUM_ORDER = ['top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds','top100'];
+const ALBUM_ORDER = ['hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
+
+// In diesen Alben zeigt der Player die SoundCloud-Streams dezent neben Titel/Interpret.
+const SC_STREAM_ALBUMS = new Set(['hallOfFame','top100','top50']);
 
 // Werden async befüllt
 let ALBUMS = {};
@@ -5386,6 +5401,13 @@ async function loadFromSupabase() {
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);
   const playlistsRaw = await playlistsRes.json();
   const tracksRaw = await tracksRes.json();
+
+  // SoundCloud-Streams + Likes (täglich vom GitHub-Action-Script erzeugt) für die dezente Anzeige im Player.
+  window._scStreams = {}; window._scLikes = {};
+  try {
+    const sres = await fetch('streams.json', { cache: 'no-store' });
+    if (sres.ok) { const sj = await sres.json(); window._scStreams = (sj && sj.streams) || {}; window._scLikes = (sj && sj.likes) || {}; }
+  } catch(e) { /* optional – ohne Streams/Likes läuft alles normal weiter */ }
 
   // 3. ALBUMS aufbauen
   ALBUMS = {};
@@ -5710,6 +5732,7 @@ const tlDeckABCBtn = document.getElementById('tlDeckABCBtn');
 const tlDeckSignatureBtn = document.getElementById('tlDeckSignatureBtn');
 const tlAlbumHomeBrand = document.getElementById('tlAlbumHomeBrand');
 let tlAlbumAlpha = false;
+let tlMetricSort = 'streams';   // Sortierung in SC-Alben: 'streams' (default) oder 'likes'
 let tlOriginalOrders = {};
 // Now Playing screen
 const npCover      = document.getElementById('npCover');
@@ -6635,6 +6658,28 @@ function showHome(){
   updateLandingBackBtn();
   prevScreen='home';
 }
+// Sortier-Kopfzeile (Streams / Likes) für die SC-Alben aufbauen und verdrahten.
+function renderTlSortHeader(isSc, key){
+  const hdr = document.getElementById('tlSortHeader');
+  if(!hdr) return;
+  if(!isSc){ hdr.classList.remove('visible'); hdr.innerHTML=''; return; }
+  const sActive = !tlAlbumAlpha && tlMetricSort==='streams';
+  const lActive = !tlAlbumAlpha && tlMetricSort==='likes';
+  hdr.classList.add('visible');
+  hdr.innerHTML =
+    '<span class="tl-sort-lbl">Sortieren:</span>'+
+    '<button type="button" class="tl-sort-btn'+(sActive?' active':'')+'" data-sort="streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Streams'+(sActive?' ▾':'')+'</button>'+
+    '<button type="button" class="tl-sort-btn'+(lActive?' active':'')+'" data-sort="likes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Likes'+(lActive?' ▾':'')+'</button>';
+  hdr.querySelectorAll('.tl-sort-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      tlAlbumAlpha=false;
+      if(typeof tlDeckABCBtn!=='undefined' && tlDeckABCBtn) tlDeckABCBtn.classList.remove('active');
+      tlMetricSort=b.dataset.sort;
+      if(curAlbum) showAlbum(curAlbum);
+    });
+  });
+}
+
 function showAlbum(key){
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
@@ -6655,20 +6700,44 @@ function showAlbum(key){
   if(tlDeckTitle) tlDeckTitle.textContent=alb.title||'';
   if(tlDeckArtist) tlDeckArtist.textContent=alb.meta||'';
   if(!tlOriginalOrders[key]) tlOriginalOrders[key]=alb.songs.slice();
-  const songsForView = tlAlbumAlpha ? alb.songs.slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'})) : tlOriginalOrders[key].slice();
+  const _isScAlbum = SC_STREAM_ALBUMS.has(key);
+  const _alphaCmp = (a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'});
+  let songsForView;
+  if(tlAlbumAlpha){
+    songsForView = tlOriginalOrders[key].slice().sort(_alphaCmp);
+  } else if(_isScAlbum && (tlMetricSort==='streams' || tlMetricSort==='likes')){
+    // Absteigend nach Streams bzw. Likes; bei Gleichstand alphabetisch nach Titel.
+    const map = tlMetricSort==='likes' ? (window._scLikes||{}) : (window._scStreams||{});
+    songsForView = tlOriginalOrders[key].slice().sort((a,b)=>{
+      const va=Number(map[a.slug]); const vb=Number(map[b.slug]);
+      const na=isNaN(va)?-1:va, nb=isNaN(vb)?-1:vb;
+      return nb!==na ? nb-na : _alphaCmp(a,b);
+    });
+  } else {
+    songsForView = tlOriginalOrders[key].slice();
+  }
+  // Sortier-Kopfzeile (Streams / Likes) nur in den SC-Alben anzeigen
+  renderTlSortHeader(_isScAlbum, key);
   alb.songs = songsForView;
   tlList.innerHTML='';
   alb.songs.forEach((s,i)=>{
     const row=document.createElement('div');
     row.className='tl-track'; row.dataset.idx=i; row.draggable=true;
     const cachedDur=durationCache[s.mp3]?fmt(durationCache[s.mp3]):'';
+    const _isSc=SC_STREAM_ALBUMS.has(key);
+    const _scv=(_isSc&&window._scStreams)?window._scStreams[s.slug]:null;
+    const _lkv=(_isSc&&window._scLikes)?window._scLikes[s.slug]:null;
+    const streamsHtml=(_scv!=null)?'<span class="tl-streams" title="SoundCloud-Streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'+Number(_scv).toLocaleString('de-DE')+'</span>':'';
+    const likesHtml=(_lkv!=null)?'<span class="tl-likes" title="SoundCloud-Likes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'+Number(_lkv).toLocaleString('de-DE')+'</span>':'';
+    const rightHtml=_isSc?likesHtml:('<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>');
     row.innerHTML=
       '<div class="tl-drag-handle" title="Reihenfolge ändern" aria-label="Song verschieben"><svg viewBox="0 0 24 24"><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>'+
       '<div class="tl-num-wrap"><span class="tl-track-num">'+(i+1)+'</span>'+
       '<div class="tl-bars"><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div><div class="tl-bar"></div></div></div>'+
       '<img class="tl-thumb" loading="lazy" alt=""/>'+
       '<div class="tl-info"><div class="tl-title">'+s.title+'</div><div class="tl-artist">'+(s.artist||'')+'</div></div>'+
-      '<span class="tl-duration" data-mp3="'+s.mp3+'">'+cachedDur+'</span>';
+      streamsHtml+
+      rightHtml;
     setImgSrcWithFallback(row.querySelector('.tl-thumb'), getImgUrls(s,'cover'));
     row.addEventListener('click',()=>playIdx(parseInt(row.dataset.idx)));
     row.addEventListener('dragstart',e=>{ row.classList.add('is-dragging'); e.dataTransfer.setData('text/plain', row.dataset.idx); e.dataTransfer.effectAllowed='move'; });
