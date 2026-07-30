@@ -495,6 +495,23 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-caption-wrap{padding:0 2px 6px}
 .he-row-caption{width:100%;box-sizing:border-box;background:rgba(133,172,201,.05);border:1px solid rgba(133,172,201,.12);border-radius:8px;color:#85ACC9;font-size:12px;padding:8px 10px;resize:vertical;min-height:56px;font-family:inherit;line-height:1.5;margin-top:6px}
 .he-row-caption:focus{outline:none;border-color:rgba(133,172,201,.35)}
+/* ── Pro-Zeile-Überschrift (N-TV / Kurz notiert) ── */
+.he-rhctrl{margin:2px 8px 8px;padding:8px 10px;background:rgba(133,172,201,.04);border:1px solid rgba(133,172,201,.1);border-radius:8px}
+.he-rhctrl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.he-rhctrl-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-right:2px}
+.he-rhctrl-seg{display:inline-flex;gap:4px}
+.he-rhchip{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:rgba(133,172,201,.7);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;transition:.15s}
+.he-rhchip:hover{border-color:rgba(133,172,201,.4);color:#cfe5f5}
+.he-rhchip.active{background:rgba(133,172,201,.22);border-color:rgba(133,172,201,.5);color:#eaf3fb}
+.he-rhctrl-fields{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.he-rhctrl-fields input{width:100%;box-sizing:border-box;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:7px;color:#cfe5f5;font-size:12px;padding:7px 9px;font-family:inherit}
+.he-rhctrl-fields input:focus{outline:none;border-color:rgba(133,172,201,.4)}
+.he-rhctrl-prev{margin-top:9px;padding-top:9px;border-top:1px dashed rgba(133,172,201,.14)}
+.he-rhprev-simple .rhp-eye{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;margin-bottom:3px}
+.he-rhprev-simple .rhp-title{font-weight:700;font-size:15px;line-height:1.2;color:#f1ecdf}
+.he-rhprev-modern{display:flex;align-items:baseline;gap:6px;padding-bottom:5px;border-bottom:1px solid rgba(133,172,201,.42)}
+.he-rhprev-modern .rhp-dot{color:#85ACC9;font-size:8px}
+.he-rhprev-modern .rhp-title{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#85ACC9}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
 .he-cell.editing-mode{border-color:rgba(133,172,201,.22);cursor:pointer}
 .he-cell.editing-mode:hover{border-color:rgba(133,172,201,.45);background:#0d2436}
@@ -11672,6 +11689,11 @@ function buildRowEl(row, idx, arr, labelPrefix){
 
   el.appendChild(bar);
 
+  // ── Pro-Zeile-Überschrift (nur im Bearbeiten-Modus, nicht bei Sonderzeilen) ──
+  if(row.editing && !['heading','spacer','language'].includes(row.cells[0] && row.cells[0].type)){
+    el.appendChild(buildRowHeadingControl(row));
+  }
+
   // Caption-Block entfernt — Labels pro Kachel via cell.alt
 
   // ── Grid ──
@@ -11681,6 +11703,112 @@ function buildRowEl(row, idx, arr, labelPrefix){
   el.appendChild(grid);
 
   return el;
+}
+
+/* ── Bedienelement: optionale Überschrift über einer Zeile ──
+   Speicherung auf row.cells[0].rowHeading = { style:'simple'|'modern', title, eyebrow }.
+   Reist automatisch durch Home-, Unterseiten- und Landing-Persistenz (cells = JSONB). */
+function buildRowHeadingControl(row){
+  const cell = row.cells[0];
+  const rh = cell.rowHeading || null;
+  const cur = rh && rh.style ? rh.style : 'none';
+
+  const box = document.createElement('div');
+  box.className = 'he-rhctrl';
+
+  const top = document.createElement('div');
+  top.className = 'he-rhctrl-top';
+  const lbl = document.createElement('span');
+  lbl.className = 'he-rhctrl-lbl';
+  lbl.textContent = 'Überschrift';
+  const seg = document.createElement('div');
+  seg.className = 'he-rhctrl-seg';
+  [['none','Keine'],['simple','Einfach'],['modern','Modern (Kurz notiert)']].forEach(([val,txt])=>{
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'he-rhchip' + (cur===val ? ' active' : '');
+    chip.textContent = txt;
+    chip.onclick = ()=> setRowHeadingStyle(row.id, val);
+    seg.appendChild(chip);
+  });
+  top.appendChild(lbl);
+  top.appendChild(seg);
+  box.appendChild(top);
+
+  if(cur !== 'none'){
+    const fields = document.createElement('div');
+    fields.className = 'he-rhctrl-fields';
+    if(cur === 'simple'){
+      const eye = document.createElement('input');
+      eye.type = 'text';
+      eye.placeholder = 'Kicker / Label (optional)';
+      eye.value = (rh && rh.eyebrow) || '';
+      eye.oninput = ()=> setRowHeadingField(row.id, 'eyebrow', eye.value);
+      fields.appendChild(eye);
+    }
+    const title = document.createElement('input');
+    title.type = 'text';
+    title.placeholder = cur === 'modern' ? 'Rubrik-Text (z. B. Kurz notiert)' : 'Überschrift';
+    title.value = (rh && rh.title) || '';
+    title.oninput = ()=> setRowHeadingField(row.id, 'title', title.value);
+    fields.appendChild(title);
+    box.appendChild(fields);
+
+    // Live-Vorschau
+    const prev = document.createElement('div');
+    prev.className = 'he-rhctrl-prev';
+    prev.appendChild(rowHeadingPreviewEl(cell.rowHeading));
+    box.appendChild(prev);
+  }
+
+  return box;
+}
+
+function rowHeadingPreviewEl(rh){
+  rh = rh || {};
+  const title = (rh.title || '').trim();
+  const eyebrow = (rh.eyebrow || '').trim();
+  if(rh.style === 'modern'){
+    const d = document.createElement('div');
+    d.className = 'he-rhprev-modern';
+    d.innerHTML = '<span class="rhp-dot">◆</span><span class="rhp-title"></span>';
+    d.querySelector('.rhp-title').textContent = (title || 'Rubrik').toUpperCase();
+    return d;
+  }
+  const d = document.createElement('div');
+  d.className = 'he-rhprev-simple';
+  const e = document.createElement('span'); e.className = 'rhp-eye';
+  const t = document.createElement('span'); t.className = 'rhp-title';
+  if(eyebrow){ e.textContent = eyebrow.toUpperCase(); d.appendChild(e); }
+  t.textContent = title || 'Überschrift';
+  d.appendChild(t);
+  return d;
+}
+
+// Stil umschalten (Chip-Klick) → Modell setzen, Editor neu rendern (Felder ein-/ausblenden).
+function setRowHeadingStyle(rowId, style){
+  const row = rowById(rowId); if(!row) return;
+  markHomeAction();
+  if(style === 'none'){
+    delete row.cells[0].rowHeading;
+  } else {
+    const rh = row.cells[0].rowHeading || {};
+    rh.style = style;
+    if(rh.title === undefined) rh.title = '';
+    row.cells[0].rowHeading = rh;
+  }
+  rerenderOwnerArr(ownerArrayOf(rowId));
+}
+
+// Textfeld live ins Modell schreiben (ohne Re-Render → Fokus bleibt). Vorschau aktualisieren.
+function setRowHeadingField(rowId, key, val){
+  const row = rowById(rowId); if(!row) return;
+  const rh = row.cells[0].rowHeading; if(!rh) return;
+  rh[key] = val;
+  // Nur die Vorschau der aktiven Zeile aktualisieren (kein voller Re-Render).
+  const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"] .he-rhctrl-prev');
+  if(rowEl){ rowEl.innerHTML = ''; rowEl.appendChild(rowHeadingPreviewEl(rh)); }
+  updateHomeUndoUi();
 }
 
 function makeBarBtn(label, cls, title, fn){
