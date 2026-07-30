@@ -503,6 +503,8 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-rhchip{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:rgba(133,172,201,.7);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;transition:.15s}
 .he-rhchip:hover{border-color:rgba(133,172,201,.4);color:#cfe5f5}
 .he-rhchip.active{background:rgba(133,172,201,.22);border-color:rgba(133,172,201,.5);color:#eaf3fb}
+.he-rhcheck{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:rgba(207,229,245,.72);cursor:pointer;user-select:none}
+.he-rhcheck input{accent-color:#85ACC9}
 .he-rhctrl-fields{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .he-rhctrl-fields input{width:100%;box-sizing:border-box;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:7px;color:#cfe5f5;font-size:12px;padding:7px 9px;font-family:inherit}
 .he-rhctrl-fields input:focus{outline:none;border-color:rgba(133,172,201,.4)}
@@ -510,7 +512,11 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .rhwys{margin:16px 8px 6px}
 .rhwys.simple .rh-eyebrow{display:block;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#85ACC9;margin:0 0 4px}
 .rhwys.simple .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:clamp(16px,2vw,21px);line-height:1.2;color:#f1ecdf;margin:0}
+.rhwys.simple.split{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.rhwys.simple.split .rh-eyebrow{margin:0;flex-shrink:0}
+.rhwys.simple.split .rh-title{text-align:right;margin-left:auto}
 .rhwys.modern{display:flex;align-items:baseline;gap:8px;padding-bottom:8px;border-bottom:1px solid rgba(133,172,201,.42)}
+.rhwys.modern.split{justify-content:space-between}
 .rhwys.modern .rh-dot{color:#85ACC9;font-size:10px;flex-shrink:0}
 .rhwys.modern .rh-title{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;letter-spacing:.13em;text-transform:uppercase;color:#85ACC9}
 .he-cell-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:44px;gap:3px;color:rgba(133,172,201,.18)}
@@ -11713,7 +11719,7 @@ function buildRowEl(row, idx, arr, labelPrefix){
 }
 
 /* ── Bedienelement: optionale Überschrift über einer Zeile ──
-   Speicherung auf row.cells[0].rowHeading = { style:'simple'|'modern', title, eyebrow }.
+   Speicherung auf row.cells[0].rowHeading = { style:'simple'|'modern', title, eyebrow, splitAlign }.
    Reist automatisch durch Home-, Unterseiten- und Landing-Persistenz (cells = JSONB). */
 function buildRowHeadingControl(row){
   const cell = row.cells[0];
@@ -11743,6 +11749,14 @@ function buildRowHeadingControl(row){
   box.appendChild(top);
 
   if(cur !== 'none'){
+    const split = document.createElement('label');
+    split.className = 'he-rhcheck';
+    split.innerHTML = '<input type="checkbox"> links + rechtsbündig';
+    const splitInput = split.querySelector('input');
+    splitInput.checked = !!(rh && rh.splitAlign);
+    splitInput.onchange = ()=> setRowHeadingSplit(row.id, splitInput.checked);
+    top.appendChild(split);
+
     const fields = document.createElement('div');
     fields.className = 'he-rhctrl-fields';
     if(cur === 'simple'){
@@ -11775,12 +11789,12 @@ function adminBuildRowHeadingEl(rh){
   if(!title && !eyebrow) return null;
   const wrap = document.createElement('div');
   if(rh.style === 'modern'){
-    wrap.className = 'rhwys modern';
+    wrap.className = 'rhwys modern' + (rh.splitAlign ? ' split' : '');
     const dot = document.createElement('span'); dot.className = 'rh-dot';   dot.textContent = '◆';
     const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent   = title.toUpperCase();
     wrap.appendChild(dot); wrap.appendChild(t);
   } else {
-    wrap.className = 'rhwys simple';
+    wrap.className = 'rhwys simple' + (rh.splitAlign ? ' split' : '');
     if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); wrap.appendChild(e); }
     if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    wrap.appendChild(t); }
   }
@@ -11800,6 +11814,23 @@ function setRowHeadingStyle(rowId, style){
     row.cells[0].rowHeading = rh;
   }
   rerenderOwnerArr(ownerArrayOf(rowId));
+}
+
+// Checkbox: Kicker/Raute links, Titel rechtsbündig über die Zeilenbreite verteilen.
+function setRowHeadingSplit(rowId, checked){
+  const row = rowById(rowId); if(!row) return;
+  const rh = row.cells[0].rowHeading; if(!rh) return;
+  markHomeAction();
+  rh.splitAlign = !!checked;
+  const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"]');
+  if(rowEl){
+    const grid = rowEl.querySelector('.he-row-grid');
+    const old = rowEl.querySelector(':scope > .rhwys');
+    if(old) old.remove();
+    const wys = adminBuildRowHeadingEl(rh);
+    if(wys && grid) rowEl.insertBefore(wys, grid);
+  }
+  updateHomeUndoUi();
 }
 
 // Textfeld live ins Modell schreiben (ohne Re-Render → Fokus bleibt). Vorschau aktualisieren.
