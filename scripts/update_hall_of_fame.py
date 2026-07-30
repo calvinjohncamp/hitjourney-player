@@ -128,15 +128,33 @@ def build_order(sc, songs):
             return by_base[best][0]
         return None
 
-    seen, order = set(), []
+    seen, order, streams_by_slug = set(), [], {}
     for x in sorted(sc, key=lambda z: -(z["streams"] or 0)):
-        if (x["streams"] or 0) < MIN_STREAMS:
-            break   # Liste ist absteigend sortiert -> ab hier sind alle unter der Schwelle
         h = match(x)
-        if not h or h["slug"] in seen:
+        if not h:
             continue
-        seen.add(h["slug"]); order.append(h["slug"])
-    return order
+        slug = h["slug"]
+        st = x["streams"] or 0
+        # Streams-Map (für die Anzeige im Player): ALLE zugeordneten Songs, höchster Wert gewinnt
+        if st > streams_by_slug.get(slug, -1):
+            streams_by_slug[slug] = st
+        # Album-Reihenfolge: nur ab Schwelle, dedupliziert (Liste ist absteigend sortiert)
+        if st >= MIN_STREAMS and slug not in seen:
+            seen.add(slug); order.append(slug)
+    return order, streams_by_slug
+
+
+def write_streams_json(streams):
+    """Schreibt streams.json (Slug -> Streams) für die dezente Anzeige im Player.
+    Wird von der GitHub-Action committet und von index.html geladen."""
+    import datetime
+    if DRY_RUN:
+        print("  [DRY_RUN] streams.json: %d Songs (nicht geschrieben)" % len(streams))
+        return
+    data = {"updated": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z", "streams": streams}
+    with open("streams.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+    print("  streams.json: %d Songs geschrieben" % len(streams))
 
 
 # ---------- Schreiben (mit Restore-Sicherung) ----------
@@ -176,14 +194,16 @@ def main():
     print("Lese SoundCloud-Playlist …")
     sc = get_sc_tracks()
     print("  %d SC-Tracks" % len(sc))
-    order = build_order(sc, songs)
-    print("Zuordenbar: %d Songs (Top: %s)" % (len(order), ", ".join(order[:3])))
+    order, streams_by_slug = build_order(sc, songs)
+    print("Zuordenbar: %d Songs ab %d Streams (Top: %s) | Streams-Map: %d Songs" % (
+        len(order), MIN_STREAMS, ", ".join(order[:3]), len(streams_by_slug)))
     if len(order) < MIN_TRACKS:
         print("ABBRUCH: nur %d Treffer (< %d) – vermutlich SoundCloud-Änderung. Nichts geschrieben." % (len(order), MIN_TRACKS))
         sys.exit(1)
     ensure_playlist_row(len(order))
     write_playlist(HOF_SLUG, order)
     write_playlist(TOP100_SLUG, order[:TOP100_N])
+    write_streams_json(streams_by_slug)
     print("Fertig.")
 
 
