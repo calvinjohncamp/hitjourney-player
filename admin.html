@@ -744,9 +744,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 @keyframes ssPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.28)}50%{box-shadow:0 0 0 4px rgba(111,218,154,.35),0 8px 24px rgba(0,0,0,.38)}}
 
 /* v169: Gefüllte Home-Motive/Diashows lassen sich auch im normalen Zeilenmodus direkt öffnen. */
-.he-cell .he-cell-overlay.always-edit{opacity:1;background:linear-gradient(to bottom,rgba(6,20,32,.10),rgba(6,20,32,.34));pointer-events:none}
-.he-cell .he-cell-overlay.always-edit .he-cell-badge{opacity:.72}
-.he-cell .he-cell-overlay.always-edit .he-cell-acts{opacity:.78;pointer-events:auto}
+/* Kein Abdunkel-Verlauf mehr über den Kacheln → echte Bildfarben im Editor (Pipette greift die tatsächliche Farbe ab). Die Bedien-Buttons haben eigene Hintergründe + Schlagschatten und bleiben lesbar. */
+.he-cell .he-cell-overlay.always-edit{opacity:1;background:transparent;pointer-events:none}
+.he-cell .he-cell-overlay.always-edit .he-cell-badge{opacity:.9;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.he-cell .he-cell-overlay.always-edit .he-cell-acts{opacity:.9;pointer-events:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
 .he-cell:hover .he-cell-overlay.always-edit .he-cell-acts{opacity:1}
 .he-cell:not(.editing-mode){cursor:pointer}
 
