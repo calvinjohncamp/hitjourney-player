@@ -511,6 +511,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-rhctrl-fields{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .he-rhctrl-fields input{width:100%;box-sizing:border-box;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:7px;color:#cfe5f5;font-size:12px;padding:7px 9px;font-family:inherit}
 .he-rhctrl-fields input:focus{outline:none;border-color:rgba(133,172,201,.4)}
+.he-rhcolor{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.he-rhcolor-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(133,172,201,.55)}
+.he-rhcolor-pip{border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.06);color:rgba(207,229,245,.85);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;transition:.15s}
+.he-rhcolor-pip:hover{border-color:rgba(133,172,201,.4);color:#eaf3fb}
+.he-rhcolor-swatch{width:32px;height:26px;padding:0;border:1px solid rgba(133,172,201,.25);border-radius:6px;background:transparent;cursor:pointer}
+.he-rhcolor-reset{border:none;background:transparent;color:rgba(133,172,201,.55);font-size:11px;font-weight:700;padding:5px 4px;cursor:pointer;text-decoration:underline}
+.he-rhcolor-reset:hover{color:#cfe5f5}
 /* WYSIWYG-Überschrift über der Zeile im Editor — 1:1 wie auf der Live-Seite (.home-rowheading) */
 .rhwys{margin:16px 8px 6px}
 .rhwys.multi{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -11833,10 +11840,83 @@ function buildRowHeadingControl(row){
     title.oninput = ()=> setRowHeadingField(row.id, 'title', title.value);
     fields.appendChild(title);
     box.appendChild(fields);
+
+    // ── Farbe: Pipette (aus Kachel-Bild wählen) + Swatch + Zurücksetzen ──
+    box.appendChild(buildRowHeadingColorControl(row, rh));
     // Hinweis: die echte Vorschau erscheint als gerenderte Überschrift ÜBER der Zeile (WYSIWYG).
   }
 
   return box;
+}
+
+/* Farb-Bedienelement für die Zeilen-Überschrift.
+   Pipette nutzt die native EyeDropper-API (Chrome/Edge): damit lässt sich ein
+   Bildpunkt einer der Kacheln (Cover, Lyric-Sheet) direkt am Bildschirm abgreifen.
+   Fallback (Safari/Firefox): der Farbwähler des Swatch-Feldes. */
+function buildRowHeadingColorControl(row, rh){
+  const cur = (rh && rh.color) || '';
+  const wrap = document.createElement('div');
+  wrap.className = 'he-rhcolor';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'he-rhcolor-lbl';
+  lbl.textContent = 'Farbe';
+  wrap.appendChild(lbl);
+
+  // Pipette (nur wenn vom Browser unterstützt)
+  if(window.EyeDropper){
+    const pip = document.createElement('button');
+    pip.type = 'button';
+    pip.className = 'he-rhcolor-pip';
+    pip.innerHTML = '🎨 Pipette';
+    pip.title = 'Aus einem Bildpunkt (Cover, Lyric-Sheet …) wählen';
+    pip.onclick = async ()=>{
+      try{
+        const res = await new EyeDropper().open();
+        if(res && res.sRGBHex) setRowHeadingColor(row.id, res.sRGBHex);
+      }catch(e){ /* Abbruch durch Nutzer → ignorieren */ }
+    };
+    wrap.appendChild(pip);
+  }
+
+  // Swatch / manueller Farbwähler
+  const sw = document.createElement('input');
+  sw.type = 'color';
+  sw.className = 'he-rhcolor-swatch';
+  sw.value = /^#[0-9a-fA-F]{6}$/.test(cur) ? cur : '#85ACC9';
+  sw.title = 'Farbe wählen';
+  sw.oninput = ()=> setRowHeadingColor(row.id, sw.value);
+  wrap.appendChild(sw);
+
+  // Zurücksetzen (Standardfarbe)
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'he-rhcolor-reset';
+  reset.textContent = 'Zurücksetzen';
+  reset.title = 'Standardfarbe wiederherstellen';
+  reset.onclick = ()=> setRowHeadingColor(row.id, '');
+  wrap.appendChild(reset);
+
+  return wrap;
+}
+
+// Farbe ins Modell schreiben ('' = löschen → Standard) und WYSIWYG live aktualisieren.
+function setRowHeadingColor(rowId, color){
+  const row = rowById(rowId); if(!row) return;
+  const rh = row.cells[0].rowHeading; if(!rh) return;
+  markHomeAction();
+  if(color) rh.color = color; else delete rh.color;
+  const rowEl = document.querySelector('.he-row[data-row-id="'+CSS.escape(rowId)+'"]');
+  if(rowEl){
+    const grid = rowEl.querySelector('.he-row-grid');
+    const old = rowEl.querySelector(':scope > .rhwys');
+    if(old) old.remove();
+    const wys = adminBuildRowHeadingEl(rh);
+    if(wys && grid) rowEl.insertBefore(wys, grid);
+    const sw = rowEl.querySelector('.he-rhcolor-swatch');
+    if(sw && /^#[0-9a-fA-F]{6}$/.test(color)) sw.value = color;
+  }
+  updateHomeUndoUi();
 }
 
 // WYSIWYG: gerenderte Zeilen-Überschrift für den Editor — optisch identisch zur Live-Seite.
@@ -11851,13 +11931,15 @@ function rowHeadingAligns(rh){
 function appendRowHeadingSide(wrap, rh, side, title, eyebrow){
   const group = document.createElement('div');
   group.className = 'rh-side ' + side;
+  const col = rh.color || '';   // optionale Wunschfarbe (z. B. aus Kachel-Pipette)
   if(rh.style === 'modern'){
     const dot = document.createElement('span'); dot.className = 'rh-dot';   dot.textContent = '◆';
     const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent   = title.toUpperCase();
+    if(col){ dot.style.color = col; t.style.color = col; }
     group.appendChild(dot); group.appendChild(t);
   } else {
-    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); group.appendChild(e); }
-    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    group.appendChild(t); }
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); if(col) e.style.color = col; group.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    if(col) t.style.color = col; group.appendChild(t); }
   }
   wrap.appendChild(group);
 }
