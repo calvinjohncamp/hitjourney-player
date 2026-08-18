@@ -8604,13 +8604,15 @@ function rowHeadingAligns(rh){
 function appendRowHeadingSide(wrap, rh, side, title, eyebrow){
   const group = document.createElement('div');
   group.className = 'rh-side ' + side;
+  const col = rh.color || '';   // optionale Wunschfarbe (z. B. aus Kachel-Pipette)
   if(rh.style === 'modern'){
     const dot = document.createElement('span'); dot.className = 'rh-dot'; dot.textContent = '◆';
     const t   = document.createElement('span'); t.className   = 'rh-title'; t.textContent = title.toUpperCase();
+    if(col){ dot.style.color = col; t.style.color = col; }
     group.appendChild(dot); group.appendChild(t);
   } else {
-    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); group.appendChild(e); }
-    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    group.appendChild(t); }
+    if(eyebrow){ const e = document.createElement('span'); e.className = 'rh-eyebrow'; e.textContent = eyebrow.toUpperCase(); if(col) e.style.color = col; group.appendChild(e); }
+    if(title){   const t = document.createElement('div');  t.className = 'rh-title';   t.textContent = title;                    if(col) t.style.color = col; group.appendChild(t); }
   }
   wrap.appendChild(group);
 }
