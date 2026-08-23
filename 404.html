@@ -6905,8 +6905,8 @@ function hideNowPlaying(){
   else if(prevScreen==='archive'){ screenArchive.classList.add('active'); }
   else if(prevScreen==='kursNordwest'){ if(screenKnw) screenKnw.style.display='block'; }
   else if(prevScreen==='songwritersFavorites'){ if(screenSwf) screenSwf.style.display='block'; }
-  else if(prevScreen==='languageGerman'){ if(screenLangDe) screenLangDe.classList.add('active'); updateLanguageHighlight(); }
-  else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); updateLanguageHighlight(); }
+  else if(prevScreen==='languageGerman'){ if(screenLangDe) screenLangDe.classList.add('active'); applyLanguageHeader('de'); updateLanguageHighlight(); }
+  else if(prevScreen==='languageEnglish'){ if(screenLangEn) screenLangEn.classList.add('active'); applyLanguageHeader('en'); updateLanguageHighlight(); }
   else if(prevScreen==='landing'){ if(screenLanding) screenLanding.classList.add('active'); }
   else { screenTL.classList.add('active'); updateAlbumTopButton(); }
   updateLandingBackBtn();
@@ -6961,6 +6961,22 @@ function syncLanguagePlayButtons(){
     }
   }
 }
+// Kopfzeile der Sprachseiten (HOME-Link, Titel rechts, Schnell-Umschalter neben HOME).
+// Wird von showLanguage UND von hideNowPlaying (Rückkehr aus Now-Playing) genutzt, damit
+// der Umschalter „English Songs" / „German Songs" nach dem Abspielen NICHT verschwindet.
+function applyLanguageHeader(lang){
+  const isDe = lang === 'de';
+  backBtn.classList.add('visible');
+  logoHome.style.display='none';
+  makingWaves.style.display='none';
+  headerRight.textContent = isDe ? 'German Songs' : 'English Songs';
+  if(langSwitchBtn && langSwitchLabel){
+    langSwitchBtn.dataset.target = isDe ? 'en' : 'de';
+    langSwitchLabel.textContent = isDe ? 'English Songs' : 'German Songs';
+    langSwitchBtn.setAttribute('aria-label', isDe ? 'Zu English Songs wechseln' : 'Zu German Songs wechseln');
+    langSwitchBtn.classList.add('visible');
+  }
+}
 function showLanguage(lang){
   if(tlTopBtn) tlTopBtn.classList.remove('visible');
   if(arcTopBtn) arcTopBtn.classList.remove('visible');
@@ -6975,17 +6991,7 @@ function showLanguage(lang){
   const isDe = lang === 'de';
   const screen = isDe ? screenLangDe : screenLangEn;
   if(screen) screen.classList.add('active');
-  backBtn.classList.add('visible');
-  logoHome.style.display='none';
-  makingWaves.style.display='none';
-  headerRight.textContent = isDe ? 'German Songs' : 'English Songs';
-  // Schnell-Umschalter neben HOME: auf der deutschen Seite zu Englisch, auf der englischen zu Deutsch.
-  if(langSwitchBtn && langSwitchLabel){
-    langSwitchBtn.dataset.target = isDe ? 'en' : 'de';
-    langSwitchLabel.textContent = isDe ? 'English Songs' : 'German Songs';
-    langSwitchBtn.setAttribute('aria-label', isDe ? 'Zu Englische Songs wechseln' : 'Zu Deutsche Songs wechseln');
-    langSwitchBtn.classList.add('visible');
-  }
+  applyLanguageHeader(lang);
   mainHeader.style.display='';
   if(screen) screen.scrollTop = 0;
   prevScreen = isDe ? 'languageGerman' : 'languageEnglish';
