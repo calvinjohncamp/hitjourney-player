@@ -7359,6 +7359,14 @@ function resetImageFrameTransform(){
 
 function openLanguageCoverFrame(){
   if(!screenNP.classList.contains('active')) return;
+  // Cover verbindlich aus der aktuellen Queue-Position setzen (nicht aus
+  // currentPlaybackSong/updateNPScreen, das kurz am noch nicht geladenen audio.currentSrc
+  // hängt und sonst das VORHERIGE Cover zeigt – tritt bei Next/Prev UND beim Wisch-Wechsel
+  // (playRandomLanguageFromImageFrame) auf).
+  const _lcAlbum = ALBUMS[playAlbum];
+  if(_lcAlbum && _lcAlbum.songs && queueIdx >= 0 && queue[queueIdx] != null && _lcAlbum.songs[queue[queueIdx]]){
+    setImgSrcWithFallback(npCoverImg, getImgUrls(_lcAlbum.songs[queue[queueIdx]], 'cover'));
+  }
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
   screenNP.classList.add('lyrics-open');
@@ -7768,11 +7776,8 @@ function loadPlay(songIdx){
   if(screenNP.classList.contains('active')) updateNPScreen();
   if(langFrameWasOpen){
     // Zurück auf die Cover-Ansicht des jetzt aktuellen Songs: ein Tipp öffnet dann
-    // korrekt dessen Lyrics (Phase 1). Cover direkt aus songIdx setzen (verbindlich) –
-    // updateNPScreen/currentPlaybackSong hängt kurz am noch nicht geladenen audio.currentSrc
-    // und würde sonst das VORHERIGE Cover zeigen.
+    // korrekt dessen Lyrics (Phase 1). openLanguageCoverFrame() setzt das Cover verbindlich neu.
     languageCoverClickState = { key: playAlbum, idx: songIdx, phase: 1 };
-    setImgSrcWithFallback(npCoverImg, getImgUrls(s,'cover'));
     openLanguageCoverFrame();
   }
 }
