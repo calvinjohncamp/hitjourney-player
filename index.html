@@ -81,6 +81,11 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .hj-back-btn{display:none;align-items:center;gap:5px;color:#85ACC9;font-size:14px;cursor:pointer;padding:2px 0;z-index:1}
 .hj-back-btn svg{width:18px;height:18px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hj-back-btn.visible{display:flex}
+/* Sprach-Umschalter neben HOME (nur auf Deutsche/Englische-Songs-Unterseiten sichtbar) */
+.hj-lang-switch{display:none;align-items:center;gap:4px;color:#85ACC9;font-size:14px;font-weight:600;cursor:pointer;padding:2px 14px;margin-left:14px;margin-right:auto;z-index:2;white-space:nowrap;border-left:1px solid rgba(133,172,201,.25)}
+.hj-lang-switch.visible{display:flex}
+.hj-lang-switch svg{width:15px;height:15px;stroke:#85ACC9;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hj-lang-switch:active{opacity:.6}
 /* Landing-Rücksprung-Button: mittig in der Kopfzeile (Album = ← BMG, Home = BMG →) */
 .hj-landing-back{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;font-weight:700;white-space:nowrap;z-index:2}
 .hj-landing-back span{text-transform:uppercase;letter-spacing:.08em}
@@ -4242,6 +4247,10 @@ body.album-open #hjPlayerSpacer{
 <svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
 <span>HOME</span>
 </div>
+<div class="hj-lang-switch" id="langSwitchBtn" role="button" tabindex="0">
+<span id="langSwitchLabel"></span>
+<svg viewbox="0 0 24 24"><polyline points="9,6 15,12 9,18"></polyline></svg>
+</div>
 <div class="hj-back-btn hj-landing-back" id="landingBackBtn" onclick="showLanding()" role="button" tabindex="0">
 <svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
 <span id="landingBackLabel">Landingpage</span>
@@ -5780,9 +5789,21 @@ let prevScreen = 'home'; // track where to go back from NP
 let arcQueue=[], arcQueueIdx=-1;
 
 
+const langSwitchBtn = document.getElementById('langSwitchBtn');
+const langSwitchLabel = document.getElementById('langSwitchLabel');
+if(langSwitchBtn){
+  langSwitchBtn.addEventListener('click', ()=>{
+    const target = langSwitchBtn.dataset.target;
+    if(target) showLanguage(target);
+  });
+  langSwitchBtn.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); langSwitchBtn.click(); }
+  });
+}
 function hideLanguageScreens(){
   if(screenLangDe) screenLangDe.classList.remove('active');
   if(screenLangEn) screenLangEn.classList.remove('active');
+  if(langSwitchBtn) langSwitchBtn.classList.remove('visible');
 }
 function isLanguageScreenActive(){
   return (screenLangDe && screenLangDe.classList.contains('active')) || (screenLangEn && screenLangEn.classList.contains('active'));
@@ -6958,6 +6979,13 @@ function showLanguage(lang){
   logoHome.style.display='none';
   makingWaves.style.display='none';
   headerRight.textContent = isDe ? 'German Songs' : 'English Songs';
+  // Schnell-Umschalter neben HOME: auf der deutschen Seite zu Englisch, auf der englischen zu Deutsch.
+  if(langSwitchBtn && langSwitchLabel){
+    langSwitchBtn.dataset.target = isDe ? 'en' : 'de';
+    langSwitchLabel.textContent = isDe ? 'English Songs' : 'German Songs';
+    langSwitchBtn.setAttribute('aria-label', isDe ? 'Zu Englische Songs wechseln' : 'Zu Deutsche Songs wechseln');
+    langSwitchBtn.classList.add('visible');
+  }
   mainHeader.style.display='';
   if(screen) screen.scrollTop = 0;
   prevScreen = isDe ? 'languageGerman' : 'languageEnglish';
@@ -7719,6 +7747,16 @@ function loadPlay(songIdx){
   const album = ALBUMS[playAlbum];
   if(!album || !album.songs || !album.songs[songIdx]) return;
   const s=album.songs[songIdx];
+  // Sprach-Cover-Zyklus (Deutsche/Englische Songs) mit dem neuen Song synchronisieren.
+  // Ohne dies bleibt nach Next/Prev/Auto-Advance der große Rahmen auf dem Cover des
+  // VORHERIGEN Songs stehen (languageCoverClickState blieb stale), und clearHomeLyricsContext()
+  // entfernt fälschlich die 'language-cover-open'-Klasse. Merker VOR closeLyrics() setzen,
+  // da dieses lyricsOpen zurücksetzt.
+  const langFrameWasOpen =
+    (playAlbum === 'languageGerman' || playAlbum === 'languageEnglish') &&
+    languageCoverClickState && languageCoverClickState.key === playAlbum &&
+    screenNP.classList.contains('active') &&
+    (languageCoverFrameOpen || lyricsOpen);
   if(lyricsOpen) closeLyrics();
   setImgSrcWithFallback(nowCover, getImgUrls(s,'cover')); nowTitle.textContent=s.title;
   updateAlbumDeckSong(s, album.meta);
@@ -7728,6 +7766,15 @@ function loadPlay(songIdx){
   if(!screenNP.classList.contains('active')) playerBar.classList.add('visible');
   refreshHighlight(true); updateMS(songIdx);
   if(screenNP.classList.contains('active')) updateNPScreen();
+  if(langFrameWasOpen){
+    // Zurück auf die Cover-Ansicht des jetzt aktuellen Songs: ein Tipp öffnet dann
+    // korrekt dessen Lyrics (Phase 1). Cover direkt aus songIdx setzen (verbindlich) –
+    // updateNPScreen/currentPlaybackSong hängt kurz am noch nicht geladenen audio.currentSrc
+    // und würde sonst das VORHERIGE Cover zeigen.
+    languageCoverClickState = { key: playAlbum, idx: songIdx, phase: 1 };
+    setImgSrcWithFallback(npCoverImg, getImgUrls(s,'cover'));
+    openLanguageCoverFrame();
+  }
 }
 function refreshHighlight(allowScroll){
   const cur=queueIdx>=0?queue[queueIdx]:-1;
