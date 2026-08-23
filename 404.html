@@ -7171,6 +7171,12 @@ function playLanguageSong(lang, idx){
     languageCoverClickState = { key, idx, phase:1 };
     loadPlayNoScroll(idx);
     showNowPlaying();
+    // Cover SOFORT verbindlich auf den eben angeklickten Song setzen – nicht auf den rAF
+    // warten. loadPlayNoScroll/showNowPlaying rufen updateNPScreen, das über
+    // currentPlaybackSong() kurz das VORHERIGE Cover zeigt (audio.currentSrc lädt noch).
+    if(ALBUMS[key] && ALBUMS[key].songs && ALBUMS[key].songs[idx]){
+      setImgSrcWithFallback(npCoverImg, getImgUrls(ALBUMS[key].songs[idx], 'cover'));
+    }
     requestAnimationFrame(()=>{ openLanguageCoverFrame(); });
     updateLanguageHighlight();
     return;
@@ -7359,13 +7365,14 @@ function resetImageFrameTransform(){
 
 function openLanguageCoverFrame(){
   if(!screenNP.classList.contains('active')) return;
-  // Cover verbindlich aus der aktuellen Queue-Position setzen (nicht aus
-  // currentPlaybackSong/updateNPScreen, das kurz am noch nicht geladenen audio.currentSrc
-  // hängt und sonst das VORHERIGE Cover zeigt – tritt bei Next/Prev UND beim Wisch-Wechsel
-  // (playRandomLanguageFromImageFrame) auf).
-  const _lcAlbum = ALBUMS[playAlbum];
-  if(_lcAlbum && _lcAlbum.songs && queueIdx >= 0 && queue[queueIdx] != null && _lcAlbum.songs[queue[queueIdx]]){
-    setImgSrcWithFallback(npCoverImg, getImgUrls(_lcAlbum.songs[queue[queueIdx]], 'cover'));
+  // Cover verbindlich aus dem gemerkten Song (languageCoverClickState) setzen – NICHT aus
+  // queue[queueIdx]/currentPlaybackSong: currentPlaybackSong() verbiegt queueIdx kurzzeitig
+  // zurück auf den vorherigen Song, solange das neue Audio noch lädt (audio.currentSrc hängt
+  // nach). languageCoverClickState.idx wird davon nie verändert und ist der wahre Ziel-Song.
+  const _lcSt = languageCoverClickState;
+  const _lcAlbum = _lcSt && ALBUMS[_lcSt.key];
+  if(_lcAlbum && _lcAlbum.songs && _lcSt.idx >= 0 && _lcAlbum.songs[_lcSt.idx]){
+    setImgSrcWithFallback(npCoverImg, getImgUrls(_lcAlbum.songs[_lcSt.idx], 'cover'));
   }
   npCoverImg.classList.add('lyrics-active');
   npCoverWrap.classList.add('lyrics-mode');
