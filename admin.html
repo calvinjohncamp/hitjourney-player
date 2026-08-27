@@ -442,7 +442,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-row-bar-btn.overlays,.he-cell-act.ovl{background:rgba(88,150,220,.12)!important;color:#5DAEFF!important;font-size:10px;letter-spacing:.04em;padding:0 8px}
 .he-row-bar-btn.overlays:hover,.he-cell-act.ovl:hover{background:rgba(88,150,220,.22)!important}
 .he-cell-home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:5;user-select:none;-webkit-user-drag:none}
-.he-cell img.he-cell-home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important}
+.he-cell img.he-cell-home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important;max-width:none!important}
 @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .confirm-title{font-size:15px;font-weight:700;color:#cfe5f5;margin-bottom:8px}
 .confirm-msg{font-size:13px;color:rgba(133,172,201,.6);line-height:1.5;margin-bottom:18px}
@@ -922,7 +922,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* ══ OVERLAY GRAPHICS EDITOR ══ */
 #overlayEditorOverlay{display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:20px}
 #overlayEditorOverlay.open{display:flex}
-#overlayEditorModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px 16px 12px 12px;width:100%;max-width:580px;padding:20px;animation:fadeIn .2s ease;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+#overlayEditorModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px 16px 12px 12px;width:min(96vw,1120px);max-width:none;padding:20px;animation:fadeIn .2s ease;max-height:94vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
 .oe-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
 .oe-toolbar-title{font-size:15px;font-weight:700;color:#cfe5f5}
 .oe-toolbar-btns{display:flex;gap:6px}
@@ -939,7 +939,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-upload-icon{font-size:24px}
 .oe-upload-text{font-size:12px;font-weight:600;color:#85ACC9;text-align:center}
 .oe-upload-hint{font-size:10px;color:rgba(133,172,201,.45)}
-.oe-canvas-container{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:#0a1520;position:relative;aspect-ratio:auto;min-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;user-select:none;flex:1}
+.oe-canvas-container{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:#0a1520;position:relative;aspect-ratio:auto;min-height:clamp(420px,65vh,760px);display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;user-select:none;flex:1}
 .oe-canvas-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.85) brightness(.72)}
 .oe-stage{position:absolute;inset:0;width:100%;height:100%}
 .oe-overlay-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:move;touch-action:none;user-select:none;border:2px solid #85ACC9;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3);background:transparent;background-size:contain;background-repeat:no-repeat;background-position:center;transition:box-shadow .15s;transform-origin:center center}
@@ -948,7 +948,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-resize-handle{position:absolute;width:14px;height:14px;background:#85ACC9;border:1px solid #0a1520;border-radius:50%;cursor:nwse-resize;opacity:0;transition:opacity .15s}
 .oe-overlay-item:hover .oe-resize-handle,.oe-overlay-item.selected .oe-resize-handle{opacity:1}
 .oe-resize-handle.br{bottom:-7px;right:-7px;cursor:nwse-resize}
-.oe-rotate-handle{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:#0B2A42;border:2px solid #85ACC9;border-radius:50%;cursor:grab;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:12px;color:#85ACC9}
+.oe-rotate-handle{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%) rotate(calc(-1 * var(--oe-rot, 0deg)));width:22px;height:22px;background:#0B2A42;border:2px solid #85ACC9;border-radius:50%;cursor:grab;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:12px;color:#85ACC9}
 .oe-overlay-item:hover .oe-rotate-handle,.oe-overlay-item.selected .oe-rotate-handle{opacity:1}
 .oe-rotate-handle:active{cursor:grabbing}
 .oe-selected-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:rgba(133,172,201,.05);border-radius:8px;border:1px solid rgba(133,172,201,.12);flex-shrink:0}
@@ -1047,7 +1047,7 @@ function renderOverlayEditor(){
   overlayEditorState.overlays.sort((a,b)=>(a.zIndex||1)-(b.zIndex||1)).forEach((overlay,idx)=>{
     const isSelected=overlay.id===overlayEditorState.selectedId;const el=document.createElement('div');
     el.className=`oe-overlay-item${isSelected?' selected':''}`;el.id=`oe-overlay-${overlay.id}`;el.dataset.id=overlay.id;
-    el.style.left=`${overlay.x}%`;el.style.top=`${overlay.y}%`;el.style.width=`${overlay.width}%`;el.style.height=`${overlay.height}%`;el.style.transform=`rotate(${overlay.rotation||0}deg)`;el.style.zIndex=overlay.zIndex||1;el.style.backgroundImage=`url('${overlay.url}')`;
+    el.style.left=`${overlay.x}%`;el.style.top=`${overlay.y}%`;el.style.width=`${overlay.width}%`;el.style.height=`${overlay.height}%`;el.style.transform=`rotate(${overlay.rotation||0}deg)`;el.style.zIndex=overlay.zIndex||1;el.style.backgroundImage=`url('${overlay.url}')`;el.style.setProperty('--oe-rot',(overlay.rotation||0)+'deg');
     el.innerHTML=`<div class="oe-resize-handle br" data-handle="br"></div><div class="oe-rotate-handle" data-handle="rotate">↻</div>`;
     el.addEventListener('pointerdown',handleOverlayPointerDown);stage.appendChild(el);
     const listItem=document.createElement('div');listItem.className=`oe-list-item${isSelected?' active':''}`;listItem.onclick=()=>selectOverlay(overlay.id);listItem.innerHTML=`<img src="${overlay.url}" alt="Overlay" class="oe-list-thumb"><div class="oe-list-info">${overlay.altText||`Overlay ${idx+1}`}</div><div class="oe-list-actions"><button class="oe-list-btn" onclick="event.stopPropagation();selectOverlay('${overlay.id}');overlayMoveLayer(-1)">↓</button><button class="oe-list-btn" onclick="event.stopPropagation();selectOverlay('${overlay.id}');overlayMoveLayer(+1)">↑</button></div>`;list.appendChild(listItem)
@@ -1065,9 +1065,28 @@ function handleDragEnd(){document.removeEventListener('pointermove',handleDragMo
 function handleResizeStart(e,id,handle){overlayEditorState.resizeHandle=handle;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('pointermove',handleResizeMove);document.addEventListener('pointerup',handleResizeEnd)}
 function handleResizeMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const dx=(e.clientX-ds.x)/ds.containerW*100;const dy=(e.clientY-ds.y)/ds.containerH*100;overlay.width=Math.max(3,Math.min(100-overlay.x,overlay.width+dx));overlay.height=Math.max(3,Math.min(100-overlay.y,overlay.height+dy));overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
 function handleResizeEnd(){document.removeEventListener('pointermove',handleResizeMove);document.removeEventListener('pointerup',handleResizeEnd);overlayEditorState.resizeHandle=null}
-function handleRotateStart(e,id){const el=document.getElementById('oe-overlay-'+id);const r=el?el.getBoundingClientRect():overlayEditorState.canvasRect;overlayEditorState.rotateStart={x:e.clientX,y:e.clientY,centerX:r.left+r.width/2,centerY:r.top+r.height/2};document.addEventListener('pointermove',handleRotateMove);document.addEventListener('pointerup',handleRotateEnd)}
-function handleRotateMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay||!overlayEditorState.rotateStart)return;const rs=overlayEditorState.rotateStart;overlay.rotation=Math.atan2(e.clientY-rs.centerY,e.clientX-rs.centerX)*180/Math.PI+90;renderOverlayEditor()}
-function handleRotateEnd(){document.removeEventListener('pointermove',handleRotateMove);document.removeEventListener('pointerup',handleRotateEnd);overlayEditorState.rotateStart=null}
+function overlayPointerAngle(e,cx,cy){return Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI}
+function paintOverlayTransform(overlay){
+  const el=document.getElementById('oe-overlay-'+overlay.id);
+  if(el){ el.style.transform='rotate('+(overlay.rotation||0)+'deg)'; el.style.setProperty('--oe-rot',(overlay.rotation||0)+'deg'); }
+  updateOverlayProps();
+}
+function handleRotateStart(e,id){
+  const overlay=overlayEditorState.overlays.find(o=>o.id===id); if(!overlay)return;
+  const r=overlayEditorState.canvasRect;
+  const cx=r.left+((overlay.x+(overlay.width/2))/100)*r.width;
+  const cy=r.top+((overlay.y+(overlay.height/2))/100)*r.height;
+  overlayEditorState.rotateStart={centerX:cx,centerY:cy,startAngle:overlayPointerAngle(e,cx,cy),startRotation:Number(overlay.rotation)||0};
+  document.addEventListener('pointermove',handleRotateMove);document.addEventListener('pointerup',handleRotateEnd);
+}
+function handleRotateMove(e){
+  const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay||!overlayEditorState.rotateStart)return;
+  const rs=overlayEditorState.rotateStart;
+  const delta=overlayPointerAngle(e,rs.centerX,rs.centerY)-rs.startAngle;
+  overlay.rotation=rs.startRotation+delta;
+  paintOverlayTransform(overlay);
+}
+function handleRotateEnd(){document.removeEventListener('pointermove',handleRotateMove);document.removeEventListener('pointerup',handleRotateEnd);overlayEditorState.rotateStart=null;renderOverlayEditor()}
 async function handleOverlayFileSelect(event){const file=event.target.files[0];if(!file)return;if(!file.type.startsWith('image/png')){alert('Bitte eine PNG-Datei auswählen');return}if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return}uploadOverlayImage(file);event.target.value=''}
 async function uploadOverlayImage(file){try{const rowId=overlayEditorState.rowId;const timestamp=Date.now();const safe=(file.name||'overlay.png').replace(/[^a-zA-Z0-9._-]/g,'-');const s3Key=`artwork/overlays/row-${rowId}-${timestamp}-${safe}`;const url=await uploadToS3(file,s3Key);addNewOverlay(url)}catch(err){console.error('Overlay Upload Fehler:',err);alert('Upload fehlgeschlagen: '+err.message)}}
 function addNewOverlay(url){const id='overlay-'+Date.now();overlayEditorState.overlays.push({id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:overlayEditorState.overlays.length+1,altText:''});selectOverlay(id)}
@@ -1078,7 +1097,7 @@ function handleCanvasDragOver(e){e.preventDefault();document.getElementById('ove
 function handleCanvasDrop(e){e.preventDefault();document.getElementById('overlayUploadZone')?.classList.remove('dragover');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f) uploadOverlayImage(f)}
 function appendAdminCellOverlays(el, cell){
   const overlays=(cell&&Array.isArray(cell.overlays))?cell.overlays:[]; if(!el||!overlays.length)return;
-  overlays.filter(o=>o&&(o.url||o.src||o.imageUrl)).sort((a,b)=>(Number(a.zIndex)||1)-(Number(b.zIndex)||1)).forEach(o=>{const img=document.createElement('img');img.className='he-cell-home-overlay';img.src=o.url||o.src||o.imageUrl;img.alt='';img.style.left=(Number(o.x)||0)+'%';img.style.top=(Number(o.y)||0)+'%';img.style.width=(Number(o.width)||30)+'%';img.style.height=(Number(o.height)||30)+'%';img.style.transform='rotate('+(Number(o.rotation)||0)+'deg)';img.style.zIndex=String(5+(Number(o.zIndex)||1));el.appendChild(img);});
+  overlays.filter(o=>o&&(o.url||o.src||o.imageUrl)).sort((a,b)=>(Number(a.zIndex)||1)-(Number(b.zIndex)||1)).forEach(o=>{const img=document.createElement('img');img.className='he-cell-home-overlay';img.src=o.url||o.src||o.imageUrl;img.alt='';img.style.left=(Number(o.x)||0)+'%';img.style.top=(Number(o.y)||0)+'%';img.style.width=(Number(o.width)||30)+'%';img.style.height=(Number(o.height)||30)+'%';img.style.setProperty('transform','rotate('+(Number(o.rotation)||0)+'deg)','important');img.style.zIndex=String(5+(Number(o.zIndex)||1));img.style.setProperty('position','absolute','important');img.style.setProperty('object-fit','contain','important');img.style.setProperty('aspect-ratio','auto','important');img.style.setProperty('max-width','none','important');el.appendChild(img);});
 }
 function initOverlayButtons(){const rows=document.querySelectorAll('.he-row-bar');rows.forEach(bar=>{if(bar.querySelector('.overlays'))return;const rowEl=bar.closest('.he-row');if(!rowEl)return;const rowId=rowEl.dataset.rowId;const btn=document.createElement('button');btn.className='he-row-bar-btn overlays';btn.title='Overlays für das erste Motiv dieser Zeile bearbeiten';btn.textContent='Overlays';btn.onclick=()=>openOverlayEditor(rowId);const editBtn=bar.querySelector('.edit-row');if(editBtn){editBtn.parentNode.insertBefore(btn,editBtn)}else{bar.appendChild(btn)}})}
 function tryInitOverlayButtons(){const bars=document.querySelectorAll('.he-row-bar');if(bars.length>0){initOverlayButtons();return true}return false}
@@ -11815,6 +11834,7 @@ function renderHomeEditor(){
   bar.className = 'he-add-bar bottom';
   bar.innerHTML = '<button class="he-add-btn" onclick="addRow()">＋ Neue Zeile unten hinzufügen</button>';
   wrap.appendChild(bar);
+  if(typeof initOverlayButtons === 'function') initOverlayButtons();
   updateHomeUndoUi();
   // Geteilte Mutatoren (applyType, Zell-/Diashow-Speichern …) rufen renderHomeEditor.
   // Falls gerade freie Landing-Zeilen oder Unterseiten-Home-Zeilen sichtbar sind, mit auffrischen.
