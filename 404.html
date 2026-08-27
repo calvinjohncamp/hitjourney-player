@@ -261,7 +261,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* ── 3× 1:1 Quadrate nebeneinander (1x1-third) ── */
 .home-row3sq{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:stretch; }
 .home-row3sq .home-card img{ aspect-ratio:1/1; }
-.home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:3;user-select:none;-webkit-user-drag:none}
+.home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:3;user-select:none;-webkit-user-drag:none;background-repeat:no-repeat;background-position:center;background-size:contain}
 .home-card img.home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important;max-width:none!important}
 /* ── Überschrift-Zeile (Text 1–3 Zeilen) ── */
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
@@ -9376,6 +9376,19 @@ const HJChain = (function(){
 try{ window.HJChain = HJChain; }catch(e){}
 
 
+function overlayHexColor(value){return /^#[0-9a-fA-F]{6}$/.test(value||'') ? value : ''}
+function overlayIsTinted(ov){return !!(ov && ov.tintEnabled && overlayHexColor(ov.tintColor))}
+function overlayEscUrl(url){return String(url||'').replace(/\"/g,'%22').replace(/'/g,'%27')}
+function applyHomeOverlayTintStyle(el, ov){
+  const url = ov.url || ov.src || ov.imageUrl || '';
+  el.style.backgroundColor = overlayHexColor(ov.tintColor);
+  const mask = 'url("' + overlayEscUrl(url) + '")';
+  el.style.webkitMaskImage = mask;
+  el.style.maskImage = mask;
+  el.style.webkitMaskRepeat = el.style.maskRepeat = 'no-repeat';
+  el.style.webkitMaskPosition = el.style.maskPosition = 'center';
+  el.style.webkitMaskSize = el.style.maskSize = 'contain';
+}
 function appendHomeOverlaysToCard(card, cell){
   const overlays = (cell && Array.isArray(cell.overlays)) ? cell.overlays : [];
   if(!card || !overlays.length) return;
@@ -9383,22 +9396,27 @@ function appendHomeOverlaysToCard(card, cell){
     .filter(ov => ov && (ov.url || ov.src || ov.imageUrl))
     .sort((a,b)=>(Number(a.zIndex)||1)-(Number(b.zIndex)||1))
     .forEach(ov => {
-      const img = document.createElement('img');
-      img.className = 'home-overlay';
-      img.src = ov.url || ov.src || ov.imageUrl;
-      img.alt = ov.altText || '';
-      img.loading = 'lazy';
-      img.style.left = (Number.isFinite(Number(ov.x)) ? Number(ov.x) : 0) + '%';
-      img.style.top = (Number.isFinite(Number(ov.y)) ? Number(ov.y) : 0) + '%';
-      img.style.width = Math.max(1, Number(ov.width) || 30) + '%';
-      img.style.height = Math.max(1, Number(ov.height) || 30) + '%';
-      img.style.setProperty('transform', 'rotate(' + (Number(ov.rotation) || 0) + 'deg)', 'important');
-      img.style.setProperty('position', 'absolute', 'important');
-      img.style.setProperty('object-fit', 'contain', 'important');
-      img.style.setProperty('aspect-ratio', 'auto', 'important');
-      img.style.setProperty('max-width', 'none', 'important');
-      img.style.zIndex = String(3 + (Number(ov.zIndex) || 1));
-      card.appendChild(img);
+      const tinted = overlayIsTinted(ov);
+      const item = document.createElement(tinted ? 'div' : 'img');
+      item.className = 'home-overlay';
+      if(tinted){
+        applyHomeOverlayTintStyle(item, ov);
+      }else{
+        item.src = ov.url || ov.src || ov.imageUrl;
+        item.alt = ov.altText || '';
+        item.loading = 'lazy';
+      }
+      item.style.left = (Number.isFinite(Number(ov.x)) ? Number(ov.x) : 0) + '%';
+      item.style.top = (Number.isFinite(Number(ov.y)) ? Number(ov.y) : 0) + '%';
+      item.style.width = Math.max(1, Number(ov.width) || 30) + '%';
+      item.style.height = Math.max(1, Number(ov.height) || 30) + '%';
+      item.style.setProperty('transform', 'rotate(' + (Number(ov.rotation) || 0) + 'deg)', 'important');
+      item.style.setProperty('position', 'absolute', 'important');
+      item.style.setProperty('object-fit', 'contain', 'important');
+      item.style.setProperty('aspect-ratio', 'auto', 'important');
+      item.style.setProperty('max-width', 'none', 'important');
+      item.style.zIndex = String(3 + (Number(ov.zIndex) || 1));
+      card.appendChild(item);
     });
 }
 
