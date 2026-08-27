@@ -8702,7 +8702,7 @@ function renderHomeLayout(){
 
   // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
   const rows = (window._homeLayoutRows || []).filter(r =>
-    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages')));
+    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary')));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){

@@ -939,6 +939,19 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-upload-icon{font-size:24px}
 .oe-upload-text{font-size:12px;font-weight:600;color:#85ACC9;text-align:center}
 .oe-upload-hint{font-size:10px;color:rgba(133,172,201,.45)}
+
+.oe-library-section{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:rgba(133,172,201,.04);padding:12px;flex-shrink:0}
+.oe-library-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.oe-library-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(133,172,201,.55)}
+.oe-library-count{font-size:10px;color:rgba(133,172,201,.35)}
+.oe-library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;max-height:190px;overflow-y:auto;padding-right:2px}
+.oe-library-empty{font-size:11px;color:rgba(133,172,201,.38);line-height:1.45;padding:10px;border-radius:8px;background:rgba(6,20,32,.35)}
+.oe-lib-tile{position:relative;min-height:82px;border:1px solid rgba(133,172,201,.14);border-radius:8px;background:rgba(6,20,32,.55);cursor:pointer;padding:7px 7px 20px;display:flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s}
+.oe-lib-tile:hover{border-color:rgba(133,172,201,.42);background:rgba(6,20,32,.86)}
+.oe-lib-tile img{max-width:100%;max-height:54px;object-fit:contain;display:block;filter:drop-shadow(0 2px 7px rgba(0,0,0,.35))}
+.oe-lib-name{position:absolute;left:6px;right:18px;bottom:5px;font-size:9px;color:rgba(207,229,245,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.oe-lib-del{position:absolute;right:4px;top:4px;width:18px;height:18px;border:0;border-radius:50%;background:rgba(220,80,80,.18);color:#f08080;font-size:12px;line-height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.oe-lib-tile:hover .oe-lib-del{opacity:1}
 .oe-canvas-container{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:#0a1520;position:relative;aspect-ratio:auto;min-height:clamp(420px,65vh,760px);display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;user-select:none;flex:1}
 .oe-canvas-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.85) brightness(.72)}
 .oe-stage{position:absolute;inset:0;width:100%;height:100%}
@@ -989,6 +1002,83 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 <script>
 /* ════ OVERLAY GRAPHICS EDITOR ════ */
 let overlayEditorState = {rowId:null,cellIdx:0,overlays:[],selectedId:null,draggedId:null,dragStart:{x:0,y:0},resizeHandle:null,rotateStart:null,canvasRect:null};
+let overlayLibraryState = {loaded:false,rowId:null,items:[]};
+function overlayLibraryNameFromUrl(url){
+  const raw=String(url||'').split('/').pop().split('?')[0]||'Overlay';
+  let name=raw;
+  try{name=decodeURIComponent(raw)}catch(_){name=raw.replace(/%20/g,' ')}
+  name=name.replace(/^row-[^-]+-\d+-/,'').replace(/\.(png)$/i,'').replace(/[-_]+/g,' ').trim();
+  return name || 'Overlay';
+}
+function normalizeOverlayLibraryItem(item){
+  item=item||{};
+  const url=item.url||item.src||item.imageUrl||'';
+  return {id:item.id||('lib-'+Date.now()+Math.random().toString(36).slice(2,6)),url,title:item.title||overlayLibraryNameFromUrl(url),createdAt:item.createdAt||new Date().toISOString()};
+}
+async function loadOverlayLibrary(force){
+  if(overlayLibraryState.loaded && !force) return overlayLibraryState.items;
+  try{
+    const r=await fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-4&limit=1'),{headers:hdrs()});
+    if(r.ok){
+      const rows=await r.json(); const row=rows&&rows[0];
+      overlayLibraryState.rowId=row&&row.id||null;
+      const cell=row&&row.cells&&row.cells[0];
+      overlayLibraryState.items=Array.isArray(cell&&cell.items)?cell.items.map(normalizeOverlayLibraryItem).filter(x=>x.url):[];
+    }else overlayLibraryState.items=[];
+  }catch(_){ overlayLibraryState.items=[]; }
+  overlayLibraryState.loaded=true;
+  renderOverlayLibrary();
+  return overlayLibraryState.items;
+}
+async function saveOverlayLibrary(){
+  const body={row_order:-4,caption:'__overlay_library__',cells:[{type:'overlayLibrary',items:overlayLibraryState.items}]};
+  let ok=false;
+  if(overlayLibraryState.rowId){
+    const patch=await fetch(SB_URL+'/rest/v1/home_layout?id=eq.'+encodeURIComponent(overlayLibraryState.rowId)+'&apikey='+SB_KEY,{method:'PATCH',headers:hdrsMin(),body:JSON.stringify(body)});
+    ok=patch.ok;
+  }
+  if(!ok){
+    const existing=await fetch(sbUrl('/rest/v1/home_layout?select=id&row_order=eq.-4'),{headers:hdrs()});
+    if(existing.ok){
+      const rows=await existing.json();
+      if(rows&&rows[0]&&rows[0].id){ overlayLibraryState.rowId=rows[0].id; return saveOverlayLibrary(); }
+    }
+    const post=await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{method:'POST',headers:hdrs(),body:JSON.stringify(body)});
+    if(!post.ok) throw new Error('Bibliothek konnte nicht gespeichert werden: HTTP '+post.status);
+    const saved=await post.json(); overlayLibraryState.rowId=saved&&saved[0]&&saved[0].id||overlayLibraryState.rowId;
+  }
+  renderOverlayLibrary();
+}
+function renderOverlayLibrary(){
+  const grid=document.getElementById('overlayLibraryGrid'); if(!grid)return;
+  const count=document.getElementById('overlayLibraryCount'); if(count) count.textContent=(overlayLibraryState.items.length||0)+' Vorlage'+(overlayLibraryState.items.length===1?'':'n');
+  if(!overlayLibraryState.items.length){ grid.innerHTML='<div class="oe-library-empty">Noch keine PNG-Vorlagen. Ein Upload wird automatisch hier abgelegt.</div>'; return; }
+  grid.innerHTML='';
+  overlayLibraryState.items.forEach(item=>{
+    const tile=document.createElement('button'); tile.type='button'; tile.className='oe-lib-tile'; tile.title='Vorlage verwenden: '+item.title;
+    tile.onclick=()=>overlayLibraryUse(item.id);
+    tile.innerHTML='<img src="'+item.url.replace(/"/g,'&quot;')+'" alt=""><span class="oe-lib-name">'+item.title.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</span><span class="oe-lib-del" title="Aus Bibliothek entfernen">×</span>';
+    tile.querySelector('.oe-lib-del').onclick=(e)=>{e.stopPropagation();overlayLibraryRemove(item.id)};
+    grid.appendChild(tile);
+  });
+}
+function overlayLibraryUse(id){
+  const item=overlayLibraryState.items.find(x=>x.id===id); if(!item)return;
+  addNewOverlay(item.url,item.title);
+  toast('Vorlage eingesetzt ✓','ok');
+}
+async function overlayLibraryRemove(id){
+  overlayLibraryState.items=overlayLibraryState.items.filter(x=>x.id!==id);
+  try{ await saveOverlayLibrary(); toast('Vorlage entfernt','ok'); }catch(e){ toast(e.message,'err',5000); }
+}
+async function overlayLibraryRemember(url,title){
+  if(!url)return;
+  await loadOverlayLibrary();
+  if(!overlayLibraryState.items.some(x=>x.url===url)){
+    overlayLibraryState.items.unshift(normalizeOverlayLibraryItem({url,title}));
+    try{ await saveOverlayLibrary(); }catch(e){ console.warn('Overlay-Bibliothek konnte nicht gespeichert werden',e); }
+  }
+}
 function overlayRowAndCell(rowId, cellIdx){
   const row=rowById(rowId); if(!row) return {row:null,cell:null,cellIdx:0};
   let idx = Number.isInteger(cellIdx) ? cellIdx : -1;
@@ -1027,6 +1117,7 @@ function openOverlayEditor(rowId, cellIdx){
   const cont=document.getElementById('overlayCanvasContainer');
   if(cont) cont.style.aspectRatio=overlayAspectForCell(rc.cell);
   renderOverlayEditor();
+  loadOverlayLibrary();
   document.getElementById('overlayEditorOverlay').classList.add('open');
 }
 function closeOverlayEditor(){document.getElementById('overlayEditorOverlay').classList.remove('open');overlayEditorState.selectedId=null;overlayEditorState.draggedId=null}
@@ -1088,8 +1179,8 @@ function handleRotateMove(e){
 }
 function handleRotateEnd(){document.removeEventListener('pointermove',handleRotateMove);document.removeEventListener('pointerup',handleRotateEnd);overlayEditorState.rotateStart=null;renderOverlayEditor()}
 async function handleOverlayFileSelect(event){const file=event.target.files[0];if(!file)return;if(!file.type.startsWith('image/png')){alert('Bitte eine PNG-Datei auswählen');return}if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return}uploadOverlayImage(file);event.target.value=''}
-async function uploadOverlayImage(file){try{const rowId=overlayEditorState.rowId;const timestamp=Date.now();const safe=(file.name||'overlay.png').replace(/[^a-zA-Z0-9._-]/g,'-');const s3Key=`artwork/overlays/row-${rowId}-${timestamp}-${safe}`;const url=await uploadToS3(file,s3Key);addNewOverlay(url)}catch(err){console.error('Overlay Upload Fehler:',err);alert('Upload fehlgeschlagen: '+err.message)}}
-function addNewOverlay(url){const id='overlay-'+Date.now();overlayEditorState.overlays.push({id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:overlayEditorState.overlays.length+1,altText:''});selectOverlay(id)}
+async function uploadOverlayImage(file){try{const rowId=overlayEditorState.rowId;const timestamp=Date.now();const safe=(file.name||'overlay.png').replace(/[^a-zA-Z0-9._-]/g,'-');const s3Key=`artwork/overlays/row-${rowId}-${timestamp}-${safe}`;const url=await uploadToS3(file,s3Key);const title=(file.name||'Overlay').replace(/\.png$/i,'');await overlayLibraryRemember(url,title);addNewOverlay(url,title)}catch(err){console.error('Overlay Upload Fehler:',err);alert('Upload fehlgeschlagen: '+err.message)}}
+function addNewOverlay(url,title){const id='overlay-'+Date.now();overlayEditorState.overlays.push({id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:overlayEditorState.overlays.length+1,altText:title||''});selectOverlay(id)}
 function overlayMoveLayer(direction){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;overlay.zIndex=Math.max(1,(overlay.zIndex||1)+direction);renderOverlayEditor()}
 function overlayDuplicateSelected(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const copy={...overlay,id:'overlay-'+Date.now(),x:Math.min(90,overlay.x+5),y:Math.min(90,overlay.y+5),zIndex:(overlay.zIndex||1)+1};overlayEditorState.overlays.push(copy);selectOverlay(copy.id)}
 function overlayDeleteSelected(){if(!overlayEditorState.selectedId)return;overlayEditorState.overlays=overlayEditorState.overlays.filter(o=>o.id!==overlayEditorState.selectedId);overlayEditorState.selectedId=null;renderOverlayEditor()}
@@ -1105,7 +1196,7 @@ document.addEventListener('DOMContentLoaded',()=>{if(!tryInitOverlayButtons()){s
 window.addEventListener('load',()=>setTimeout(tryInitOverlayButtons,200));
 </script>
 
-<div id="overlayEditorOverlay"><div id="overlayEditorModal"><div class="oe-toolbar"><div class="oe-toolbar-title">⭕ Overlay-Grafiken</div><div class="oe-toolbar-btns"><button class="oe-btn cancel" onclick="closeOverlayEditor()">✕ Schließen</button><button class="oe-btn done" onclick="saveOverlayEditor()">✓ Speichern</button></div></div><div class="oe-upload-section"><label class="oe-upload-label">📤 PNG hochladen (transparent)</label><div class="oe-upload-zone" id="overlayUploadZone"><div class="oe-upload-icon">🖼️</div><div class="oe-upload-text">PNG ziehen oder klicken</div><div class="oe-upload-hint">Max 5 MB, transparent</div><input type="file" id="overlayFileInput" accept=".png,image/png" onchange="handleOverlayFileSelect(event)"></div></div><div class="oe-canvas-container" id="overlayCanvasContainer"><img id="overlayCanvasBg" class="oe-canvas-bg" alt="Zeilen-Motiv"><div class="oe-stage" id="overlayStage" ondragover="handleCanvasDragOver(event)" ondrop="handleCanvasDrop(event)"></div></div><div class="oe-selected-toolbar" id="overlaySelectedToolbar" style="display:none"><button class="oe-mini-btn" onclick="overlayMoveLayer(-1)" title="Eine Ebene zurück">⬆ Nach hinten</button><button class="oe-mini-btn" onclick="overlayMoveLayer(+1)" title="Eine Ebene nach vorne">⬇ Nach vorne</button><button class="oe-mini-btn" onclick="overlayDuplicateSelected()" title="Duplizieren">📋 Kopieren</button><button class="oe-mini-btn danger" onclick="overlayDeleteSelected()" title="Löschen">🗑 Löschen</button></div><div class="oe-list-section"><label class="oe-list-label">Ebenen</label><div id="overlaysList"></div></div><div class="oe-props-section" id="overlayPropsSection" style="display:none"><label class="oe-props-label">⚙ Eigenschaften</label><div class="oe-props-grid"><div class="oe-prop-field"><label class="oe-prop-label">Position X (%)</label><input type="number" class="oe-prop-input" id="propX" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Position Y (%)</label><input type="number" class="oe-prop-input" id="propY" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Breite (%)</label><input type="number" class="oe-prop-input" id="propW" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Höhe (%)</label><input type="number" class="oe-prop-input" id="propH" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Rotation (°)</label><input type="number" class="oe-prop-input" id="propRot" min="0" max="360" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Z-Index</label><input type="number" class="oe-prop-input" id="propZ" min="0" step="1" onchange="updatePropFromInput()"></div></div></div><div class="oe-actions"><button class="oe-action-btn cancel" onclick="closeOverlayEditor()">Abbrechen</button><button class="oe-action-btn save" onclick="saveOverlayEditor()">✓ Speichern & Schließen</button></div></div></div>
+<div id="overlayEditorOverlay"><div id="overlayEditorModal"><div class="oe-toolbar"><div class="oe-toolbar-title">⭕ Overlay-Grafiken</div><div class="oe-toolbar-btns"><button class="oe-btn cancel" onclick="closeOverlayEditor()">✕ Schließen</button><button class="oe-btn done" onclick="saveOverlayEditor()">✓ Speichern</button></div></div><div class="oe-upload-section"><label class="oe-upload-label">📤 PNG hochladen (transparent)</label><div class="oe-upload-zone" id="overlayUploadZone"><div class="oe-upload-icon">🖼️</div><div class="oe-upload-text">PNG ziehen oder klicken</div><div class="oe-upload-hint">Max 5 MB, transparent</div><input type="file" id="overlayFileInput" accept=".png,image/png" onchange="handleOverlayFileSelect(event)"></div></div><div class="oe-library-section"><div class="oe-library-head"><span class="oe-library-label">PNG-Vorlagen</span><span class="oe-library-count" id="overlayLibraryCount">0 Vorlagen</span></div><div class="oe-library-grid" id="overlayLibraryGrid"><div class="oe-library-empty">Lädt Vorlagen …</div></div></div><div class="oe-canvas-container" id="overlayCanvasContainer"><img id="overlayCanvasBg" class="oe-canvas-bg" alt="Zeilen-Motiv"><div class="oe-stage" id="overlayStage" ondragover="handleCanvasDragOver(event)" ondrop="handleCanvasDrop(event)"></div></div><div class="oe-selected-toolbar" id="overlaySelectedToolbar" style="display:none"><button class="oe-mini-btn" onclick="overlayMoveLayer(-1)" title="Eine Ebene zurück">⬆ Nach hinten</button><button class="oe-mini-btn" onclick="overlayMoveLayer(+1)" title="Eine Ebene nach vorne">⬇ Nach vorne</button><button class="oe-mini-btn" onclick="overlayDuplicateSelected()" title="Duplizieren">📋 Kopieren</button><button class="oe-mini-btn danger" onclick="overlayDeleteSelected()" title="Löschen">🗑 Löschen</button></div><div class="oe-list-section"><label class="oe-list-label">Ebenen</label><div id="overlaysList"></div></div><div class="oe-props-section" id="overlayPropsSection" style="display:none"><label class="oe-props-label">⚙ Eigenschaften</label><div class="oe-props-grid"><div class="oe-prop-field"><label class="oe-prop-label">Position X (%)</label><input type="number" class="oe-prop-input" id="propX" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Position Y (%)</label><input type="number" class="oe-prop-input" id="propY" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Breite (%)</label><input type="number" class="oe-prop-input" id="propW" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Höhe (%)</label><input type="number" class="oe-prop-input" id="propH" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Rotation (°)</label><input type="number" class="oe-prop-input" id="propRot" min="0" max="360" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Z-Index</label><input type="number" class="oe-prop-input" id="propZ" min="0" step="1" onchange="updatePropFromInput()"></div></div></div><div class="oe-actions"><button class="oe-action-btn cancel" onclick="closeOverlayEditor()">Abbrechen</button><button class="oe-action-btn save" onclick="saveOverlayEditor()">✓ Speichern & Schließen</button></div></div></div>
 
 <!-- Header -->
 <div class="hj-header">
@@ -10622,7 +10713,7 @@ async function loadHomeLayout(){
     // Home-Editor. Ohne diesen Filter würde die Landing-Zeile als leere Home-Zeile
     // geladen und beim nächsten Home-Speichern überschrieben → Landingpages verloren.
     const rows = (await r.json()).filter(row =>
-      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages')));
+      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages' || row.cells[0].type === 'overlayLibrary')));
     homeLayout = rows.map(normalizeHomeRow);
   } catch(e){
     homeLayout = [];
