@@ -437,6 +437,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 #confirmOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
 #confirmOverlay.open{display:flex}
 #confirmDialog{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px;width:100%;max-width:360px;padding:24px 20px 20px;animation:fadeIn .2s ease}
+
+/* ══ OVERLAY EDITOR BUTTON IN HOME ROW ══ */
+.he-row-bar-btn.overlays{background:rgba(88,150,220,.08);color:#5DAEFF;font-size:10px;letter-spacing:.04em;padding:0 8px}
+.he-row-bar-btn.overlays:hover{background:rgba(88,150,220,.18)}
 @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .confirm-title{font-size:15px;font-weight:700;color:#cfe5f5;margin-bottom:8px}
 .confirm-msg{font-size:13px;color:rgba(133,172,201,.6);line-height:1.5;margin-bottom:18px}
@@ -912,9 +916,119 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 
 /* v20260616f: Section headline/subtitle fields removed */
 .lp-section-grid{grid-template-columns:repeat(2,minmax(120px,180px))!important;justify-content:start}
+
+/* ══ OVERLAY GRAPHICS EDITOR ══ */
+#overlayEditorOverlay{display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:20px}
+#overlayEditorOverlay.open{display:flex}
+#overlayEditorModal{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px 16px 12px 12px;width:100%;max-width:580px;padding:20px;animation:fadeIn .2s ease;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.oe-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.oe-toolbar-title{font-size:15px;font-weight:700;color:#cfe5f5}
+.oe-toolbar-btns{display:flex;gap:6px}
+.oe-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(133,172,201,.18);background:rgba(133,172,201,.08);color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.oe-btn:hover{background:rgba(133,172,201,.18)}
+.oe-btn.done{background:rgba(50,180,100,.15);border-color:rgba(50,180,100,.3);color:#6fda9a}
+.oe-btn.done:hover{background:rgba(50,180,100,.28)}
+.oe-upload-section{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:rgba(133,172,201,.04);padding:12px;flex-shrink:0}
+.oe-upload-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-bottom:8px;display:block}
+.oe-upload-zone{position:relative;border-radius:10px;border:1.5px dashed rgba(133,172,201,.3);background:rgba(11,42,66,.5);cursor:pointer;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all .2s;height:100px}
+.oe-upload-zone:hover{border-color:rgba(133,172,201,.6);background:rgba(11,42,66,.7)}
+.oe-upload-zone.dragover{border-color:#85ACC9;background:rgba(133,172,201,.1)}
+.oe-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.oe-upload-icon{font-size:24px}
+.oe-upload-text{font-size:12px;font-weight:600;color:#85ACC9;text-align:center}
+.oe-upload-hint{font-size:10px;color:rgba(133,172,201,.45)}
+.oe-canvas-container{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:#0a1520;position:relative;aspect-ratio:auto;min-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;user-select:none;flex:1}
+.oe-canvas-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15}
+.oe-stage{position:absolute;inset:0;width:100%;height:100%}
+.oe-overlay-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:move;touch-action:none;user-select:none;border:2px solid #85ACC9;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3);background:rgba(6,20,32,.4);background-size:contain;background-repeat:no-repeat;background-position:center;transition:box-shadow .15s}
+.oe-overlay-item.selected{border-color:#6fda9a;box-shadow:0 0 0 3px rgba(111,218,154,.3),0 4px 12px rgba(0,0,0,.3)}
+.oe-overlay-item.dragging{opacity:.7;z-index:1000}
+.oe-resize-handle{position:absolute;width:12px;height:12px;background:#85ACC9;border:1px solid #0a1520;border-radius:50%;cursor:nwse-resize;opacity:0;transition:opacity .15s}
+.oe-overlay-item:hover .oe-resize-handle,.oe-overlay-item.selected .oe-resize-handle{opacity:1}
+.oe-resize-handle.tl{top:-6px;left:-6px;cursor:nwse-resize}
+.oe-resize-handle.tr{top:-6px;right:-6px;cursor:nesw-resize}
+.oe-resize-handle.bl{bottom:-6px;left:-6px;cursor:nesw-resize}
+.oe-resize-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize}
+.oe-resize-handle.tm{top:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.oe-resize-handle.bm{bottom:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
+.oe-resize-handle.ml{top:50%;left:-6px;transform:translateY(-50%);cursor:ew-resize}
+.oe-resize-handle.mr{top:50%;right:-6px;transform:translateY(-50%);cursor:ew-resize}
+.oe-rotate-handle{position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#0B2A42;border:2px solid #85ACC9;border-radius:50%;cursor:grab;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:12px;color:#85ACC9}
+.oe-overlay-item:hover .oe-rotate-handle,.oe-overlay-item.selected .oe-rotate-handle{opacity:1}
+.oe-rotate-handle:active{cursor:grabbing}
+.oe-selected-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:rgba(133,172,201,.05);border-radius:8px;border:1px solid rgba(133,172,201,.12);flex-shrink:0}
+.oe-mini-btn{padding:6px 10px;border-radius:6px;border:1px solid rgba(133,172,201,.15);background:rgba(133,172,201,.06);color:#85ACC9;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.oe-mini-btn:hover{background:rgba(133,172,201,.16);color:#cfe5f5}
+.oe-mini-btn.danger{color:#f08080;border-color:rgba(220,80,80,.25);background:rgba(220,80,80,.08)}
+.oe-mini-btn.danger:hover{background:rgba(220,80,80,.18)}
+.oe-list-section{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:rgba(133,172,201,.04);padding:10px;flex-shrink:0;max-height:200px;overflow-y:auto}
+.oe-list-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-bottom:8px;display:block}
+.oe-list-item{display:flex;align-items:center;gap:8px;padding:7px;border-radius:6px;background:rgba(6,20,32,.5);border:1px solid rgba(133,172,201,.1);cursor:pointer;transition:all .15s;margin-bottom:5px}
+.oe-list-item:last-child{margin-bottom:0}
+.oe-list-item:hover{background:rgba(6,20,32,.8);border-color:rgba(133,172,201,.25)}
+.oe-list-item.active{background:rgba(50,180,100,.12);border-color:rgba(50,180,100,.3)}
+.oe-list-thumb{width:32px;height:32px;border-radius:4px;background:rgba(133,172,201,.1);flex-shrink:0;object-fit:cover;display:block}
+.oe-list-info{flex:1;min-width:0;font-size:12px;color:#cfe5f5}
+.oe-list-actions{display:flex;gap:4px}
+.oe-list-btn{width:24px;height:24px;border-radius:4px;border:none;background:rgba(133,172,201,.1);color:#85ACC9;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.oe-list-btn:hover{background:rgba(133,172,201,.22)}
+.oe-list-btn.del:hover{background:rgba(220,80,80,.25);color:#f08080}
+.oe-props-section{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:rgba(133,172,201,.04);padding:10px;flex-shrink:0}
+.oe-props-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(133,172,201,.55);margin-bottom:8px;display:block}
+.oe-props-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.oe-prop-field{display:flex;flex-direction:column;gap:4px}
+.oe-prop-label{font-size:10px;color:rgba(133,172,201,.55)}
+.oe-prop-input{width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(133,172,201,.18);background:rgba(11,42,66,.6);color:#f1ecdf;font-size:12px;outline:none;font-family:monospace}
+.oe-prop-input:focus{border-color:rgba(133,172,201,.45)}
+.oe-actions{display:flex;gap:8px;flex-shrink:0}
+.oe-action-btn{flex:1;padding:12px;border-radius:9px;border:none;cursor:pointer;font-size:14px;font-weight:700;transition:all .15s}
+.oe-action-btn.save{background:rgba(50,180,100,.18);color:#6fda9a;border:1px solid rgba(50,180,100,.28)}
+.oe-action-btn.save:hover{background:rgba(50,180,100,.28)}
+.oe-action-btn.cancel{background:rgba(133,172,201,.1);color:#85ACC9;border:1px solid rgba(133,172,201,.18)}
+.oe-action-btn.cancel:hover{background:rgba(133,172,201,.2)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script></head>
 <body>
+
+<!-- ══ OVERLAY GRAPHICS EDITOR MODAL ══ -->
+<script>
+/* ════ OVERLAY GRAPHICS EDITOR ════ */
+let overlayEditorState = {rowId:null,overlays:[],selectedId:null,draggedId:null,dragStart:{x:0,y:0},resizeHandle:null,rotateStart:null,canvasRect:null,history:[]};
+function openOverlayEditor(rowId){const row=homeLayout.find(r=>r.id===rowId);if(!row)return;overlayEditorState.rowId=rowId;overlayEditorState.overlays=(row.overlays||[]).map(o=>({...o}));overlayEditorState.selectedId=null;overlayEditorState.history=[JSON.stringify(overlayEditorState.overlays)];renderOverlayEditor();document.getElementById('overlayEditorOverlay').classList.add('open')}
+function closeOverlayEditor(){document.getElementById('overlayEditorOverlay').classList.remove('open');overlayEditorState.selectedId=null;overlayEditorState.draggedId=null}
+function saveOverlayEditor(){const row=homeLayout.find(r=>r.id===overlayEditorState.rowId);if(!row)return;row.overlays=overlayEditorState.overlays.map(o=>({id:o.id,url:o.url,x:Math.round(o.x*100)/100,y:Math.round(o.y*100)/100,width:Math.round(o.width*100)/100,height:Math.round(o.height*100)/100,rotation:Math.round(o.rotation),zIndex:o.zIndex||1,altText:o.altText||''}));saveHomeLayout();closeOverlayEditor();showToast('Overlays gespeichert ✓','ok')}
+function renderOverlayEditor(){const container=document.getElementById('overlayCanvasContainer');const stage=document.getElementById('overlayStage');const list=document.getElementById('overlaysList');overlayEditorState.canvasRect=container.getBoundingClientRect();stage.innerHTML='';list.innerHTML='';overlayEditorState.overlays.sort((a,b)=>(a.zIndex||1)-(b.zIndex||1)).forEach((overlay,idx)=>{const isSelected=overlay.id===overlayEditorState.selectedId;const el=document.createElement('div');el.className=`oe-overlay-item${isSelected?' selected':''}`;el.id=`oe-overlay-${overlay.id}`;el.dataset.id=overlay.id;el.style.left=`${overlay.x}%`;el.style.top=`${overlay.y}%`;el.style.width=`${overlay.width}%`;el.style.height=`${overlay.height}%`;el.style.transform=`rotate(${overlay.rotation}deg)`;el.style.zIndex=overlay.zIndex||1;el.style.backgroundImage=`url('${overlay.url}')`;el.innerHTML=`<div class="oe-resize-handle tl" data-handle="tl"></div><div class="oe-resize-handle tm" data-handle="tm"></div><div class="oe-resize-handle tr" data-handle="tr"></div><div class="oe-resize-handle ml" data-handle="ml"></div><div class="oe-resize-handle mr" data-handle="mr"></div><div class="oe-resize-handle bl" data-handle="bl"></div><div class="oe-resize-handle bm" data-handle="bm"></div><div class="oe-resize-handle br" data-handle="br"></div><div class="oe-rotate-handle" data-handle="rotate">↻</div>`;el.addEventListener('mousedown',e=>handleOverlayMouseDown(e));el.addEventListener('touchstart',e=>handleOverlayTouchStart(e));stage.appendChild(el);const listItem=document.createElement('div');listItem.className=`oe-list-item${isSelected?' active':''}`;listItem.onclick=()=>selectOverlay(overlay.id);listItem.innerHTML=`<img src="${overlay.url}" alt="Overlay" class="oe-list-thumb"><div class="oe-list-info">${overlay.altText||`Overlay ${idx+1}`}</div><div class="oe-list-actions"><button class="oe-list-btn" onclick="overlayMoveLayer(-1)">⬆</button><button class="oe-list-btn" onclick="overlayMoveLayer(+1)">⬇</button></div>`;list.appendChild(listItem)});updateOverlayToolbar()}
+function selectOverlay(id){overlayEditorState.selectedId=id;renderOverlayEditor();updateOverlayToolbar();updateOverlayProps()}
+function updateOverlayToolbar(){const toolbar=document.getElementById('overlaySelectedToolbar');const propsSection=document.getElementById('overlayPropsSection');if(overlayEditorState.selectedId){toolbar.style.display='flex';propsSection.style.display='block'}else{toolbar.style.display='none';propsSection.style.display='none'}}
+function updateOverlayProps(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;document.getElementById('propX').value=Math.round(overlay.x);document.getElementById('propY').value=Math.round(overlay.y);document.getElementById('propW').value=Math.round(overlay.width);document.getElementById('propH').value=Math.round(overlay.height);document.getElementById('propRot').value=Math.round(overlay.rotation||0);document.getElementById('propZ').value=overlay.zIndex||1}
+function updatePropFromInput(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;overlay.x=parseFloat(document.getElementById('propX').value)||0;overlay.y=parseFloat(document.getElementById('propY').value)||0;overlay.width=parseFloat(document.getElementById('propW').value)||30;overlay.height=parseFloat(document.getElementById('propH').value)||30;overlay.rotation=parseFloat(document.getElementById('propRot').value)||0;overlay.zIndex=parseInt(document.getElementById('propZ').value)||1;renderOverlayEditor()}
+function handleOverlayMouseDown(e){const overlayEl=e.currentTarget;const id=overlayEl.dataset.id;selectOverlay(id);const handle=e.target.dataset.handle;if(handle==='rotate'){handleRotateStart(e,id)}else if(handle){handleResizeStart(e,id,handle)}else{handleDragStart(e,id)}}
+function handleDragStart(e,id){if(e.button!==0)return;overlayEditorState.draggedId=id;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerX:overlayEditorState.canvasRect.left,containerY:overlayEditorState.canvasRect.top,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('mousemove',handleDragMove);document.addEventListener('mouseup',handleDragEnd);e.preventDefault()}
+function handleDragMove(e){if(!overlayEditorState.draggedId)return;const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.draggedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const deltaX=e.clientX-ds.x;const deltaY=e.clientY-ds.y;const deltaXPercent=(deltaX/ds.containerW)*100;const deltaYPercent=(deltaY/ds.containerH)*100;overlay.x=Math.max(0,Math.min(100-overlay.width,overlay.x+deltaXPercent));overlay.y=Math.max(0,Math.min(100-overlay.height,overlay.y+deltaYPercent));overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
+function handleDragEnd(e){document.removeEventListener('mousemove',handleDragMove);document.removeEventListener('mouseup',handleDragEnd);overlayEditorState.draggedId=null}
+function handleResizeStart(e,id,handle){overlayEditorState.resizeHandle=handle;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('mousemove',handleResizeMove);document.addEventListener('mouseup',handleResizeEnd);e.preventDefault()}
+function handleResizeMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const handle=overlayEditorState.resizeHandle;const deltaX=(e.clientX-ds.x)/ds.containerW*100;const deltaY=(e.clientY-ds.y)/ds.containerH*100;if(handle==='br'){overlay.width=Math.max(5,overlay.width+deltaX);overlay.height=Math.max(5,overlay.height+deltaY)}overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
+function handleResizeEnd(e){document.removeEventListener('mousemove',handleResizeMove);document.removeEventListener('mouseup',handleResizeEnd);overlayEditorState.resizeHandle=null}
+function handleRotateStart(e,id){const center=overlayEditorState.canvasRect;overlayEditorState.rotateStart={x:e.clientX,y:e.clientY,centerX:center.left+center.width/2,centerY:center.top+center.height/2};document.addEventListener('mousemove',handleRotateMove);document.addEventListener('mouseup',handleRotateEnd);e.preventDefault()}
+function handleRotateMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay||!overlayEditorState.rotateStart)return;const rs=overlayEditorState.rotateStart;const angle1=Math.atan2(rs.y-rs.centerY,rs.x-rs.centerX);const angle2=Math.atan2(e.clientY-rs.centerY,e.clientX-rs.centerX);const deltaAngle=(angle2-angle1)*(180/Math.PI);overlay.rotation=(overlay.rotation+deltaAngle)%360;overlayEditorState.rotateStart.x=e.clientX;overlayEditorState.rotateStart.y=e.clientY;renderOverlayEditor()}
+function handleRotateEnd(e){document.removeEventListener('mousemove',handleRotateMove);document.removeEventListener('mouseup',handleRotateEnd);overlayEditorState.rotateStart=null}
+function handleOverlayFileSelect(event){const file=event.target.files[0];if(!file)return;if(!file.type.startsWith('image/png')){alert('Bitte ein PNG-Datei auswählen');return}if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return}uploadOverlayImage(file)}
+function uploadOverlayImage(file){const reader=new FileReader();reader.onload=(e)=>{addNewOverlay(e.target.result)};reader.readAsDataURL(file)}
+function addNewOverlay(url){const id='overlay-'+Date.now();const overlay={id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:(overlayEditorState.overlays.length+1),altText:''};overlayEditorState.overlays.push(overlay);selectOverlay(id);renderOverlayEditor()}
+function overlayMoveLayer(direction){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const newZ=(overlay.zIndex||1)+direction;if(newZ<0)return;overlay.zIndex=newZ;renderOverlayEditor()}
+function overlayDuplicateSelected(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const copy={...overlay,id:'overlay-'+Date.now(),x:overlay.x+5,y:overlay.y+5,zIndex:(overlay.zIndex||1)+1};overlayEditorState.overlays.push(copy);selectOverlay(copy.id);renderOverlayEditor()}
+function overlayDeleteSelected(){if(!overlayEditorState.selectedId)return;overlayEditorState.overlays=overlayEditorState.overlays.filter(o=>o.id!==overlayEditorState.selectedId);overlayEditorState.selectedId=null;renderOverlayEditor()}
+function handleOverlayTouchStart(e){handleOverlayMouseDown(e.touches[0])}
+
+// ── Add Overlay Button to Row Bars ──
+function initOverlayButtons(){const rows=document.querySelectorAll('.he-row-bar');rows.forEach(bar=>{if(bar.querySelector('.btn-overlays'))return;const rowId=bar.closest('.he-row').dataset.rowId;const btn=document.createElement('button');btn.className='he-row-bar-btn overlays';btn.title='Overlays bearbeiten';btn.textContent='⭕ Overlays';btn.onclick=()=>openOverlayEditor(rowId);const editBtn=bar.querySelector('.edit-row');if(editBtn){editBtn.parentNode.insertBefore(btn,editBtn)}else{bar.appendChild(btn)}})}
+
+// Initialize when home layout is loaded
+function initOverlayButtonsWhenReady(){if(document.querySelectorAll('.he-row-bar').length>0){initOverlayButtons()}else{setTimeout(initOverlayButtonsWhenReady,100)}}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(initOverlayButtonsWhenReady,500));
+</script>
+
+<div id="overlayEditorOverlay"><div id="overlayEditorModal"><div class="oe-toolbar"><div class="oe-toolbar-title">⭕ Overlay-Grafiken</div><div class="oe-toolbar-btns"><button class="oe-btn cancel" onclick="closeOverlayEditor()">✕ Schließen</button><button class="oe-btn done" onclick="saveOverlayEditor()">✓ Speichern</button></div></div><div class="oe-upload-section"><label class="oe-upload-label">📤 PNG hochladen (transparent)</label><div class="oe-upload-zone" id="overlayUploadZone"><div class="oe-upload-icon">🖼️</div><div class="oe-upload-text">PNG ziehen oder klicken</div><div class="oe-upload-hint">Max 5 MB, transparent</div><input type="file" id="overlayFileInput" accept=".png,image/png" onchange="handleOverlayFileSelect(event)"></div></div><div class="oe-canvas-container" id="overlayCanvasContainer"><img id="overlayCanvasBg" class="oe-canvas-bg" alt="Zeilen-Motiv"><div class="oe-stage" id="overlayStage" ondragover="handleCanvasDragOver(event)" ondrop="handleCanvasDrop(event)"></div></div><div class="oe-selected-toolbar" id="overlaySelectedToolbar" style="display:none"><button class="oe-mini-btn" onclick="overlayMoveLayer(-1)" title="Eine Ebene zurück">⬆ Nach hinten</button><button class="oe-mini-btn" onclick="overlayMoveLayer(+1)" title="Eine Ebene nach vorne">⬇ Nach vorne</button><button class="oe-mini-btn" onclick="overlayDuplicateSelected()" title="Duplizieren">📋 Kopieren</button><button class="oe-mini-btn danger" onclick="overlayDeleteSelected()" title="Löschen">🗑 Löschen</button></div><div class="oe-list-section"><label class="oe-list-label">Ebenen</label><div id="overlaysList"></div></div><div class="oe-props-section" id="overlayPropsSection" style="display:none"><label class="oe-props-label">⚙ Eigenschaften</label><div class="oe-props-grid"><div class="oe-prop-field"><label class="oe-prop-label">Position X (%)</label><input type="number" class="oe-prop-input" id="propX" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Position Y (%)</label><input type="number" class="oe-prop-input" id="propY" min="0" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Breite (%)</label><input type="number" class="oe-prop-input" id="propW" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Höhe (%)</label><input type="number" class="oe-prop-input" id="propH" min="5" max="100" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Rotation (°)</label><input type="number" class="oe-prop-input" id="propRot" min="0" max="360" step="1" onchange="updatePropFromInput()"></div><div class="oe-prop-field"><label class="oe-prop-label">Z-Index</label><input type="number" class="oe-prop-input" id="propZ" min="0" step="1" onchange="updatePropFromInput()"></div></div></div><div class="oe-actions"><button class="oe-action-btn cancel" onclick="closeOverlayEditor()">Abbrechen</button><button class="oe-action-btn save" onclick="saveOverlayEditor()">✓ Speichern & Schließen</button></div></div></div>
 
 <!-- Header -->
 <div class="hj-header">
