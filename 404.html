@@ -261,6 +261,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* ── 3× 1:1 Quadrate nebeneinander (1x1-third) ── */
 .home-row3sq{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:stretch; }
 .home-row3sq .home-card img{ aspect-ratio:1/1; }
+.home-overlay{position:absolute;pointer-events:none;display:block}
 /* ── Überschrift-Zeile (Text 1–3 Zeilen) ── */
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
@@ -8718,6 +8719,29 @@ function renderHomeLayout(){
 
   rows.forEach(row => renderHomeRowInto(grid, row));
 
+  
+  
+  // ── Render overlays for all rows
+  rows.forEach((row, idx) => {
+    if(row.overlays && row.overlays.length > 0) {
+      row.overlays.forEach(ov => {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.left = (ov.x || 0) + '%';
+        overlay.style.top = (ov.y || 0) + '%';
+        overlay.style.width = (ov.width || 100) + '%';
+        overlay.style.height = (ov.height || 100) + '%';
+        overlay.style.backgroundImage = `url('${ov.url}')`;
+        overlay.style.backgroundSize = 'contain';
+        overlay.style.backgroundRepeat = 'no-repeat';
+        overlay.style.backgroundPosition = 'center';
+        if(ov.rotation) overlay.style.transform = `rotate(${ov.rotation}deg)`;
+        overlay.style.zIndex = ov.zIndex || 1;
+        overlay.className = 'home-overlay';
+        grid.appendChild(overlay);
+      });
+    }
+  });
   wireHomeGrid(grid);
 }
 
