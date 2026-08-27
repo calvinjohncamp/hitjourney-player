@@ -262,7 +262,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-row3sq{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:stretch; }
 .home-row3sq .home-card img{ aspect-ratio:1/1; }
 .home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:3;user-select:none;-webkit-user-drag:none}
-.home-card img.home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important}
+.home-card img.home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important;max-width:none!important}
 /* ── Überschrift-Zeile (Text 1–3 Zeilen) ── */
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
@@ -9392,7 +9392,11 @@ function appendHomeOverlaysToCard(card, cell){
       img.style.top = (Number.isFinite(Number(ov.y)) ? Number(ov.y) : 0) + '%';
       img.style.width = Math.max(1, Number(ov.width) || 30) + '%';
       img.style.height = Math.max(1, Number(ov.height) || 30) + '%';
-      img.style.transform = 'rotate(' + (Number(ov.rotation) || 0) + 'deg)';
+      img.style.setProperty('transform', 'rotate(' + (Number(ov.rotation) || 0) + 'deg)', 'important');
+      img.style.setProperty('position', 'absolute', 'important');
+      img.style.setProperty('object-fit', 'contain', 'important');
+      img.style.setProperty('aspect-ratio', 'auto', 'important');
+      img.style.setProperty('max-width', 'none', 'important');
       img.style.zIndex = String(3 + (Number(ov.zIndex) || 1));
       card.appendChild(img);
     });
