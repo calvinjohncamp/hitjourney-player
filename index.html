@@ -261,7 +261,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 /* ── 3× 1:1 Quadrate nebeneinander (1x1-third) ── */
 .home-row3sq{ grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:stretch; }
 .home-row3sq .home-card img{ aspect-ratio:1/1; }
-.home-overlay{position:absolute;pointer-events:none;display:block}
+.home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:3;user-select:none;-webkit-user-drag:none}
+.home-card img.home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important}
 /* ── Überschrift-Zeile (Text 1–3 Zeilen) ── */
 .home-heading{ grid-column:1/-1; display:flex; flex-direction:column; gap:8px; margin:38px 0 30px; padding:0; }
 .home-heading-line{ width:100%; }
@@ -8719,29 +8720,6 @@ function renderHomeLayout(){
 
   rows.forEach(row => renderHomeRowInto(grid, row));
 
-  
-  
-  // ── Render overlays for all rows
-  rows.forEach((row, idx) => {
-    if(row.overlays && row.overlays.length > 0) {
-      row.overlays.forEach(ov => {
-        const overlay = document.createElement('div');
-        overlay.style.position = 'absolute';
-        overlay.style.left = (ov.x || 0) + '%';
-        overlay.style.top = (ov.y || 0) + '%';
-        overlay.style.width = (ov.width || 100) + '%';
-        overlay.style.height = (ov.height || 100) + '%';
-        overlay.style.backgroundImage = `url('${ov.url}')`;
-        overlay.style.backgroundSize = 'contain';
-        overlay.style.backgroundRepeat = 'no-repeat';
-        overlay.style.backgroundPosition = 'center';
-        if(ov.rotation) overlay.style.transform = `rotate(${ov.rotation}deg)`;
-        overlay.style.zIndex = ov.zIndex || 1;
-        overlay.className = 'home-overlay';
-        grid.appendChild(overlay);
-      });
-    }
-  });
   wireHomeGrid(grid);
 }
 
@@ -8751,6 +8729,10 @@ function renderHomeRowInto(grid, row){
     // isFinalJustThisDanceCell: nur noch no-op — der Admin entscheidet selbst.
     const isFinalJustThisDanceCell = (cell)=>false;
     const cells = row.cells || [];
+    if(row && Array.isArray(row.overlays) && row.overlays.length && !cells.some(c => c && Array.isArray(c.overlays) && c.overlays.length)){
+      const target = cells.find(c => c && c.type !== 'hidden' && c.type !== 'empty' && (c.imageUrl || c.customImageUrl || c.cover21Url || c.bgUrl));
+      if(target) target.overlays = row.overlays;
+    }
     if(!cells.length) return;
     const t0 = cells[0] && cells[0].type;
     if(!t0 || t0 === 'empty') return;
@@ -9393,6 +9375,29 @@ const HJChain = (function(){
 // zusätzlich global verfügbar machen, sonst startet die Wiedergabe dort nie.
 try{ window.HJChain = HJChain; }catch(e){}
 
+
+function appendHomeOverlaysToCard(card, cell){
+  const overlays = (cell && Array.isArray(cell.overlays)) ? cell.overlays : [];
+  if(!card || !overlays.length) return;
+  overlays
+    .filter(ov => ov && (ov.url || ov.src || ov.imageUrl))
+    .sort((a,b)=>(Number(a.zIndex)||1)-(Number(b.zIndex)||1))
+    .forEach(ov => {
+      const img = document.createElement('img');
+      img.className = 'home-overlay';
+      img.src = ov.url || ov.src || ov.imageUrl;
+      img.alt = ov.altText || '';
+      img.loading = 'lazy';
+      img.style.left = (Number.isFinite(Number(ov.x)) ? Number(ov.x) : 0) + '%';
+      img.style.top = (Number.isFinite(Number(ov.y)) ? Number(ov.y) : 0) + '%';
+      img.style.width = Math.max(1, Number(ov.width) || 30) + '%';
+      img.style.height = Math.max(1, Number(ov.height) || 30) + '%';
+      img.style.transform = 'rotate(' + (Number(ov.rotation) || 0) + 'deg)';
+      img.style.zIndex = String(3 + (Number(ov.zIndex) || 1));
+      card.appendChild(img);
+    });
+}
+
 /* ── Build a standard home-card div ── */
 function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
@@ -9440,6 +9445,7 @@ function buildHomeCard(cell, extraClass){
     ? (cell.customImageUrl || cell.imageUrl || cell.cover21Url)
     : (cell.imageUrl || cell.customImageUrl);
   el.appendChild(img);
+  appendHomeOverlaysToCard(el, cell);
 
   // Label-Balken: für Trio-Kacheln IMMER erzeugen
   const _TRIO = new Set(['trio-a','trio-b','trio-c']);

@@ -439,8 +439,10 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 #confirmDialog{background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:16px;width:100%;max-width:360px;padding:24px 20px 20px;animation:fadeIn .2s ease}
 
 /* ══ OVERLAY EDITOR BUTTON IN HOME ROW ══ */
-.he-row-bar-btn.overlays{background:rgba(88,150,220,.08);color:#5DAEFF;font-size:10px;letter-spacing:.04em;padding:0 8px}
-.he-row-bar-btn.overlays:hover{background:rgba(88,150,220,.18)}
+.he-row-bar-btn.overlays,.he-cell-act.ovl{background:rgba(88,150,220,.12)!important;color:#5DAEFF!important;font-size:10px;letter-spacing:.04em;padding:0 8px}
+.he-row-bar-btn.overlays:hover,.he-cell-act.ovl:hover{background:rgba(88,150,220,.22)!important}
+.he-cell-home-overlay{position:absolute;pointer-events:none;display:block;object-fit:contain;object-position:center;transform-origin:center center;z-index:5;user-select:none;-webkit-user-drag:none}
+.he-cell img.he-cell-home-overlay{position:absolute;object-fit:contain!important;aspect-ratio:auto!important}
 @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .confirm-title{font-size:15px;font-weight:700;color:#cfe5f5;margin-bottom:8px}
 .confirm-msg{font-size:13px;color:rgba(133,172,201,.6);line-height:1.5;margin-bottom:18px}
@@ -938,22 +940,15 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-upload-text{font-size:12px;font-weight:600;color:#85ACC9;text-align:center}
 .oe-upload-hint{font-size:10px;color:rgba(133,172,201,.45)}
 .oe-canvas-container{border:1px solid rgba(133,172,201,.14);border-radius:10px;background:#0a1520;position:relative;aspect-ratio:auto;min-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;user-select:none;flex:1}
-.oe-canvas-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.15}
+.oe-canvas-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.85) brightness(.72)}
 .oe-stage{position:absolute;inset:0;width:100%;height:100%}
-.oe-overlay-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:move;touch-action:none;user-select:none;border:2px solid #85ACC9;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3);background:rgba(6,20,32,.4);background-size:contain;background-repeat:no-repeat;background-position:center;transition:box-shadow .15s}
+.oe-overlay-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:move;touch-action:none;user-select:none;border:2px solid #85ACC9;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3);background:transparent;background-size:contain;background-repeat:no-repeat;background-position:center;transition:box-shadow .15s;transform-origin:center center}
 .oe-overlay-item.selected{border-color:#6fda9a;box-shadow:0 0 0 3px rgba(111,218,154,.3),0 4px 12px rgba(0,0,0,.3)}
 .oe-overlay-item.dragging{opacity:.7;z-index:1000}
-.oe-resize-handle{position:absolute;width:12px;height:12px;background:#85ACC9;border:1px solid #0a1520;border-radius:50%;cursor:nwse-resize;opacity:0;transition:opacity .15s}
+.oe-resize-handle{position:absolute;width:14px;height:14px;background:#85ACC9;border:1px solid #0a1520;border-radius:50%;cursor:nwse-resize;opacity:0;transition:opacity .15s}
 .oe-overlay-item:hover .oe-resize-handle,.oe-overlay-item.selected .oe-resize-handle{opacity:1}
-.oe-resize-handle.tl{top:-6px;left:-6px;cursor:nwse-resize}
-.oe-resize-handle.tr{top:-6px;right:-6px;cursor:nesw-resize}
-.oe-resize-handle.bl{bottom:-6px;left:-6px;cursor:nesw-resize}
-.oe-resize-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize}
-.oe-resize-handle.tm{top:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
-.oe-resize-handle.bm{bottom:-6px;left:50%;transform:translateX(-50%);cursor:ns-resize}
-.oe-resize-handle.ml{top:50%;left:-6px;transform:translateY(-50%);cursor:ew-resize}
-.oe-resize-handle.mr{top:50%;right:-6px;transform:translateY(-50%);cursor:ew-resize}
-.oe-rotate-handle{position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:#0B2A42;border:2px solid #85ACC9;border-radius:50%;cursor:grab;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:12px;color:#85ACC9}
+.oe-resize-handle.br{bottom:-7px;right:-7px;cursor:nwse-resize}
+.oe-rotate-handle{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);width:22px;height:22px;background:#0B2A42;border:2px solid #85ACC9;border-radius:50%;cursor:grab;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:12px;color:#85ACC9}
 .oe-overlay-item:hover .oe-rotate-handle,.oe-overlay-item.selected .oe-rotate-handle{opacity:1}
 .oe-rotate-handle:active{cursor:grabbing}
 .oe-selected-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:rgba(133,172,201,.05);border-radius:8px;border:1px solid rgba(133,172,201,.12);flex-shrink:0}
@@ -993,39 +988,101 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 <!-- ══ OVERLAY GRAPHICS EDITOR MODAL ══ -->
 <script>
 /* ════ OVERLAY GRAPHICS EDITOR ════ */
-let overlayEditorState = {rowId:null,overlays:[],selectedId:null,draggedId:null,dragStart:{x:0,y:0},resizeHandle:null,rotateStart:null,canvasRect:null,history:[]};
-function openOverlayEditor(rowId){const row=homeLayout.find(r=>r.id===rowId);if(!row)return;overlayEditorState.rowId=rowId;overlayEditorState.overlays=(row.overlays||[]).map(o=>({...o}));overlayEditorState.selectedId=null;overlayEditorState.history=[JSON.stringify(overlayEditorState.overlays)];renderOverlayEditor();document.getElementById('overlayEditorOverlay').classList.add('open')}
+let overlayEditorState = {rowId:null,cellIdx:0,overlays:[],selectedId:null,draggedId:null,dragStart:{x:0,y:0},resizeHandle:null,rotateStart:null,canvasRect:null};
+function overlayRowAndCell(rowId, cellIdx){
+  const row=rowById(rowId); if(!row) return {row:null,cell:null,cellIdx:0};
+  let idx = Number.isInteger(cellIdx) ? cellIdx : -1;
+  if(idx < 0 || !row.cells[idx] || row.cells[idx].type==='hidden' || row.cells[idx].type==='empty'){
+    idx = row.cells.findIndex(c => c && c.type!=='hidden' && c.type!=='empty' && (c.imageUrl||c.customImageUrl||c.cover21Url||c.bgUrl));
+  }
+  if(idx < 0) idx = 0;
+  return {row, cell:row.cells[idx], cellIdx:idx};
+}
+function overlayCellImage(cell){
+  if(!cell) return '';
+  if(cell.type==='slideshow') return cell.bgUrl || cell.imageUrl || (cell.slides&&cell.slides[0]&&(cell.slides[0].focusUrl||cell.slides[0].coverUrl)) || '';
+  return cell.imageUrl || cell.customImageUrl || cell.cover21Url || cell.bgUrl || '';
+}
+function overlayAspectForCell(cell){
+  const t = cell && cell.type;
+  if(t==='4x1') return '4 / 1';
+  if(t==='span-4'||t==='lyrics21'||t==='2x1'||t==='2x1-full'||t==='2x1-half'||t==='span-2'||t==='slideshow') return '2 / 1';
+  return '1 / 1';
+}
+function normalizeOverlay(o){
+  o=o||{};
+  return {id:o.id||('overlay-'+Date.now()+Math.random().toString(36).slice(2,6)),url:o.url||o.src||o.imageUrl||'',x:Number.isFinite(Number(o.x))?Number(o.x):10,y:Number.isFinite(Number(o.y))?Number(o.y):10,width:Math.max(1,Number(o.width)||30),height:Math.max(1,Number(o.height)||30),rotation:Number(o.rotation)||0,zIndex:Number(o.zIndex)||1,altText:o.altText||''};
+}
+function openOverlayEditor(rowId, cellIdx){
+  const rc=overlayRowAndCell(rowId, cellIdx);
+  if(!rc.row || !rc.cell){ toast('Bitte zuerst ein Motiv in dieser Zeile anlegen.','err'); return; }
+  if(!overlayCellImage(rc.cell)){ toast('Bitte zuerst ein Motiv hochladen oder auswählen.','err'); return; }
+  overlayEditorState.rowId=rowId;
+  overlayEditorState.cellIdx=rc.cellIdx;
+  const legacy = (!rc.cell.overlays || !rc.cell.overlays.length) && Array.isArray(rc.row.overlays) ? rc.row.overlays : [];
+  overlayEditorState.overlays=(rc.cell.overlays&&rc.cell.overlays.length?rc.cell.overlays:legacy).map(normalizeOverlay);
+  overlayEditorState.selectedId=null;
+  const bg=document.getElementById('overlayCanvasBg');
+  if(bg) bg.src=overlayCellImage(rc.cell);
+  const cont=document.getElementById('overlayCanvasContainer');
+  if(cont) cont.style.aspectRatio=overlayAspectForCell(rc.cell);
+  renderOverlayEditor();
+  document.getElementById('overlayEditorOverlay').classList.add('open');
+}
 function closeOverlayEditor(){document.getElementById('overlayEditorOverlay').classList.remove('open');overlayEditorState.selectedId=null;overlayEditorState.draggedId=null}
-function saveOverlayEditor(){const row=homeLayout.find(r=>r.id===overlayEditorState.rowId);if(!row)return;row.overlays=overlayEditorState.overlays.map(o=>({id:o.id,url:o.url,x:Math.round(o.x*100)/100,y:Math.round(o.y*100)/100,width:Math.round(o.width*100)/100,height:Math.round(o.height*100)/100,rotation:Math.round(o.rotation),zIndex:o.zIndex||1,altText:o.altText||''}));saveHomeLayout();closeOverlayEditor();showToast('Overlays gespeichert ✓','ok')}
-function renderOverlayEditor(){const container=document.getElementById('overlayCanvasContainer');const stage=document.getElementById('overlayStage');const list=document.getElementById('overlaysList');overlayEditorState.canvasRect=container.getBoundingClientRect();stage.innerHTML='';list.innerHTML='';overlayEditorState.overlays.sort((a,b)=>(a.zIndex||1)-(b.zIndex||1)).forEach((overlay,idx)=>{const isSelected=overlay.id===overlayEditorState.selectedId;const el=document.createElement('div');el.className=`oe-overlay-item${isSelected?' selected':''}`;el.id=`oe-overlay-${overlay.id}`;el.dataset.id=overlay.id;el.style.left=`${overlay.x}%`;el.style.top=`${overlay.y}%`;el.style.width=`${overlay.width}%`;el.style.height=`${overlay.height}%`;el.style.transform=`rotate(${overlay.rotation}deg)`;el.style.zIndex=overlay.zIndex||1;el.style.backgroundImage=`url('${overlay.url}')`;el.innerHTML=`<div class="oe-resize-handle tl" data-handle="tl"></div><div class="oe-resize-handle tm" data-handle="tm"></div><div class="oe-resize-handle tr" data-handle="tr"></div><div class="oe-resize-handle ml" data-handle="ml"></div><div class="oe-resize-handle mr" data-handle="mr"></div><div class="oe-resize-handle bl" data-handle="bl"></div><div class="oe-resize-handle bm" data-handle="bm"></div><div class="oe-resize-handle br" data-handle="br"></div><div class="oe-rotate-handle" data-handle="rotate">↻</div>`;el.addEventListener('mousedown',e=>handleOverlayMouseDown(e));el.addEventListener('touchstart',e=>handleOverlayTouchStart(e));stage.appendChild(el);const listItem=document.createElement('div');listItem.className=`oe-list-item${isSelected?' active':''}`;listItem.onclick=()=>selectOverlay(overlay.id);listItem.innerHTML=`<img src="${overlay.url}" alt="Overlay" class="oe-list-thumb"><div class="oe-list-info">${overlay.altText||`Overlay ${idx+1}`}</div><div class="oe-list-actions"><button class="oe-list-btn" onclick="overlayMoveLayer(-1)">⬆</button><button class="oe-list-btn" onclick="overlayMoveLayer(+1)">⬇</button></div>`;list.appendChild(listItem)});updateOverlayToolbar()}
-function selectOverlay(id){overlayEditorState.selectedId=id;renderOverlayEditor();updateOverlayToolbar();updateOverlayProps()}
-function updateOverlayToolbar(){const toolbar=document.getElementById('overlaySelectedToolbar');const propsSection=document.getElementById('overlayPropsSection');if(overlayEditorState.selectedId){toolbar.style.display='flex';propsSection.style.display='block'}else{toolbar.style.display='none';propsSection.style.display='none'}}
+async function saveOverlayEditor(){
+  const rc=overlayRowAndCell(overlayEditorState.rowId, overlayEditorState.cellIdx);
+  if(!rc.row || !rc.cell) return;
+  markHomeAction();
+  rc.cell.overlays=overlayEditorState.overlays.map(o=>({id:o.id,url:o.url,x:Math.round(o.x*100)/100,y:Math.round(o.y*100)/100,width:Math.round(o.width*100)/100,height:Math.round(o.height*100)/100,rotation:Math.round((o.rotation||0)*100)/100,zIndex:o.zIndex||1,altText:o.altText||''}));
+  delete rc.row.overlays;
+  await saveHomeLayout();
+  closeOverlayEditor();
+  toast('Overlays gespeichert ✓','ok');
+}
+function renderOverlayEditor(){
+  const container=document.getElementById('overlayCanvasContainer');const stage=document.getElementById('overlayStage');const list=document.getElementById('overlaysList');
+  if(!container||!stage||!list) return;
+  overlayEditorState.canvasRect=container.getBoundingClientRect();stage.innerHTML='';list.innerHTML='';
+  overlayEditorState.overlays.sort((a,b)=>(a.zIndex||1)-(b.zIndex||1)).forEach((overlay,idx)=>{
+    const isSelected=overlay.id===overlayEditorState.selectedId;const el=document.createElement('div');
+    el.className=`oe-overlay-item${isSelected?' selected':''}`;el.id=`oe-overlay-${overlay.id}`;el.dataset.id=overlay.id;
+    el.style.left=`${overlay.x}%`;el.style.top=`${overlay.y}%`;el.style.width=`${overlay.width}%`;el.style.height=`${overlay.height}%`;el.style.transform=`rotate(${overlay.rotation||0}deg)`;el.style.zIndex=overlay.zIndex||1;el.style.backgroundImage=`url('${overlay.url}')`;
+    el.innerHTML=`<div class="oe-resize-handle br" data-handle="br"></div><div class="oe-rotate-handle" data-handle="rotate">↻</div>`;
+    el.addEventListener('pointerdown',handleOverlayPointerDown);stage.appendChild(el);
+    const listItem=document.createElement('div');listItem.className=`oe-list-item${isSelected?' active':''}`;listItem.onclick=()=>selectOverlay(overlay.id);listItem.innerHTML=`<img src="${overlay.url}" alt="Overlay" class="oe-list-thumb"><div class="oe-list-info">${overlay.altText||`Overlay ${idx+1}`}</div><div class="oe-list-actions"><button class="oe-list-btn" onclick="event.stopPropagation();selectOverlay('${overlay.id}');overlayMoveLayer(-1)">↓</button><button class="oe-list-btn" onclick="event.stopPropagation();selectOverlay('${overlay.id}');overlayMoveLayer(+1)">↑</button></div>`;list.appendChild(listItem)
+  });
+  updateOverlayToolbar();updateOverlayProps();
+}
+function selectOverlay(id){overlayEditorState.selectedId=id;renderOverlayEditor()}
+function updateOverlayToolbar(){const toolbar=document.getElementById('overlaySelectedToolbar');const propsSection=document.getElementById('overlayPropsSection');const on=!!overlayEditorState.selectedId;if(toolbar)toolbar.style.display=on?'flex':'none';if(propsSection)propsSection.style.display=on?'block':'none'}
 function updateOverlayProps(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;document.getElementById('propX').value=Math.round(overlay.x);document.getElementById('propY').value=Math.round(overlay.y);document.getElementById('propW').value=Math.round(overlay.width);document.getElementById('propH').value=Math.round(overlay.height);document.getElementById('propRot').value=Math.round(overlay.rotation||0);document.getElementById('propZ').value=overlay.zIndex||1}
-function updatePropFromInput(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;overlay.x=parseFloat(document.getElementById('propX').value)||0;overlay.y=parseFloat(document.getElementById('propY').value)||0;overlay.width=parseFloat(document.getElementById('propW').value)||30;overlay.height=parseFloat(document.getElementById('propH').value)||30;overlay.rotation=parseFloat(document.getElementById('propRot').value)||0;overlay.zIndex=parseInt(document.getElementById('propZ').value)||1;renderOverlayEditor()}
-function handleOverlayMouseDown(e){const overlayEl=e.currentTarget;const id=overlayEl.dataset.id;selectOverlay(id);const handle=e.target.dataset.handle;if(handle==='rotate'){handleRotateStart(e,id)}else if(handle){handleResizeStart(e,id,handle)}else{handleDragStart(e,id)}}
-function handleDragStart(e,id){if(e.button!==0)return;overlayEditorState.draggedId=id;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerX:overlayEditorState.canvasRect.left,containerY:overlayEditorState.canvasRect.top,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('mousemove',handleDragMove);document.addEventListener('mouseup',handleDragEnd);e.preventDefault()}
-function handleDragMove(e){if(!overlayEditorState.draggedId)return;const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.draggedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const deltaX=e.clientX-ds.x;const deltaY=e.clientY-ds.y;const deltaXPercent=(deltaX/ds.containerW)*100;const deltaYPercent=(deltaY/ds.containerH)*100;overlay.x=Math.max(0,Math.min(100-overlay.width,overlay.x+deltaXPercent));overlay.y=Math.max(0,Math.min(100-overlay.height,overlay.y+deltaYPercent));overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
-function handleDragEnd(e){document.removeEventListener('mousemove',handleDragMove);document.removeEventListener('mouseup',handleDragEnd);overlayEditorState.draggedId=null}
-function handleResizeStart(e,id,handle){overlayEditorState.resizeHandle=handle;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('mousemove',handleResizeMove);document.addEventListener('mouseup',handleResizeEnd);e.preventDefault()}
-function handleResizeMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const handle=overlayEditorState.resizeHandle;const deltaX=(e.clientX-ds.x)/ds.containerW*100;const deltaY=(e.clientY-ds.y)/ds.containerH*100;if(handle==='br'){overlay.width=Math.max(5,overlay.width+deltaX);overlay.height=Math.max(5,overlay.height+deltaY)}overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
-function handleResizeEnd(e){document.removeEventListener('mousemove',handleResizeMove);document.removeEventListener('mouseup',handleResizeEnd);overlayEditorState.resizeHandle=null}
-function handleRotateStart(e,id){const center=overlayEditorState.canvasRect;overlayEditorState.rotateStart={x:e.clientX,y:e.clientY,centerX:center.left+center.width/2,centerY:center.top+center.height/2};document.addEventListener('mousemove',handleRotateMove);document.addEventListener('mouseup',handleRotateEnd);e.preventDefault()}
-function handleRotateMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay||!overlayEditorState.rotateStart)return;const rs=overlayEditorState.rotateStart;const angle1=Math.atan2(rs.y-rs.centerY,rs.x-rs.centerX);const angle2=Math.atan2(e.clientY-rs.centerY,e.clientX-rs.centerX);const deltaAngle=(angle2-angle1)*(180/Math.PI);overlay.rotation=(overlay.rotation+deltaAngle)%360;overlayEditorState.rotateStart.x=e.clientX;overlayEditorState.rotateStart.y=e.clientY;renderOverlayEditor()}
-function handleRotateEnd(e){document.removeEventListener('mousemove',handleRotateMove);document.removeEventListener('mouseup',handleRotateEnd);overlayEditorState.rotateStart=null}
-async function handleOverlayFileSelect(event){const file=event.target.files[0];if(!file)return;if(!file.type.startsWith('image/png')){alert('Bitte ein PNG-Datei auswählen');return}if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return}uploadOverlayImage(file)}
-async function uploadOverlayImage(file){try{const rowId=overlayEditorState.rowId;const timestamp=Date.now();const filename=`row-${rowId}-overlay-${timestamp}.png`;const s3Key=`artwork/overlays/${filename}`;const url=await uploadToS3(file,s3Key);addNewOverlay(url)}catch(err){console.error('Overlay Upload Fehler:',err);alert('Upload fehlgeschlagen: '+err.message)}}
-function addNewOverlay(url){const id='overlay-'+Date.now();const overlay={id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:(overlayEditorState.overlays.length+1),altText:''};overlayEditorState.overlays.push(overlay);selectOverlay(id);renderOverlayEditor()}
-function overlayMoveLayer(direction){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const newZ=(overlay.zIndex||1)+direction;if(newZ<0)return;overlay.zIndex=newZ;renderOverlayEditor()}
-function overlayDuplicateSelected(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const copy={...overlay,id:'overlay-'+Date.now(),x:overlay.x+5,y:overlay.y+5,zIndex:(overlay.zIndex||1)+1};overlayEditorState.overlays.push(copy);selectOverlay(copy.id);renderOverlayEditor()}
+function updatePropFromInput(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;overlay.x=Math.max(0,Math.min(100,parseFloat(document.getElementById('propX').value)||0));overlay.y=Math.max(0,Math.min(100,parseFloat(document.getElementById('propY').value)||0));overlay.width=Math.max(1,Math.min(100,parseFloat(document.getElementById('propW').value)||30));overlay.height=Math.max(1,Math.min(100,parseFloat(document.getElementById('propH').value)||30));overlay.rotation=parseFloat(document.getElementById('propRot').value)||0;overlay.zIndex=parseInt(document.getElementById('propZ').value)||1;renderOverlayEditor()}
+function handleOverlayPointerDown(e){const id=e.currentTarget.dataset.id;selectOverlay(id);const handle=e.target.dataset.handle;if(handle==='rotate')handleRotateStart(e,id);else if(handle==='br')handleResizeStart(e,id,'br');else handleDragStart(e,id);e.preventDefault()}
+function handleDragStart(e,id){overlayEditorState.draggedId=id;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('pointermove',handleDragMove);document.addEventListener('pointerup',handleDragEnd)}
+function handleDragMove(e){if(!overlayEditorState.draggedId)return;const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.draggedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const dx=(e.clientX-ds.x)/ds.containerW*100;const dy=(e.clientY-ds.y)/ds.containerH*100;overlay.x=Math.max(0,Math.min(100-overlay.width,overlay.x+dx));overlay.y=Math.max(0,Math.min(100-overlay.height,overlay.y+dy));overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
+function handleDragEnd(){document.removeEventListener('pointermove',handleDragMove);document.removeEventListener('pointerup',handleDragEnd);overlayEditorState.draggedId=null}
+function handleResizeStart(e,id,handle){overlayEditorState.resizeHandle=handle;overlayEditorState.dragStart={x:e.clientX,y:e.clientY,containerW:overlayEditorState.canvasRect.width,containerH:overlayEditorState.canvasRect.height};document.addEventListener('pointermove',handleResizeMove);document.addEventListener('pointerup',handleResizeEnd)}
+function handleResizeMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const ds=overlayEditorState.dragStart;const dx=(e.clientX-ds.x)/ds.containerW*100;const dy=(e.clientY-ds.y)/ds.containerH*100;overlay.width=Math.max(3,Math.min(100-overlay.x,overlay.width+dx));overlay.height=Math.max(3,Math.min(100-overlay.y,overlay.height+dy));overlayEditorState.dragStart.x=e.clientX;overlayEditorState.dragStart.y=e.clientY;renderOverlayEditor()}
+function handleResizeEnd(){document.removeEventListener('pointermove',handleResizeMove);document.removeEventListener('pointerup',handleResizeEnd);overlayEditorState.resizeHandle=null}
+function handleRotateStart(e,id){const el=document.getElementById('oe-overlay-'+id);const r=el?el.getBoundingClientRect():overlayEditorState.canvasRect;overlayEditorState.rotateStart={x:e.clientX,y:e.clientY,centerX:r.left+r.width/2,centerY:r.top+r.height/2};document.addEventListener('pointermove',handleRotateMove);document.addEventListener('pointerup',handleRotateEnd)}
+function handleRotateMove(e){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay||!overlayEditorState.rotateStart)return;const rs=overlayEditorState.rotateStart;overlay.rotation=Math.atan2(e.clientY-rs.centerY,e.clientX-rs.centerX)*180/Math.PI+90;renderOverlayEditor()}
+function handleRotateEnd(){document.removeEventListener('pointermove',handleRotateMove);document.removeEventListener('pointerup',handleRotateEnd);overlayEditorState.rotateStart=null}
+async function handleOverlayFileSelect(event){const file=event.target.files[0];if(!file)return;if(!file.type.startsWith('image/png')){alert('Bitte eine PNG-Datei auswählen');return}if(file.size>5*1024*1024){alert('Datei zu groß (max 5 MB)');return}uploadOverlayImage(file);event.target.value=''}
+async function uploadOverlayImage(file){try{const rowId=overlayEditorState.rowId;const timestamp=Date.now();const safe=(file.name||'overlay.png').replace(/[^a-zA-Z0-9._-]/g,'-');const s3Key=`artwork/overlays/row-${rowId}-${timestamp}-${safe}`;const url=await uploadToS3(file,s3Key);addNewOverlay(url)}catch(err){console.error('Overlay Upload Fehler:',err);alert('Upload fehlgeschlagen: '+err.message)}}
+function addNewOverlay(url){const id='overlay-'+Date.now();overlayEditorState.overlays.push({id,url,x:10,y:10,width:30,height:30,rotation:0,zIndex:overlayEditorState.overlays.length+1,altText:''});selectOverlay(id)}
+function overlayMoveLayer(direction){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;overlay.zIndex=Math.max(1,(overlay.zIndex||1)+direction);renderOverlayEditor()}
+function overlayDuplicateSelected(){const overlay=overlayEditorState.overlays.find(o=>o.id===overlayEditorState.selectedId);if(!overlay)return;const copy={...overlay,id:'overlay-'+Date.now(),x:Math.min(90,overlay.x+5),y:Math.min(90,overlay.y+5),zIndex:(overlay.zIndex||1)+1};overlayEditorState.overlays.push(copy);selectOverlay(copy.id)}
 function overlayDeleteSelected(){if(!overlayEditorState.selectedId)return;overlayEditorState.overlays=overlayEditorState.overlays.filter(o=>o.id!==overlayEditorState.selectedId);overlayEditorState.selectedId=null;renderOverlayEditor()}
-function handleOverlayTouchStart(e){handleOverlayMouseDown(e.touches[0])}
-
-// ── Add Overlay Button to Row Bars ──
-function initOverlayButtons(){const rows=document.querySelectorAll('.he-row-bar');rows.forEach(bar=>{if(bar.querySelector('.overlays'))return;const rowEl=bar.closest('.he-row');if(!rowEl)return;const rowId=rowEl.dataset.rowId;const btn=document.createElement('button');btn.className='he-row-bar-btn overlays';btn.title='Overlays bearbeiten';btn.textContent='⭕ Overlays';btn.onclick=()=>openOverlayEditor(rowId);const editBtn=bar.querySelector('.edit-row');if(editBtn){editBtn.parentNode.insertBefore(btn,editBtn)}else{bar.appendChild(btn)}})}
-
-// Robust initialization with retries
+function handleCanvasDragOver(e){e.preventDefault();document.getElementById('overlayUploadZone')?.classList.add('dragover')}
+function handleCanvasDrop(e){e.preventDefault();document.getElementById('overlayUploadZone')?.classList.remove('dragover');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f) uploadOverlayImage(f)}
+function appendAdminCellOverlays(el, cell){
+  const overlays=(cell&&Array.isArray(cell.overlays))?cell.overlays:[]; if(!el||!overlays.length)return;
+  overlays.filter(o=>o&&(o.url||o.src||o.imageUrl)).sort((a,b)=>(Number(a.zIndex)||1)-(Number(b.zIndex)||1)).forEach(o=>{const img=document.createElement('img');img.className='he-cell-home-overlay';img.src=o.url||o.src||o.imageUrl;img.alt='';img.style.left=(Number(o.x)||0)+'%';img.style.top=(Number(o.y)||0)+'%';img.style.width=(Number(o.width)||30)+'%';img.style.height=(Number(o.height)||30)+'%';img.style.transform='rotate('+(Number(o.rotation)||0)+'deg)';img.style.zIndex=String(5+(Number(o.zIndex)||1));el.appendChild(img);});
+}
+function initOverlayButtons(){const rows=document.querySelectorAll('.he-row-bar');rows.forEach(bar=>{if(bar.querySelector('.overlays'))return;const rowEl=bar.closest('.he-row');if(!rowEl)return;const rowId=rowEl.dataset.rowId;const btn=document.createElement('button');btn.className='he-row-bar-btn overlays';btn.title='Overlays für das erste Motiv dieser Zeile bearbeiten';btn.textContent='Overlays';btn.onclick=()=>openOverlayEditor(rowId);const editBtn=bar.querySelector('.edit-row');if(editBtn){editBtn.parentNode.insertBefore(btn,editBtn)}else{bar.appendChild(btn)}})}
 function tryInitOverlayButtons(){const bars=document.querySelectorAll('.he-row-bar');if(bars.length>0){initOverlayButtons();return true}return false}
-document.addEventListener('DOMContentLoaded',()=>{if(!tryInitOverlayButtons()){setTimeout(()=>{tryInitOverlayButtons();if(document.querySelectorAll('.he-row-bar .overlays').length===0){const obs=new MutationObserver(()=>{if(tryInitOverlayButtons()){obs.disconnect()}});obs.observe(document.body,{childList:true,subtree:true})},100)}});
+document.addEventListener('DOMContentLoaded',()=>{if(!tryInitOverlayButtons()){setTimeout(()=>{tryInitOverlayButtons();if(document.querySelectorAll('.he-row-bar .overlays').length===0){const obs=new MutationObserver(()=>{if(tryInitOverlayButtons()){obs.disconnect()}});obs.observe(document.body,{childList:true,subtree:true})}},100)}});
 window.addEventListener('load',()=>setTimeout(tryInitOverlayButtons,200));
 </script>
 
@@ -10466,7 +10523,12 @@ function normalizeHomeCell(c){
 function normalizeHomeRow(row){
   row = row || {};
   const cells = (row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
-  return { id: row.id || uid(), editing: !!row.editing, caption: row.caption || undefined, cells: cells.map(normalizeHomeCell) };
+  const normalized = cells.map(normalizeHomeCell);
+  if(Array.isArray(row.overlays) && row.overlays.length && !normalized.some(c => Array.isArray(c.overlays) && c.overlays.length)){
+    const target = normalized.find(c => c && c.type !== 'hidden' && c.type !== 'empty' && (c.imageUrl || c.customImageUrl || c.cover21Url || c.bgUrl));
+    if(target) target.overlays = row.overlays.map(normalizeOverlay);
+  }
+  return { id: row.id || uid(), editing: !!row.editing, caption: row.caption || undefined, cells: normalized };
 }
 
 function makeRow(){
@@ -12528,6 +12590,7 @@ function buildCell(row, cellIdx, extraClass, editing){
       img.onerror = ()=>{ img.style.opacity='.15'; };
       el.appendChild(img);
     }
+    appendAdminCellOverlays(el, cell);
     // Alt text overlay (bottom, always visible, subtle)
     {
       const _TRIO_TYPES = new Set(['trio-a','trio-b','trio-c']);
@@ -12594,6 +12657,7 @@ function buildCell(row, cellIdx, extraClass, editing){
           <span class="he-cell-badge ${badgeCls}">${badgeTxt}</span>
           <div class="he-cell-acts">
             <button class="he-cell-act edt" onclick="event.stopPropagation();openCellEdit('${row.id}',${cellIdx})" title="Bearbeiten">✎</button>
+            <button class="he-cell-act ovl" onclick="event.stopPropagation();openOverlayEditor('${row.id}',${cellIdx})" title="Overlay-Grafiken platzieren">Overlay</button>
             ${editing ? `<button class="he-cell-act rem" onclick="event.stopPropagation();clearCell('${row.id}',${cellIdx})" title="Entfernen">×</button>` : ''}
           </div>`;
       }
