@@ -672,6 +672,61 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   pointer-events:none;
 }
 
+.hj-page-jump{
+  position:fixed;
+  right:calc(env(safe-area-inset-right,0px) + 12px);
+  top:50%;
+  z-index:230;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(207,229,245,.22);
+  border-radius:50%;
+  background:#85ACC9;
+  color:#06141F;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:pointer;
+  box-shadow:0 8px 26px rgba(0,0,0,.34),0 0 0 1px rgba(6,20,32,.18) inset;
+  opacity:0;
+  transform:translate(8px,-50%) scale(.96);
+  pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease,color .18s ease,background .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.hj-page-jump.visible{
+  opacity:.96;
+  transform:translate(0,-50%) scale(1);
+  pointer-events:auto;
+}
+.hj-page-jump:hover{
+  color:#06141F;
+  background:#cfe5f5;
+  border-color:rgba(207,229,245,.56);
+  box-shadow:0 10px 30px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.18) inset;
+}
+.hj-page-jump:active{transform:translate(0,-50%) scale(.91);opacity:.86}
+.hj-page-jump svg{
+  width:27px;
+  height:27px;
+  display:block;
+  stroke:currentColor;
+  stroke-width:2.35;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:transform .18s ease;
+}
+.hj-page-jump.to-top svg{transform:rotate(180deg)}
+@media(max-width:599px){
+  .hj-page-jump{
+    right:calc(env(safe-area-inset-right,0px) + 8px);
+    width:40px;
+    height:40px;
+  }
+  .hj-page-jump svg{width:25px;height:25px}
+}
+
 
 /* ══ TRACKLIST ══ */
 /* Album header v120: iPhone = Cover links + Info+Buttons rechts / iPad = 2 Spalten */
@@ -4263,6 +4318,9 @@ body.album-open #hjPlayerSpacer{
 <span class="hj-logo-sub" id="makingWaves"><img class="hj-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="making waves" draggable="false"/></span>
 <div class="hj-header-right" id="headerRight"></div>
 </div>
+<button aria-label="Zum Seitenende springen" class="hj-page-jump" id="hjPageJump" type="button">
+<svg viewbox="0 0 24 24" aria-hidden="true"><polyline points="6,9 12,15 18,9"></polyline></svg>
+</button>
 <!-- HOME -->
 <div class="screen active" id="screenHome">
 <div class="home-grid" id="homeGrid">
@@ -5782,6 +5840,7 @@ const screenLanding = document.getElementById('screenLanding');
 const aboutFinalArt = document.getElementById('aboutFinalArt');
 const aboutArtLightbox = document.getElementById('aboutArtLightbox');
 const homeInfoBtn = document.getElementById('homeInfoBtn');
+const pageJumpBtn = document.getElementById('hjPageJump');
 
 // ── State ──
 // curAlbum = aktuell sichtbares Album, playAlbum = Album der tatsächlich laufenden Queue.
@@ -10820,6 +10879,47 @@ arcTopBtn && arcTopBtn.addEventListener('click',()=>{
   setTimeout(updateArchiveTopButton,260);
 });
 window.addEventListener('resize',updateArchiveTopButton);
+
+// Home/Landing: dezenter Seiten-Sprungpfeil außen rechts
+function currentPageJumpScroller(){
+  if(screenHome && screenHome.classList.contains('active')) return screenHome;
+  if(screenLanding && screenLanding.classList.contains('active')) return screenLanding;
+  return null;
+}
+
+function updatePageJumpButton(){
+  if(!pageJumpBtn) return;
+  const scroller = currentPageJumpScroller();
+  if(!scroller){
+    pageJumpBtn.classList.remove('visible','to-top');
+    return;
+  }
+  const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+  const y = Math.max(0, scroller.scrollTop);
+  const progress = maxScroll ? y / maxScroll : 0;
+  const visible = maxScroll > 80 && y > 24;
+  const toTop = progress >= .58;
+  pageJumpBtn.classList.toggle('visible', visible);
+  pageJumpBtn.classList.toggle('to-top', toTop);
+  pageJumpBtn.setAttribute('aria-label', toTop ? 'Zum Seitenanfang springen' : 'Zum Seitenende springen');
+}
+
+pageJumpBtn && pageJumpBtn.addEventListener('click',()=>{
+  const scroller = currentPageJumpScroller();
+  if(!scroller) return;
+  const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+  const target = pageJumpBtn.classList.contains('to-top') ? 0 : maxScroll;
+  scroller.scrollTo({top:target,behavior:'smooth'});
+  setTimeout(updatePageJumpButton,320);
+});
+
+[screenHome, screenLanding].forEach(scroller=>{
+  if(!scroller) return;
+  scroller.addEventListener('scroll',()=>requestAnimationFrame(updatePageJumpButton),{passive:true});
+  new MutationObserver(()=>requestAnimationFrame(updatePageJumpButton)).observe(scroller,{attributes:true,attributeFilter:['class']});
+});
+window.addEventListener('resize',()=>requestAnimationFrame(updatePageJumpButton));
+requestAnimationFrame(updatePageJumpButton);
 
 screenArchive.addEventListener('scroll',()=>{
   if(arcScrollTicking) return;
