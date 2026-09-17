@@ -30,6 +30,7 @@ MIN_TRACKS   = 80    # Sicherheitsabbruch, falls Zuordnung unplausibel klein (Sc
 OVERRIDE     = {
     "no-no": "noe-noe",
     "nachtexpress-durch-die-nacht": "nachtexpress",
+    "nothing-but-stories": "nothing-but-stories-male",
     "sehnsucht": "sehnsucht-eichendorff",
     "sehnsucht-1": "sehnsucht",
 }
