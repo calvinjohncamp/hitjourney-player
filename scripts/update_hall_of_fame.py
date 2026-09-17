@@ -25,8 +25,13 @@ TOP100_SLUG  = "top-100"
 TOP100_N     = 100
 MIN_STREAMS  = 500   # Nur Songs ab dieser Stream-Zahl kommen in die Hall of Fame (später ggf. 400)
 MIN_TRACKS   = 80    # Sicherheitsabbruch, falls Zuordnung unplausibel klein (Schutz vor SoundCloud-Fehlern)
-# Manuelle Korrekturen: SC-Permalink -> HJ-Slug (z. B. Umlaut-Permalinks)
-OVERRIDE     = {"no-no": "noe-noe"}
+# Manuelle Korrekturen: SC-Permalink -> HJ-Slug (z. B. Umlaut-Permalinks
+# oder SoundCloud-Permalinks, die vor der internen Slug-Trennung entstanden sind).
+OVERRIDE     = {
+    "no-no": "noe-noe",
+    "sehnsucht": "sehnsucht-eichendorff",
+    "sehnsucht-1": "sehnsucht",
+}
 UA           = {"User-Agent": "Mozilla/5.0"}
 DRY_RUN      = os.environ.get("DRY_RUN") == "1"
 
@@ -98,35 +103,69 @@ def normbase(s):
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "", s)
 
+def normtitle(s):
+    s = translit(s).replace("'", "")
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "", s)
+
 def anorm(s):
     return re.sub(r"[^a-z0-9]+", "", translit(s))
+
+def has_title_qualifier(s):
+    return bool(re.search(r"\([^)]*\)|\[[^\]]*\]", s or ""))
+
+def artist_compatible(song_artist, sc_artist):
+    """Artist-Fallback bewusst konservativ:
+    Exakte Normalisierung oder enthaltene Credits sind ok; klare Fremd-Artists nicht."""
+    a = anorm(song_artist)
+    b = anorm(sc_artist)
+    if not a or not b:
+        return True
+    return a == b or a in b or b in a
 
 def build_order(sc, songs):
     from collections import defaultdict
     by_slug = {s["slug"]: s for s in songs}
+    by_title = defaultdict(list)
     by_base = defaultdict(list)
     for s in songs:
+        by_title[normtitle(s["title"])].append(s)
         by_base[normbase(s["title"])].append(s)
-    bases = list(by_base.keys())
+    titles = list(by_title.keys())
 
     def match(x):
         if x["permalink"] in OVERRIDE:
             return by_slug.get(OVERRIDE[x["permalink"]])
         if x["permalink"] in by_slug:
             return by_slug[x["permalink"]]
+
+        exact = by_title.get(normtitle(x["title"]), [])
+        if len(exact) == 1:
+            return exact[0] if artist_compatible(exact[0].get("artist"), x.get("artist")) else None
+        if len(exact) > 1:
+            b = [k for k in exact if artist_compatible(k.get("artist"), x.get("artist"))]
+            return b[0] if len(b) == 1 else None
+
+        # Nur einfache Titel auf ihren Basistitel zurueckfuehren. Versionstitel wie
+        # "Isabelle (I was the Cool One)" duerfen nicht still auf "Isabelle" fallen.
+        if has_title_qualifier(x["title"]):
+            return None
+
         c = by_base.get(normbase(x["title"]), [])
         if len(c) == 1:
-            return c[0]
+            return c[0] if artist_compatible(c[0].get("artist"), x.get("artist")) else None
         if len(c) > 1:
-            b = [k for k in c if anorm(k["artist"]) == anorm(x["artist"])]
-            return b[0] if b else c[0]
-        nb = normbase(x["title"]); best = None; br = 0.0
-        for bb in bases:
-            r = difflib.SequenceMatcher(None, nb, bb).ratio()
+            b = [k for k in c if artist_compatible(k.get("artist"), x.get("artist"))]
+            return b[0] if len(b) == 1 else None
+
+        nt = normtitle(x["title"]); best = None; br = 0.0
+        for tt in titles:
+            r = difflib.SequenceMatcher(None, nt, tt).ratio()
             if r > br:
-                br, best = r, bb
-        if best and br >= 0.88 and len(by_base[best]) == 1:
-            return by_base[best][0]
+                br, best = r, tt
+        if best and br >= 0.90 and len(by_title[best]) == 1:
+            h = by_title[best][0]
+            return h if artist_compatible(h.get("artist"), x.get("artist")) else None
         return None
 
     seen, order = set(), []
