@@ -28,6 +28,7 @@ MIN_TRACKS   = 80    # Sicherheitsabbruch, falls Zuordnung unplausibel klein (Sc
 # Manuelle Korrekturen: SC-Permalink -> HJ-Slug (z. B. Umlaut-Permalinks
 # oder SoundCloud-Permalinks, die vor der internen Slug-Trennung entstanden sind).
 OVERRIDE     = {
+    "an-und-fu-r-sich-leni-f": "an-und-fuer-sich",
     "no-no": "noe-noe",
     "nachtexpress-durch-die-nacht": "nachtexpress",
     "nothing-but-stories": "nothing-but-stories-male",
