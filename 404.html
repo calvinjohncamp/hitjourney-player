@@ -3289,7 +3289,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   .tl-deck .deck-cover-wrap{position:absolute;left:7.6%;top:8.4%;width:74.8%;aspect-ratio:1;border-radius:50%;overflow:hidden;z-index:2;background:#000;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
   .tl-deck .deck-cover-inner{width:100%;height:100%;position:relative;transform-origin:50% 50%}
   .tl-deck.is-playing .deck-cover-inner{animation:coverSpin 3.70s linear infinite}
-  @keyframes coverSpin{to{transform:rotate(360deg)}}
+  @keyframes coverSpin{
+    from{transform:translate3d(0,0,0) rotate(0deg)}
+    to{transform:translate3d(0,0,0) rotate(360deg)}
+  }
   .tl-deck .deck-cover-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;opacity:1;filter:brightness(1.10) contrast(1.14) saturate(1.12);backface-visibility:hidden}
   .tl-deck .deck-cover-ph{position:absolute;inset:0;border-radius:50%;background:#000}
   .tl-deck .deck-center-pin{position:absolute;left:45%;top:45.8%;width:3.2%;aspect-ratio:1;border-radius:50%;background:#f3f3f3;transform:translate(-50%,-50%);z-index:6;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.18),0 0 5px rgba(255,255,255,.12)}
@@ -4138,9 +4141,27 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
    2. iOS-Compositing-Hinweise: eigener Layer für den drehenden Innenteil und
       stabiler runder Beschnitt — verhindert das bekannte Einfrieren von
       Animationen in border-radius/overflow:hidden-Containern auf iPadOS. */
-@keyframes coverSpin{to{transform:rotate(360deg)}}
-.tl-deck .deck-cover-wrap{-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translateZ(0)}
-.tl-deck .deck-cover-inner{will-change:transform}
+@keyframes coverSpin{
+  from{transform:translate3d(0,0,0) rotate(0deg)}
+  to{transform:translate3d(0,0,0) rotate(360deg)}
+}
+.tl-deck .deck-cover-wrap{
+  -webkit-mask-image:-webkit-radial-gradient(white,black);
+  transform:translate3d(0,0,0);
+  backface-visibility:hidden;
+  isolation:isolate;
+  contain:paint;
+}
+.tl-deck .deck-cover-inner{
+  transform-origin:50% 50%;
+  backface-visibility:hidden;
+  will-change:transform;
+  contain:layout paint style;
+}
+.tl-deck .deck-cover-img{
+  transform:translate3d(0,0,0);
+  backface-visibility:hidden;
+}
 
 /* v245: Player-Bar auf der Albumseite zusätzlich per JS-Klasse verstecken.
    Bisher hing das Ausblenden allein an body:has(...) — falls der Browser
