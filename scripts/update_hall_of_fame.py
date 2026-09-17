@@ -143,10 +143,12 @@ def build_order(sc, songs):
 
         exact = by_title.get(normtitle(x["title"]), [])
         if len(exact) == 1:
-            return exact[0] if artist_compatible(exact[0].get("artist"), x.get("artist")) else None
+            if artist_compatible(exact[0].get("artist"), x.get("artist")):
+                return exact[0]
         if len(exact) > 1:
             b = [k for k in exact if artist_compatible(k.get("artist"), x.get("artist"))]
-            return b[0] if len(b) == 1 else None
+            if len(b) == 1:
+                return b[0]
 
         # Nur einfache Titel auf ihren Basistitel zurueckfuehren. Versionstitel wie
         # "Isabelle (I was the Cool One)" duerfen nicht still auf "Isabelle" fallen.
