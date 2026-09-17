@@ -29,6 +29,7 @@ MIN_TRACKS   = 80    # Sicherheitsabbruch, falls Zuordnung unplausibel klein (Sc
 # oder SoundCloud-Permalinks, die vor der internen Slug-Trennung entstanden sind).
 OVERRIDE     = {
     "no-no": "noe-noe",
+    "nachtexpress-durch-die-nacht": "nachtexpress",
     "sehnsucht": "sehnsucht-eichendorff",
     "sehnsucht-1": "sehnsucht",
 }
