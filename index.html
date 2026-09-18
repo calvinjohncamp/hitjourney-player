@@ -230,7 +230,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-stage{
   appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;background:#02070B;
   position:absolute;top:0;width:calc((100% - 10px)/2);aspect-ratio:1/1;z-index:2;
-  border-radius:8px;cursor:pointer;
+  border-radius:8px;cursor:pointer;transform-style:preserve-3d;perspective:none;
   box-shadow:0 10px 30px rgba(0,0,0,.38);overflow:visible;
   transition:transform 2.8s cubic-bezier(.22,.61,.24,1),box-shadow .5s ease;
   will-change:transform
@@ -240,33 +240,28 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-stage.is-open{transform:translateX(0)}
 .home-album-promo-stage:focus-visible{outline:2px solid #85ACC9;outline-offset:4px}
 .home-album-promo-flip{
-  position:absolute;inset:0;transform-origin:50% 50%;border-radius:8px;
-  transform:translate(0,0) rotate(0deg) scale(1);will-change:transform
-}
-.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2.8s cubic-bezier(.4,0,.2,1) both}
-@keyframes albumSleeveTurn{
-  0%{transform:translate(0,0) rotate(0deg) scale(1)}
-  18%{transform:translate(0,-.25%) rotate(8deg) scale(1.004)}
-  46%{transform:translate(0,-.8%) rotate(82deg) scale(.972)}
-  49.8%{transform:translate(0,-1%) rotate(90deg) scale(.965)}
-  50.2%{transform:translate(0,-1%) rotate(-90deg) scale(.965)}
-  54%{transform:translate(0,-.8%) rotate(-82deg) scale(.972)}
-  82%{transform:translate(0,-.25%) rotate(-8deg) scale(1.004)}
-  100%{transform:translate(0,0) rotate(0deg) scale(1)}
+  position:absolute;inset:0;transform-origin:50% 50%;border-radius:8px;will-change:transform
 }
 .home-album-promo-face,.home-album-promo-back-cover{
   position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;aspect-ratio:1/1;
-  border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
+  border-radius:8px;transform-origin:50% 50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);will-change:transform
 }
-.home-album-promo-face{will-change:opacity}
-.home-album-promo-face.front{opacity:1}
-.home-album-promo-face.back{transform:none;opacity:0}
-.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2.8s linear both}
-.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2.8s linear both}
-.home-album-promo-stage.is-flipped .home-album-promo-face.front{opacity:0}
-.home-album-promo-stage.is-flipped .home-album-promo-face.back{opacity:1}
-@keyframes albumSleeveFrontFade{0%,46%{opacity:1}49.8%,100%{opacity:0}}
-@keyframes albumSleeveBackFade{0%,50.2%{opacity:0}54%,100%{opacity:1}}
+.home-album-promo-face.front{transform:scaleX(1);opacity:1}
+.home-album-promo-face.back{transform:scaleX(.001);opacity:0}
+.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontTurn 2.8s cubic-bezier(.42,0,.58,1) both}
+.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackTurn 2.8s cubic-bezier(.42,0,.58,1) both}
+.home-album-promo-stage.is-flipped .home-album-promo-face.front{transform:scaleX(.001);opacity:0}
+.home-album-promo-stage.is-flipped .home-album-promo-face.back{transform:scaleX(1);opacity:1}
+@keyframes albumSleeveFrontTurn{
+  0%{transform:scaleX(1);opacity:1}
+  49.99%{transform:scaleX(.001);opacity:1}
+  50%,100%{transform:scaleX(.001);opacity:0}
+}
+@keyframes albumSleeveBackTurn{
+  0%,49.99%{transform:scaleX(.001);opacity:0}
+  50%{transform:scaleX(.001);opacity:1}
+  100%{transform:scaleX(1);opacity:1}
+}
 .home-album-promo-back-cover{opacity:0;transition:opacity .3s ease;backface-visibility:visible}
 .home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
 .home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
