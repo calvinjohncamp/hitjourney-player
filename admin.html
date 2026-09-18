@@ -216,11 +216,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .album-cover{width:44px;height:44px;border-radius:7px;object-fit:cover;flex-shrink:0;background:rgba(133,172,201,.08)}
 .album-cover-placeholder{width:44px;height:44px;border-radius:7px;background:rgba(133,172,201,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .album-cover-placeholder svg{width:18px;height:18px;stroke:rgba(133,172,201,.3);stroke-width:1.5;fill:none}
-.btn-album-cover-change,.btn-album-title-edit,.btn-album-promotion{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:rgba(133,172,201,.08);border:1px solid rgba(133,172,201,.2);cursor:pointer;flex-shrink:0;transition:background .15s,color .15s,border-color .15s}
+.btn-album-cover-change,.btn-album-title-edit,.btn-album-promotion{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;background:rgba(133,172,201,.08);border:1px solid rgba(133,172,201,.2);cursor:pointer;flex-shrink:0;transition:background .15s,color .15s,border-color .15s}
+.btn-album-cover-change,.btn-album-title-edit{width:30px}
+.btn-album-promotion{width:auto;padding:0 10px;gap:6px;color:rgba(207,229,245,.78);font-size:11px;font-weight:700;white-space:nowrap}
 .btn-album-cover-change:hover,.btn-album-title-edit:hover,.btn-album-promotion:hover{background:rgba(133,172,201,.18)}
 .btn-album-cover-change svg,.btn-album-title-edit svg,.btn-album-promotion svg{width:15px;height:15px;stroke:rgba(133,172,201,.7);stroke-width:1.8;fill:none}
-.btn-album-promotion.active{background:rgba(201,0,25,.16);border-color:rgba(201,0,25,.48)}
+.btn-album-promotion.active{background:rgba(201,0,25,.16);border-color:rgba(201,0,25,.48);color:#f1ecdf}
 .btn-album-promotion.active svg{stroke:#f06b7d}
+@media(max-width:760px){.btn-album-promotion{width:30px;padding:0}.btn-album-promotion span{display:none}.album-meta{display:none}}
 .album-info{flex:1;min-width:0}
 .album-title{font-size:15px;font-weight:700;color:#cfe5f5;transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .album-slug{font-size:11px;color:rgba(133,172,201,.35);margin-top:2px;font-family:'SF Mono','Menlo',monospace}
@@ -296,7 +299,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .album-promotion-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .album-promotion-note{font-size:11px;line-height:1.5;color:rgba(133,172,201,.48);margin-top:10px}
 @media(max-width:680px){.album-promotion-grid{grid-template-columns:1fr}.album-promotion-grid .upload-zone{max-width:220px}}
-.btn-album-cover-change,.btn-album-promotion{padding:0}
+.btn-album-cover-change{padding:0}
 
 
 
@@ -10121,8 +10124,9 @@ function renderAlbums(){
           <button class="btn-album-title-edit" title="Albumtitel ändern" onclick="editAlbumTitle(event,'${al.slug}')">
             <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><path d="M12 4v16"/><path d="M8 20h8"/></svg>
           </button>
-          <button class="btn-album-promotion ${albumPromotions[al.slug] && albumPromotions[al.slug].enabled ? 'active' : ''}" title="Album-Promotion" onclick="openAlbumPromotionModal(event,'${al.slug}')">
+          <button class="btn-album-promotion ${albumPromotions[al.slug] && albumPromotions[al.slug].enabled ? 'active' : ''}" title="Album-Promotion öffnen" onclick="openAlbumPromotionModal(event,'${al.slug}')">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="14" height="14" rx="1"/><path d="M7 8h6v6H7zM17 8l4 4-4 4"/></svg>
+            <span>Album-Promotion</span>
           </button>
           <button class="btn-album-cover-change" title="Cover-Bild ersetzen" onclick="openAlbumCoverModal(event,'${al.slug}')">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
