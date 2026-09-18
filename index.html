@@ -213,6 +213,40 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-card.span-2col img{aspect-ratio:2/1}
 .home-card.big-square{grid-column:span 2} /* 1x1-big: 2 cols wide, 1:1 aspect */
 .home-card.big-square img{aspect-ratio:1/1}
+.home-album-promo-row{
+  grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  position:relative;isolation:isolate;overflow:visible
+}
+.home-album-promo-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
+.home-album-promo-row .home-card.album-promo-ready::before{
+  content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%;
+  background:#C90019;box-shadow:0 0 0 4px rgba(6,20,32,.55);z-index:6;pointer-events:none
+}
+.home-album-promo-row .home-card.promo-partner-hidden{visibility:hidden;pointer-events:none}
+.home-album-promo-stage{
+  appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;background:#06141F;
+  position:absolute;top:0;width:calc((100% - 10px)/2);aspect-ratio:1/1;z-index:2;
+  border-radius:8px;cursor:pointer;transform-style:preserve-3d;perspective:1500px;
+  box-shadow:0 10px 30px rgba(0,0,0,.38);overflow:visible;
+  transition:transform .72s cubic-bezier(.2,.78,.2,1),box-shadow .35s ease
+}
+.home-album-promo-stage.from-left{right:0;transform:translateX(calc(-100% - 10px))}
+.home-album-promo-stage.from-right{left:0;transform:translateX(calc(100% + 10px))}
+.home-album-promo-stage.is-open{transform:translateX(0)}
+.home-album-promo-stage:focus-visible{outline:2px solid #85ACC9;outline-offset:4px}
+.home-album-promo-flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.68,.18,1);border-radius:8px}
+.home-album-promo-stage.is-flipped .home-album-promo-flip{transform:rotateY(180deg)}
+.home-album-promo-face,.home-album-promo-back-cover{
+  position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;aspect-ratio:1/1;
+  border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
+}
+.home-album-promo-face.back{transform:rotateY(180deg)}
+.home-album-promo-back-cover{opacity:0;transition:opacity .18s ease;backface-visibility:visible}
+.home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
+.home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
+@media(prefers-reduced-motion:reduce){
+  .home-album-promo-stage,.home-album-promo-flip,.home-album-promo-back-cover{transition-duration:.01ms!important}
+}
 .home-card img{width:100%;display:block;object-fit:cover}
 .home-card.wide img{aspect-ratio:2/1}
 .home-card.panorama-4x1 img{aspect-ratio:4/1}
@@ -5576,6 +5610,12 @@ async function loadFromSupabase() {
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
 
+  const promotionRow = (window._homeLayoutRows || []).find(r =>
+    r && r.cells && r.cells[0] && r.cells[0].type === 'albumPromotions');
+  window._albumPromotions = promotionRow && promotionRow.cells[0].albums
+    ? promotionRow.cells[0].albums
+    : {};
+
   // 4a. Unterseiten (Lyric-Sheet-Unterseiten) aus der geschützten Sonderzeile
   //     (row_order = -3, cells[0].type = 'subpages') übernehmen — falls im Admin gepflegt.
   try {
@@ -8360,7 +8400,7 @@ function buildLandingFreeformRows(rowsArr){
   const ff = document.createElement('div');
   ff.className = 'home-grid landing-freeform';
   rowsArr.forEach(row => {
-    if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages')) return;
+    if(row && row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages' || row.cells[0].type === 'overlayLibrary' || row.cells[0].type === 'albumPromotions')) return;
     renderHomeRowInto(ff, row);
   });
   return ff.children.length ? ff : null;
@@ -8830,7 +8870,7 @@ function renderHomeLayout(){
 
   // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
   const rows = (window._homeLayoutRows || []).filter(r =>
-    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary')));
+    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary' || r.cells[0].type === 'albumPromotions')));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -8979,10 +9019,15 @@ function renderHomeRowInto(grid, row){
 
     // ── 2× 1:1 groß (1x1-big) — je 2 Spalten breit ──────────────────
     if(t0 === '1x1-big'){
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        grid.appendChild(buildHomeCard(cell, 'big-square'));
-      });
+      const visibleCells = cells.filter(cell =>
+        cell && cell.imageUrl && cell.type !== 'hidden' && !isFinalJustThisDanceCell(cell));
+      const hasPromotion = visibleCells.some(cell => albumPromotionForCell(cell));
+      const isAlbumPair = visibleCells.length === 2 && visibleCells.every(cell => cell.fn === 'album');
+      if(isAlbumPair && hasPromotion){
+        grid.appendChild(buildTwoAlbumPromotionRow(visibleCells));
+      }else{
+        visibleCells.forEach(cell => grid.appendChild(buildHomeCard(cell, 'big-square')));
+      }
       return;
     }
 
@@ -9548,6 +9593,94 @@ function appendHomeOverlaysToCard(card, cell){
     });
 }
 
+function albumPromotionForCell(cell){
+  const slug = String(cell && (cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug) || '').trim();
+  const promotion = slug && window._albumPromotions ? window._albumPromotions[slug] : null;
+  if(!promotion || !promotion.enabled || !promotion.sleeveFrontUrl || !promotion.sleeveBackUrl || !promotion.backCoverUrl) return null;
+  return {slug, ...promotion};
+}
+
+function openPromotedAlbum(cell, row, sourceCard, partnerCard, stage){
+  const slug = cell && (cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug);
+  const key = resolveAlbumKey(slug);
+  if(!key || !ALBUMS[key]) return;
+  showAlbum(key);
+  if(stage) stage.remove();
+  if(sourceCard) sourceCard.classList.remove('promo-source');
+  if(partnerCard) partnerCard.classList.remove('promo-partner-hidden');
+  if(row) row._albumPromotionActive = false;
+}
+
+function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, sourceIndex){
+  if(row._albumPromotionActive) return;
+  row._albumPromotionActive = true;
+  sourceCard.classList.add('promo-source');
+  partnerCard.classList.add('promo-partner-hidden');
+
+  const stage = document.createElement('button');
+  stage.type = 'button';
+  stage.className = 'home-album-promo-stage ' + (sourceIndex === 0 ? 'from-left' : 'from-right');
+  stage.setAttribute('aria-label', 'Innensleeve wenden');
+  stage.innerHTML = '<span class="home-album-promo-flip">' +
+    '<img class="home-album-promo-face front" alt="Innensleeve Vorderseite">' +
+    '<img class="home-album-promo-face back" alt="Innensleeve Rückseite">' +
+    '</span><img class="home-album-promo-back-cover" alt="Album Rückseite">';
+  stage.querySelector('.front').src = promotion.sleeveFrontUrl;
+  stage.querySelector('.back').src = promotion.sleeveBackUrl;
+  stage.querySelector('.home-album-promo-back-cover').src = promotion.backCoverUrl;
+  row.appendChild(stage);
+
+  let step = 1;
+  let locked = false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
+  stage.addEventListener('click', ()=>{
+    if(locked) return;
+    if(step === 1){
+      stage.classList.add('is-flipped');
+      stage.setAttribute('aria-label', 'Album-Rückseite zeigen');
+      step = 2;
+      return;
+    }
+    if(step === 2){
+      locked = true;
+      stage.classList.remove('is-open');
+      setTimeout(()=>{
+        stage.classList.remove('is-flipped');
+        stage.classList.add('show-back');
+        stage.setAttribute('aria-label', 'Album im Player öffnen');
+        requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
+        step = 3;
+        setTimeout(()=>{ locked = false; }, 740);
+      }, 520);
+      return;
+    }
+    openPromotedAlbum(cell, row, sourceCard, partnerCard, stage);
+  });
+}
+
+function buildTwoAlbumPromotionRow(cells){
+  const row = document.createElement('div');
+  row.className = 'home-album-promo-row';
+  const cards = cells.map(cell => buildHomeCard(cell, 'big-square'));
+  cards.forEach((card, index)=>{
+    const promotion = albumPromotionForCell(cells[index]);
+    if(promotion){
+      card._albumPromotionHandled = true;
+      card.classList.add('album-promo-ready');
+      card.setAttribute('aria-label', (cells[index].alt || 'Album') + ' Promotion öffnen');
+      [promotion.sleeveFrontUrl, promotion.sleeveBackUrl, promotion.backCoverUrl].forEach(url=>{
+        const preload = new Image(); preload.src = url;
+      });
+      card.addEventListener('click', event=>{
+        event.stopPropagation();
+        startTwoAlbumPromotion(row, card, cards[index === 0 ? 1 : 0], cells[index], promotion, index);
+      });
+    }
+    row.appendChild(card);
+  });
+  return row;
+}
+
 /* ── Build a standard home-card div ── */
 function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
@@ -9658,6 +9791,7 @@ function buildHomeCard(cell, extraClass){
 
   // Click action
   el.addEventListener('click', () => {
+    if(el._albumPromotionHandled) return;
     // v182: Lyrics-Sheet-21 nutzt immer die gleiche Sonderlogik wie Tante Paula / Just This Dance:
     // Klick startet den Song und öffnet den Bild/Lyrics-Zyklus, aber ohne Footer-Player-Bar.
     if(cell.fn === 'play' && (cell.lyricsCycle || cell.useCover21)){
@@ -10519,7 +10653,7 @@ function wireHomeGrid(grid){
   grid._albumDelegationV229 = true;
   grid.addEventListener('click', function(e){
     const card = e.target && e.target.closest ? e.target.closest('[data-album]') : null;
-    if(!card || !grid.contains(card)) return;
+    if(!card || !grid.contains(card) || card._albumPromotionHandled) return;
     const key = card.dataset.album;
     if(key && ALBUMS && ALBUMS[key]){
       e.preventDefault();
