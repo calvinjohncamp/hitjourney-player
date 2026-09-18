@@ -228,7 +228,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:absolute;top:0;width:calc((100% - 10px)/2);aspect-ratio:1/1;z-index:2;
   border-radius:8px;cursor:pointer;transform-style:preserve-3d;perspective:1800px;
   box-shadow:0 10px 30px rgba(0,0,0,.38);overflow:visible;
-  transition:transform .72s cubic-bezier(.2,.78,.2,1),box-shadow .35s ease
+  transition:transform 2.8s cubic-bezier(.22,.61,.24,1),box-shadow .5s ease;
+  will-change:transform
 }
 .home-album-promo-stage.from-left{right:0;transform:translateX(calc(-100% - 10px))}
 .home-album-promo-stage.from-right{left:0;transform:translateX(calc(100% + 10px))}
@@ -236,33 +237,48 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-stage:focus-visible{outline:2px solid #85ACC9;outline-offset:4px}
 .home-album-promo-flip{
   position:absolute;inset:0;display:block;width:100%;height:100%;transform-origin:50% 50%;border-radius:8px;
-  transform:translate3d(0,0,0);will-change:transform
+  transform:scale(1);will-change:transform
 }
-.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2.8s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2.8s cubic-bezier(.25,.46,.45,.94) both}
 @keyframes albumSleeveTurn{
-  0%{transform:translate3d(0,0,0) rotateY(0deg) scale(1)}
-  12%{transform:translate3d(0,-.3%,24px) rotateY(14deg) scale(1.006)}
-  49.8%{transform:translate3d(0,-1.4%,118px) rotateY(89.5deg) scale(1.025)}
-  50.2%{transform:translate3d(0,-1.4%,118px) rotateY(-89.5deg) scale(1.025)}
-  88%{transform:translate3d(0,-.3%,24px) rotateY(-14deg) scale(1.006)}
-  100%{transform:translate3d(0,0,0) rotateY(0deg) scale(1)}
+  0%{transform:skewX(0deg) scaleX(1)}
+  50%{transform:skewX(-8deg) scaleX(0.92)}
+  100%{transform:skewX(0deg) scaleX(1)}
 }
 .home-album-promo-face,.home-album-promo-back-cover{
   position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;aspect-ratio:1/1;
   border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
 }
-.home-album-promo-face{backface-visibility:visible;-webkit-backface-visibility:visible}
+.home-album-promo-face{mix-blend-mode:normal}
 .home-album-promo-face.front{opacity:1}
-.home-album-promo-face.back{transform:none;opacity:0}
-.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2.8s linear both}
-.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2.8s linear both}
+.home-album-promo-face.back{opacity:0}
+.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2.8s cubic-bezier(.25,.46,.45,.94) both}
+.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2.8s cubic-bezier(.25,.46,.45,.94) both}
+@keyframes albumSleeveFrontFade{0%{opacity:1}50%{opacity:0.5}100%{opacity:0}}
+@keyframes albumSleeveBackFade{0%{opacity:0}50%{opacity:0.5}100%{opacity:1}}
 .home-album-promo-stage.is-flipped .home-album-promo-face.front{opacity:0}
 .home-album-promo-stage.is-flipped .home-album-promo-face.back{opacity:1}
-@keyframes albumSleeveFrontFade{0%,25%{opacity:1}49.8%,100%{opacity:0}}
-@keyframes albumSleeveBackFade{0%,50.2%{opacity:0}75%,100%{opacity:1}}
-.home-album-promo-back-cover{opacity:0;transition:opacity .18s ease;backface-visibility:visible}
+.home-album-promo-back-cover{opacity:0;transition:opacity .3s ease;backface-visibility:visible}
 .home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
 .home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
+.home-album-promo-play{
+  position:absolute;left:50%;top:50%;z-index:9;width:116px;height:123px;padding:0;
+  transform:translate(-50%,-50%);border:0;border-radius:0;background:transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  animation:albumPromoPlayIn .45s cubic-bezier(.2,.8,.2,1) both;
+  transition:transform .2s ease;will-change:auto
+}
+.home-album-promo-play svg{
+  width:83px;height:93px;display:block;overflow:visible;
+  filter:drop-shadow(0 8px 11px rgba(0,0,0,.5));
+  transition:transform .2s ease,filter .2s ease
+}
+.home-album-promo-play path{fill:#C90019;stroke:#C90019;stroke-width:.7;stroke-linejoin:round}
+.home-album-promo-play:hover{transform:translate(-50%,-50%) scale(1.06)}
+.home-album-promo-play:hover svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
+.home-album-promo-play:focus-visible{outline:2px solid #C90019;outline-offset:3px}
+@keyframes albumPromoPlayIn{from{opacity:0;transform:translate(-50%,-50%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(max-width:680px){.home-album-promo-play{width:99px;height:105px}.home-album-promo-play svg{width:69px;height:80px}}
 @media(prefers-reduced-motion:reduce){
   .home-album-promo-stage,.home-album-promo-flip,.home-album-promo-back-cover{transition-duration:.01ms!important}
   .home-album-promo-stage.is-turning .home-album-promo-flip,.home-album-promo-stage.is-turning .home-album-promo-face{animation-duration:.01ms!important}
@@ -5636,6 +5652,15 @@ async function loadFromSupabase() {
     ? promotionRow.cells[0].albums
     : {};
 
+  // Preload promotion images für schnelleres Laden
+  if(window._albumPromotions && Object.values(window._albumPromotions).length > 0){
+    Object.values(window._albumPromotions).forEach(promo => {
+      if(promo.sleeveFrontUrl) { const img = new Image(); img.src = promo.sleeveFrontUrl; }
+      if(promo.sleeveBackUrl) { const img = new Image(); img.src = promo.sleeveBackUrl; }
+      if(promo.backCoverUrl) { const img = new Image(); img.src = promo.backCoverUrl; }
+    });
+  }
+
   // 4a. Unterseiten (Lyric-Sheet-Unterseiten) aus der geschützten Sonderzeile
   //     (row_order = -3, cells[0].type = 'subpages') übernehmen — falls im Admin gepflegt.
   try {
@@ -9628,7 +9653,29 @@ function openPromotedAlbum(cell, row, sourceCard, partnerCard, stage){
   if(stage) stage.remove();
   if(sourceCard) sourceCard.classList.remove('promo-source');
   if(partnerCard) partnerCard.classList.remove('promo-partner-hidden');
-  if(row) row._albumPromotionActive = false;
+  if(row){
+    row._albumPromotionActive = false;
+    row._albumPromotionAdvance = null;
+  }
+}
+
+function showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage){
+  if(stage) stage.remove();
+  sourceCard.classList.remove('promo-source');
+  partnerCard.classList.remove('promo-partner-hidden');
+  row._albumPromotionActive = false;
+  row._albumPromotionAdvance = null;
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.className = 'home-album-promo-play';
+  play.setAttribute('aria-label', 'Album im Player öffnen');
+  play.innerHTML = '<svg viewBox="0 0 28 24" aria-hidden="true"><path d="M8.7 5.4c0-1.55 1.7-2.5 3.02-1.68l10.45 6.45c1.22.75 1.22 2.52 0 3.27l-10.45 6.45c-1.32.82-3.02-.13-3.02-1.68z"></path></svg>';
+  play.addEventListener('click', event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    openPromotedAlbum(cell, row, sourceCard, partnerCard, null);
+  });
+  sourceCard.appendChild(play);
 }
 
 function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, sourceIndex){
@@ -9636,10 +9683,14 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
     if(row._albumPromotionAdvance) row._albumPromotionAdvance();
     return;
   }
+  row.querySelectorAll('.home-album-promo-play').forEach(button=>button.remove());
   row._albumPromotionActive = true;
   sourceCard.classList.add('promo-source');
   partnerCard.classList.add('promo-partner-hidden');
 
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slideDuration = reducedMotion ? 20 : 2800;
+  const turnDuration = reducedMotion ? 20 : 2800;
   const stage = document.createElement('button');
   stage.type = 'button';
   stage.className = 'home-album-promo-stage ' + (sourceIndex === 0 ? 'from-left' : 'from-right');
@@ -9654,8 +9705,9 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
   row.appendChild(stage);
 
   let step = 1;
-  let locked = false;
+  let locked = true;
   requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
+  setTimeout(()=>{ locked = false; }, slideDuration + 80);
   const advancePromotion = ()=>{
     if(locked) return;
     if(step === 1){
@@ -9667,9 +9719,11 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
         turnFinished = true;
         flip.removeEventListener('animationend', handleTurnEnd);
         stage.classList.add('is-flipped');
-        stage.classList.remove('is-turning');
-        step = 2;
-        locked = false;
+        requestAnimationFrame(()=>{
+          stage.classList.remove('is-turning');
+          step = 2;
+          locked = false;
+        });
       };
       const handleTurnEnd = event=>{
         if(event.target === flip && event.animationName === 'albumSleeveTurn') finishTurn();
@@ -9677,7 +9731,7 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
       flip.addEventListener('animationend', handleTurnEnd);
       stage.classList.add('is-turning');
       stage.setAttribute('aria-label', 'Album-Rückseite zeigen');
-      setTimeout(finishTurn, 3000);
+      setTimeout(finishTurn, turnDuration + 200);
       return;
     }
     if(step === 2){
@@ -9686,14 +9740,16 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
       setTimeout(()=>{
         stage.classList.remove('is-flipped');
         stage.classList.add('show-back');
-        stage.setAttribute('aria-label', 'Album im Player öffnen');
+        stage.setAttribute('aria-label', 'Artwork schließen');
         requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
         step = 3;
-        setTimeout(()=>{ locked = false; }, 740);
-      }, 520);
+        setTimeout(()=>{ locked = false; }, slideDuration);
+      }, slideDuration);
       return;
     }
-    openPromotedAlbum(cell, row, sourceCard, partnerCard, stage);
+    locked = true;
+    stage.classList.remove('is-open');
+    setTimeout(()=>showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage), slideDuration);
   };
   row._albumPromotionAdvance = advancePromotion;
   stage.addEventListener('click', advancePromotion);
