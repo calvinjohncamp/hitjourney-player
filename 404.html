@@ -6398,6 +6398,19 @@ function hjAdvanceChainViewer(){
   }
   closeNow();
 }
+function hjMoveChainViewer(direction){
+  if(!hjChainViewState.open || hjIsLyrics21Item(hjChainViewState.item)) return false;
+  const song = hjChainViewState.song;
+  const item = hjChainViewState.item;
+  if(!song) return false;
+  if(direction === 'next' && hjChainViewState.phase === 1){
+    return hjChainViewerSetImage(song, item, 2);
+  }
+  if(direction === 'prev' && hjChainViewState.phase === 2){
+    return hjChainViewerSetImage(song, item, 1);
+  }
+  return false;
+}
 function hjSyncChainViewerToCurrent(song, item){
   if(!hjChainViewState.open || !song) return;
   const keepPhase = hjChainViewState.phase || 1;
@@ -6475,11 +6488,46 @@ function hjRemoveCoverCue(el){
   document.addEventListener('DOMContentLoaded', ()=>{
     const els = hjGetChainViewerEls();
     if(els.box){
+      const swipeMin = 45;
+      let touchStartX = null;
+      let touchStartY = null;
+
       els.box.addEventListener('click', (e)=>{
         e.preventDefault();
         e.stopPropagation();
         hjAdvanceChainViewer();
       });
+
+      els.box.addEventListener('touchstart', (e)=>{
+        if(!hjChainViewState.open || e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, {passive:true});
+
+      els.box.addEventListener('touchend', (e)=>{
+        if(!hjChainViewState.open || touchStartX == null || touchStartY == null || !e.changedTouches.length) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+        if(Math.max(Math.abs(dx), Math.abs(dy)) < swipeMin) return;
+        if(hjChainViewState.phase !== 1 && hjChainViewState.phase !== 2) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if(Math.abs(dx) >= Math.abs(dy)) hjMoveChainViewer(dx > 0 ? 'next' : 'prev');
+        else hjMoveChainViewer(dy > 0 ? 'next' : 'prev');
+      }, {passive:false});
+    }
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(!hjChainViewState.open) return;
+    let moved = false;
+    if(e.key === 'ArrowDown' || e.key === 'ArrowRight') moved = hjMoveChainViewer('next');
+    else if(e.key === 'ArrowUp' || e.key === 'ArrowLeft') moved = hjMoveChainViewer('prev');
+    if(moved){
+      e.preventDefault();
+      e.stopPropagation();
     }
   });
 })();
