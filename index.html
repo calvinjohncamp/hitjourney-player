@@ -243,7 +243,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:absolute;inset:0;transform-origin:50% 50%;border-radius:8px;
   transform:translate3d(0,0,0);will-change:transform
 }
-.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2.8s linear both}
 @keyframes albumSleeveTurn{
   0%{transform:translate3d(0,0,0) rotateY(0deg) scale(1)}
   12%{transform:translate3d(0,-.3%,24px) rotateY(14deg) scale(1.006)}
@@ -259,8 +259,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-face{will-change:opacity}
 .home-album-promo-face.front{opacity:1}
 .home-album-promo-face.back{transform:none;opacity:0}
-.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2s linear both}
-.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2.8s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2.8s linear both}
 .home-album-promo-stage.is-flipped .home-album-promo-face.front{opacity:0}
 .home-album-promo-stage.is-flipped .home-album-promo-face.back{opacity:1}
 @keyframes albumSleeveFrontFade{0%,25%{opacity:1}49.8%,100%{opacity:0}}
@@ -269,20 +269,23 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
 .home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
 .home-album-promo-play{
-  position:absolute;left:50%;top:50%;z-index:9;width:62px;height:62px;padding:0;
-  transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.5);border-radius:50%;
-  background:#C90019;box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 0 6px rgba(201,0,25,.12);
+  position:absolute;left:50%;top:50%;z-index:9;width:78px;height:82px;padding:0;
+  transform:translate(-50%,-50%);border:0;border-radius:0;background:transparent;
   cursor:pointer;animation:albumPromoPlayIn .45s cubic-bezier(.2,.8,.2,1) both;
-  transition:transform .2s ease,background .2s ease,box-shadow .2s ease
+  transition:transform .2s ease
 }
 .home-album-promo-play::before{
-  content:'';display:block;margin-left:24px;width:0;height:0;
-  border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:15px solid #fff
+  content:'';position:absolute;left:50%;top:50%;width:48px;height:56px;
+  transform:translate(-43%,-50%);background:#C90019;
+  clip-path:polygon(8% 4%,96% 50%,8% 96%);
+  filter:drop-shadow(0 8px 11px rgba(0,0,0,.5));
+  transition:transform .2s ease,background .2s ease,filter .2s ease
 }
-.home-album-promo-play:hover{background:#E0001C;transform:translate(-50%,-50%) scale(1.06);box-shadow:0 12px 32px rgba(0,0,0,.48),0 0 0 8px rgba(201,0,25,.14)}
-.home-album-promo-play:focus-visible{outline:2px solid #fff;outline-offset:4px}
+.home-album-promo-play:hover{transform:translate(-50%,-50%) scale(1.06)}
+.home-album-promo-play:hover::before{background:#E0001C;filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
+.home-album-promo-play:focus-visible{outline:2px solid #C90019;outline-offset:3px}
 @keyframes albumPromoPlayIn{from{opacity:0;transform:translate(-50%,-50%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@media(max-width:680px){.home-album-promo-play{width:50px;height:50px}.home-album-promo-play::before{margin-left:19px;border-top-width:7px;border-bottom-width:7px;border-left-width:12px}}
+@media(max-width:680px){.home-album-promo-play{width:66px;height:70px}.home-album-promo-play::before{width:40px;height:47px}}
 @media(prefers-reduced-motion:reduce){
   .home-album-promo-stage,.home-album-promo-flip,.home-album-promo-back-cover{transition-duration:.01ms!important}
   .home-album-promo-stage.is-turning .home-album-promo-flip,.home-album-promo-stage.is-turning .home-album-promo-face{animation-duration:.01ms!important}
@@ -9684,7 +9687,7 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
 
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const slideDuration = reducedMotion ? 20 : 2800;
-  const turnDuration = reducedMotion ? 20 : 2000;
+  const turnDuration = reducedMotion ? 20 : 2800;
   const stage = document.createElement('button');
   stage.type = 'button';
   stage.className = 'home-album-promo-stage ' + (sourceIndex === 0 ? 'from-left' : 'from-right');
@@ -9699,8 +9702,9 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
   row.appendChild(stage);
 
   let step = 1;
-  let locked = false;
+  let locked = true;
   requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
+  setTimeout(()=>{ locked = false; }, slideDuration + 80);
   const advancePromotion = ()=>{
     if(locked) return;
     if(step === 1){
