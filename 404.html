@@ -218,6 +218,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:relative;isolation:isolate;overflow:visible
 }
 .home-album-promo-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
+.home-album-promo-row .home-card.big-square>img:first-child{
+  opacity:0;transition:opacity .48s ease;will-change:opacity
+}
+.home-album-promo-row.promo-covers-ready .home-card.big-square>img:first-child{opacity:1}
 .home-album-promo-row .home-card.album-promo-ready::before{
   content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%;
   background:#C90019;box-shadow:0 0 0 4px rgba(6,20,32,.55);z-index:6;pointer-events:none
@@ -228,7 +232,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:absolute;top:0;width:calc((100% - 10px)/2);aspect-ratio:1/1;z-index:2;
   border-radius:8px;cursor:pointer;transform-style:preserve-3d;perspective:1800px;
   box-shadow:0 10px 30px rgba(0,0,0,.38);overflow:visible;
-  transition:transform .72s cubic-bezier(.2,.78,.2,1),box-shadow .35s ease
+  transition:transform 2.8s cubic-bezier(.22,.61,.24,1),box-shadow .5s ease;
+  will-change:transform
 }
 .home-album-promo-stage.from-left{right:0;transform:translateX(calc(-100% - 10px))}
 .home-album-promo-stage.from-right{left:0;transform:translateX(calc(100% + 10px))}
@@ -238,7 +243,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   position:absolute;inset:0;transform-origin:50% 50%;border-radius:8px;
   transform:translate3d(0,0,0);will-change:transform
 }
-.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 1.6s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-flip{animation:albumSleeveTurn 2s linear both}
 @keyframes albumSleeveTurn{
   0%{transform:translate3d(0,0,0) rotateY(0deg) scale(1)}
   12%{transform:translate3d(0,-.3%,24px) rotateY(14deg) scale(1.006)}
@@ -254,15 +259,30 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-face{will-change:opacity}
 .home-album-promo-face.front{opacity:1}
 .home-album-promo-face.back{transform:none;opacity:0}
-.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 1.6s linear both}
-.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 1.6s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-face.front{animation:albumSleeveFrontFade 2s linear both}
+.home-album-promo-stage.is-turning .home-album-promo-face.back{animation:albumSleeveBackFade 2s linear both}
 .home-album-promo-stage.is-flipped .home-album-promo-face.front{opacity:0}
 .home-album-promo-stage.is-flipped .home-album-promo-face.back{opacity:1}
 @keyframes albumSleeveFrontFade{0%,25%{opacity:1}49.8%,100%{opacity:0}}
 @keyframes albumSleeveBackFade{0%,50.2%{opacity:0}75%,100%{opacity:1}}
-.home-album-promo-back-cover{opacity:0;transition:opacity .18s ease;backface-visibility:visible}
+.home-album-promo-back-cover{opacity:0;transition:opacity .3s ease;backface-visibility:visible}
 .home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
 .home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
+.home-album-promo-play{
+  position:absolute;left:50%;top:50%;z-index:9;width:62px;height:62px;padding:0;
+  transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.5);border-radius:50%;
+  background:#C90019;box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 0 6px rgba(201,0,25,.12);
+  cursor:pointer;animation:albumPromoPlayIn .45s cubic-bezier(.2,.8,.2,1) both;
+  transition:transform .2s ease,background .2s ease,box-shadow .2s ease
+}
+.home-album-promo-play::before{
+  content:'';display:block;margin-left:24px;width:0;height:0;
+  border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:15px solid #fff
+}
+.home-album-promo-play:hover{background:#E0001C;transform:translate(-50%,-50%) scale(1.06);box-shadow:0 12px 32px rgba(0,0,0,.48),0 0 0 8px rgba(201,0,25,.14)}
+.home-album-promo-play:focus-visible{outline:2px solid #fff;outline-offset:4px}
+@keyframes albumPromoPlayIn{from{opacity:0;transform:translate(-50%,-50%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(max-width:680px){.home-album-promo-play{width:50px;height:50px}.home-album-promo-play::before{margin-left:19px;border-top-width:7px;border-bottom-width:7px;border-left-width:12px}}
 @media(prefers-reduced-motion:reduce){
   .home-album-promo-stage,.home-album-promo-flip,.home-album-promo-back-cover{transition-duration:.01ms!important}
   .home-album-promo-stage.is-turning .home-album-promo-flip,.home-album-promo-stage.is-turning .home-album-promo-face{animation-duration:.01ms!important}
@@ -9628,7 +9648,28 @@ function openPromotedAlbum(cell, row, sourceCard, partnerCard, stage){
   if(stage) stage.remove();
   if(sourceCard) sourceCard.classList.remove('promo-source');
   if(partnerCard) partnerCard.classList.remove('promo-partner-hidden');
-  if(row) row._albumPromotionActive = false;
+  if(row){
+    row._albumPromotionActive = false;
+    row._albumPromotionAdvance = null;
+  }
+}
+
+function showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage){
+  if(stage) stage.remove();
+  sourceCard.classList.remove('promo-source');
+  partnerCard.classList.remove('promo-partner-hidden');
+  row._albumPromotionActive = false;
+  row._albumPromotionAdvance = null;
+  const play = document.createElement('button');
+  play.type = 'button';
+  play.className = 'home-album-promo-play';
+  play.setAttribute('aria-label', 'Album im Player öffnen');
+  play.addEventListener('click', event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    openPromotedAlbum(cell, row, sourceCard, partnerCard, null);
+  });
+  sourceCard.appendChild(play);
 }
 
 function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, sourceIndex){
@@ -9636,10 +9677,14 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
     if(row._albumPromotionAdvance) row._albumPromotionAdvance();
     return;
   }
+  row.querySelectorAll('.home-album-promo-play').forEach(button=>button.remove());
   row._albumPromotionActive = true;
   sourceCard.classList.add('promo-source');
   partnerCard.classList.add('promo-partner-hidden');
 
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slideDuration = reducedMotion ? 20 : 2800;
+  const turnDuration = reducedMotion ? 20 : 2000;
   const stage = document.createElement('button');
   stage.type = 'button';
   stage.className = 'home-album-promo-stage ' + (sourceIndex === 0 ? 'from-left' : 'from-right');
@@ -9667,7 +9712,7 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
         stage.classList.remove('is-turning');
         step = 2;
         locked = false;
-      }, 1600);
+      }, turnDuration);
       return;
     }
     if(step === 2){
@@ -9676,14 +9721,16 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
       setTimeout(()=>{
         stage.classList.remove('is-flipped');
         stage.classList.add('show-back');
-        stage.setAttribute('aria-label', 'Album im Player öffnen');
+        stage.setAttribute('aria-label', 'Artwork schließen');
         requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
         step = 3;
-        setTimeout(()=>{ locked = false; }, 740);
-      }, 520);
+        setTimeout(()=>{ locked = false; }, slideDuration);
+      }, slideDuration);
       return;
     }
-    openPromotedAlbum(cell, row, sourceCard, partnerCard, stage);
+    locked = true;
+    stage.classList.remove('is-open');
+    setTimeout(()=>showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage), slideDuration);
   };
   row._albumPromotionAdvance = advancePromotion;
   stage.addEventListener('click', advancePromotion);
@@ -9693,6 +9740,22 @@ function buildTwoAlbumPromotionRow(cells){
   const row = document.createElement('div');
   row.className = 'home-album-promo-row';
   const cards = cells.map(cell => buildHomeCard(cell, 'big-square'));
+  const coverImages = cards.map(card=>card.querySelector(':scope > img')).filter(Boolean);
+  coverImages.forEach(img=>{
+    img.loading = 'eager';
+    img.fetchPriority = 'high';
+  });
+  const coverReady = img=>{
+    const decode = ()=>img.decode ? img.decode().catch(()=>{}) : Promise.resolve();
+    if(img.complete && img.naturalWidth) return decode();
+    return new Promise(resolve=>{
+      img.addEventListener('load', resolve, {once:true});
+      img.addEventListener('error', resolve, {once:true});
+    }).then(decode);
+  };
+  Promise.all(coverImages.map(coverReady)).then(()=>{
+    requestAnimationFrame(()=>requestAnimationFrame(()=>row.classList.add('promo-covers-ready')));
+  });
   cards.forEach((card, index)=>{
     const promotion = albumPromotionForCell(cells[index]);
     if(promotion){
@@ -9700,7 +9763,9 @@ function buildTwoAlbumPromotionRow(cells){
       card.classList.add('album-promo-ready');
       card.setAttribute('aria-label', (cells[index].alt || 'Album') + ' Promotion öffnen');
       [promotion.sleeveFrontUrl, promotion.sleeveBackUrl, promotion.backCoverUrl].forEach(url=>{
-        const preload = new Image(); preload.src = url;
+        const preload = new Image();
+        preload.fetchPriority = 'high';
+        preload.src = url;
       });
       card.addEventListener('click', event=>{
         event.stopPropagation();
