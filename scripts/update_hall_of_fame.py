@@ -40,8 +40,24 @@ DRY_RUN      = os.environ.get("DRY_RUN") == "1"
 
 
 # ---------- SoundCloud lesen ----------
-def http(url, headers=None):
-    return urllib.request.urlopen(urllib.request.Request(url, headers=headers or UA), timeout=60).read().decode("utf-8", "ignore")
+def http(url, headers=None, attempts=3):
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers or UA),
+                timeout=60
+            ).read().decode("utf-8", "ignore")
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+            last_error = e
+            if attempt == attempts:
+                break
+            wait = attempt * 2
+            print("  HTTP-Versuch %d/%d fehlgeschlagen (%s) - retry in %ds" % (attempt, attempts, e, wait))
+            time.sleep(wait)
+    raise last_error
 
 def get_client_id(html):
     for u in re.findall(r'<script[^>]+src="(https://[^"]+\.js)"', html):
