@@ -821,7 +821,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-vinyl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .he-vinyl-title{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#85ACC9}
 .he-vinyl-edit{border:1px solid rgba(133,172,201,.28);background:rgba(133,172,201,.12);color:#cfe5f5;border-radius:5px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
-.he-vinyl-covers{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-width:620px}
+.he-vinyl-covers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:500px}
 .he-vinyl-cover{aspect-ratio:1/1;border-radius:6px;overflow:hidden;background:rgba(133,172,201,.07);border:1px solid rgba(133,172,201,.1)}
 .he-vinyl-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .he-heading-cell{position:relative;width:100%;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:26px 18px;cursor:pointer;aspect-ratio:auto!important;min-height:0!important;display:block}
@@ -7999,7 +7999,7 @@ document.addEventListener('keydown', overlayEditorKeydown);
     </div>
 
     <div id="apTypeMultipleContent" style="display:none">
-      <div class="section-label">Bis zu fünf Alben zum Auswählen</div>
+      <div class="section-label">Bis zu vier Alben zum Auswählen</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
         <div style="display:flex;flex-direction:column;gap:6px">
           <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 1</label>
@@ -8022,12 +8022,6 @@ document.addEventListener('keydown', overlayEditorKeydown);
         <div style="display:flex;flex-direction:column;gap:6px">
           <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 4</label>
           <select class="ai" id="apMultiAlbum4" onchange="onVinylPromotionAlbumChange()">
-            <option value="">— Wählen —</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 5</label>
-          <select class="ai" id="apMultiAlbum5" onchange="onVinylPromotionAlbumChange()">
             <option value="">— Wählen —</option>
           </select>
         </div>
@@ -10918,7 +10912,7 @@ function onVinylPromotionTypeChange(){
 
 function vinylPromotionSelectedSlots(){
   if(!vinylPromotionDraft) return [];
-  const count = vinylPromotionType === 'two' ? 2 : 5;
+  const count = vinylPromotionType === 'two' ? 2 : 4;
   return Array.from({length:count},(_,index)=>({index,slug:vinylPromotionDraft['album'+(index+1)] || ''})).filter(item=>item.slug);
 }
 
@@ -11091,7 +11085,7 @@ function renderVinylPromotionHeadingControl(){
 }
 
 function updateVinylPromotionAlbumDropdowns(){
-  for(let i=1; i<=5; i++){
+  for(let i=1; i<=4; i++){
     const ids = i <= 2 ? ['apMultiAlbum'+i, 'apTwoAlbum'+i] : ['apMultiAlbum'+i];
     ids.forEach(id=>{
     const sel = document.getElementById(id);
@@ -11109,7 +11103,7 @@ function onVinylPromotionAlbumChange(){
   vinylPromotionDraft.album2 = ((document.getElementById(type === 'two' ? 'apTwoAlbum2' : 'apMultiAlbum2')||{}).value) || '';
   vinylPromotionDraft.album3 = (document.getElementById('apMultiAlbum3')||{}).value || '';
   vinylPromotionDraft.album4 = (document.getElementById('apMultiAlbum4')||{}).value || '';
-  vinylPromotionDraft.album5 = (document.getElementById('apMultiAlbum5')||{}).value || '';
+  vinylPromotionDraft.album5 = '';
   ['apMultiAlbum1','apTwoAlbum1'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=vinylPromotionDraft.album1; });
   ['apMultiAlbum2','apTwoAlbum2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=vinylPromotionDraft.album2; });
   renderVinylPromotionAssetTabs();
@@ -11221,7 +11215,7 @@ async function saveVinylPromotion(){
       album2: vinylPromotionDraft.album2 || '',
       album3: vinylPromotionDraft.album3 || '',
       album4: vinylPromotionDraft.album4 || '',
-      album5: vinylPromotionDraft.album5 || '',
+      album5: '',
       rowHeading: vinylPromotionDraft.rowHeading ? {...vinylPromotionDraft.rowHeading} : null,
       albumAssets: vinylPromotionDraft.albumAssets.map(makeVinylAlbumAsset),
       multiSleeveFrontUrl: firstAsset.sleeveFrontUrl || '',
@@ -13399,7 +13393,7 @@ function buildCells(row, grid){
 function buildVinylPromotionAdminCell(row){
   const promo = row.cells[0].promotion || {};
   const slugs = promo.type === 'multiple'
-    ? [promo.album1,promo.album2,promo.album3,promo.album4,promo.album5].filter(Boolean)
+    ? [promo.album1,promo.album2,promo.album3,promo.album4].filter(Boolean)
     : [promo.album1,promo.album2].filter(Boolean);
   const el = document.createElement('div');
   el.className = 'he-vinyl-cell';
@@ -13408,7 +13402,7 @@ function buildVinylPromotionAdminCell(row){
   head.className = 'he-vinyl-head';
   const title = document.createElement('div');
   title.className = 'he-vinyl-title';
-  title.textContent = promo.type === 'multiple' ? 'Vinyl Promotion · bis zu fünf Alben' : 'Vinyl Promotion · zwei Alben';
+  title.textContent = promo.type === 'multiple' ? 'Vinyl Promotion · bis zu vier Alben' : 'Vinyl Promotion · zwei Alben';
   const edit = document.createElement('button');
   edit.type = 'button';
   edit.className = 'he-vinyl-edit';
