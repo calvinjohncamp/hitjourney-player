@@ -232,7 +232,10 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-vinyl-promo-choice img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
 .home-vinyl-promo-choice:active{transform:scale(.96);opacity:.86}
 .home-vinyl-promo-choice.active{box-shadow:0 0 0 2px rgba(133,172,201,.76),0 8px 24px rgba(0,0,0,.28)}
-.home-vinyl-promo-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:3px;align-items:center}
+.home-vinyl-promo-controls{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;aspect-ratio:1/1;
+  margin:0;align-items:center;align-content:center;justify-items:center
+}
 .home-vinyl-promo-control{
   appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;aspect-ratio:1/1;background:transparent;
   display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease,opacity .15s ease
@@ -241,7 +244,9 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-vinyl-promo-control:focus-visible{outline:2px solid #85ACC9;outline-offset:2px;border-radius:50%}
 .home-vinyl-promo-control svg{width:72%;height:72%;display:block;overflow:visible;filter:drop-shadow(0 5px 7px rgba(0,0,0,.42))}
 .home-vinyl-promo-control path{fill:#C90019;stroke:#C90019;stroke-width:.7;stroke-linejoin:round}
-.home-vinyl-promo-control img{width:88%;height:88%;object-fit:contain;display:block;filter:none}
+.home-vinyl-promo-control.vinyl-dice svg{width:76%;height:76%;color:#85ACC9;filter:none}
+.home-vinyl-promo-control.vinyl-dice rect,
+.home-vinyl-promo-control.vinyl-dice path{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .home-vinyl-promo-control.is-active{filter:drop-shadow(0 0 7px rgba(133,172,201,.55))}
 .home-vinyl-promo-stage-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative;overflow:visible}
 .home-vinyl-promo-stage-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
@@ -10244,9 +10249,9 @@ function buildVinylMultiplePromotion(promo){
   playAll.innerHTML = '<svg viewBox="0 0 28 24" aria-hidden="true"><path d="M8.7 5.4c0-1.55 1.7-2.5 3.02-1.68l10.45 6.45c1.22.75 1.22 2.52 0 3.27l-10.45 6.45c-1.32.82-3.02-.13-3.02-1.68z"></path></svg>';
   const shuffleAll = document.createElement('button');
   shuffleAll.type = 'button';
-  shuffleAll.className = 'home-vinyl-promo-control';
+  shuffleAll.className = 'home-vinyl-promo-control vinyl-dice';
   shuffleAll.setAttribute('aria-label', 'Songs der ausgewählten Alben zufällig abspielen');
-  shuffleAll.innerHTML = '<img alt="" src="https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%2520Play%2520Button.png" onerror="this.onerror=null;this.src=\'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/Random%20Play%20Button.png\';">';
+  shuffleAll.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01"></path></svg>';
   controls.appendChild(playAll);
   controls.appendChild(shuffleAll);
   picker.appendChild(controls);
@@ -10258,7 +10263,7 @@ function buildVinylMultiplePromotion(promo){
       const album = key && ALBUMS[key];
       if(!album || !Array.isArray(album.songs)) return;
       album.songs.forEach(song=>{
-        if(song && song.mp3) items.push({song,el:pickerButtons[albumIndex] || null});
+        if(song && song.mp3) items.push({song,el:null});
       });
     });
     return items;
