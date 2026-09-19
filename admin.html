@@ -297,7 +297,13 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .album-promotion-switch input:checked + span{background:rgba(201,0,25,.34);border-color:rgba(201,0,25,.58)}
 .album-promotion-switch input:checked + span::after{transform:translateX(20px);background:#f1ecdf}
 .album-promotion-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.vinyl-asset-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+.vinyl-asset-tab{border:1px solid rgba(133,172,201,.2);background:rgba(133,172,201,.07);color:rgba(207,229,245,.72);border-radius:6px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vinyl-asset-tab.active{background:#85ACC9;color:#061420;border-color:#85ACC9}
+.vinyl-asset-empty{font-size:11px;color:rgba(133,172,201,.5);padding:3px 0 10px}
 .album-promotion-note{font-size:11px;line-height:1.5;color:rgba(133,172,201,.48);margin-top:10px}
+.album-promotion-albums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.album-promotion-albums label{display:block;font-size:12px;font-weight:600;color:rgba(133,172,201,.7);margin:0 0 6px}
 @media(max-width:680px){.album-promotion-grid{grid-template-columns:1fr}.album-promotion-grid .upload-zone{max-width:220px}}
 .btn-album-cover-change{padding:0}
 
@@ -810,6 +816,14 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .he-cell.cell-1x1third{aspect-ratio:1/1;width:100%}
 /* ── Überschrift-Zeile im Editor ── */
 .he-row-grid.layout-heading{display:block;padding:8px}
+.he-row-grid.layout-vinyl{display:block;padding:8px}
+.he-vinyl-cell{grid-column:1/-1;min-height:132px;border-radius:8px;border:1px solid rgba(133,172,201,.2);background:#0B1E2D;padding:14px;cursor:pointer}
+.he-vinyl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.he-vinyl-title{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#85ACC9}
+.he-vinyl-edit{border:1px solid rgba(133,172,201,.28);background:rgba(133,172,201,.12);color:#cfe5f5;border-radius:5px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.he-vinyl-covers{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-width:620px}
+.he-vinyl-cover{aspect-ratio:1/1;border-radius:6px;overflow:hidden;background:rgba(133,172,201,.07);border:1px solid rgba(133,172,201,.1)}
+.he-vinyl-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .he-heading-cell{position:relative;width:100%;background:rgba(6,20,32,1);border:1px solid rgba(133,172,201,.14);border-radius:10px;padding:26px 18px;cursor:pointer;aspect-ratio:auto!important;min-height:0!important;display:block}
 .he-heading-cell:hover{border-color:rgba(133,172,201,.32)}
 .he-heading-preview{display:flex;flex-direction:column;gap:6px;align-items:stretch}
@@ -7900,14 +7914,14 @@ document.addEventListener('keydown', overlayEditorKeydown);
 <div id="albumPromotionOverlay">
   <div id="albumPromotionModal">
     <div class="modal-drag"></div>
-    <div class="modal-title">Album-Promotion</div>
+    <div class="modal-title">Vinyl Promotion</div>
     <div class="section-label" style="margin-top:14px">Album</div>
     <div class="ai" id="apAlbumTitle" style="pointer-events:none;opacity:.85">—</div>
 
     <div class="album-promotion-toggle" style="margin-top:14px">
       <div class="album-promotion-toggle-copy">
-        <strong>Album-Promotion aktivieren</strong>
-        <span>Nur in einer Zeile mit zwei großen Album-Covern</span>
+        <strong>Vinyl Promotion aktivieren</strong>
+        <span>Schicke Präsentation mit Flip-Animation</span>
       </div>
       <label class="album-promotion-switch">
         <input id="apEnabled" type="checkbox">
@@ -7915,7 +7929,40 @@ document.addEventListener('keydown', overlayEditorKeydown);
       </label>
     </div>
 
-    <div class="section-label">Drei zusätzliche 1:1 Bilder</div>
+    <div class="section-label" style="margin-top:16px">Vinyl Promotion Typ</div>
+    <div style="display:flex;gap:12px;padding:0 0 16px 0">
+      <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 12px;border-radius:8px;background:rgba(133,172,201,.07);border:1px solid rgba(133,172,201,.12)">
+        <input type="radio" id="apTypeTwo" name="apType" value="two" checked onchange="document.getElementById('albumPromotionOverlay').dataset.vinylMode==='1' ? onVinylPromotionTypeChange() : null">
+        <span style="font-size:13px;font-weight:600">Zwei Alben</span>
+      </label>
+      <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 12px;border-radius:8px;background:rgba(133,172,201,.07);border:1px solid rgba(133,172,201,.12)">
+        <input type="radio" id="apTypeMultiple" name="apType" value="multiple" onchange="document.getElementById('albumPromotionOverlay').dataset.vinylMode==='1' ? onVinylPromotionTypeChange() : null">
+        <span style="font-size:13px;font-weight:600">Mehr als zwei</span>
+      </label>
+    </div>
+
+    <div class="section-label">Zeilenüberschrift</div>
+    <div id="apRowHeadingControl"></div>
+    <div id="apRowHeadingPreview"></div>
+
+    <div id="apTypeTwoContent">
+      <div class="section-label">Zwei Alben</div>
+      <div class="album-promotion-albums">
+        <div>
+          <label>Album links</label>
+          <select class="ai" id="apTwoAlbum1" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+        <div>
+          <label>Album rechts</label>
+          <select class="ai" id="apTwoAlbum2" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-label" id="apTwoAssetHeading">Bilder je Album</div>
+      <div class="vinyl-asset-tabs" id="apTwoAssetTabs"></div>
     <div class="album-promotion-grid">
       <div class="field">
         <div class="field-label">Innensleeve Vorderseite</div>
@@ -7949,12 +7996,102 @@ document.addEventListener('keydown', overlayEditorKeydown);
       </div>
     </div>
     <div class="album-promotion-note">Ablauf: Cover anklicken → Sleeve herausziehen → Sleeve wenden → Cover-Rückseite herausziehen → Album öffnen.</div>
+    </div>
+
+    <div id="apTypeMultipleContent" style="display:none">
+      <div class="section-label">Bis zu fünf Alben zum Auswählen</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 1</label>
+          <select class="ai" id="apMultiAlbum1" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 2</label>
+          <select class="ai" id="apMultiAlbum2" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 3</label>
+          <select class="ai" id="apMultiAlbum3" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 4</label>
+          <select class="ai" id="apMultiAlbum4" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:rgba(133,172,201,.7)">Album 5</label>
+          <select class="ai" id="apMultiAlbum5" onchange="onVinylPromotionAlbumChange()">
+            <option value="">— Wählen —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label" id="apMultiAssetHeading">Bilder je Album</div>
+      <div class="vinyl-asset-tabs" id="apMultiAssetTabs"></div>
+      <div class="album-promotion-grid">
+        <div class="field">
+          <div class="field-label">Innensleeve Vorderseite</div>
+          <div class="upload-zone sq" id="apMultiSleeveFrontZone" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onAlbumPromotionDrop(event,'multiSleeveFront')">
+            <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.jpg,.jpeg,.png,.webp" onchange="onAlbumPromotionFile(this,'multiSleeveFront')">
+            <div class="upload-zone-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg><span>Sleeve vorne</span></div>
+            <img class="zone-preview" id="apMultiSleeveFrontPreview" alt="">
+            <div class="upload-progress" id="apMultiSleeveFrontProgress"></div>
+            <button class="zone-clear" onclick="clearAlbumPromotionImage(event,'multiSleeveFront')" title="Entfernen">×</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Innensleeve Rückseite</div>
+          <div class="upload-zone sq" id="apMultiSleeveBackZone" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onAlbumPromotionDrop(event,'multiSleeveBack')">
+            <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.jpg,.jpeg,.png,.webp" onchange="onAlbumPromotionFile(this,'multiSleeveBack')">
+            <div class="upload-zone-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 8-4 4 4 4M5 12h14"/></svg><span>Sleeve hinten</span></div>
+            <img class="zone-preview" id="apMultiSleeveBackPreview" alt="">
+            <div class="upload-progress" id="apMultiSleeveBackProgress"></div>
+            <button class="zone-clear" onclick="clearAlbumPromotionImage(event,'multiSleeveBack')" title="Entfernen">×</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Albumcover Rückseite</div>
+          <div class="upload-zone sq" id="apMultiBackCoverZone" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onAlbumPromotionDrop(event,'multiBackCover')">
+            <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,.jpg,.jpeg,.png,.webp" onchange="onAlbumPromotionFile(this,'multiBackCover')">
+            <div class="upload-zone-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>Cover hinten</span></div>
+            <img class="zone-preview" id="apMultiBackCoverPreview" alt="">
+            <div class="upload-progress" id="apMultiBackCoverProgress"></div>
+            <button class="zone-clear" onclick="clearAlbumPromotionImage(event,'multiBackCover')" title="Entfernen">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="form-msg" id="apMsg" style="margin-top:12px"></div>
     <div class="modal-actions" style="margin-top:14px">
       <button class="btn-cancel" onclick="closeAlbumPromotionModal()">Abbrechen</button>
-      <button class="btn-save" id="btnSaveAlbumPromotion" onclick="saveAlbumPromotion()">Promotion speichern</button>
+      <button class="btn-save" id="btnSaveAlbumPromotion" onclick="document.getElementById('albumPromotionOverlay').dataset.vinylMode==='1' ? saveVinylPromotion() : saveAlbumPromotion()">Promotion speichern</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ NEUE ZEILE - TYP AUSWAHL MODAL ══ -->
+<div id="addRowTypeModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeAddRowTypeModal()">
+  <div style="background:#0B1E2D;border:1px solid rgba(133,172,201,.2);border-radius:12px;padding:30px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">
+    <div style="font-size:18px;font-weight:600;color:#cfe5f5;margin-bottom:24px;text-align:center">Neue Zeile hinzufügen</div>
+
+    <div style="display:grid;gap:12px">
+      <button onclick="addRowType('standard')" style="padding:16px;border-radius:8px;background:rgba(133,172,201,.1);border:1px solid rgba(133,172,201,.3);color:#cfe5f5;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all .2s;text-align:center">
+        Standard (vier Zellen)
+      </button>
+      <button onclick="addRowType('vinylPromotion')" style="padding:16px;border-radius:8px;background:rgba(133,172,201,.1);border:1px solid rgba(133,172,201,.3);color:#cfe5f5;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all .2s;text-align:center">
+        Vinyl Promotion
+      </button>
+    </div>
+
+    <button onclick="closeAddRowTypeModal()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:rgba(133,172,201,.08);border:1px solid rgba(133,172,201,.2);color:#85ACC9;font-weight:600;cursor:pointer">Abbrechen</button>
   </div>
 </div>
 
@@ -10046,14 +10183,37 @@ let albumPromotionEditSlug = null;
 let albumPromotionDraft = null;
 let albumPromotionFiles = {sleeveFront:null,sleeveBack:null,backCover:null};
 
+/* ── Vinyl Promotion (neuer Zeilen-Typ) ── */
+let vinylPromotions = {};
+let vinylPromotionRowId = null;
+let vinylPromotionEditSlug = null;
+let vinylPromotionDraft = null;
+let vinylPromotionType = 'two'; // 'two' oder 'multiple'
+function makeVinylPromotionFiles(){
+  return {albumAssets:Array.from({length:5},()=>({sleeveFront:null,sleeveBack:null,backCover:null}))};
+}
+function makeVinylAlbumAsset(asset){
+  asset = asset || {};
+  return {
+    sleeveFrontUrl: asset.sleeveFrontUrl || '',
+    sleeveBackUrl: asset.sleeveBackUrl || '',
+    backCoverUrl: asset.backCoverUrl || ''
+  };
+}
+let vinylPromotionFiles = makeVinylPromotionFiles();
+let vinylPromotionActiveAlbum = 0;
+let vinylPromotionEditRowId = null;
+let vinylPromotionNewAtTop = false;
+
 async function loadPlaylists(){
   const list = document.getElementById('albumList');
   try{
     // Load all playlists + track counts in parallel
-    const [plR, trR, promoR] = await Promise.all([
+    const [plR, trR, promoR, vinylR] = await Promise.all([
       fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'), {headers:hdrs()}),
       fetch(sbUrl('/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position'), {headers:hdrs()}),
       fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-5&limit=1'), {headers:hdrs()}),
+      fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-6&limit=1'), {headers:hdrs()}),
     ]);
     const playlists = await plR.json();
     const tracks    = await trR.json();
@@ -10067,6 +10227,17 @@ async function loadPlaylists(){
     }else{
       albumPromotionRowId = null;
       albumPromotions = {};
+    }
+    if(vinylR.ok){
+      const vinylRows = await vinylR.json();
+      const vinylRow = vinylRows && vinylRows[0];
+      vinylPromotionRowId = vinylRow && vinylRow.id || null;
+      vinylPromotions = vinylRow && vinylRow.cells && vinylRow.cells[0] && vinylRow.cells[0].promotions
+        ? vinylRow.cells[0].promotions
+        : {};
+    }else{
+      vinylPromotionRowId = null;
+      vinylPromotions = {};
     }
     try{
       const sr = await fetch('streams.json', {cache:'no-store'});
@@ -10623,11 +10794,495 @@ function openAlbumPromotionModal(event, slug){
   });
   document.getElementById('albumPromotionOverlay').classList.add('open');
 }
-function closeAlbumPromotionModal(){
+
+/* ── Vinyl Promotion Editor ── */
+function openVinylPromotionNewModal(atTop){
+  vinylPromotionEditRowId = null;
+  vinylPromotionNewAtTop = !!atTop;
+  const slug = 'vinyl-' + Date.now();
+  openVinylPromotionModal(null, slug, atTop);
+}
+
+function openVinylPromotionRowModal(rowId){
+  const row = rowById(rowId);
+  if(!row || !row.cells || !row.cells[0]) return;
+  vinylPromotionEditRowId = rowId;
+  vinylPromotionNewAtTop = false;
+  openVinylPromotionModal(null, rowId, false, row.cells[0].promotion || {}, row.cells[0].rowHeading || null);
+}
+
+function openVinylPromotionModal(event, slug, atTop, rowPromotion, rowHeading){
+  if(event) event.stopPropagation();
+  atTop = atTop !== undefined ? atTop : false;
+
+  const saved = rowPromotion || vinylPromotions[slug] || {};
+  const legacyAsset = makeVinylAlbumAsset({
+    sleeveFrontUrl: saved.multiSleeveFrontUrl || saved.sleeveFrontUrl || '',
+    sleeveBackUrl: saved.multiSleeveBackUrl || saved.sleeveBackUrl || '',
+    backCoverUrl: saved.multiBackCoverUrl || saved.backCoverUrl || ''
+  });
+  const savedAssets = Array.isArray(saved.albumAssets) ? saved.albumAssets : [];
+  vinylPromotionEditSlug = slug;
+  vinylPromotionType = saved.type || 'two';
+  vinylPromotionDraft = {
+    type: vinylPromotionType,
+    enabled: !!saved.enabled,
+    sleeveFrontUrl: saved.sleeveFrontUrl || '',
+    sleeveBackUrl: saved.sleeveBackUrl || '',
+    backCoverUrl: saved.backCoverUrl || '',
+    // Für "multiple" Variante:
+    album1: saved.album1 || '',
+    album2: saved.album2 || '',
+    album3: saved.album3 || '',
+    album4: saved.album4 || '',
+    album5: saved.album5 || '',
+    rowHeading: rowHeading ? {...rowHeading} : (saved.rowHeading ? {...saved.rowHeading} : null),
+    albumAssets: Array.from({length:5},(_,index)=>makeVinylAlbumAsset(savedAssets[index] || legacyAsset)),
+    multiSleeveFrontUrl: saved.multiSleeveFrontUrl || '',
+    multiSleeveBackUrl: saved.multiSleeveBackUrl || '',
+    multiBackCoverUrl: saved.multiBackCoverUrl || ''
+  };
+  vinylPromotionFiles = makeVinylPromotionFiles();
+  vinylPromotionActiveAlbum = 0;
+
+  // Modal konfigurieren (verwende denselben Modal wie albumPromotion, aber für Vinyl)
+  document.getElementById('apAlbumTitle').textContent = saved.title || 'Neue Vinyl Promotion';
+  document.getElementById('apEnabled').checked = vinylPromotionDraft.enabled;
+  document.getElementById('apTypeTwo').checked = vinylPromotionType === 'two';
+  document.getElementById('apTypeMultiple').checked = vinylPromotionType === 'multiple';
+  const vinylMsg = document.getElementById('apMsg');
+  vinylMsg.textContent = '';
+  vinylMsg.className = 'form-msg';
+  if(location.protocol === 'file:'){
+    showMsg(vinylMsg,'Hinweis: Für Uploads bitte http://127.0.0.1:8787/admin.html verwenden.','err');
+  }
+
+  // Zeige die entsprechende Variante
+  showVinylPromotionType(vinylPromotionType);
+  renderVinylPromotionHeadingControl();
+
+  // Album-Dropdowns füllen (für "Mehr als zwei" Variante)
+  updateVinylPromotionAlbumDropdowns();
+
+  renderVinylPromotionAssetTabs();
+  syncVinylPromotionAssetZones();
+
+  // Modal öffnen und Store atTop für später
+  document.getElementById('albumPromotionOverlay').classList.add('open');
+  document.getElementById('albumPromotionOverlay').dataset.vinylNewAtTop = atTop ? '1' : '0';
+  document.getElementById('albumPromotionOverlay').dataset.vinylMode = '1'; // Markiere als Vinyl Mode
+}
+
+function closeVinylPromotionModal(){
   document.getElementById('albumPromotionOverlay').classList.remove('open');
-  albumPromotionEditSlug = null;
-  albumPromotionDraft = null;
-  albumPromotionFiles = {sleeveFront:null,sleeveBack:null,backCover:null};
+  document.getElementById('albumPromotionOverlay').dataset.vinylMode = '0';
+  vinylPromotionEditSlug = null;
+  vinylPromotionEditRowId = null;
+  vinylPromotionNewAtTop = false;
+  vinylPromotionDraft = null;
+  vinylPromotionFiles = makeVinylPromotionFiles();
+  vinylPromotionActiveAlbum = 0;
+}
+
+function getVinylPromotionFieldKey(kind){
+  return kind.replace(/^multi/,'').replace(/^./,c=>c.toLowerCase()) + 'Url';
+}
+
+function syncVinylPromotionZone(kind){
+  const zone = document.getElementById(albumPromotionId(kind,'Zone'));
+  const preview = document.getElementById(albumPromotionId(kind,'Preview'));
+  const fieldKey = getVinylPromotionFieldKey(kind);
+  const asset = vinylPromotionDraft && vinylPromotionDraft.albumAssets && vinylPromotionDraft.albumAssets[vinylPromotionActiveAlbum];
+  const url = asset && asset[fieldKey] || '';
+  if(!zone || !preview) return;
+  preview.src = url;
+  preview.style.display = url ? 'block' : 'none';
+  zone.classList.toggle('has-file', !!url);
+}
+
+function showVinylPromotionType(type){
+  vinylPromotionType = type;
+  if(vinylPromotionDraft) vinylPromotionDraft.type = type;
+  document.getElementById('apTypeTwoContent').style.display = type === 'two' ? 'block' : 'none';
+  document.getElementById('apTypeMultipleContent').style.display = type === 'multiple' ? 'block' : 'none';
+  const max = type === 'two' ? 1 : 4;
+  vinylPromotionActiveAlbum = Math.min(vinylPromotionActiveAlbum, max);
+  renderVinylPromotionAssetTabs();
+  syncVinylPromotionAssetZones();
+}
+
+function onVinylPromotionTypeChange(){
+  const type = document.querySelector('input[name="apType"]:checked').value;
+  showVinylPromotionType(type);
+}
+
+function vinylPromotionSelectedSlots(){
+  if(!vinylPromotionDraft) return [];
+  const count = vinylPromotionType === 'two' ? 2 : 5;
+  return Array.from({length:count},(_,index)=>({index,slug:vinylPromotionDraft['album'+(index+1)] || ''})).filter(item=>item.slug);
+}
+
+function vinylPromotionAlbumLabel(slug, index){
+  const album = albumsData.find(a=>a.slug === slug);
+  return album && (album.title || album.slug) || slug || ('Album ' + (index + 1));
+}
+
+function renderVinylPromotionAssetTabs(){
+  if(!vinylPromotionDraft) return;
+  const slots = vinylPromotionSelectedSlots();
+  if(slots.length && !slots.some(item=>item.index === vinylPromotionActiveAlbum)) vinylPromotionActiveAlbum = slots[0].index;
+  const mode = vinylPromotionType === 'two' ? 'Two' : 'Multi';
+  const host = document.getElementById('ap' + mode + 'AssetTabs');
+  const heading = document.getElementById('ap' + mode + 'AssetHeading');
+  if(!host || !heading) return;
+  host.innerHTML = '';
+  if(!slots.length){
+    const empty = document.createElement('div');
+    empty.className = 'vinyl-asset-empty';
+    empty.textContent = 'Bitte zuerst Alben auswählen.';
+    host.appendChild(empty);
+    heading.textContent = 'Bilder je Album';
+    return;
+  }
+  slots.forEach(item=>{
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'vinyl-asset-tab' + (item.index === vinylPromotionActiveAlbum ? ' active' : '');
+    button.textContent = vinylPromotionAlbumLabel(item.slug, item.index);
+    button.onclick = ()=>{
+      vinylPromotionActiveAlbum = item.index;
+      renderVinylPromotionAssetTabs();
+      syncVinylPromotionAssetZones();
+    };
+    host.appendChild(button);
+  });
+  const activeSlug = vinylPromotionDraft['album'+(vinylPromotionActiveAlbum+1)] || '';
+  heading.textContent = 'Innensleeve & Cover-Bilder für ' + vinylPromotionAlbumLabel(activeSlug, vinylPromotionActiveAlbum);
+}
+
+function syncVinylPromotionAssetZones(){
+  const kinds = vinylPromotionType === 'two'
+    ? ['sleeveFront','sleeveBack','backCover']
+    : ['multiSleeveFront','multiSleeveBack','multiBackCover'];
+  kinds.forEach(kind=>{
+    const zone = document.getElementById(albumPromotionId(kind,'Zone'));
+    const input = zone && zone.querySelector('input[type=file]');
+    const progress = document.getElementById(albumPromotionId(kind,'Progress'));
+    if(input) input.value = '';
+    if(progress) progress.style.width = '0%';
+    syncVinylPromotionZone(kind);
+  });
+}
+
+function renderVinylPromotionHeadingPreview(){
+  const host = document.getElementById('apRowHeadingPreview');
+  if(!host) return;
+  host.innerHTML = '';
+  const preview = adminBuildRowHeadingEl(vinylPromotionDraft && vinylPromotionDraft.rowHeading);
+  if(preview) host.appendChild(preview);
+}
+
+function renderVinylPromotionHeadingControl(){
+  const host = document.getElementById('apRowHeadingControl');
+  if(!host || !vinylPromotionDraft) return;
+  host.innerHTML = '';
+  const rh = vinylPromotionDraft.rowHeading;
+  const cur = rh && rh.style ? rh.style : 'none';
+  const box = document.createElement('div');
+  box.className = 'he-rhctrl';
+  const top = document.createElement('div');
+  top.className = 'he-rhctrl-top';
+  const label = document.createElement('span');
+  label.className = 'he-rhctrl-lbl';
+  label.textContent = 'Überschrift';
+  top.appendChild(label);
+  const seg = document.createElement('div');
+  seg.className = 'he-rhctrl-seg';
+  [['none','Keine'],['simple','Einfach'],['modern','Modern (Kurz notiert)']].forEach(([value,text])=>{
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'he-rhchip' + (cur === value ? ' active' : '');
+    button.textContent = text;
+    button.onclick = ()=>{
+      if(value === 'none') vinylPromotionDraft.rowHeading = null;
+      else vinylPromotionDraft.rowHeading = {...(vinylPromotionDraft.rowHeading || {}), style:value, title:(vinylPromotionDraft.rowHeading && vinylPromotionDraft.rowHeading.title) || ''};
+      renderVinylPromotionHeadingControl();
+    };
+    seg.appendChild(button);
+  });
+  top.appendChild(seg);
+  box.appendChild(top);
+
+  if(cur !== 'none'){
+    [['left','linksbündig'],['right','rechtsbündig']].forEach(([side,text])=>{
+      const wrap = document.createElement('label');
+      wrap.className = 'he-rhcheck';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = side === 'left' ? rh.alignLeft !== false : !!(rh.alignRight || rh.splitAlign);
+      input.onchange = ()=>{
+        delete rh.splitAlign;
+        if(side === 'left') rh.alignLeft = input.checked;
+        else rh.alignRight = input.checked;
+        if(rh.alignLeft === false && !rh.alignRight){
+          if(side === 'left') rh.alignRight = true;
+          else rh.alignLeft = true;
+        }
+        renderVinylPromotionHeadingControl();
+      };
+      wrap.appendChild(input);
+      wrap.appendChild(document.createTextNode(' ' + text));
+      top.appendChild(wrap);
+    });
+
+    const fields = document.createElement('div');
+    fields.className = 'he-rhctrl-fields';
+    if(cur === 'simple'){
+      const eyebrow = document.createElement('input');
+      eyebrow.type = 'text';
+      eyebrow.placeholder = 'Kicker / Label (optional)';
+      eyebrow.value = rh.eyebrow || '';
+      eyebrow.oninput = ()=>{ rh.eyebrow = eyebrow.value; renderVinylPromotionHeadingPreview(); };
+      fields.appendChild(eyebrow);
+    }
+    const title = document.createElement('input');
+    title.type = 'text';
+    title.placeholder = cur === 'modern' ? 'Rubrik-Text (z. B. Kurz notiert)' : 'Überschrift';
+    title.value = rh.title || '';
+    title.oninput = ()=>{ rh.title = title.value; renderVinylPromotionHeadingPreview(); };
+    fields.appendChild(title);
+    box.appendChild(fields);
+
+    const colorWrap = document.createElement('div');
+    colorWrap.className = 'he-rhcolor';
+    const colorLabel = document.createElement('span');
+    colorLabel.className = 'he-rhcolor-lbl';
+    colorLabel.textContent = 'Farbe';
+    colorWrap.appendChild(colorLabel);
+    if(window.EyeDropper){
+      const pipette = document.createElement('button');
+      pipette.type = 'button';
+      pipette.className = 'he-rhcolor-pip';
+      pipette.textContent = 'Pipette';
+      pipette.onclick = async ()=>{
+        try{
+          const result = await new EyeDropper().open();
+          if(result && result.sRGBHex){ rh.color = result.sRGBHex; renderVinylPromotionHeadingControl(); }
+        }catch(_e){}
+      };
+      colorWrap.appendChild(pipette);
+    }
+    const color = document.createElement('input');
+    color.type = 'color';
+    color.className = 'he-rhcolor-swatch';
+    color.value = /^#[0-9a-fA-F]{6}$/.test(rh.color || '') ? rh.color : '#85ACC9';
+    color.oninput = ()=>{ rh.color = color.value; renderVinylPromotionHeadingPreview(); };
+    colorWrap.appendChild(color);
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'he-rhcolor-reset';
+    reset.textContent = 'Zurücksetzen';
+    reset.onclick = ()=>{ delete rh.color; renderVinylPromotionHeadingControl(); };
+    colorWrap.appendChild(reset);
+    box.appendChild(colorWrap);
+  }
+  host.appendChild(box);
+  renderVinylPromotionHeadingPreview();
+}
+
+function updateVinylPromotionAlbumDropdowns(){
+  for(let i=1; i<=5; i++){
+    const ids = i <= 2 ? ['apMultiAlbum'+i, 'apTwoAlbum'+i] : ['apMultiAlbum'+i];
+    ids.forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const opts = albumsData.map(a=>`<option value="${a.slug}" ${vinylPromotionDraft && vinylPromotionDraft['album'+i]===a.slug ? 'selected' : ''}>${esc(a.title||a.slug)}</option>`).join('');
+    sel.innerHTML = '<option value="">— Wählen —</option>' + opts;
+    });
+  }
+}
+
+function onVinylPromotionAlbumChange(){
+  if(!vinylPromotionDraft) return;
+  const type = (document.querySelector('input[name="apType"]:checked')||{}).value || vinylPromotionType || 'two';
+  vinylPromotionDraft.album1 = ((document.getElementById(type === 'two' ? 'apTwoAlbum1' : 'apMultiAlbum1')||{}).value) || '';
+  vinylPromotionDraft.album2 = ((document.getElementById(type === 'two' ? 'apTwoAlbum2' : 'apMultiAlbum2')||{}).value) || '';
+  vinylPromotionDraft.album3 = (document.getElementById('apMultiAlbum3')||{}).value || '';
+  vinylPromotionDraft.album4 = (document.getElementById('apMultiAlbum4')||{}).value || '';
+  vinylPromotionDraft.album5 = (document.getElementById('apMultiAlbum5')||{}).value || '';
+  ['apMultiAlbum1','apTwoAlbum1'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=vinylPromotionDraft.album1; });
+  ['apMultiAlbum2','apTwoAlbum2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=vinylPromotionDraft.album2; });
+  renderVinylPromotionAssetTabs();
+  syncVinylPromotionAssetZones();
+}
+
+function setVinylPromotionFile(file, kind){
+  if(!file || !vinylPromotionDraft) return;
+  const slotFiles = vinylPromotionFiles.albumAssets[vinylPromotionActiveAlbum];
+  const assetKind = kind.replace(/^multi/,'').replace(/^./,c=>c.toLowerCase());
+  slotFiles[assetKind] = file;
+  const fieldKey = getVinylPromotionFieldKey(kind);
+  vinylPromotionDraft.albumAssets[vinylPromotionActiveAlbum][fieldKey] = URL.createObjectURL(file);
+  syncVinylPromotionZone(kind);
+  document.getElementById('apMsg').className = 'form-msg';
+}
+
+function clearVinylPromotionImage(event, kind){
+  event.preventDefault();
+  event.stopPropagation();
+  if(!vinylPromotionDraft) return;
+  const assetKind = kind.replace(/^multi/,'').replace(/^./,c=>c.toLowerCase());
+  vinylPromotionFiles.albumAssets[vinylPromotionActiveAlbum][assetKind] = null;
+  const fieldKey = getVinylPromotionFieldKey(kind);
+  vinylPromotionDraft.albumAssets[vinylPromotionActiveAlbum][fieldKey] = '';
+  const zone = document.getElementById(albumPromotionId(kind,'Zone'));
+  const input = zone && zone.querySelector('input[type=file]');
+  if(input) input.value = '';
+  syncVinylPromotionZone(kind);
+}
+
+async function persistVinylPromotions(){
+  const enabledPromotions = Object.values(vinylPromotions).filter(p=>p && p.enabled);
+  const activePromotion = enabledPromotions[enabledPromotions.length - 1] || null;
+  const body = {
+    row_order:-6,
+    caption:'__vinyl_promotions__',
+    cells:[{type:'vinylPromotion', promotions:vinylPromotions, rowHeading:activePromotion && activePromotion.rowHeading || null}]
+  };
+  if(vinylPromotionRowId){
+    const res = await fetch(SB_URL+'/rest/v1/home_layout?id=eq.'+encodeURIComponent(vinylPromotionRowId)+'&apikey='+SB_KEY,{
+      method:'PATCH',headers:{...hdrsMin(),'Prefer':'return=minimal'},body:JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    return;
+  }
+  const res = await fetch(SB_URL+'/rest/v1/home_layout?apikey='+SB_KEY,{
+    method:'POST',headers:{...hdrs(),'Prefer':'return=representation'},body:JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error(await res.text());
+  const rows = await res.json();
+  vinylPromotionRowId = rows && rows[0] && rows[0].id || null;
+}
+
+async function saveVinylPromotion(){
+  const msg = document.getElementById('apMsg');
+  if(!vinylPromotionDraft){ showMsg(msg,'Fehler bei der Promotion-Speicherung.','err'); return; }
+  const enabled = document.getElementById('apEnabled').checked;
+  const type = document.querySelector('input[name="apType"]:checked').value;
+  onVinylPromotionAlbumChange();
+  const selectedSlots = vinylPromotionSelectedSlots();
+  const needed = type === 'multiple' ? 3 : 2;
+  if(enabled && selectedSlots.length < needed){
+    showMsg(msg, type === 'multiple' ? 'Bitte mindestens drei Alben auswählen.' : 'Bitte zwei Alben auswählen.','err');
+    return;
+  }
+  const incompleteSlot = selectedSlots.find(item=>{
+    const asset = vinylPromotionDraft.albumAssets[item.index] || {};
+    return !asset.sleeveFrontUrl || !asset.sleeveBackUrl || !asset.backCoverUrl;
+  });
+  if(enabled && incompleteSlot){
+    showMsg(msg,'Bitte für „'+vinylPromotionAlbumLabel(incompleteSlot.slug,incompleteSlot.index)+'“ alle drei Bilder hinterlegen.','err');
+    vinylPromotionActiveAlbum = incompleteSlot.index;
+    renderVinylPromotionAssetTabs();
+    syncVinylPromotionAssetZones();
+    return;
+  }
+  const hasPendingUploads = vinylPromotionFiles.albumAssets.some(asset=>asset.sleeveFront || asset.sleeveBack || asset.backCover);
+  if(hasPendingUploads && location.protocol === 'file:'){
+    showMsg(msg,'Uploads funktionieren nicht beim direkten Öffnen der Datei. Bitte den Admin über http://127.0.0.1:8787/admin.html öffnen.','err');
+    return;
+  }
+
+  const btn = document.getElementById('btnSaveAlbumPromotion');
+  btn.disabled = true;
+  btn.textContent = 'Promotion wird gespeichert …';
+  try{
+    for(const item of selectedSlots){
+      for(const assetKind of ['sleeveFront','sleeveBack','backCover']){
+        const file = vinylPromotionFiles.albumAssets[item.index][assetKind];
+        if(!file) continue;
+        const fieldKey = assetKind + 'Url';
+        const safeSlug = (item.slug || ('album-'+(item.index+1))).replace(/[^a-zA-Z0-9_-]/g,'-');
+        const key = 'artwork/vinyl-promotion-' + vinylPromotionEditSlug + '-' + safeSlug + '-' + assetKind.replace(/([A-Z])/g,m=>'-'+m.toLowerCase()) + '-' + Date.now() + '.jpg';
+        const uiKind = type === 'multiple' ? 'multi' + assetKind.charAt(0).toUpperCase() + assetKind.slice(1) : assetKind;
+        const progressId = item.index === vinylPromotionActiveAlbum ? albumPromotionId(uiKind,'Progress') : null;
+        vinylPromotionDraft.albumAssets[item.index][fieldKey] = await uploadToS3(file, key, progressId);
+      }
+    }
+
+    const firstAsset = vinylPromotionDraft.albumAssets[0] || makeVinylAlbumAsset();
+    const saved = {
+      type,
+      enabled,
+      sleeveFrontUrl: firstAsset.sleeveFrontUrl || '',
+      sleeveBackUrl: firstAsset.sleeveBackUrl || '',
+      backCoverUrl: firstAsset.backCoverUrl || '',
+      album1: vinylPromotionDraft.album1 || '',
+      album2: vinylPromotionDraft.album2 || '',
+      album3: vinylPromotionDraft.album3 || '',
+      album4: vinylPromotionDraft.album4 || '',
+      album5: vinylPromotionDraft.album5 || '',
+      rowHeading: vinylPromotionDraft.rowHeading ? {...vinylPromotionDraft.rowHeading} : null,
+      albumAssets: vinylPromotionDraft.albumAssets.map(makeVinylAlbumAsset),
+      multiSleeveFrontUrl: firstAsset.sleeveFrontUrl || '',
+      multiSleeveBackUrl: firstAsset.sleeveBackUrl || '',
+      multiBackCoverUrl: firstAsset.backCoverUrl || ''
+    };
+
+    const hasAnyAssets = saved.albumAssets.some(asset=>asset.sleeveFrontUrl || asset.sleeveBackUrl || asset.backCoverUrl);
+    if(enabled || hasAnyAssets){
+      markHomeAction();
+      if(vinylPromotionEditRowId){
+        const row = rowById(vinylPromotionEditRowId);
+        if(!row) throw new Error('Die Vinyl-Zeile wurde nicht gefunden.');
+        row.cells[0].type = 'vinylPromotion';
+        row.cells[0].promotion = saved;
+        if(saved.rowHeading) row.cells[0].rowHeading = {...saved.rowHeading};
+        else delete row.cells[0].rowHeading;
+        row.editing = false;
+      }else{
+        const row = makeRow();
+        row.editing = false;
+        row.cells[0] = {...row.cells[0], type:'vinylPromotion', promotion:saved};
+        if(saved.rowHeading) row.cells[0].rowHeading = {...saved.rowHeading};
+        row.cells[1].type = 'hidden';
+        row.cells[2].type = 'hidden';
+        row.cells[3].type = 'hidden';
+        if(vinylPromotionNewAtTop) homeLayout.unshift(row);
+        else homeLayout.push(row);
+      }
+      await saveHomeLayout();
+      showMsg(msg,'Vinyl Promotion und Bilder wurden dauerhaft gespeichert.','ok');
+      toast('Vinyl Promotion dauerhaft gespeichert ✓');
+      const scrollToTop = vinylPromotionNewAtTop;
+      setTimeout(()=>{
+        closeVinylPromotionModal();
+        renderHomeEditor();
+        const w = document.getElementById('homeEditorWrap');
+        if(w) w.scrollTop = scrollToTop ? 0 : w.scrollHeight;
+      }, 650);
+    } else {
+      showMsg(msg,'Bitte mindestens die Sleeve-Vorderseite hinterlegen.','err');
+    }
+  }catch(e){
+    showMsg(msg,'Fehler: '+e.message,'err');
+    toast('Vinyl Promotion konnte nicht gespeichert werden','err');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Promotion speichern';
+  }
+}
+
+function closeAlbumPromotionModal(){
+  const vinylMode = document.getElementById('albumPromotionOverlay').dataset.vinylMode === '1';
+  if(vinylMode){
+    closeVinylPromotionModal();
+  } else {
+    document.getElementById('albumPromotionOverlay').classList.remove('open');
+    albumPromotionEditSlug = null;
+    albumPromotionDraft = null;
+    albumPromotionFiles = {sleeveFront:null,sleeveBack:null,backCover:null};
+  }
 }
 function setAlbumPromotionFile(file, kind){
   if(!file || !ALBUM_PROMOTION_FIELDS[kind] || !albumPromotionDraft) return;
@@ -10637,23 +11292,38 @@ function setAlbumPromotionFile(file, kind){
   document.getElementById('apMsg').className = 'form-msg';
 }
 function onAlbumPromotionFile(input, kind){
-  setAlbumPromotionFile(input.files && input.files[0], kind);
+  const isVinyl = document.getElementById('albumPromotionOverlay').dataset.vinylMode === '1';
+  if(isVinyl){
+    setVinylPromotionFile(input.files && input.files[0], kind);
+  } else {
+    setAlbumPromotionFile(input.files && input.files[0], kind);
+  }
 }
 function onAlbumPromotionDrop(event, kind){
   event.preventDefault();
   offDrag(document.getElementById(albumPromotionId(kind,'Zone')));
-  setAlbumPromotionFile(event.dataTransfer.files && event.dataTransfer.files[0], kind);
+  const isVinyl = document.getElementById('albumPromotionOverlay').dataset.vinylMode === '1';
+  if(isVinyl){
+    setVinylPromotionFile(event.dataTransfer.files && event.dataTransfer.files[0], kind);
+  } else {
+    setAlbumPromotionFile(event.dataTransfer.files && event.dataTransfer.files[0], kind);
+  }
 }
 function clearAlbumPromotionImage(event, kind){
   event.preventDefault();
   event.stopPropagation();
-  if(!albumPromotionDraft || !ALBUM_PROMOTION_FIELDS[kind]) return;
-  albumPromotionFiles[kind] = null;
-  albumPromotionDraft[ALBUM_PROMOTION_FIELDS[kind].url] = '';
-  const zone = document.getElementById(albumPromotionId(kind,'Zone'));
-  const input = zone && zone.querySelector('input[type=file]');
-  if(input) input.value = '';
-  syncAlbumPromotionZone(kind);
+  const isVinyl = document.getElementById('albumPromotionOverlay').dataset.vinylMode === '1';
+  if(isVinyl){
+    clearVinylPromotionImage(event, kind);
+  } else {
+    if(!albumPromotionDraft || !ALBUM_PROMOTION_FIELDS[kind]) return;
+    albumPromotionFiles[kind] = null;
+    albumPromotionDraft[ALBUM_PROMOTION_FIELDS[kind].url] = '';
+    const zone = document.getElementById(albumPromotionId(kind,'Zone'));
+    const input = zone && zone.querySelector('input[type=file]');
+    if(input) input.value = '';
+    syncAlbumPromotionZone(kind);
+  }
 }
 function albumPromotionExt(file){
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -10999,7 +11669,7 @@ async function loadHomeLayout(){
     // Home-Editor. Ohne diesen Filter würde die Landing-Zeile als leere Home-Zeile
     // geladen und beim nächsten Home-Speichern überschrieben → Landingpages verloren.
     const rows = (await r.json()).filter(row =>
-      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages' || row.cells[0].type === 'overlayLibrary' || row.cells[0].type === 'albumPromotions')));
+      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages' || row.cells[0].type === 'overlayLibrary' || row.cells[0].type === 'albumPromotions' || (row.cells[0].type === 'vinylPromotion' && Number(row.row_order) < 0))));
     homeLayout = rows.map(normalizeHomeRow);
   } catch(e){
     homeLayout = [];
@@ -12228,6 +12898,7 @@ function cellHasContent(c){
     || (c.type === 'slideshow' && c.slides && c.slides.length > 0)
     || (c.type === 'silbertablett' && c.stPlaylistSlug)
     || (c.type === 'heading' && c.headingLines && c.headingLines.some(l => (l.text||'').trim()))
+    || (c.type === 'vinylPromotion' && c.promotion)
     || c.type === 'spacer');
 }
 function rowIsFullyFilled(row){
@@ -12620,6 +13291,10 @@ function buildCells(row, grid){
     grid.classList.add('layout-heading');
     grid.appendChild(buildSpacerAdminCell(row));
 
+  } else if(t0 === 'vinylPromotion'){
+    grid.classList.add('layout-vinyl');
+    grid.appendChild(buildVinylPromotionAdminCell(row));
+
   } else if(t0 === 'silbertablett'){
     // Silbertablett: 2 gleich breite 1:1-Quadrate nebeneinander
     grid.classList.add('layout-silbertablett');
@@ -12719,6 +13394,45 @@ function buildCells(row, grid){
       grid.appendChild(buildCell(row,i,'',editing));
     }
   }
+}
+
+function buildVinylPromotionAdminCell(row){
+  const promo = row.cells[0].promotion || {};
+  const slugs = promo.type === 'multiple'
+    ? [promo.album1,promo.album2,promo.album3,promo.album4,promo.album5].filter(Boolean)
+    : [promo.album1,promo.album2].filter(Boolean);
+  const el = document.createElement('div');
+  el.className = 'he-vinyl-cell';
+  el.onclick = ()=>openVinylPromotionRowModal(row.id);
+  const head = document.createElement('div');
+  head.className = 'he-vinyl-head';
+  const title = document.createElement('div');
+  title.className = 'he-vinyl-title';
+  title.textContent = promo.type === 'multiple' ? 'Vinyl Promotion · bis zu fünf Alben' : 'Vinyl Promotion · zwei Alben';
+  const edit = document.createElement('button');
+  edit.type = 'button';
+  edit.className = 'he-vinyl-edit';
+  edit.textContent = 'Konfigurieren';
+  edit.onclick = event=>{ event.stopPropagation(); openVinylPromotionRowModal(row.id); };
+  head.appendChild(title);
+  head.appendChild(edit);
+  el.appendChild(head);
+  const covers = document.createElement('div');
+  covers.className = 'he-vinyl-covers';
+  slugs.forEach(slug=>{
+    const album = albumsData.find(a=>a.slug === slug);
+    const slot = document.createElement('div');
+    slot.className = 'he-vinyl-cover';
+    if(album && album.cover_url){
+      const img = document.createElement('img');
+      img.src = album.cover_url;
+      img.alt = album.title || slug;
+      slot.appendChild(img);
+    }
+    covers.appendChild(slot);
+  });
+  el.appendChild(covers);
+  return el;
 }
 
 /* ── Überschrift-Zelle im Editor (Vorschau + Bearbeiten) ── */
@@ -13404,25 +14118,49 @@ function applyType(rowId, cellIdx, type, pos){
 }
 
 /* ── Row operations ── */
+function openAddRowTypeModal(atTop){
+  const modal = document.getElementById('addRowTypeModal');
+  if(!modal) return;
+  modal.dataset.atTop = atTop ? '1' : '0';
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
+
+function closeAddRowTypeModal(){
+  const modal = document.getElementById('addRowTypeModal');
+  if(!modal) return;
+  modal.classList.remove('open');
+  modal.style.display = 'none';
+}
+
+function addRowType(type){
+  const modal = document.getElementById('addRowTypeModal');
+  const atTop = modal && modal.dataset.atTop === '1';
+  closeAddRowTypeModal();
+
+  if(type === 'vinylPromotion'){
+    // Öffne den Vinyl Promotion Editor Modal
+    openVinylPromotionNewModal(atTop);
+  } else {
+    // Standard: leere Zeile
+    markHomeAction();
+    const row = makeRow();
+    if(atTop) homeLayout.unshift(row);
+    else homeLayout.push(row);
+    renderHomeEditor();
+    setTimeout(()=>{
+      const w = document.getElementById('homeEditorWrap');
+      if(w) w.scrollTop = atTop ? 0 : w.scrollHeight;
+    },60);
+  }
+}
+
 function addRow(){
-  markHomeAction();
-  homeLayout.push(makeRow());
-  renderHomeEditor();
-  // Scroll to bottom
-  setTimeout(()=>{
-    const w = document.getElementById('homeEditorWrap');
-    if(w) w.scrollTop = w.scrollHeight;
-  },60);
+  openAddRowTypeModal(false);
 }
 
 function addRowAtTop(){
-  markHomeAction();
-  homeLayout.unshift(makeRow());
-  renderHomeEditor();
-  setTimeout(()=>{
-    const w = document.getElementById('homeEditorWrap');
-    if(w) w.scrollTop = 0;
-  },60);
+  openAddRowTypeModal(true);
 }
 
 function deleteRow(id){
@@ -13474,6 +14212,8 @@ function openCellEdit(rowId, cellIdx){
     openHeadingModal(rowId);
   } else if(cell.type === 'spacer'){
     return; // Leerstreifen wird über die Größen-Buttons gesteuert, kein Modal
+  } else if(cell.type === 'vinylPromotion'){
+    openVinylPromotionRowModal(rowId);
   } else {
     openHomeTileModal(rowId, cellIdx);
   }

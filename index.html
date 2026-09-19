@@ -217,12 +217,33 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
   grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
   position:relative;isolation:isolate;overflow:visible
 }
+.home-vinyl-promo{
+  grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,11fr);gap:10px;
+  position:relative;isolation:isolate;overflow:visible
+}
+.home-vinyl-promo-picker{
+  display:flex;flex-direction:column;justify-content:flex-start;gap:8px;align-self:stretch;min-width:0
+}
+.home-vinyl-promo-choice{
+  appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;
+  background:#0B2A42;cursor:pointer;position:relative;transition:transform .13s ease,opacity .13s ease,box-shadow .16s ease
+}
+.home-vinyl-promo-choice img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.home-vinyl-promo-choice:active{transform:scale(.96);opacity:.86}
+.home-vinyl-promo-choice.active{box-shadow:0 0 0 2px rgba(133,172,201,.76),0 8px 24px rgba(0,0,0,.28)}
+.home-vinyl-promo-stage-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative;overflow:visible}
+.home-vinyl-promo-stage-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
 .home-album-promo-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
 .home-album-promo-row .home-card.album-promo-ready::before{
   content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%;
   background:#C90019;box-shadow:0 0 0 4px rgba(6,20,32,.55);z-index:6;pointer-events:none
 }
+.home-vinyl-promo-stage-row .home-card.album-promo-ready::before{
+  content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%;
+  background:#C90019;box-shadow:0 0 0 4px rgba(6,20,32,.55);z-index:6;pointer-events:none
+}
 .home-album-promo-row .home-card.promo-partner-hidden{visibility:hidden;pointer-events:none}
+.home-vinyl-promo-stage-row .home-card.promo-partner-hidden{visibility:hidden;pointer-events:none}
 .home-album-promo-stage{
   appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;background:#02070B;
   position:absolute;top:0;width:calc((100% - 10px)/2);aspect-ratio:1/1;z-index:2;
@@ -261,6 +282,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-album-promo-back-cover{opacity:0;transition:opacity .3s ease;backface-visibility:visible}
 .home-album-promo-stage.show-back .home-album-promo-flip{opacity:0}
 .home-album-promo-stage.show-back .home-album-promo-back-cover{opacity:1}
+.home-album-promo-stage.is-complete{cursor:default}
 .home-album-promo-play{
   position:absolute;left:50%;top:50%;z-index:9;width:116px;height:123px;padding:0;
   transform:translate(-50%,-50%);border:0;border-radius:0;background:transparent;
@@ -5661,6 +5683,31 @@ async function loadFromSupabase() {
     });
   }
 
+  // Vinyl Promotions aus der geschützten Sonderzeile (row_order = -6, type = 'vinylPromotion')
+  const vinylPromotionRow = (window._homeLayoutRows || []).find(r =>
+    r && r.cells && r.cells[0] && r.cells[0].type === 'vinylPromotion');
+  window._vinylPromotions = vinylPromotionRow && vinylPromotionRow.cells[0].promotions
+    ? vinylPromotionRow.cells[0].promotions
+    : {};
+
+  // Preload vinyl promotion images für schnelleres Laden
+  if(window._vinylPromotions && Object.values(window._vinylPromotions).length > 0){
+    Object.values(window._vinylPromotions).forEach(promo => {
+      if(promo.sleeveFrontUrl) { const img = new Image(); img.src = promo.sleeveFrontUrl; }
+      if(promo.sleeveBackUrl) { const img = new Image(); img.src = promo.sleeveBackUrl; }
+      if(promo.backCoverUrl) { const img = new Image(); img.src = promo.backCoverUrl; }
+      if(promo.multiSleeveFrontUrl) { const img = new Image(); img.src = promo.multiSleeveFrontUrl; }
+      if(promo.multiSleeveBackUrl) { const img = new Image(); img.src = promo.multiSleeveBackUrl; }
+      if(promo.multiBackCoverUrl) { const img = new Image(); img.src = promo.multiBackCoverUrl; }
+      if(Array.isArray(promo.albumAssets)) promo.albumAssets.forEach(asset=>{
+        if(!asset) return;
+        ['sleeveFrontUrl','sleeveBackUrl','backCoverUrl'].forEach(key=>{
+          if(asset[key]) { const img = new Image(); img.src = asset[key]; }
+        });
+      });
+    });
+  }
+
   // 4a. Unterseiten (Lyric-Sheet-Unterseiten) aus der geschützten Sonderzeile
   //     (row_order = -3, cells[0].type = 'subpages') übernehmen — falls im Admin gepflegt.
   try {
@@ -8913,9 +8960,12 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
+  const allRows = window._homeLayoutRows || [];
+  const hasNormalVinylRow = allRows.some(r => r && Number(r.row_order) >= 0 && r.cells && r.cells[0] && r.cells[0].type === 'vinylPromotion');
   // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
-  const rows = (window._homeLayoutRows || []).filter(r =>
-    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary' || r.cells[0].type === 'albumPromotions')));
+  // Die alte geschützte Vinyl-Sonderzeile bleibt nur als Kompatibilitäts-Fallback sichtbar.
+  const rows = allRows.filter(r =>
+    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary' || r.cells[0].type === 'albumPromotions' || (r.cells[0].type === 'vinylPromotion' && Number(r.row_order) < 0 && hasNormalVinylRow))));
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -8953,11 +9003,18 @@ function renderHomeRowInto(grid, row){
     // ── Optionale Zeilen-Überschrift über der Zeile (N-TV / Kurz-notiert) ──
     // Nicht bei eigenständigen Überschrift-/Abstand-Zeilen. Nur rendern, wenn die
     // Zeile auch Inhalt hat (sonst stünde die Überschrift verwaist ohne Kachel da).
-    if(cells[0].rowHeading && t0 !== 'heading' && t0 !== 'spacer'){
+    const vinylPromotionsForHeading = t0 === 'vinylPromotion' && cells[0].promotions
+      ? Object.values(cells[0].promotions).filter(p=>p && p.enabled)
+      : [];
+    const vinylHeading = vinylPromotionsForHeading.length
+      ? vinylPromotionsForHeading[vinylPromotionsForHeading.length - 1].rowHeading
+      : null;
+    const activeRowHeading = cells[0].rowHeading || vinylHeading;
+    if(activeRowHeading && t0 !== 'heading' && t0 !== 'spacer'){
       const rowHasContent = cells.some(c => c && c.imageUrl) ||
-                            ['language','slideshow','silbertablett'].includes(t0);
+                            ['language','slideshow','silbertablett','vinylPromotion'].includes(t0);
       if(rowHasContent){
-        const rhEl = buildRowHeadingEl(cells[0].rowHeading);
+        const rhEl = buildRowHeadingEl(activeRowHeading);
         if(rhEl) grid.appendChild(rhEl);
       }
     }
@@ -9016,6 +9073,14 @@ function renderHomeRowInto(grid, row){
       const cell = cells[0];
       const el = buildSlideshowEl(cell);
       grid.appendChild(el);
+      return;
+    }
+
+    // ── Vinyl Promotion ────────────────────────────────────────────
+    if(t0 === 'vinylPromotion'){
+      const cell = cells[0];
+      const el = buildVinylPromotionEl(cell);
+      if(el) grid.appendChild(el);
       return;
     }
 
@@ -9678,7 +9743,7 @@ function showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage){
   sourceCard.appendChild(play);
 }
 
-function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, sourceIndex){
+function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, sourceIndex, playOnBack){
   if(row._albumPromotionActive){
     if(row._albumPromotionAdvance) row._albumPromotionAdvance();
     return;
@@ -9706,8 +9771,23 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
 
   let step = 1;
   let locked = true;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
-  setTimeout(()=>{ locked = false; }, slideDuration + 80);
+  let revealStarted = false;
+  const revealStage = ()=>{
+    if(revealStarted) return;
+    revealStarted = true;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
+    setTimeout(()=>{ locked = false; }, slideDuration + 80);
+  };
+  const stageImages = [...stage.querySelectorAll('img')];
+  const imageReady = stageImages.map(image=>{
+    if(image.complete && image.naturalWidth) return Promise.resolve();
+    return new Promise(resolve=>{
+      image.addEventListener('load', resolve, {once:true});
+      image.addEventListener('error', resolve, {once:true});
+    });
+  });
+  Promise.all(imageReady).then(revealStage);
+  setTimeout(revealStage, 8000);
   const advancePromotion = ()=>{
     if(locked) return;
     if(step === 1){
@@ -9741,15 +9821,37 @@ function startTwoAlbumPromotion(row, sourceCard, partnerCard, cell, promotion, s
         stage.classList.remove('is-flipped');
         stage.classList.add('show-back');
         stage.setAttribute('aria-label', 'Artwork schließen');
+        if(playOnBack && !sourceCard.querySelector('.home-album-promo-play')){
+          const play = document.createElement('button');
+          play.type = 'button';
+          play.className = 'home-album-promo-play';
+          play.setAttribute('aria-label', 'Album im Player öffnen');
+          play.innerHTML = '<svg viewBox="0 0 28 24" aria-hidden="true"><path d="M8.7 5.4c0-1.55 1.7-2.5 3.02-1.68l10.45 6.45c1.22.75 1.22 2.52 0 3.27l-10.45 6.45c-1.32.82-3.02-.13-3.02-1.68z"></path></svg>';
+          play.addEventListener('click', event=>{
+            event.preventDefault();
+            event.stopPropagation();
+            openPromotedAlbum(cell, row, sourceCard, partnerCard, stage);
+          });
+          sourceCard.appendChild(play);
+        }
         requestAnimationFrame(()=>requestAnimationFrame(()=>stage.classList.add('is-open')));
         step = 3;
-        setTimeout(()=>{ locked = false; }, slideDuration);
+        setTimeout(()=>{
+          locked = false;
+          if(playOnBack){
+            stage.classList.add('is-complete');
+            stage.setAttribute('aria-label', 'Album-Rückseite');
+          }
+        }, slideDuration);
       }, slideDuration);
       return;
     }
+    if(playOnBack) return;
     locked = true;
     stage.classList.remove('is-open');
-    setTimeout(()=>showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage), slideDuration);
+    setTimeout(()=>{
+      showAlbumPromotionPlay(row, sourceCard, partnerCard, cell, stage);
+    }, slideDuration);
   };
   row._albumPromotionAdvance = advancePromotion;
   stage.addEventListener('click', advancePromotion);
@@ -9776,6 +9878,146 @@ function buildTwoAlbumPromotionRow(cells){
     row.appendChild(card);
   });
   return row;
+}
+
+function vinylPromotionAlbumCell(slug){
+  const key = resolveAlbumKey(slug);
+  const album = key && ALBUMS[key] ? ALBUMS[key] : null;
+  if(!album) return null;
+  return {
+    type:'1x1',
+    fn:'album',
+    slug: album.slug || slug,
+    albumSlug: album.slug || slug,
+    imageUrl: album.cover || '',
+    alt: album.title || slug
+  };
+}
+
+function vinylPromotionImages(promo, mode, albumIndex){
+  const asset = promo && Array.isArray(promo.albumAssets) && promo.albumAssets[albumIndex];
+  if(asset){
+    return {
+      enabled: !!promo.enabled,
+      sleeveFrontUrl: asset.sleeveFrontUrl || '',
+      sleeveBackUrl: asset.sleeveBackUrl || '',
+      backCoverUrl: asset.backCoverUrl || ''
+    };
+  }
+  const useMulti = mode === 'multiple';
+  return {
+    enabled: !!(promo && promo.enabled),
+    sleeveFrontUrl: (useMulti && promo.multiSleeveFrontUrl) || promo.sleeveFrontUrl || '',
+    sleeveBackUrl: (useMulti && promo.multiSleeveBackUrl) || promo.sleeveBackUrl || '',
+    backCoverUrl: (useMulti && promo.multiBackCoverUrl) || promo.backCoverUrl || ''
+  };
+}
+
+function vinylPromotionIsReady(promo, mode, albumIndex){
+  const p = vinylPromotionImages(promo, mode, albumIndex);
+  return !!(p.enabled && p.sleeveFrontUrl && p.sleeveBackUrl && p.backCoverUrl);
+}
+
+function buildVinylTwoAlbumPromotion(promo){
+  const row = document.createElement('div');
+  row.className = 'home-album-promo-row';
+  const entries = [promo.album1, promo.album2].map((slug,slotIndex)=>({cell:vinylPromotionAlbumCell(slug),slotIndex})).filter(entry=>entry.cell);
+  if(entries.length < 2) return null;
+  const cells = entries.map(entry=>entry.cell);
+  const cards = cells.map(cell => buildHomeCard(cell, 'big-square'));
+  cards.forEach((card, index)=>{
+    const slotIndex = entries[index].slotIndex;
+    const promotion = vinylPromotionImages(promo, 'two', slotIndex);
+    if(vinylPromotionIsReady(promo, 'two', slotIndex)){
+      card._albumPromotionHandled = true;
+      card.classList.add('album-promo-ready');
+      card.addEventListener('click', event=>{
+        event.stopPropagation();
+        startTwoAlbumPromotion(row, card, cards[index === 0 ? 1 : 0], cells[index], promotion, index);
+      });
+    }
+    row.appendChild(card);
+  });
+  return row;
+}
+
+function buildVinylMultiplePromotion(promo){
+  const entries = [promo.album1, promo.album2, promo.album3, promo.album4, promo.album5]
+    .map((slug,slotIndex)=>({cell:vinylPromotionAlbumCell(slug),slotIndex}))
+    .filter(entry=>entry.cell);
+  if(!entries.length) return null;
+  const albums = entries.map(entry=>entry.cell);
+  const wrap = document.createElement('div');
+  wrap.className = 'home-vinyl-promo';
+
+  const picker = document.createElement('div');
+  picker.className = 'home-vinyl-promo-picker';
+  const stageRow = document.createElement('div');
+  stageRow.className = 'home-vinyl-promo-stage-row';
+  wrap.appendChild(picker);
+  wrap.appendChild(stageRow);
+
+  let selected = 0;
+  const renderStage = ()=>{
+    stageRow._albumPromotionActive = false;
+    stageRow._albumPromotionAdvance = null;
+    stageRow.innerHTML = '';
+    const cell = albums[selected] || albums[0];
+    const card = buildHomeCard(cell, 'big-square');
+    const partner = document.createElement('div');
+    partner.className = 'home-card big-square promo-partner-hidden';
+    const slotIndex = entries[selected] ? entries[selected].slotIndex : entries[0].slotIndex;
+    if(vinylPromotionIsReady(promo, 'multiple', slotIndex)){
+      const promotion = vinylPromotionImages(promo, 'multiple', slotIndex);
+      [promotion.sleeveFrontUrl, promotion.sleeveBackUrl, promotion.backCoverUrl].forEach(url=>{
+        const preload = new Image();
+        preload.src = url;
+      });
+      card._albumPromotionHandled = true;
+      card.classList.add('album-promo-ready');
+      card.addEventListener('click', event=>{
+        event.stopPropagation();
+        startTwoAlbumPromotion(stageRow, card, partner, cell, promotion, 0, true);
+      });
+    }
+    stageRow.appendChild(card);
+    stageRow.appendChild(partner);
+  };
+
+  albums.slice(0,5).forEach((cell, index)=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'home-vinyl-promo-choice' + (index === 0 ? ' active' : '');
+    btn.setAttribute('aria-label', cell.alt || 'Album auswählen');
+    const img = document.createElement('img');
+    img.src = cell.imageUrl || '';
+    img.alt = cell.alt || '';
+    img.loading = 'lazy';
+    btn.appendChild(img);
+    btn.addEventListener('click', event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      selected = index;
+      picker.querySelectorAll('.home-vinyl-promo-choice').forEach((el,i)=>el.classList.toggle('active', i === index));
+      renderStage();
+    });
+    picker.appendChild(btn);
+  });
+  renderStage();
+  return wrap;
+}
+
+function buildVinylPromotionEl(cell){
+  if(cell && cell.promotion){
+    const promo = cell.promotion;
+    if(!promo.enabled) return null;
+    return promo.type === 'multiple' ? buildVinylMultiplePromotion(promo) : buildVinylTwoAlbumPromotion(promo);
+  }
+  const promos = cell && cell.promotions ? Object.values(cell.promotions) : Object.values(window._vinylPromotions || {});
+  const enabled = promos.filter(p => p && p.enabled);
+  if(!enabled.length) return null;
+  const promo = enabled[enabled.length - 1];
+  return promo.type === 'multiple' ? buildVinylMultiplePromotion(promo) : buildVinylTwoAlbumPromotion(promo);
 }
 
 /* ── Build a standard home-card div ── */
