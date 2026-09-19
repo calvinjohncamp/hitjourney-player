@@ -47,7 +47,7 @@
 <!-- Version: v230-album-branding-deck-click-polish -->
 <!-- Version: v229-album-click-fix -->
 <!-- Version: v232-album-space-abc-prev-polish -->
-<!-- Version: v251-wide-teaser-cover-lyrics-cycle-fix -->
+<!-- Version: v252-vinyl-promotion-live-sync -->
 <!-- Version: v250-describe-page-nach-lyrics-cover-lyrics-describe -->
 <!-- Version: v249-describe-page-cover-describe-lyrics-cycle -->
 <!-- Version: v228-album-dj-deck-conservative -->
@@ -5663,7 +5663,7 @@ async function loadFromSupabase() {
 
   // 4. Home-Layout laden
   try {
-    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers });
+    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers, cache:'no-store' });
     if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
     else window._homeLayoutRows = [];
   } catch(e){ window._homeLayoutRows = []; }
@@ -11542,7 +11542,7 @@ showHome = function(){
 <script>
 // Cache-Busting: prüft beim Start ob eine neue Version verfügbar ist
 (function(){
-  const VERSION = 'v251-wide-teaser-cover-lyrics-cycle-fix-20260614';
+  const VERSION = 'v252-vinyl-promotion-live-sync-20260919';
   const STORED  = localStorage.getItem('hj-version');
   if(STORED && STORED !== VERSION){
     localStorage.setItem('hj-version', VERSION);
