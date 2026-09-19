@@ -11662,7 +11662,7 @@ function headingLineStyle(l){
 /* ── Load / Save Supabase ── */
 async function loadHomeLayout(){
   try {
-    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs()});
+    const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs(),cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     // About-/Info-Sonderzeile (type 'about', row_order -1) und die Landingpages-
     // Sonderzeile (type 'landingPages'/'landing', row_order -2) gehören NICHT in den
