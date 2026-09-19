@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-20260608.png"/>
 <link rel="shortcut icon" href="favicon-20260608.png"/>
 <title>hitjourney</title>
+<!-- Version: v278-vinyl-endless-crossfade -->
 <!-- Version: v277-vinyl-original-dice-staged-images -->
 <!-- Version: v276-vinyl-promotion-playlists-cover-priority -->
 <!-- Version: v275-home-diashow-no-crossfade-songs-voll-ausspielen-fade-nur-mrdj -->
@@ -250,6 +251,14 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 .home-vinyl-promo-control.is-active{filter:drop-shadow(0 0 7px rgba(133,172,201,.55))}
 .home-vinyl-promo-stage-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative;overflow:visible}
 .home-vinyl-promo-stage-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
+.home-vinyl-promo-stage-row .vinyl-next-cover-preview{
+  position:absolute;left:0;top:0;width:calc((100% - 10px)/2);z-index:10;pointer-events:none;opacity:0
+}
+.home-vinyl-promo-stage-row .vinyl-transition-toggle{
+  appearance:none;-webkit-appearance:none;position:absolute;inset:0;z-index:12;border:0;padding:0;margin:0;
+  background:transparent;cursor:pointer
+}
+.home-vinyl-promo-stage-row .vinyl-transition-toggle:focus-visible{outline:2px solid #85ACC9;outline-offset:4px}
 .home-album-promo-row .home-card.big-square{grid-column:auto;min-width:0;z-index:3}
 .home-album-promo-row .home-card.album-promo-ready::before{
   content:'';position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%;
@@ -9866,7 +9875,7 @@ function startAutomaticVinylPromotion(row, sourceCard, partnerCard, cell, promot
     stage.classList.add('is-complete');
     stage.setAttribute('aria-label', 'Album-Rückseite');
     showPlayButton();
-    if(options.onComplete) schedule(options.onComplete, phaseDuration);
+    if(options.onComplete) schedule(options.onComplete, 4500);
   };
   const showBackCover = ()=>{
     stage.classList.remove('is-flipped');
@@ -10140,19 +10149,70 @@ function buildVinylMultiplePromotion(promo){
   wrap.appendChild(stageRow);
 
   let selected = 0;
-  let continuousPresentation = false;
+  let continuousPresentation = true;
   let audioMode = '';
+  let transitionSerial = 0;
+  let transitionActive = false;
   const pickerButtons = [];
   const syncPickerSelection = ()=>{
     pickerButtons.forEach((button,index)=>button.classList.toggle('active', index === selected));
   };
-  const advancePresentation = ()=>{
-    if(!continuousPresentation || !albums.length) return;
-    selected = (selected + 1) % albums.length;
+  const advancePresentation = async ()=>{
+    if(!continuousPresentation || !albums.length || transitionActive) return;
+    transitionActive = true;
+    const serial = ++transitionSerial;
+    const nextIndex = (selected + 1) % albums.length;
+    const nextCard = buildHomeCard(albums[nextIndex], 'big-square vinyl-next-cover-preview');
+    const nextImage = nextCard.querySelector('img');
+    if(nextImage){
+      nextImage.loading = 'eager';
+      nextImage.decoding = 'async';
+      nextImage.fetchPriority = 'high';
+    }
+    stageRow.appendChild(nextCard);
+    const imageReady = !nextImage || (nextImage.complete && nextImage.naturalWidth)
+      ? Promise.resolve()
+      : new Promise(resolve=>{
+          nextImage.addEventListener('load', resolve, {once:true});
+          nextImage.addEventListener('error', resolve, {once:true});
+        });
+    await imageReady;
+    if(serial !== transitionSerial) return;
+
+    const outgoing = [...stageRow.children].filter(element=>element !== nextCard);
+    const animations = outgoing.map(element=>element.animate(
+      [{opacity:1},{opacity:0}],
+      {duration:1400,easing:'ease-in-out',fill:'forwards'}
+    ));
+    animations.push(nextCard.animate(
+      [{opacity:0},{opacity:1}],
+      {duration:1400,easing:'ease-in-out',fill:'forwards'}
+    ));
+
+    let transitionPaused = false;
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'vinyl-transition-toggle';
+    toggle.setAttribute('aria-label', 'Vinyl-Präsentation pausieren');
+    toggle.addEventListener('click', event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      transitionPaused = !transitionPaused;
+      animations.forEach(animation=>{
+        try{ transitionPaused ? animation.pause() : animation.play(); }catch(_err){}
+      });
+      toggle.setAttribute('aria-label', transitionPaused ? 'Vinyl-Präsentation fortsetzen' : 'Vinyl-Präsentation pausieren');
+    });
+    stageRow.appendChild(toggle);
+    await Promise.all(animations.map(animation=>animation.finished.catch(()=>null)));
+    if(serial !== transitionSerial) return;
+    selected = nextIndex;
     syncPickerSelection();
+    transitionActive = false;
     renderStage();
   };
   const renderStage = ()=>{
+    transitionActive = false;
     if(stageRow._albumPromotionDestroy) stageRow._albumPromotionDestroy();
     stageRow._albumPromotionActive = false;
     stageRow._albumPromotionAdvance = null;
@@ -10202,6 +10262,7 @@ function buildVinylMultiplePromotion(promo){
     btn.addEventListener('click', event=>{
       event.preventDefault();
       event.stopPropagation();
+      transitionSerial++;
       selected = index;
       syncPickerSelection();
       renderStage();
