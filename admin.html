@@ -11658,12 +11658,10 @@ async function loadHomeLayout(){
   try {
     const r = await fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),{headers:hdrs(),cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    // About-/Info-Sonderzeile (type 'about', row_order -1) und die Landingpages-
-    // Sonderzeile (type 'landingPages'/'landing', row_order -2) gehören NICHT in den
-    // Home-Editor. Ohne diesen Filter würde die Landing-Zeile als leere Home-Zeile
-    // geladen und beim nächsten Home-Speichern überschrieben → Landingpages verloren.
-    const rows = (await r.json()).filter(row =>
-      !(row.cells && row.cells[0] && (row.cells[0].type === 'about' || row.cells[0].type === 'landing' || row.cells[0].type === 'landingPages' || row.cells[0].type === 'subpages' || row.cells[0].type === 'overlayLibrary' || row.cells[0].type === 'albumPromotions' || (row.cells[0].type === 'vinylPromotion' && Number(row.row_order) < 0))));
+    // About-/Info-Sonderzeile, Landingpages usw. gehören NICHT in den Home-Editor.
+    // Dieselbe Schutzlogik wird auch beim Speichern verwendet, damit Risiko-Check,
+    // Delete und Verify dieselbe Zeilenmenge betrachten.
+    const rows = (await r.json()).filter(isEditableHomeLayoutRow);
     homeLayout = rows.map(normalizeHomeRow);
   } catch(e){
     homeLayout = [];
@@ -11684,6 +11682,32 @@ async function createHomeLayoutSafetyBackup(reason='manual'){
     throw new Error('Backup READ ' + r.status + ': ' + txt.slice(0,300));
   }
   const rows = await r.json();
+  return rows;
+}
+
+function canDownloadHomeSafetyBackup(){
+  const ua = navigator.userAgent || '';
+  const isiPadOS13Plus = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || isiPadOS13Plus;
+  return !isIOS;
+}
+
+function isProtectedHomeLayoutRow(row){
+  const firstType = row && row.cells && row.cells[0] && row.cells[0].type;
+  return firstType === 'about'
+    || firstType === 'landing'
+    || firstType === 'landingPages'
+    || firstType === 'subpages'
+    || firstType === 'overlayLibrary'
+    || firstType === 'albumPromotions'
+    || (firstType === 'vinylPromotion' && Number(row.row_order) < 0);
+}
+
+function isEditableHomeLayoutRow(row){
+  return Number(row && row.row_order) >= 0 && !isProtectedHomeLayoutRow(row);
+}
+
+function maybeDownloadHomeSafetyBackup(rows, reason){
   const stamp = new Date().toISOString().replace(/[:.]/g,'-');
   const backup = {
     created: new Date().toISOString(),
@@ -11692,6 +11716,10 @@ async function createHomeLayoutSafetyBackup(reason='manual'){
     row_count: rows.length,
     tables: { home_layout: rows }
   };
+  if(!canDownloadHomeSafetyBackup()){
+    console.info('Backup-Download auf diesem Gerät übersprungen; DB-Sicherheitskopie wurde für diesen Speichervorgang gelesen.', backup);
+    return;
+  }
   try{
     const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
     const a = document.createElement('a');
@@ -11703,7 +11731,6 @@ async function createHomeLayoutSafetyBackup(reason='manual'){
   }catch(e){
     console.warn('Backup-Download konnte nicht gestartet werden:', e);
   }
-  return rows;
 }
 
 function normalizeHomePayloadRows(){
@@ -11729,7 +11756,7 @@ async function safeUpsertHomeLayoutRows(payload){
 
 async function deleteRemovedHomeLayoutRows(oldRows, payload){
   const keep = new Set(payload.map(r=>String(r.id)));
-  const removed = (oldRows||[]).filter(r => Number(r.row_order) >= 0 && r.id && !keep.has(String(r.id)));
+  const removed = (oldRows||[]).filter(r => isEditableHomeLayoutRow(r) && r.id && !keep.has(String(r.id)));
   for(const r of removed){
     const del = await fetch(SB_URL + '/rest/v1/home_layout?id=eq.' + encodeURIComponent(r.id) + '&apikey=' + SB_KEY, {
       method:'DELETE', headers:hdrsMin()
@@ -11743,12 +11770,12 @@ async function deleteRemovedHomeLayoutRows(oldRows, payload){
 }
 
 async function verifyHomeLayoutSaved(expectedCount){
-  const r = await fetch(sbUrl('/rest/v1/home_layout?select=id,row_order&row_order=gte.0&order=row_order.asc'), {headers:hdrs()});
+  const r = await fetch(sbUrl('/rest/v1/home_layout?select=id,row_order,cells&row_order=gte.0&order=row_order.asc'), {headers:hdrs()});
   if(!r.ok){
     const txt = await r.text();
     throw new Error('VERIFY READ ' + r.status + ': ' + txt.slice(0,300));
   }
-  const rows = await r.json();
+  const rows = (await r.json()).filter(isEditableHomeLayoutRow);
   if(rows.length !== expectedCount){
     throw new Error('VERIFY: erwartet ' + expectedCount + ' Home-Zeilen, gefunden ' + rows.length + '. Speicherung wurde nicht als sicher bestätigt.');
   }
@@ -11773,10 +11800,11 @@ async function saveHomeLayout(){
   try {
     // 1) Erst Sicherheitskopie der aktuellen DB-Zeilen ziehen. Keine destruktive Aktion davor.
     const oldRows = await createHomeLayoutSafetyBackup('before-home-save');
-    const oldNormalCount = oldRows.filter(r=>Number(r.row_order) >= 0).length;
+    maybeDownloadHomeSafetyBackup(oldRows, 'before-home-save');
+    const oldNormalCount = oldRows.filter(isEditableHomeLayoutRow).length;
     if(oldNormalCount && homeLayout.length < Math.max(1, oldNormalCount - 2)){
       const ok = confirm('In der Datenbank liegen aktuell ' + oldNormalCount + ' Home-Zeilen. Gespeichert würden nur ' + homeLayout.length + '.\\n\\nDas kann korrekt sein, wirkt aber riskant. Trotzdem speichern?');
-      if(!ok){ toast('Speichern abgebrochen. Backup wurde erstellt.','err'); return; }
+      if(!ok){ toast('Speichern abgebrochen. Sicherheitskopie wurde gelesen.','err'); return; }
     }
 
     const payload = normalizeHomePayloadRows();
