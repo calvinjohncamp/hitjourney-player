@@ -10169,6 +10169,8 @@ function showMsg(el,text,type){ el.textContent=text; el.className='form-msg '+ty
 let albumsData = [];      // [{slug, title, cover_url, tracks:[{song_slug, position}]}]
 let albumFileNew = null;  // file for new album cover upload
 let albumSortModes = {};
+const albumOrderDirty = new Set();
+const albumWritesPending = new Set();
 let adminScStreams = {};
 let adminScLikes = {};
 let albumPromotions = {};
@@ -10310,7 +10312,7 @@ function renderAlbums(){
           </div>
           ${sortHtml}
         </div>
-        <button class="btn-sort-save" id="savesort-${al.slug}" onclick="saveOrder('${al.slug}')">✓ Reihenfolge speichern</button>
+        <button class="btn-sort-save${albumOrderDirty.has(al.slug) ? ' visible' : ''}" id="savesort-${al.slug}" onclick="saveOrder('${al.slug}')">✓ Reihenfolge speichern</button>
         <div id="altable-${al.slug}">${renderAlbumSongs(al)}</div>
         <div class="album-picker">
           <div class="album-picker-title">Songs hinzufügen</div>
@@ -10330,7 +10332,7 @@ function setAlbumSortMode(event, albumSlug, mode){
   if(albumSlug !== 'songwriters-picks') return;
   albumSortModes[albumSlug] = mode || 'album';
   const btn = document.getElementById('savesort-'+albumSlug);
-  if(btn) btn.classList.remove('visible');
+  if(btn) btn.classList.toggle('visible', albumOrderDirty.has(albumSlug));
   document.querySelectorAll('#alsort-'+CSS.escape(albumSlug)+' button').forEach(b=>{
     b.classList.toggle('active', b.textContent.trim().toLowerCase() === albumSortModes[albumSlug]);
   });
@@ -10457,14 +10459,15 @@ function filterPicker(slug, q){
 
 async function addToAlbum(albumSlug, songSlug){
   const al = albumsData.find(a=>a.slug===albumSlug);
-  if(!al) return;
-  const maxPos = al.tracks.length ? Math.max(...al.tracks.map(t=>t.position)) : 0;
+  if(!al || albumWritesPending.has(albumSlug) || al.tracks.some(t=>t.song_slug===songSlug)) return;
+  albumWritesPending.add(albumSlug);
+  const maxPos = al.tracks.length ? Math.max(...al.tracks.map(t=>Number(t.position)||0)) : 0;
   const pos = maxPos + 1;
   try{
     const r = await fetch(sbUrl('/rest/v1/playlist_tracks'),{method:'POST',headers:hdrs(),body:JSON.stringify({playlist_slug:albumSlug,song_slug:songSlug,position:pos})});
     if(!r.ok) throw new Error(await r.text());
     al.tracks.push({song_slug:songSlug,playlist_slug:albumSlug,position:pos});
-    document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
+    reloadAlbumSongs(albumSlug);
     document.getElementById('picker-'+albumSlug).innerHTML = renderPicker(al);
     // update meta count
     const card = document.getElementById('album-'+albumSlug);
@@ -10474,26 +10477,27 @@ async function addToAlbum(albumSlug, songSlug){
     const msg = String(e.message||'');
     if(msg.includes('23505') || msg.toLowerCase().includes('duplicate key')){
       toast('Song ist bereits im Album');
-      try{ await loadPlaylists(); }catch(_e){}
       return;
     }
     toast('Fehler: '+msg,'err');
-  }
+  } finally { albumWritesPending.delete(albumSlug); }
 }
 
 async function removeFromAlbum(albumSlug, songSlug){
   const al = albumsData.find(a=>a.slug===albumSlug);
-  if(!al) return;
+  if(!al || albumWritesPending.has(albumSlug)) return;
+  albumWritesPending.add(albumSlug);
   try{
     const r = await fetch(SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+albumSlug+'&apikey='+SB_KEY+'&song_slug=eq.'+songSlug,{method:'DELETE',headers:hdrs()});
     if(!r.ok) throw new Error(await r.text());
     al.tracks = al.tracks.filter(t=>t.song_slug!==songSlug);
-    document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
+    reloadAlbumSongs(albumSlug);
     document.getElementById('picker-'+albumSlug).innerHTML = renderPicker(al);
     const card = document.getElementById('album-'+albumSlug);
     if(card) card.querySelector('.album-meta').textContent = al.tracks.length+' Songs';
     toast('Song entfernt');
   } catch(e){ toast('Fehler: '+e.message,'err'); }
+  finally { albumWritesPending.delete(albumSlug); }
 }
 
 async function updateTrackPos(albumSlug, songSlug, newPos){
@@ -10509,22 +10513,32 @@ async function updateTrackPos(albumSlug, songSlug, newPos){
 
 function reloadAlbumSongs(albumSlug){
   const al = albumsData.find(a=>a.slug===albumSlug);
-  if(al){ document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al); initDragSort(albumSlug); }
+  if(al){
+    const query = document.querySelector('#alsongs-'+CSS.escape(albumSlug)+' .album-songs-search input');
+    document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al, (query?.value || '').toLowerCase());
+    initDragSort(albumSlug);
+    const btn = document.getElementById('savesort-'+albumSlug);
+    if(btn) btn.classList.toggle('visible', albumOrderDirty.has(albumSlug));
+  }
 }
 
 /* ── DRAG & DROP SORT ── */
 let dragSrc = null;
 
 function initDragSort(albumSlug){
-  const tbody = document.querySelector(`#dragtable-${albumSlug} tbody`);
+  const tbody = document.querySelector(`#dragtable-${CSS.escape(albumSlug)} tbody`);
   if(!tbody) return;
   tbody.querySelectorAll('tr[draggable]').forEach(row=>{
+    if(row.dataset.dragSortReady) return;
+    row.dataset.dragSortReady = 'true';
     row.addEventListener('dragstart', e=>{
+      if(albumWritesPending.has(albumSlug)){ e.preventDefault(); return; }
       dragSrc = row;
       row.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
     row.addEventListener('dragend', ()=>{
+      dragSrc = null;
       row.classList.remove('dragging');
       tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
     });
@@ -10536,18 +10550,29 @@ function initDragSort(albumSlug){
     });
     row.addEventListener('drop', e=>{
       e.preventDefault();
-      if(!dragSrc || dragSrc===row) return;
+      if(albumWritesPending.has(albumSlug) || !dragSrc || dragSrc===row || dragSrc.parentElement!==tbody) return;
       const rows = [...tbody.querySelectorAll('tr')];
       const srcIdx = rows.indexOf(dragSrc);
       const tgtIdx = rows.indexOf(row);
       if(srcIdx < tgtIdx) row.after(dragSrc);
       else row.before(dragSrc);
       row.classList.remove('drag-over');
-      // Renumber all positions live
-      tbody.querySelectorAll('tr[data-slug]').forEach((r,i)=>{
+      // Keep the full album draft in memory, including songs hidden by search.
+      const al = albumsData.find(a=>a.slug===albumSlug);
+      if(!al) return;
+      const visibleSlugs = [...tbody.querySelectorAll('tr[data-slug]')].map(r=>r.dataset.slug);
+      const visible = new Set(visibleSlugs);
+      const bySlug = new Map(al.tracks.map(t=>[t.song_slug,t]));
+      let next = 0;
+      al.tracks = al.tracks.slice().sort((a,b)=>a.position-b.position).map((t,i)=>({
+        ...bySlug.get(visible.has(t.song_slug) ? visibleSlugs[next++] : t.song_slug), position:i+1
+      }));
+      const positions = new Map(al.tracks.map(t=>[t.song_slug,t.position]));
+      tbody.querySelectorAll('tr[data-slug]').forEach(r=>{
         const numCell = r.querySelector('.td-num');
-        if(numCell) numCell.textContent = i+1;
+        if(numCell) numCell.textContent = positions.get(r.dataset.slug);
       });
+      albumOrderDirty.add(albumSlug);
       // Show save button
       const btn = document.getElementById('savesort-'+albumSlug);
       if(btn) btn.classList.add('visible');
@@ -10556,50 +10581,56 @@ function initDragSort(albumSlug){
 }
 
 async function saveOrder(albumSlug){
-  const tbody = document.querySelector(`#dragtable-${albumSlug} tbody`);
-  if(!tbody) return;
-  const rows = [...tbody.querySelectorAll('tr[data-slug]')];
   const al = albumsData.find(a=>a.slug===albumSlug);
-  if(!al || !rows.length) return;
+  if(!al || !al.tracks.length || albumWritesPending.has(albumSlug)) return;
+  albumWritesPending.add(albumSlug);
   const btn = document.getElementById('savesort-'+albumSlug);
   if(btn){ btn.textContent='Speichere …'; btn.disabled=true; }
   try{
-    // Reihenfolge aus der sichtbaren Tabelle lesen und doppelte Slugs sicher entfernen.
-    // Das vermeidet den Supabase-Fehler 23505, falls ein Song durch Reload/Altbestand doppelt im UI landet.
-    const seen = new Set();
-    const newOrder = [];
-    rows.forEach(row=>{
-      const songSlug = row.dataset.slug;
-      if(songSlug && !seen.has(songSlug)){
-        seen.add(songSlug);
-        newOrder.push({playlist_slug:albumSlug, song_slug:songSlug, position:newOrder.length+1});
+    // Always save the complete draft, never just the search results in the table.
+    const newOrder = al.tracks.slice().sort((a,b)=>a.position-b.position)
+      .map((t,i)=>({...t, position:i+1}));
+    const tracksUrl = sbUrl('/rest/v1/playlist_tracks?playlist_slug=eq.'+encodeURIComponent(albumSlug));
+    const readTracks = async ()=>{
+      const res = await fetch(tracksUrl+'&select=song_slug,position&order=position', {headers:hdrs(), cache:'no-store'});
+      if(!res.ok) throw new Error(await res.text());
+      return await res.json();
+    };
+    const stored = await readTracks();
+    const expected = new Set(newOrder.map(t=>t.song_slug));
+    if(stored.length!==newOrder.length || stored.some(t=>!expected.has(t.song_slug))){
+      throw new Error('Die Albumzuordnung wurde zwischenzeitlich geändert. Bitte das Album neu laden.');
+    }
+    const writePosition = async (track, position)=>{
+      const res = await fetch(tracksUrl+'&song_slug=eq.'+encodeURIComponent(track.song_slug), {
+        method:'PATCH', headers:hdrs(), body:JSON.stringify({position})
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const changed = await res.json();
+      if(changed.length!==1 || Number(changed[0].position)!==position){
+        throw new Error('Die Datenbank hat die Positionsänderung nicht bestätigt.');
       }
-    });
-    if(!newOrder.length) throw new Error('Keine Songs zum Speichern gefunden');
-
-    // Robusteste Variante: Album-Zuordnung komplett neu schreiben.
-    // Dadurch wird nicht gepatcht/dupliziert, sondern die Reihenfolge exakt so gespeichert, wie sie im Admin sichtbar ist.
-    const delUrl = SB_URL+'/rest/v1/playlist_tracks?playlist_slug=eq.'+encodeURIComponent(albumSlug)+'&apikey='+SB_KEY;
-    const del = await fetch(delUrl, {method:'DELETE', headers:{...hdrsMin(),'Prefer':'return=minimal'}});
-    if(!del.ok) throw new Error(await del.text());
-
-    const ins = await fetch(sbUrl('/rest/v1/playlist_tracks'), {
-      method:'POST',
-      headers:{...hdrsMin(),'Prefer':'return=minimal'},
-      body:JSON.stringify(newOrder)
-    });
-    if(!ins.ok) throw new Error(await ins.text());
-
-    al.tracks = newOrder.map(x=>({...x}));
-    document.getElementById('altable-'+albumSlug).innerHTML = renderAlbumSongs(al);
-    initDragSort(albumSlug);
+    };
+    // Temporary free positions also work with a unique constraint on album/position.
+    // Membership is never deleted, even if a request fails.
+    const offset = Math.max(0, ...stored.map(t=>Number(t.position)||0), newOrder.length);
+    for(let i=0; i<newOrder.length; i++) await writePosition(newOrder[i], offset+i+1);
+    for(const track of newOrder) await writePosition(track, track.position);
+    const verified = await readTracks();
+    if(verified.length!==newOrder.length || verified.some((t,i)=>t.song_slug!==newOrder[i].song_slug || Number(t.position)!==i+1)){
+      throw new Error('Die gespeicherte Reihenfolge stimmt nicht mit der gewünschten Reihenfolge überein.');
+    }
+    al.tracks = newOrder;
+    albumOrderDirty.delete(albumSlug);
+    reloadAlbumSongs(albumSlug);
     toast('Reihenfolge gespeichert ✓');
-    if(btn){ btn.textContent='✓ Reihenfolge speichern'; btn.disabled=false; btn.classList.remove('visible'); }
   } catch(e){
-    toast('Fehler beim Speichern der Reihenfolge: '+e.message,'err');
+    albumOrderDirty.add(albumSlug);
+    if(btn) btn.classList.add('visible');
+    toast('Fehler beim Speichern der Reihenfolge: '+e.message+' Deine Reihenfolge bleibt zum erneuten Speichern erhalten.','err');
+  } finally {
+    albumWritesPending.delete(albumSlug);
     if(btn){ btn.textContent='✓ Reihenfolge speichern'; btn.disabled=false; }
-    // Daten nach Fehler neu laden, damit der Admin nicht mit einem Zwischenstand weiterarbeitet.
-    try{ await loadPlaylists(); }catch(_e){}
   }
 }
 
