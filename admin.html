@@ -9979,20 +9979,21 @@ async function sbWriteSongRecord(method, url, body){
 }
 const DESCRIBE_COLUMN_HINT = '⚠️ Alle Änderungen gespeichert – aber die Beschreibung konnte nicht gespeichert werden. Bitte zuerst in Supabase die Spalte „describe_url" in der Tabelle „songs" anlegen (siehe Anleitung), dann die Beschreibung erneut hochladen.';
 
+let editSavePending = false;
 async function saveEdit(){
-  if(!editTarget) return;
+  if(!editTarget || editSavePending) return;
+  editSavePending = true;
   const slug = editTarget.slug;
   const msgEl = document.getElementById('editMsg');
   const btn   = document.getElementById('editSaveBtn');
   const navBtn = document.getElementById('editNavSaveBtn');
   if(btn) btn.disabled = true;
 
-  // Bild-Assets bekommen einen Zeitstempel im Key (wie Album-Cover). Sonst landet
-  // ein erneuter Upload unter demselben S3-Key → identische URL → Browser/CDN
-  // zeigen weiter das alte, gecachte Bild ("springt zurück auf die alte Version").
+  // Auch MP3-Ersatzdateien brauchen eine neue Adresse, damit Browser/CDN
+  // nicht die alte Aufnahme unter demselben Key ausliefern.
   const stamp = Date.now();
   const eNames = {
-    mp3:     `songs/${slug}.mp3`,
+    mp3:     `songs/${slug}-${stamp}-${crypto.randomUUID()}.mp3`,
     cover:   `artwork/${slug}-cover-${stamp}.jpg`,
     cover21: `artwork/${slug}-cover-2-1-${stamp}.jpg`,
     lyrics:  `artwork/${slug}-lyrics-${stamp}.jpg`,
@@ -10011,6 +10012,7 @@ async function saveEdit(){
   } catch(e){
     showMsg(msgEl,'Upload-Fehler: '+e.message,'err');
     if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
+    editSavePending = false;
     return;
   }
 
@@ -10019,6 +10021,7 @@ async function saveEdit(){
   if(artist && artist.length < 2){
     showMsg(msgEl,'Artist-Name muss mindestens 2 Zeichen haben.','err');
     if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
+    editSavePending = false;
     return;
   }
   const body = {
@@ -10060,8 +10063,13 @@ async function saveEdit(){
     }
 
     // Refresh from DB
-    const updated = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+slug+'&apikey='+SB_KEY,{headers:hdrs()}).then(r=>r.json());
-    const s = updated[0]||{...editTarget,...body};
+    const readRes = await fetch(SB_URL+'/rest/v1/songs?slug=eq.'+encodeURIComponent(body.slug)+'&apikey='+SB_KEY,{headers:hdrs(),cache:'no-store'});
+    if(!readRes.ok) throw new Error('Speichern konnte nicht überprüft werden. Bitte erneut prüfen.');
+    const updated = await readRes.json();
+    const s = updated[0];
+    if(!s || (newUrls.mp3_url && s.mp3_url !== newUrls.mp3_url)){
+      throw new Error('Die neue MP3 wurde nicht im Song bestätigt. Bitte erneut speichern.');
+    }
 
     // Update local state
     allSongs = allSongs.map(x=>x.slug===slug?s:x);
@@ -10080,6 +10088,7 @@ async function saveEdit(){
   } catch(e){
     showMsg(msgEl,'Fehler: '+e.message,'err');
   }
+  editSavePending = false;
   if(btn){ btn.disabled=false; btn.textContent='Änderungen speichern'; }
 }
 
