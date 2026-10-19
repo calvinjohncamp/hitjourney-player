@@ -9993,7 +9993,7 @@ async function saveEdit(){
   // nicht die alte Aufnahme unter demselben Key ausliefern.
   const stamp = Date.now();
   const eNames = {
-    mp3:     `songs/${slug}-${stamp}-${crypto.randomUUID()}.mp3`,
+    mp3:     `songs/${slug}-${stamp}-${crypto.randomUUID()}/${(editFiles.mp3?.name || 'audio.mp3').replace(/[\\/]/g, '_')}`,
     cover:   `artwork/${slug}-cover-${stamp}.jpg`,
     cover21: `artwork/${slug}-cover-2-1-${stamp}.jpg`,
     lyrics:  `artwork/${slug}-lyrics-${stamp}.jpg`,

@@ -20,7 +20,8 @@ async function run(mode){
   vm.runInContext(source.slice(source.indexOf('let editSavePending = false;'),source.indexOf('/* ── SAVE SONG ── */')),c);
   await c.saveEdit();
   assert.equal(uploads[0].file.name,'Gleich zurück.mp3');
-  assert.match(uploads[0].key,/^songs\/burning-love-.+\.mp3$/);
+  assert.match(uploads[0].key,/^songs\/burning-love-.+\/Gleich zurück\.mp3$/);
+  assert.equal(decodeURIComponent(uploads[0].key.split('/').pop()),'Gleich zurück.mp3');
   assert.equal(vm.runInContext('editSavePending',c),false);
   assert.equal(nodes.editSaveBtn.disabled,false);
   if(mode==='ok'){
