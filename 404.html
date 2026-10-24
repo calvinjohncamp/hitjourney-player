@@ -10347,10 +10347,10 @@ function buildHomeCard(cell, extraClass){
 
   // Special slugs get their own subpage — do NOT set data-album (prevents wireHomeGrid double-listener)
   const _specialSlugs = ['kurs-nordwest', 'songwriters-picks'];
-  // fn=album/link/subpage: Admin-Intent hat Vorrang — albumKey immer auflösen
+  // Explizite Song-/Link-/Unterseiten-Aktionen niemals als Album interpretieren.
   const _fnOverride = cell.fn === 'album' || cell.fn === 'link' || cell.fn === 'subpage';
   const targetSlug = cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug;
-  const albumKey = (!_fnOverride && _specialSlugs.includes((targetSlug||'').toLowerCase())) ? null : resolveAlbumKey(targetSlug);
+  const albumKey = (['play','link','subpage'].includes(cell.fn) || (!_fnOverride && _specialSlugs.includes((targetSlug||'').toLowerCase()))) ? null : resolveAlbumKey(targetSlug);
   if(albumKey) el.dataset.album = albumKey;
   el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
   // Home-Chain (v203): Einzel-Song-Kacheln für die Auto-Playlist markieren.
@@ -11198,8 +11198,15 @@ function playSongOrAlbum(cell){
     if(cell.url === '#archive'){ showArchive(); return; }
     if(cell.url){ window.open(cell.url,'_blank','noopener'); return; }
   }
-  const albumKey = resolveAlbumKey(cell.slug);
+  // Die im Admin gewählte Aktion hat Vorrang vor gleichnamigen Alben.
+  if(cell.fn === 'play'){
+    if(cell.slug) playSongBySlug(cell.slug);
+    return;
+  }
+  const albumSlug = cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug;
+  const albumKey = resolveAlbumKey(albumSlug);
   if(albumKey && ALBUMS[albumKey]){ showAlbum(albumKey); return; }
+  if(cell.fn === 'album') return;
   if(cell.slug) playSongBySlug(cell.slug);
 }
 
