@@ -1,11 +1,13 @@
 /* HitJourney focus: keep the fullscreen owner alive across document navigation.
-   Inspired by TFB's focus.js; unlike its presentation clone, entry keeps live audio/DOM. */
+   Inspired by TFB focus.js/presentation.js; resizing keeps the live audio/DOM. */
 (() => {
   'use strict';
   let host;
   try {
     if (parent !== window && parent.HJFocus?.ownedFrame === window.frameElement) host = parent.HJFocus;
   } catch (_) { /* An unrelated embedding has no access to our controller. */ }
+  const persistentHost = document.body.hasAttribute('data-hj-focus-host');
+  let viewport = null, width = 1440;
   let active = false, pending = false, ownedFrame = null, hadFullscreen = false;
   const fullscreen = () => document.fullscreenElement || document.webkitFullscreenElement;
   const getState = () => host ? host.state() : ({active, fullscreen: !!fullscreen(), pending, notice});
@@ -14,9 +16,19 @@
   panel.className = 'hj-focus-panel';
   panel.innerHTML = '<span role="status" aria-live="polite"></span><button type="button" class="hj-focus-exit" aria-label="Fokusmodus beenden">×</button>';
   document.body.append(panel);
+  let controlsTimer;
+  function reveal() {
+    if (host) return host.reveal();
+    panel.classList.add('hj-focus-controls');
+    clearTimeout(controlsTimer);
+    controlsTimer = setTimeout(() => panel.classList.remove('hj-focus-controls'), 2000);
+  }
+  panel.addEventListener('pointerenter', reveal);
+  panel.addEventListener('pointerleave', reveal);
   function render() {
     const state = getState();
     document.documentElement.classList.toggle('hj-focus-active', state.active);
+    if (viewport) updateWidth();
     panel.hidden = !state.active || !!host;
     panel.querySelector('span').textContent = state.fullscreen ? 'Fokus · Vollbild' : (state.notice || 'Fokus · im Browserfenster');
     document.querySelectorAll('.hj-focus-dot').forEach(button => {
@@ -44,12 +56,13 @@
       return;
     }
     active = true;
+    reveal();
     pending = true;
     notice = '';
     render();
     const request = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
     try {
-      if (!request || document.fullscreenEnabled === false || document.webkitFullscreenEnabled === false) {
+      if (!request || (document.documentElement.requestFullscreen ? document.fullscreenEnabled === false : document.webkitFullscreenEnabled === false)) {
         notice = 'Fokus im Browserfenster · Vollbild hier nicht verfügbar';
       } else {
         await request.call(document.documentElement, {navigationUI: 'hide'});
@@ -60,39 +73,92 @@
   }
   function navigate(value) {
     const url = new URL(value, location.href);
-    if (host || (!active && !ownedFrame) || url.origin !== location.origin) {
+    if (host || !ownedFrame || url.origin !== location.origin) {
       location.assign(url.href);
       return;
     }
-    if (!ownedFrame) {
-      // A real document navigation also stops the old player. Do not leave hidden audio running.
-      document.querySelectorAll('audio,video').forEach(media => media.pause());
-      ownedFrame = document.createElement('iframe');
-      ownedFrame.className = 'hj-focus-frame';
-      ownedFrame.title = 'HitJourney · Mr. DJ';
-      ownedFrame.allow = 'fullscreen; autoplay';
-      ownedFrame.allowFullscreen = true;
-      ownedFrame.addEventListener('load', () => {
-        try {
-          const child = ownedFrame.contentWindow;
-          if (child.location.origin === location.origin) {
-            history.replaceState(history.state, '', child.location.href);
-            document.title = child.document.title;
-            child.HJFocus?.refresh();
-          }
-        } catch (_) { /* External navigation cannot access the host controller. */ }
-      });
-      // The retained page must not receive keyboard focus behind the visible app.
-      [...document.body.children].forEach(node => { if (node !== ownedFrame && node !== panel) node.inert = true; });
-      document.body.append(ownedFrame);
-      document.documentElement.classList.add('hj-focus-shell');
-    }
     ownedFrame.src = url.href;
-    render();
     ownedFrame.focus();
   }
+  function updateWidth() {
+    const max = Math.max(1, innerWidth - (innerWidth <= 700 ? 20 : 28));
+    const actual = Math.min(width, max);
+    viewport.style.setProperty('--hj-focus-width', actual + 'px');
+    viewport.querySelectorAll('.hj-focus-grip').forEach(grip => {
+      grip.setAttribute('aria-valuemin', String(Math.min(320, max)));
+      grip.setAttribute('aria-valuemax', String(max));
+      grip.setAttribute('aria-valuenow', String(Math.round(actual)));
+    });
+  }
+  function setWidth(value) {
+    const max = Math.max(1, innerWidth - (innerWidth <= 700 ? 20 : 28));
+    width = Math.max(Math.min(320, max), Math.min(value, max));
+    updateWidth();
+  }
+  function createViewport() {
+    const stage = document.createElement('div');
+    stage.className = 'hj-focus-stage';
+    viewport = document.createElement('div');
+    viewport.className = 'hj-focus-viewport';
+    stage.append(viewport);
+    ownedFrame = document.createElement('iframe');
+    ownedFrame.className = 'hj-focus-frame';
+    ownedFrame.title = 'HitJourney · Mr. DJ';
+    ownedFrame.allow = 'fullscreen; autoplay';
+    ownedFrame.allowFullscreen = true;
+    ownedFrame.addEventListener('load', () => {
+      try {
+        const child = ownedFrame.contentWindow;
+        if (child.location.origin === location.origin) {
+          history.replaceState(history.state, '', child.location.href);
+          document.title = child.document.title;
+          child.HJFocus?.refresh();
+        }
+      } catch (_) {}
+    });
+    let initial = new URL(new URLSearchParams(location.search).get('page') || '/', location.origin);
+    if (initial.origin !== location.origin || initial.pathname === '/focus.html') initial = new URL('/', location.origin);
+    ownedFrame.src = initial.href;
+    viewport.append(ownedFrame);
+    for (const side of ['left', 'right']) {
+      const grip = document.createElement('div');
+      grip.className = 'hj-focus-grip';
+      grip.dataset.side = side;
+      grip.tabIndex = 0;
+      grip.setAttribute('role', 'separator');
+      grip.setAttribute('aria-label', 'Ansichtsbreite ändern');
+      grip.setAttribute('aria-orientation', 'vertical');
+      let dragging = false;
+      grip.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        dragging = true;
+        grip.setPointerCapture(event.pointerId);
+      });
+      grip.addEventListener('pointermove', event => {
+        if (dragging) setWidth((side === 'right' ? event.clientX - innerWidth / 2 : innerWidth / 2 - event.clientX) * 2);
+      });
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) grip.addEventListener(type, () => { dragging = false; });
+      grip.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const current = viewport.getBoundingClientRect().width;
+        if (event.key === 'Home') setWidth(320);
+        else if (event.key === 'End') setWidth(innerWidth);
+        else setWidth(current + (event.key === 'ArrowRight' ? 20 : -20) * (event.shiftKey ? 5 : 1));
+      });
+      viewport.append(grip);
+    }
+    const edge = document.createElement('div');
+    edge.className = 'hj-focus-reveal';
+    edge.addEventListener('pointerenter', reveal);
+    stage.append(edge);
+    document.body.append(stage);
+    window.addEventListener('resize', updateWidth);
+    updateWidth();
+  }
   window.HJFocus = {
-    toggle, navigate, refresh: render, state: getState,
+    toggle, navigate, reveal, refresh: render, state: getState,
     get ownedFrame() { return ownedFrame; }
   };
   function addDots() {
@@ -127,6 +193,9 @@
     }
   });
   panel.querySelector('button').addEventListener('click', toggle);
+  document.addEventListener('pointermove', event => {
+    if (host && getState().active && event.clientY < 16) host.reveal();
+  }, {passive: true});
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && getState().active && !getState().fullscreen) toggle();
   });
@@ -143,6 +212,7 @@
   document.addEventListener('play', event => {
     if (ownedFrame && event.target.matches?.('audio,video')) event.target.pause();
   }, true);
+  if (persistentHost) createViewport();
   addDots();
   // Mr. DJ creates its mobile branding after the initial markup.
   new MutationObserver(records => {
