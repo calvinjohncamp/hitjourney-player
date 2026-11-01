@@ -16,7 +16,20 @@
   panel.className = 'hj-focus-panel';
   panel.innerHTML = '<span role="status" aria-live="polite"></span><button type="button" class="hj-focus-exit" aria-label="Fokusmodus beenden">×</button>';
   document.body.append(panel);
-  let controlsTimer;
+  let controlsTimer, gripsTimer, lastGripDistance = null;
+  function revealGrips() {
+    if (!active || !viewport) return;
+    viewport.classList.add('hj-grips-visible');
+    clearTimeout(gripsTimer);
+    gripsTimer = setTimeout(() => viewport.classList.remove('hj-grips-visible'), 3000);
+  }
+  function approachGrip(clientX) {
+    if (!active || !viewport || !Number.isFinite(clientX)) return;
+    const rect = viewport.getBoundingClientRect();
+    const distance = Math.min(Math.abs(clientX - rect.left), Math.abs(clientX - rect.right));
+    if (distance <= 16 || (distance <= 80 && (lastGripDistance === null || distance < lastGripDistance))) revealGrips();
+    lastGripDistance = distance;
+  }
   function reveal() {
     if (host) return host.reveal();
     panel.classList.add('hj-focus-controls');
@@ -56,6 +69,8 @@
       return;
     }
     active = true;
+    lastGripDistance = null;
+    revealGrips();
     reveal();
     pending = true;
     notice = '';
@@ -133,10 +148,11 @@
         if (event.button !== 0) return;
         event.preventDefault();
         dragging = true;
+        revealGrips();
         grip.setPointerCapture(event.pointerId);
       });
       grip.addEventListener('pointermove', event => {
-        if (dragging) setWidth((side === 'right' ? event.clientX - innerWidth / 2 : innerWidth / 2 - event.clientX) * 2);
+        if (dragging) { revealGrips(); setWidth((side === 'right' ? event.clientX - innerWidth / 2 : innerWidth / 2 - event.clientX) * 2); }
       });
       for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) grip.addEventListener(type, () => { dragging = false; });
       grip.addEventListener('keydown', event => {
@@ -158,7 +174,7 @@
     updateWidth();
   }
   window.HJFocus = {
-    toggle, navigate, reveal, refresh: render, state: getState,
+    toggle, navigate, reveal, approachGrip, refresh: render, state: getState,
     get ownedFrame() { return ownedFrame; }
   };
   function addDots() {
@@ -194,7 +210,11 @@
   });
   panel.querySelector('button').addEventListener('click', toggle);
   document.addEventListener('pointermove', event => {
-    if (host && getState().active && event.clientY < 16) host.reveal();
+    if (event.pointerType === 'touch' || !getState().active) return;
+    if (host) {
+      if (event.clientY < 16) host.reveal();
+      host.approachGrip?.(window.frameElement.getBoundingClientRect().left + event.clientX);
+    } else approachGrip(event.clientX);
   }, {passive: true});
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && getState().active && !getState().fullscreen) toggle();

@@ -3,6 +3,7 @@
 (() => {
   if (window.parent !== window || !/^https?:$/.test(location.protocol)) return;
   const shell = new URL('/focus.html', location.href);
+  shell.searchParams.set('v','3');
   shell.searchParams.set('page', location.pathname + location.search + location.hash);
   location.replace(shell.href);
 })();

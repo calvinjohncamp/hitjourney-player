@@ -22,8 +22,8 @@ html:fullscreen,html:-webkit-full-screen{background:#06141f}
 .hj-focus-active .hj-focus-grip{display:block}
 .hj-focus-grip[data-side="left"]{left:-14px}
 .hj-focus-grip[data-side="right"]{right:-14px}
-.hj-focus-grip::after{content:"";position:absolute;top:calc(50% - 24px);left:5px;width:4px;height:48px;border-radius:2px;background:#82939f;opacity:.25;transition:opacity .15s}
-.hj-focus-grip:hover::after,.hj-focus-grip:focus-visible::after{opacity:1}
+.hj-focus-grip::after{content:"";position:absolute;top:calc(50% - 24px);left:5px;width:4px;height:48px;border-radius:2px;background:#82939f;opacity:0;transition:opacity .15s}
+.hj-grips-visible .hj-focus-grip::after,.hj-focus-grip:focus-visible::after{opacity:1}
 .hj-focus-grip:focus-visible{outline:2px solid #cfe8f7;outline-offset:-2px}
 @media(max-width:700px){.hj-focus-active .hj-focus-viewport{width:min(var(--hj-focus-width,1440px),calc(100% - 20px))}.hj-focus-grip{width:10px}.hj-focus-grip[data-side="left"]{left:-10px}.hj-focus-grip[data-side="right"]{right:-10px}.hj-focus-grip::after{left:3px}}
 
