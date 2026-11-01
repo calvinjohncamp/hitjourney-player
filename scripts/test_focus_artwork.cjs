@@ -58,24 +58,28 @@ async function setup(browser,options={}){
   await red.click();
   let content=app.locator('#lyricsOverlay .dj-artwork-content');
   await content.locator('img[alt=Cover]').waitFor();
-  await content.click();await content.locator('img[alt=Lyrics]').waitFor();
+  await content.click();await content.locator('img[alt=Cover]').waitFor();
   assert.equal(await app.locator('#lyricsOverlay').evaluate(e=>e.classList.contains('expanded')),true);
+  assert.equal(await content.locator('img').getAttribute('src'),'https://art.example/cover.png');
+  await content.click();await content.locator('img[alt=Lyrics]').waitFor();
   await content.click();await content.locator('img[alt=Cover]').waitFor();
   await content.click();await content.locator('img[alt=Lyrics]').waitFor();
   await app.locator('.lyrics-close').click();await red.click();
   await content.locator('img[alt=Cover]').waitFor(); // every fresh opening starts at cover
   await app.evaluate(()=>DECKS.A.song.lyrics='https://art.example/slow-lyrics.png');
-  await content.click();await content.click();
+  await content.click(); // enlarge cover
+  await content.click();await content.click(); // lyrics request, then return to cover
   await content.locator('img[alt=Cover]').waitFor();await pause(650);
   assert.equal(await content.locator('img').getAttribute('alt'),'Cover');
   await app.locator('.lyrics-close').click();
   await app.evaluate(()=>{DECKS.A.song={slug:'missing',title:'',cover:'https://art.example/missing-cover.png',lyrics:'https://art.example/missing-lyrics.png'}});
   await red.click();await content.getByText('Kein Cover gefunden').waitFor();
+  await content.click();await content.getByText('Kein Cover gefunden').waitFor(); // enlargement keeps the current artwork
   await content.click();await content.getByText('Kein Lyrics-Sheet gefunden').waitFor();
   await content.click();await content.getByText('Kein Cover gefunden').waitFor();
   await app.locator('.lyrics-close').click();
   assert.equal(await app.evaluate(()=>DECKS.A.playing),false);
-  console.log('PASS: desktop Cover → Lyrics → Cover, expansion and close/reopen, failed artwork, stale-load cancellation, playback unchanged');
+  console.log('PASS: desktop small cover → large cover → lyrics → cover, expansion and close/reopen, failed artwork, stale-load cancellation, playback unchanged');
   await context.close();
   const mobile=await setup(browser,{viewport:{width:390,height:844},hasTouch:true,isMobile:true});
   await mobile.app.locator('.deck-red-btn[data-deck=A]').tap();

@@ -1694,8 +1694,12 @@ function showLyricsForDeck(id){
   let mode='cover';
   const lyricsTouch=window.matchMedia('(hover:none) and (pointer:coarse)').matches;
   ov.cycleArtwork=()=>{
+    // Enlarge the current cover first; only subsequent clicks change artwork.
+    if(!lyricsTouch && !ov.classList.contains('expanded')){
+      ov.classList.add('expanded');
+      return;
+    }
     mode=mode==='cover'?'lyrics':'cover';
-    if(!lyricsTouch)ov.classList.add('expanded');
     renderDJArtwork(content,song,mode);
   };
   ov.querySelector('.lyrics-close').addEventListener('click',e=>{e.stopPropagation();closeLyricsSheet();});
