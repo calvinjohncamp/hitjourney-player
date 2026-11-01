@@ -15,6 +15,7 @@
       for(const field of ['width','rotation']) {
         find('hjLogo'+field).value=draft[field];find('hjLogo'+field+'Number').value=draft[field];
       }
+      find('hjLogoDjAlign').value=draft.djAlign;find('hjLogoWavesAlign').value=draft.wavesAlign;
       find('hjLogoHex').value=draft.color;find('hjLogoColor').value=draft.color;
       find('hjLogoHex').removeAttribute('aria-invalid');
     }
@@ -27,6 +28,7 @@
       draft=core.normalize({...draft,[field]:Number(event.target.value)});changed();
     });
   }
+  for(const [id,field] of [['hjLogoDjAlign','djAlign'],['hjLogoWavesAlign','wavesAlign']])find(id).addEventListener('change',event=>{draft[field]=event.target.value;changed();});
   find('hjLogoHex').addEventListener('input',event=>{
     const value=event.target.value.trim();
     const valid=core.hex(value);

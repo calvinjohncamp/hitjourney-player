@@ -1039,9 +1039,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-action-btn.cancel{background:rgba(133,172,201,.1);color:#85ACC9;border:1px solid rgba(133,172,201,.18)}
 .oe-action-btn.cancel:hover{background:rgba(133,172,201,.2)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><link rel="stylesheet" href="/assets/header-logo.css?v=1">
-<script src="/assets/header-logo.js?v=1" defer></script>
-<script src="/assets/header-logo-admin.js?v=1" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><link rel="stylesheet" href="/assets/header-logo.css?v=2">
+<script src="/assets/header-logo.js?v=2" defer></script>
+<script src="/assets/header-logo-admin.js?v=2" defer></script>
 </head>
 <body>
 
@@ -8325,7 +8325,9 @@ document.addEventListener('keydown', overlayEditorKeydown);
     <label for="hjLogorotation">Drehung (Grad)</label><div class="hj-logo-field"><input id="hjLogorotation" type="range" min="-180" max="180" step="1"><input id="hjLogorotationNumber" aria-label="Drehung in Grad" type="number" min="-180" max="180" step="1"></div></div>
     <div><label for="hjLogoHex">Logo einfärben · HEX</label><div class="hj-logo-field"><input id="hjLogoColor" type="color" aria-label="Logofarbe wählen"><input id="hjLogoHex" type="text" maxlength="7" placeholder="#85ACC9" spellcheck="false"></div>
     <button id="hjLogoPipette" type="button">⌾ Bildschirm-Pipette</button><p id="hjLogoPipetteHint" class="hj-logo-hint">Wähle eine Farbe auf der Website oder irgendwo auf deinem Bildschirm. Escape bricht die Auswahl ab.</p></div>
-    <div><label for="hjLogoFile">Anderes Symbol hochladen</label><input id="hjLogoFile" type="file" accept="image/png,image/webp"><p class="hj-logo-hint">Transparente PNG oder WebP, maximal 8 MB. Die sichtbare Form wird in deiner Farbe dargestellt.</p></div>
+    <div><label for="hjLogoDjAlign">Mr. DJ · Ausrichtung zu HitJourney</label><select id="hjLogoDjAlign"><option value="top">Oben bündig</option><option value="center">Mittig</option><option value="bottom">Unten bündig</option></select>
+    <label for="hjLogoWavesAlign">Making Waves · Ausrichtung zu HitJourney</label><select id="hjLogoWavesAlign"><option value="top">Oben bündig</option><option value="center">Mittig</option><option value="bottom">Unten bündig</option></select>
+    <label for="hjLogoFile">Anderes Symbol hochladen</label><input id="hjLogoFile" type="file" accept="image/png,image/webp"><p class="hj-logo-hint">Transparente PNG oder WebP, maximal 8 MB. Die sichtbare Form wird in deiner Farbe dargestellt.</p></div>
   </div></fieldset>
   <div class="hj-logo-actions"><button id="hjLogoSave" class="hj-logo-save" type="button" disabled>Logo speichern</button><button id="hjLogoReset" type="button">Änderungen verwerfen</button><span id="hjLogoStatus" class="hj-logo-status" role="status" aria-live="polite"></span></div>
 </section>

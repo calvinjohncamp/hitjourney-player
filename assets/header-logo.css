@@ -1,19 +1,19 @@
 /* Shared header and editor preview use the same geometry and recoloring. */
-.hj-branding-header{position:relative;min-height:max(54px,calc(var(--dj-logo-box-height,24px) + 24px))!important;flex-shrink:0;background:#06141f;border-bottom:1px solid #85acc91f;padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between}
-.hj-dj-logo{position:absolute!important;left:50%;top:50%;transform:translate(-50%,-50%);display:block!important;width:var(--dj-logo-box-width)!important;height:var(--dj-logo-box-height)!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;cursor:pointer;z-index:3;text-decoration:none;line-height:0;flex:none}
+.hj-branding-header{position:relative;min-height:max(54px,var(--dj-header-height,54px))!important;flex-shrink:0;background:#06141f;border-bottom:1px solid #85acc91f;padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between}
+.hj-dj-logo{position:absolute!important;left:50%;top:var(--dj-logo-top,50%);transform:translateX(-50%);display:block!important;width:var(--dj-logo-box-width)!important;height:var(--dj-logo-box-height)!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;cursor:pointer;z-index:3;text-decoration:none;line-height:0;flex:none}
 .hj-dj-logo:focus-visible{outline:2px solid #cfe5f5;outline-offset:5px}
 .hj-dj-logo-image{position:absolute;left:50%;top:50%;width:var(--dj-logo-width)!important;height:var(--dj-logo-height)!important;max-width:none!important;transform:translate(-50%,-50%) rotate(var(--dj-logo-angle));object-fit:contain;pointer-events:none;user-select:none}
 .hj-dj-logo-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
 .hj-branding-left,.hj-branding-right{width:calc(50% - var(--dj-logo-box-width,104px)/2 - 24px);min-width:0;line-height:0;display:flex;align-items:center;align-self:center!important;margin-bottom:0!important}
 .hj-branding-left{justify-content:flex-start;max-width:365px}
-.hj-branding-right{justify-content:flex-end;max-width:250px;margin-left:auto}
+.hj-branding-right{position:absolute;top:var(--dj-waves-top,50%);right:var(--dj-waves-right,18px);justify-content:flex-end;max-width:250px;margin-left:auto}
 .hj-branding-left img{width:auto!important;height:auto!important;max-height:32px;max-width:100%}
 .hj-branding-right img{width:auto!important;height:auto!important;max-height:10px;max-width:100%}
 .hj-branding-left .hj-focus-logo{max-width:100%}
 .hj-branding-header #headerRight:not(:empty){max-width:calc(50% - var(--dj-logo-box-width)/2 - 24px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto}
 .hj-branding-header .hj-lang-switch{max-width:calc(50% - var(--dj-logo-box-width)/2 - 65px);overflow:hidden;padding:2px 5px;margin-left:5px}
 .hj-branding-header .hj-landing-back{left:auto;right:18px;transform:translateY(-50%);max-width:calc(50% - var(--dj-logo-box-width)/2 - 24px);overflow:hidden}
-@media(min-width:768px) and (min-height:700px){.hj-branding-header{min-height:max(87px,calc(var(--dj-logo-box-height) + 29px))!important;padding:16px 26px 13px}.hj-branding-left img{max-height:58px}.hj-branding-right img{max-height:18px}}
+@media(min-width:768px) and (min-height:700px){.hj-branding-header{min-height:max(87px,var(--dj-header-height,87px))!important;padding:16px 26px 13px}.hj-branding-left img{max-height:58px}.hj-branding-right img{max-height:18px}}
 .hj-logo-editor{flex:none;margin:16px;padding:18px;border:1px solid #85acc933;border-radius:14px;background:#0a2030;color:#cfe5f5}
 .hj-logo-editor h2{font-size:17px;font-weight:650;margin:0 0 4px}.hj-logo-editor p{font-size:13px;color:#9cb7c9;margin:0 0 14px;line-height:1.5}
 .hj-logo-preview{overflow:hidden;border:1px solid #85acc92f;border-radius:9px;margin-bottom:16px}
@@ -30,3 +30,5 @@
 .hj-logo-upload input{max-width:210px;font-size:12px}.hj-logo-status{font-size:12px;color:#accbdd;margin-left:auto}.hj-logo-status[data-error=true]{color:#ffb3b3}
 .hj-logo-hint{font-size:11px!important;margin:6px 0!important}.hj-logo-editor [aria-invalid=true]{border-color:#ffb3b3!important}
 @media(max-width:700px){.hj-logo-controls{grid-template-columns:1fr}.hj-logo-editor{margin:10px;padding:12px}.hj-logo-status{width:100%;margin-left:0}}
+
+.hj-logo-editor select{width:100%;max-width:300px;border:1px solid #85acc94d;border-radius:6px;background:#06141f;color:#cfe5f5;padding:8px;font:13px system-ui;margin-bottom:12px}
