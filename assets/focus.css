@@ -1,0 +1,15 @@
+.hj-focus-logo{display:inline-block;position:relative;line-height:0}
+/* Transparent hit area over the existing bitmap dot (x=95–100%, y=49–81%). */
+.hj-focus-dot{position:absolute!important;left:95%!important;top:49%!important;width:5%!important;height:32%!important;min-width:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:50%;cursor:pointer;z-index:2}
+.hj-focus-dot::after{content:"";position:absolute;inset:-7px;border-radius:50%}
+.hj-focus-dot:focus-visible{outline:2px solid #cfe8f7!important;outline-offset:5px}
+.hj-focus-dot[aria-pressed="true"]{outline:1px solid #cfe8f7!important;outline-offset:3px}
+.hj-focus-panel{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(8px + env(safe-area-inset-top,0px));z-index:2147483647;display:flex;align-items:center;gap:8px;padding:3px 5px 3px 10px;border:1px solid #56758b;border-radius:8px;background:#06141fee;color:#cfe8f7;font:12px/1.3 system-ui,sans-serif;max-width:calc(100vw - 24px);box-sizing:border-box}
+.hj-focus-panel[hidden]{display:none}
+.hj-focus-exit{display:block!important;flex:none;width:32px!important;height:32px!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;color:#cfe8f7!important;font:24px/1 system-ui!important;cursor:pointer}
+.hj-focus-exit:focus-visible{outline:2px solid #cfe8f7}
+.hj-focus-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#06141f;z-index:2147483646}
+html.hj-focus-shell,html.hj-focus-shell body{overflow:hidden!important}
+html:fullscreen,html:-webkit-full-screen{background:#06141f}
+
+@media(min-width:701px){.hj-focus-panel{right:auto;left:50%;transform:translateX(-50%)}}

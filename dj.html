@@ -907,6 +907,8 @@ body.drag-reordering{cursor:grabbing}
 }
 </style>
 
+<link rel="stylesheet" href="/assets/focus.css"/>
+<script src="/assets/focus.js" defer></script>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -2160,12 +2162,9 @@ async function init(){
 init();
 
 function goHome(){
-  try{
-    window.location.href = window.location.origin + '/';
-  }catch(e){
-    window.location.assign(window.location.origin + '/');
-  }
+  window.HJFocus.navigate(new URL('./', window.location.href).href);
 }
+
 </script>
 
 

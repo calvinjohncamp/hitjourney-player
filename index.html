@@ -4225,6 +4225,8 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);pad
 #screenLanding #landingPlayerBox #landingDeck .deck-title,
 #screenLanding #landingPlayerBox #landingDeck .deck-artist{display:block!important;text-align:left!important;margin-left:0!important;margin-right:auto!important;width:100%!important}
 </style>
+<link rel="stylesheet" href="/assets/focus.css"/>
+<script src="/assets/focus.js" defer></script>
 </head>
 <body>
 <div id="hjLoadingOverlay" style="position:fixed;inset:0;z-index:9999;background:rgb(6,20,32);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
@@ -4451,7 +4453,7 @@ body.album-open #hjPlayerSpacer{
 <svg viewbox="0 0 24 24"><polyline points="15,18 9,12 15,6"></polyline></svg>
 <span id="landingBackLabel">Landingpage</span>
 </div>
-<div class="hj-logo" id="logoHome">
+<div class="hj-logo" id="logoHome" role="link" tabindex="0" aria-label="HitJourney Startseite">
 <img class="hj-logo-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-hitjourney.png" alt="hitjourney" draggable="false"/>
 </div>
 <span class="hj-logo-sub" id="makingWaves"><img class="hj-making-img" src="https://raw.githubusercontent.com/calvinjohncamp/hitjourney-player/main/logo-making-waves.png" alt="making waves" draggable="false"/></span>
@@ -7534,6 +7536,7 @@ backBtn.addEventListener('click',()=>{
   else showHome();
 });
 logoHome.addEventListener('click',showHome);
+logoHome.addEventListener('keydown',event=>{if(event.target===logoHome && (event.key==='Enter'||event.key===' ')){event.preventDefault();showHome();}});
 if(homeInfoBtn) homeInfoBtn.addEventListener('click',showAbout);
 {
   const aboutArtTrigger = document.getElementById('aboutFinalArt');
@@ -10428,7 +10431,7 @@ function buildHomeCard(cell, extraClass){
     // Stabile Sonderroute für die neue DJ-Unterseite.
     // Im Admin darf Calvin eintragen: dj.html, /dj.html, hitjourney-dj oder mr-dj.
     if(['dj','hitjourney-dj','mr-dj','mrdj','hitjourneydj'].includes(slug)){
-      window.location.href = 'dj.html';
+      window.HJFocus.navigate('dj.html');
       return true;
     }
 
@@ -10441,10 +10444,10 @@ function buildHomeCard(cell, extraClass){
 
     // Externe Links oder explizite HTML-Dateien als normale Unterseiten öffnen.
     if(/^https?:\/\//i.test(raw)){ window.open(raw, '_blank', 'noopener'); return true; }
-    if(/\.html?(?:[?#].*)?$/i.test(raw)){ window.location.href = raw; return true; }
+    if(/\.html?(?:[?#].*)?$/i.test(raw)){ window.HJFocus.navigate(raw); return true; }
 
     // Fallback: Slug als HTML-Datei im gleichen GitHub/Netlify-Verzeichnis öffnen.
-    window.location.href = cleaned + '.html';
+    window.HJFocus.navigate(cleaned + '.html');
     return true;
   }
 
