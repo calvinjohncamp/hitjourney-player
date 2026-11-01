@@ -43,11 +43,11 @@
     document.documentElement.classList.toggle('hj-focus-active', state.active);
     if (viewport) updateWidth();
     panel.hidden = !state.active || !!host;
-    panel.querySelector('span').textContent = state.fullscreen ? 'Fokus · Vollbild' : (state.notice || 'Fokus · im Browserfenster');
+    panel.querySelector('span').textContent = state.notice || '';
     document.querySelectorAll('.hj-focus-dot').forEach(button => {
       button.setAttribute('aria-pressed', String(state.active));
       button.setAttribute('aria-label', state.active ? 'Fokusmodus beenden' : 'Fokusmodus aktivieren');
-      button.title = state.active ? 'Fokus beenden · Escape' : 'Fokusmodus';
+      button.removeAttribute('title');
     });
     if (ownedFrame) {
       try { ownedFrame.contentWindow.HJFocus?.refresh(); } catch (_) {}
@@ -64,14 +64,15 @@
           await exit.call(document);
         }
         active = false;
-      } catch (_) { notice = 'Vollbild bitte mit Escape beenden'; }
+      } catch (_) { notice = 'Vollbild konnte nicht beendet werden'; reveal(); }
       finally { pending = false; render(); }
       return;
     }
+    clearTimeout(controlsTimer);
+    panel.classList.remove('hj-focus-controls');
     active = true;
     lastGripDistance = null;
     revealGrips();
-    reveal();
     pending = true;
     notice = '';
     render();
@@ -79,11 +80,12 @@
     try {
       if (!request || (document.documentElement.requestFullscreen ? document.fullscreenEnabled === false : document.webkitFullscreenEnabled === false)) {
         notice = 'Fokus im Browserfenster · Vollbild hier nicht verfügbar';
+        reveal();
       } else {
         await request.call(document.documentElement, {navigationUI: 'hide'});
         hadFullscreen = !!fullscreen();
       }
-    } catch (_) { notice = 'Fokus im Browserfenster · Browser erlaubt kein Vollbild'; }
+    } catch (_) { notice = 'Fokus im Browserfenster · Browser erlaubt kein Vollbild'; reveal(); }
     finally { pending = false; render(); }
   }
   function navigate(value) {

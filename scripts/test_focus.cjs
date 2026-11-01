@@ -46,6 +46,10 @@ async function contextFor(browser, options={}) {
     await app.locator('#logoHome .hj-focus-dot').click();
     await page.waitForFunction(()=>HJFocus.state().fullscreen && !HJFocus.state().pending);
     assert.equal(await app.evaluate(()=>window.homeClicks),0);
+    assert.equal(await page.locator('.hj-focus-panel span').textContent(),'');
+    assert.equal(await page.locator('.hj-focus-panel').evaluate(el=>getComputedStyle(el).opacity),'0');
+    assert.equal(await page.locator('.hj-focus-panel').evaluate(el=>el.classList.contains('hj-focus-controls')),false);
+    assert.equal(await app.locator('#logoHome .hj-focus-dot').getAttribute('title'),null);
     assert.equal(await app.locator('.hj-focus-dot').evaluate(button=>getComputedStyle(button).outlineStyle),'none');
     // Both grips change the actual iframe viewport, including responsive media queries.
     const grip=page.locator('.hj-focus-grip[data-side="right"]');
@@ -113,7 +117,7 @@ async function contextFor(browser, options={}) {
     assert.equal(await page.evaluate(()=>!!document.fullscreenElement),true);
     await page.waitForFunction(()=>getComputedStyle(document.querySelector('.hj-focus-panel')).opacity==='0');
     await page.screenshot({path:'/tmp/hitjourney-focus-resized.png'});
-    console.log('PASS: unmarked dot; real fullscreen; continuous resizing on both sides; keyboard resizing; responsive DJ; DOM/audio preserved; navigation and Back/Forward; browser exit');
+    console.log('PASS: silent focus entry; unmarked dot; real fullscreen; continuous resizing on both sides; keyboard resizing; responsive DJ; DOM/audio preserved; navigation and Back/Forward; browser exit');
     for(const file of ['404.html','dj.html']) {
       app=await appFrame(page,file);
       await app.locator(file==='dj.html'?'.hj-logo-vert .hj-focus-dot':'#logoHome .hj-focus-dot').click();

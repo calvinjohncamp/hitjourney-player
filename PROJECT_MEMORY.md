@@ -110,9 +110,11 @@ Die Ueberschrift besitzt dieselben Optionen wie andere Home-Zeilen: keine, einfa
 - Der beständige Rahmen hält Vollbild und Ansichtsbreite über interne HTML-Navigation und Zurück/Vorwärts hinweg. Ein tatsächlicher HTML-Dokumentwechsel entlädt weiterhin den bisherigen Seitenplayer.
 - Zentrierte Ansicht vor dunklem Außenraum, stufenlose Breite ab 320px über beide Seitenränder. Es wird die echte iframe-Breite verändert, damit responsive Layouts reagieren. Außerhalb des Fokus füllt die App das Browserfenster; beim erneuten Aktivieren bleibt die gewählte Breite erhalten.
 - Griffbalken erscheinen beim Einstieg und bei Annäherung/Anfassen für drei Sekunden. Annäherungsbereich: 80px um die echten Viewportränder, sowohl in der App als auch im dunklen Außenraum. Zentrale Mausbewegungen und ruhendes Hover halten sie nicht sichtbar. Unsichtbare Ziehflächen bleiben nutzbar; Tastaturbedienung bleibt zugänglich.
-- Status und Schließen blenden nach zwei Sekunden aus; am oberen Rand oder per Tastatur wieder erreichbar. Escape, Browser-Vollbildende und Ausschalten synchronisieren den Zustand.
+- Beim Fokusstart keine eigenen Status-/Escape-Hinweise oder Tooltips anzeigen. Das Schließen-X erscheint nur auf bewusste Annäherung an den oberen Rand oder Tastaturfokus und blendet nach zwei Sekunden aus. Technische Fehler-/Fallback-Meldungen bleiben möglich. Escape, Browser-Vollbildende und Ausschalten synchronisieren den Zustand.
 - Echtes Vollbild benötigt Nutzerinteraktion und Browserfreigabe. Bei fehlender API/Ablehnung wird ausdrücklich der Browserfenster-Modus angezeigt. Reload, externe Navigation oder Tab-Schließen können Vollbild beenden; kein automatischer Wiedereinstieg ohne Klick. Mobile Browser/Systemleisten bleiben durch die Plattform begrenzt.
-- Dateien: `focus.html`, `assets/focus-entry.js`, `assets/focus.js`, `assets/focus.css`. Aktuelle Fokus-Assets und Rahmenaufruf: `v=3`. Host- und App-Versionen gemeinsam ausliefern; die Brücke toleriert bereits geöffnete ältere Hosts.
+- Dateien: `focus.html`, `assets/focus-entry.js`, `assets/focus.js`, `assets/focus.css`. Aktuelle Fokus-Assets und Rahmenaufruf: `v=4`. Host- und App-Versionen gemeinsam ausliefern; die Brücke toleriert bereits geöffnete ältere Hosts.
+
+Browser-/Betriebssystem-eigene Vollbild-Hinweise sind keine Website-Elemente und lassen sich per Webseiten-Code nicht abschalten; keine Zusage machen, diese zu unterdrücken. Siehe [Vollbild-Standard](https://fullscreen.spec.whatwg.org/#security-and-privacy-considerations).
 
 ## Kopfzeilenlogo und Admin-Vorschau
 
@@ -137,7 +139,7 @@ Die Ueberschrift besitzt dieselben Optionen wie andere Home-Zeilen: keine, einfa
 ## Prüfung und Veröffentlichung
 
 - Statische Dateien auf GitHub `main`, GitHub Pages veröffentlicht `https://hitjourney.com/`. Kein eigener App-Build; GitHub führt seinen Pages-Build aus. `404.html` mit `index.html` identisch halten.
-- Neueste Funktionsänderung: Cover beim ersten Vergrößern beibehalten. Diese Freigabe umfasst die Cover-Korrektur sowie das aktualisierte Projektgedächtnis und `HANDOFF.md`.
+- Neueste Anpassungen: Cover beim ersten Vergrößern beibehalten; keine eigenen Hinweise/Tooltips beim Fokus-Einstieg. Beide sind mit dem aktualisierten Projektgedächtnis und `HANDOFF.md` dokumentiert.
 - Browser-Tests: `scripts/test_focus.cjs`, `scripts/test_focus_artwork.cjs`, `scripts/test_header_logo.cjs`, `scripts/test_header_alignment.cjs`. Lokaler HTTP-Server Port 8787; Playwright erforderlich. Optional `PLAYWRIGHT_MODULE` und `HJ_TEST_URL` setzen. Tests simulieren Daten und schreiben nicht in die Produktionsdatenbank.
 - Geprüft: echtes Chromium-Vollbild, Fokusnavigation, Resize/Griff-Timer, Desktop-/Touch-Bildfolge, verzögerte/fehlende Bilder, Admin-Speichern/Reload/Fehlerfälle, Upload-Integration und alle neun Ausrichtungskombinationen auf Desktop/Mobilbreite. Ausrichtung zusätzlich in WebKit und an gerenderten Pixeln geprüft. Echte Mobilgeräte, native Safari-Browseroberfläche und tatsächliche Bildschirm-Pipettenauswahl wurden nicht manuell geprüft.
 - Erst nach erfolgreichem Pages-Deployment und Live-Dateiabgleich „live“ melden. Browser können ältere HTML-/Asset-Versionen zwischenspeichern; bei zusammenhängenden JS-/CSS-Änderungen Versionsparameter gemeinsam erhöhen. Nach Änderungen Admin und Website neu laden.

@@ -6,7 +6,7 @@ Stand: 2. November 2026
 
 Die Website läuft unter [hitjourney.com](https://hitjourney.com/) über GitHub Pages aus `calvinjohncamp/hitjourney-player`, Branch `main`. Die aktuellen Fokus-, Logo- und Grundlinien-Anpassungen sind veröffentlicht. Die früher als ausstehend bezeichnete Vinyl-Endlosschleifen-/Crossfade-Reparatur ist bereits enthalten.
 
-Die letzte Korrektur dieser Freigabe betrifft Mr. DJ: **kleines Cover → großes Cover → Lyrics → Cover → Lyrics …**. Der erste Klick auf das kleine Cover vergrößert nur das Cover; er darf nicht gleichzeitig zu Lyrics wechseln. Auf Touch öffnet die feste Ansicht bereits groß mit Cover, danach wechseln Taps zwischen Lyrics und Cover. Schließen über X, neue Öffnung wieder mit Cover. Diese Freigabe umfasst die Cover-Korrektur und beide aktualisierten Dokumentationsdateien.
+Die Mr.-DJ-Korrektur dieser Freigabe: **kleines Cover → großes Cover → Lyrics → Cover → Lyrics …**. Der erste Klick auf das kleine Cover vergrößert nur das Cover; er darf nicht gleichzeitig zu Lyrics wechseln. Auf Touch öffnet die feste Ansicht bereits groß mit Cover, danach wechseln Taps zwischen Lyrics und Cover. Schließen über X, neue Öffnung wieder mit Cover. Zusätzlich startet der Fokus ohne eigene Status-/Escape-Hinweise und Tooltips. Beides ist in den aktualisierten Dokumentationsdateien festgehalten.
 
 ## Maßgebliche Dateien
 
@@ -30,7 +30,9 @@ Die letzte Korrektur dieser Freigabe betrifft Mr. DJ: **kleines Cover → große
 - Roter HitJourney-Logo-Punkt schaltet Fokus, übriger Schriftzug führt Home. Keine Aktiv-Markierung am Punkt.
 - App von Anfang an im gleichursprünglichen iframe; Fokus/Resize laden den Player nicht neu. Echter Viewport, mittig vor dunklem Hintergrund; Breite ab 320px. Interne Navigation einschließlich Mr. DJ und Zurück/Vorwärts behält Rahmen und Breite.
 - Griffbalken verschwinden nach drei Sekunden. Erst Annäherung an die tatsächlichen Seitenkanten (80px-Bereich) oder Anfassen zeigt sie wieder. Mittige Mausbewegungen und ruhendes Hover verlängern die Anzeige nicht. Tastaturbedienung bleibt möglich.
-- Status-/Schließen-Anzeige blendet nach zwei Sekunden aus, oberer Rand/Tastatur holt sie zurück. Escape/Browser-Ausgang synchronisieren den Zustand. Vollbild nur nach Nutzerinteraktion; ehrlicher Browserfenster-Fallback bei fehlender Freigabe. Fokus-Asset-/Host-Version `v=3`.
+- Beim Einstieg keine eigenen Status-/Escape-Hinweise oder Tooltips. Das Schließen-X ist am oberen Rand/per Tastatur erreichbar und blendet nach zwei Sekunden aus; technische Fehler-/Fallback-Meldungen bleiben möglich. Escape/Browser-Ausgang synchronisieren den Zustand. Vollbild nur nach Nutzerinteraktion; ehrlicher Browserfenster-Fallback bei fehlender Freigabe. Fokus-Asset-/Host-Version `v=4`.
+
+Browser-/Betriebssystem-Hinweise beim Vollbild sind außerhalb der Website-Kontrolle. Keine Browser-Sicherheitseinstellungen verändern oder eine vollständige Unterdrückung versprechen.
 
 ### Kopfzeilenlogo und Grundlinie
 
