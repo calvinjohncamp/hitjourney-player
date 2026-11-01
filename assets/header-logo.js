@@ -14,6 +14,9 @@
     return {type:'headerLogo',src:source(String(value.src||defaults.src)),color:hex(String(value.color))?value.color.toUpperCase():defaults.color,
       width:clamp(value.width,40,240,defaults.width),rotation:clamp(value.rotation,-180,180,0),ratio:clamp(value.ratio,.1,20,defaults.ratio),djAlign:alignment(value.djAlign),wavesAlign:alignment(value.wavesAlign)};
   }
+  // In the 1829×294 HitJourney artwork, the flat letter baseline is y=230.
+  // The tails of j/y extend to y=294; round letters slightly overshoot the baseline.
+  const HIT_BASELINE=230/294;
   let count=0;
   function create(header,config,{preview=false}={}) {
     header.classList.add('hj-branding-header');
@@ -41,14 +44,16 @@
       const wavesHeight=waves?.getBoundingClientRect().height || number(waves && getComputedStyle(waves).maxHeight) || 10;
       // Reserve the same space for all alignments. Moving either companion logo
       // must not move HitJourney or change the header height.
-      const needed=2*Math.max(geometry.bh,referenceHeight)-referenceHeight+number(style.paddingTop)+number(style.paddingBottom)+number(style.borderBottomWidth);
+      const baselineHeight=referenceHeight*HIT_BASELINE;
+      const clearance=Math.max(0,geometry.bh-baselineHeight,wavesHeight-baselineHeight);
+      const needed=referenceHeight+2*clearance+number(style.paddingTop)+number(style.paddingBottom)+number(style.borderBottomWidth);
       header.style.setProperty('--dj-header-height',needed.toFixed(3)+'px');
       const headerRect=header.getBoundingClientRect();
       const referenceTop=referenceRect?.height?reference.getBoundingClientRect().top-headerRect.top-header.clientTop:
         number(style.paddingTop)+(header.clientHeight-number(style.paddingTop)-number(style.paddingBottom)-referenceHeight)/2;
-      const factor={top:0,center:.5,bottom:1};
-      header.style.setProperty('--dj-logo-top',(referenceTop+(referenceHeight-geometry.bh)*factor[current.djAlign]).toFixed(3)+'px');
-      header.style.setProperty('--dj-waves-top',(referenceTop+(referenceHeight-wavesHeight)*factor[current.wavesAlign]).toFixed(3)+'px');
+      const offset=(align,height)=>align==='top'?0:align==='bottom'?baselineHeight-height:(referenceHeight-height)/2;
+      header.style.setProperty('--dj-logo-top',(referenceTop+offset(current.djAlign,geometry.bh)).toFixed(3)+'px');
+      header.style.setProperty('--dj-waves-top',(referenceTop+offset(current.wavesAlign,wavesHeight)).toFixed(3)+'px');
       header.style.setProperty('--dj-waves-right',style.paddingRight);
     }
     let alignmentFrame=0;

@@ -14,7 +14,10 @@ function verify(rects,djAlign,wavesAlign){
   const actual=rects[name],reference=rects.hit;
   if(align==='top')near(actual.y,reference.y,name+' top');
   if(align==='center')near(actual.y+actual.height/2,reference.y+reference.height/2,name+' center');
-  if(align==='bottom')near(actual.bottom,reference.bottom,name+' bottom');
+  if(align==='bottom'){
+   near(actual.bottom,reference.y+reference.height*(230/294),name+' flat letter baseline');
+   assert(actual.bottom<reference.bottom-reference.height*.2,name+' must stay above j/y descenders');
+  }
  }
 }
 (async()=>{
@@ -40,6 +43,10 @@ function verify(rects,djAlign,wavesAlign){
    await page.waitForFunction(()=>document.getElementById('hjLogoHex')?.value==='#C90018'&&!document.getElementById('hjLogoReset').disabled);
    assert.equal(await page.locator('#hjLogoDjAlign').inputValue(),'center');
    assert.equal(await page.locator('#hjLogoWavesAlign').inputValue(),'center');
+   await page.waitForFunction(()=>[...document.querySelectorAll('#hjLogoPreview img')].every(img=>img.complete&&img.naturalWidth>0));
+   await page.locator('#hjLogoDjAlign').selectOption('bottom');await page.locator('#hjLogoWavesAlign').selectOption('bottom');
+   verify(await measure(page,'#hjLogoPreview'),'bottom','bottom');
+   await page.locator('#hjLogoPreview').screenshot({path:'/tmp/hj-baseline-preview-'+name+'.png'});
    await page.locator('#hjLogowidth').fill('180');await page.locator('#hjLogorotation').fill('30');
    for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
     await page.setViewportSize(viewport);
