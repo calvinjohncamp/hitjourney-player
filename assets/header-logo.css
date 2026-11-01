@@ -32,3 +32,5 @@
 @media(max-width:700px){.hj-logo-controls{grid-template-columns:1fr}.hj-logo-editor{margin:10px;padding:12px}.hj-logo-status{width:100%;margin-left:0}}
 
 .hj-logo-editor select{width:100%;max-width:300px;border:1px solid #85acc94d;border-radius:6px;background:#06141f;color:#cfe5f5;padding:8px;font:13px system-ui;margin-bottom:12px}
+/* Keep a usable touch target even when the painted symbol becomes very small. */
+.hj-dj-logo::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%;min-width:44px;min-height:44px}

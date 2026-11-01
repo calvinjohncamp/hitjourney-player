@@ -6,7 +6,7 @@ Stand: 2. November 2026
 
 Die Website läuft unter [hitjourney.com](https://hitjourney.com/) über GitHub Pages aus `calvinjohncamp/hitjourney-player`, Branch `main`. Die aktuellen Fokus-, Logo- und Grundlinien-Anpassungen sind veröffentlicht. Die früher als ausstehend bezeichnete Vinyl-Endlosschleifen-/Crossfade-Reparatur ist bereits enthalten.
 
-Die Mr.-DJ-Korrektur dieser Freigabe: **kleines Cover → großes Cover → Lyrics → Cover → Lyrics …**. Der erste Klick auf das kleine Cover vergrößert nur das Cover; er darf nicht gleichzeitig zu Lyrics wechseln. Auf Touch öffnet die feste Ansicht bereits groß mit Cover, danach wechseln Taps zwischen Lyrics und Cover. Schließen über X, neue Öffnung wieder mit Cover. Zusätzlich startet der Fokus ohne eigene Status-/Escape-Hinweise und Tooltips. Beides ist in den aktualisierten Dokumentationsdateien festgehalten.
+Die Mr.-DJ-Korrektur dieser Freigabe: **kleines Cover → großes Cover → Lyrics → Cover → Lyrics …**. Der erste Klick auf das kleine Cover vergrößert nur das Cover; er darf nicht gleichzeitig zu Lyrics wechseln. Auf Touch öffnet die feste Ansicht bereits groß mit Cover, danach wechseln Taps zwischen Lyrics und Cover. Schließen über X, neue Öffnung wieder mit Cover. Zusätzlich startet der Fokus ohne eigene Status-/Escape-Hinweise und Tooltips. Das Mr.-DJ-Kopfzeilenlogo verkleinert sich proportional mit HitJourney auf iPad/iPhone und bleibt bewusst dezenter. Beides ist in den aktualisierten Dokumentationsdateien festgehalten.
 
 ## Maßgebliche Dateien
 
@@ -38,8 +38,9 @@ Browser-/Betriebssystem-Hinweise beim Vollbild sind außerhalb der Website-Kontr
 
 - Admin → Home → ganz oben: WYSIWYG-Vorschau, PNG/WebP-Upload bis 8 MB, Größe 40–240px, Drehung ±180°, HEX/Farbwähler/Bildschirm-Pipette. Nur „Logo speichern“ veröffentlicht Einstellungen; Verwerfen setzt zurück.
 - Das Logo führt immer zu Mr. DJ innerhalb des Fokusrahmens. SVG-Filter färbt anhand der Originaltransparenz, auch bei S3-Bildern ohne CORS-Leserechte.
+- Mr. DJ schrumpft proportional mit HitJourney, insbesondere bei iPad-/iPhone-Hochformat und beim Fokus-Ziehen. Die gespeicherte Größe ist ein Desktop-Ausgangswert. Gedrehte sichtbare Box maximal 60% der HitJourney-Breite / 70% der Höhe; unsichtbare Klickfläche mindestens 44×44px. Auf breiterer Ansicht die ursprünglichen Proportionen wiederherstellen, keine skalierten Werte in der Datenbank speichern.
 - Mr. DJ und Making Waves unabhängig oben/mittig/unten zu HitJourney. HitJourney bleibt beim Wechsel der Ausrichtung fest. Admin und öffentliche Seite verwenden denselben Code.
-- **„Unten bündig“ = normale Buchstabengrundlinie von Hit/ourne, nicht j/y-Unterlängen.** Referenz im 1829×294-Logo: y=230, also `230/294` der dargestellten Höhe. Nicht auf den Bildrand y=294 zurückstellen. Header-Assets `v=3`.
+- **„Unten bündig“ = normale Buchstabengrundlinie von Hit/ourne, nicht j/y-Unterlängen.** Referenz im 1829×294-Logo: y=230, also `230/294` der dargestellten Höhe. Nicht auf den Bildrand y=294 zurückstellen. Header-Assets `v=4`.
 - Persistenz ausschließlich in geschützter Supabase-`home_layout`-Zeile `row_order=-7`, Typ `headerLogo`. Enthält `src/color/width/rotation/ratio/djAlign/wavesAlign`. Legacy-Ausrichtungen ohne Felder sind mittig. Vor Schreiben lesen und anschließend bestätigen. Nutzerwerte nicht durch Vorgaben überschreiben.
 
 ### Bestehende Musik-/Home-Funktionen
@@ -59,11 +60,12 @@ node scripts/test_focus.cjs
 node scripts/test_focus_artwork.cjs
 node scripts/test_header_logo.cjs
 node scripts/test_header_alignment.cjs
+node scripts/test_header_responsive.cjs
 ```
 
 Falls Playwright nicht im Projekt installiert ist, `PLAYWRIGHT_MODULE` auf eine vorhandene Installation setzen. In dieser Umgebung wurde `/Users/jk/Dropbox/9. TFB-Website/01 Software/node_modules/playwright` verwendet. `HJ_TEST_URL` überschreibt bei Bedarf die Testbasis. Die Tests simulieren Datenzugriffe und verändern keine Produktionsdaten.
 
-Nach der letzten Korrektur ist besonders die vollständige Desktop-Folge kleines Cover → großes Cover → Lyrics → Cover zu prüfen, einschließlich Schließen/Neuöffnen, verspäteter Bildantworten und fehlender Motive. Touch bleibt Cover → Lyrics → Cover. Die Ausrichtungs-Tests decken Chromium und WebKit, Desktop/Mobilbreiten, alle neun Kombinationen, Save/Reload und den Fokus-Link ab. Native Pipettenauswahl und echte Mobilgeräte wurden nicht manuell geprüft.
+Nach der letzten Korrektur ist besonders die vollständige Desktop-Folge kleines Cover → großes Cover → Lyrics → Cover zu prüfen, einschließlich Schließen/Neuöffnen, verspäteter Bildantworten und fehlender Motive. Touch bleibt Cover → Lyrics → Cover. Die Ausrichtungs-Tests decken Chromium und WebKit, Desktop/Mobilbreiten, alle neun Kombinationen, Save/Reload und den Fokus-Link ab. Der Responsive-Test prüft Chromium/WebKit bei 320–1440px einschließlich iPad-/iPhone-Hochformat, Orientierung/Höhenwechsel, proportionaler Rückkehr zum Desktop, eigener Symbole/Drehung, 44px-Klickfläche sowie Fokus-Resize/Link. Native Pipettenauswahl und echte Mobilgeräte wurden nicht manuell geprüft.
 
 ## Veröffentlichung und Git-Hinweis
 

@@ -17,6 +17,8 @@
   // In the 1829×294 HitJourney artwork, the flat letter baseline is y=230.
   // The tails of j/y extend to y=294; round letters slightly overshoot the baseline.
   const HIT_BASELINE=230/294;
+  const HIT_ASPECT=1829/294;
+  const HIT_DESKTOP_HEIGHT=58;
   let count=0;
   function create(header,config,{preview=false}={}) {
     header.classList.add('hj-branding-header');
@@ -64,7 +66,19 @@
       const rad=cfg.rotation*Math.PI/180;
       let bw=Math.abs(w*Math.cos(rad))+Math.abs(h*Math.sin(rad));
       let bh=Math.abs(w*Math.sin(rad))+Math.abs(h*Math.cos(rad));
-      const scale=Math.min(1,Math.max(1,header.clientWidth-72)/bw);
+      // Treat the configured size as the desktop preference. Keep the complete
+      // (possibly rotated) symbol subordinate to HitJourney, then shrink both
+      // at the same ratio. Solve the side-slot equation explicitly to avoid a
+      // ResizeObserver feedback loop between the logo width and HitJourney's slot.
+      const desktopHitWidth=HIT_DESKTOP_HEIGHT*HIT_ASPECT;
+      const hierarchy=Math.min(1,desktopHitWidth*.6/bw,HIT_DESKTOP_HEIGHT*.7/bh);
+      const baseBoxWidth=bw*hierarchy;
+      const style=getComputedStyle(header);
+      const contentWidth=Math.max(1,header.clientWidth-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0));
+      const maxHitHeight=parseFloat(reference && getComputedStyle(reference).maxHeight)||32;
+      const sideSlot=Math.max(1,contentWidth/2-24)/(1+baseBoxWidth/(2*desktopHitWidth));
+      const hitWidth=Math.min(desktopHitWidth,maxHitHeight*HIT_ASPECT,sideSlot);
+      const scale=hierarchy*hitWidth/desktopHitWidth;
       w*=scale;h*=scale;bw*=scale;bh*=scale;
       for(const [key,val] of Object.entries({'box-width':bw+'px','box-height':bh+'px',width:w+'px',height:h+'px',angle:cfg.rotation+'deg'})) header.style.setProperty('--dj-logo-'+key,val);
       geometry={bh};
@@ -75,11 +89,18 @@
       return cfg;
     }
     update(config);
-    let lastWidth=header.clientWidth;
-    const observer=new ResizeObserver(()=>{
-      if(header.clientWidth!==lastWidth){lastWidth=header.clientWidth;update(current);}
+    const scaleSignature=()=>{
+      const style=getComputedStyle(header);
+      return [header.clientWidth,style.paddingLeft,style.paddingRight,reference && getComputedStyle(reference).maxHeight].join('|');
+    };
+    let lastScale=scaleSignature();
+    const refreshSize=()=>{
+      const next=scaleSignature();
+      if(next!==lastScale){lastScale=next;update(current);}
       else scheduleAlignment();
-    });
+    };
+    const observer=new ResizeObserver(refreshSize);
+    window.addEventListener('resize',refreshSize);
     observer.observe(header);
     for(const img of [reference,waves])if(img){observer.observe(img);img.addEventListener('load',scheduleAlignment);img.addEventListener('error',scheduleAlignment);}
     return {link,update};
