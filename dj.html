@@ -2404,4 +2404,28 @@ function goHome(){
 }
 </style>
 
+<style>
+/* Album rows keep their full cover height; extra albums scroll within the panel.
+   Reset the old five-row tablet grid, which also applied to phone layouts. */
+.album-grid{
+  grid-template-rows:none!important;
+  grid-auto-rows:max-content!important;
+  align-content:start!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none!important;
+}
+.album-grid::-webkit-scrollbar{display:none}
+.album-grid .al-item{
+  width:100%!important;
+  height:auto!important;
+  min-height:0;
+  aspect-ratio:1/1!important;
+  align-self:start;
+}
+.album-grid .al-item img{object-fit:contain!important}
+</style>
+
 </body></html>
