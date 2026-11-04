@@ -1039,9 +1039,9 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 .oe-action-btn.cancel{background:rgba(133,172,201,.1);color:#85ACC9;border:1px solid rgba(133,172,201,.18)}
 .oe-action-btn.cancel:hover{background:rgba(133,172,201,.2)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><link rel="stylesheet" href="/assets/header-logo.css?v=4">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><link rel="stylesheet" href="/assets/header-logo.css?v=5">
 <script src="/assets/header-logo.js?v=4" defer></script>
-<script src="/assets/header-logo-admin.js?v=4" defer></script>
+<script src="/assets/header-logo-admin.js?v=5" defer></script>
 </head>
 <body>
 
@@ -8312,7 +8312,8 @@ document.addEventListener('keydown', overlayEditorKeydown);
 
 <!-- ══ TAB: HOME ══ -->
 <div class="screen active" id="tabHome">
-<section class="hj-logo-editor" id="hjLogoEditor" aria-labelledby="hjLogoTitle">
+<section class="hj-logo-editor" id="hjLogoEditor" aria-labelledby="hjLogoTitle" hidden>
+  <button id="hjLogoClose" class="hj-logo-close" type="button" aria-label="Logo-Bearbeitung schließen">×</button>
   <h2 id="hjLogoTitle">Mr. DJ · Logo in der Kopfzeile</h2>
   <p>So erscheint dein Logo auf der Website. Es führt immer zu Mr. DJ.</p>
   <div class="hj-logo-preview"><div id="hjLogoPreview" class="hj-branding-header">
@@ -8336,6 +8337,7 @@ document.addEventListener('keydown', overlayEditorKeydown);
 
   <div class="home-toolbar">
     <span class="home-toolbar-title">Home-Editor</span>
+    <button id="hjLogoToggle" class="home-toolbar-btn" type="button" aria-controls="hjLogoEditor" aria-expanded="false">Mr. DJ</button>
     <div style="display:flex;gap:6px">
       <button class="home-toolbar-btn undo" id="homeUndoBtn" onclick="undoHomeAction()" title="Letzte Änderung rückgängig machen" disabled="">
         ↶ Rückgängig

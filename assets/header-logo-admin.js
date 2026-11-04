@@ -3,6 +3,15 @@
   const core=window.HJHeaderLogo,editor=document.getElementById('hjLogoEditor');
   if(!core || !editor) return;
   const find=id=>editor.querySelector('#'+id);
+  const toggle=document.getElementById('hjLogoToggle');
+  function setOpen(open){
+    editor.hidden=!open;
+    toggle.setAttribute('aria-expanded',String(open));
+    if(!open) toggle.focus({preventScroll:true});
+    else window.dispatchEvent(new Event('resize'));
+  }
+  toggle.addEventListener('click',()=>setOpen(editor.hidden));
+  document.getElementById('hjLogoClose').addEventListener('click',()=>setOpen(false));
   let draft={...core.defaults},saved={...draft},rowId=null,loaded=false,busy=false,file=null,blob=null,imageLoading=false,imageRevision=0;
   const view=core.create(find('hjLogoPreview'),draft,{preview:true});
   const status=find('hjLogoStatus'),save=find('hjLogoSave'),reset=find('hjLogoReset');
