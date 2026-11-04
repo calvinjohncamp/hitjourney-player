@@ -40,4 +40,7 @@
 .hj-logo-editor{position:relative}
 .hj-logo-editor h2{padding-right:40px}
 .hj-logo-editor .hj-logo-close{position:absolute;right:12px;top:12px;font-size:22px;width:36px;padding:0}
-#hjLogoToggle{flex:none;margin-right:auto;font-weight:700}
+.home-toolbar:has(#hjLogoToggle){display:grid;grid-template-columns:1fr auto 1fr;gap:8px}
+.home-toolbar:has(#hjLogoToggle)>:last-child{justify-self:end}
+#hjLogoToggle{font-weight:700;justify-self:center}
+@media(max-width:540px){.home-toolbar:has(#hjLogoToggle){grid-template-columns:1fr auto 1fr}.home-toolbar:has(#hjLogoToggle)>:last-child{grid-column:1 / -1;justify-self:end}}
