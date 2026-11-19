@@ -964,6 +964,7 @@ body.drag-reordering{cursor:grabbing}
   <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
 <audio id="audA" preload="auto"></audio><audio id="audB" preload="auto"></audio>
+<script src="assets/home-album.js?v=1"></script>
 <script>
 'use strict';
 const SB_URL  = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -980,7 +981,7 @@ const PLAYLIST_MAP = {
   'hall-of-fame':{key:'hallOfFame',title:'Hall of Fame',meta:'Nach Streams',cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg'},
   'mr-dj':{key:'mrDj',title:'Mr. DJ',meta:'50 Songs',cover:'https://hitjourney.s3.eu-west-1.amazonaws.com/artwork/top100-cover.jpg'},
 };
-const ALBUM_ORDER=['mrDj','hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
+const ALBUM_ORDER=['home','wenn-die-nacht-ueber-die-stadt-faellt','departure','out-there','crossroads','mrDj','hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
 let ALL_SONGS=[],ALBUMS={},djQueue=[],shuffleOn=false,activeDeck='A',abcFilter=null,searchQ='',currentSearchSource={type:'all'},nextSortAsc=true,searchSortAsc=true,searchSortMode='original',SEARCH_VISIBLE=[];
 
 const audA=document.getElementById('audA'),audB=document.getElementById('audB');
@@ -1246,6 +1247,7 @@ async function loadData(){
     ALBUMS[k].songs.sort((a,b)=>(Number(a._position)||0)-(Number(b._position)||0));
     if(!ALBUMS[k].meta)ALBUMS[k].meta=ALBUMS[k].songs.length+' Songs';
   });
+  window.hjApplyHomeAlbumSequence(ALBUMS, ALL_SONGS);
   if(ALBUMS.buriedDiamonds)ALBUMS.buriedDiamonds.songs.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
 }
 
@@ -1777,7 +1779,7 @@ function startDeckFromCue(id){
 
 function setupDefaultStartState(){
   const mrKey=findMrDjAlbumKey();
-  const defaultAlbum=mrKey&&ALBUMS[mrKey] ? ALBUMS[mrKey] : (ALBUMS.top50||ALBUMS.top100||null);
+  const defaultAlbum=ALBUMS.home || (mrKey&&ALBUMS[mrKey] ? ALBUMS[mrKey] : (ALBUMS.top50||ALBUMS.top100||null));
 
   abcFilter=null;
   searchQ='';
@@ -1793,12 +1795,12 @@ function setupDefaultStartState(){
   if(defaultAlbum){
     const original=defaultAlbum.songs.slice();
 
-    const cueA=findSongInList(original,'Just this Dance') || original[0];
-    const cueB=findSongInList(original,'What if tonight') || original[1] || original[0];
+    const cueA=ALBUMS.home ? original[0] : (findSongInList(original,'Just this Dance') || original[0]);
+    const cueB=ALBUMS.home ? (original[1] || original[0]) : (findSongInList(original,'What if tonight') || original[1] || original[0]);
     if(cueA)loadDeck('A',cueA);
     if(cueB)loadDeck('B',cueB);
 
-    // Next zeigt bewusst das komplette Mr.-DJ-Album inklusive der beiden Songs, die in den Decks vorliegen — in Original-Reihenfolge.
+    // Next zeigt das komplette vorausgewählte Album inklusive der beiden Songs, die in den Decks vorliegen — in Original-Reihenfolge.
     djQueue=original.slice();
   }else{
     const original=(ALBUMS.top100&&ALBUMS.top100.songs&&ALBUMS.top100.songs.length) ? ALBUMS.top100.songs.slice() : ALL_SONGS.slice();

@@ -81,3 +81,14 @@ Die Action `Sync 404.html with index.html` synchronisiert den Fallback zusätzli
 
 - Erst beim fünften veröffentlichten Vinylalbum die linke Auswahl auf ein Sechser-Raster erweitern.
 - Bei erneut sehr großen Druckdateien eine gesonderte Web-Bildvariante erwägen; gestaffeltes Laden allein reduziert keine Dateigröße.
+
+
+## 19. November 2026 · Album Home
+
+Home wurde mit dem Originalcover `Home - Cover Bro.jpg` und der aktuellen Home-Abspielfolge angelegt: 74 einzelne Songkacheln plus Velvet Radio-Mix (13 Songs, Home-Zeile 25) und Spotlight Radio-Mix (16 Songs, Zeile 32), jeweils an ihrer Position. 103 Abspieleinträge, 96 unterschiedliche Songs; sieben Wiederholungen bleiben absichtlich erhalten. Keine Album-/Vinyl-Promotions als Songquellen.
+
+`assets/home-album.js` enthält die kuratierte Reihenfolge (Stand 19.11.2026) und wird von index/404 und Mr. DJ geladen. Die bestehende Datenbank erlaubt je Album nur eine Mitgliedschaft pro Song: `playlists/home` und 96 eindeutige `playlist_tracks` speichern das Album; die gemeinsame JS-Reihenfolge ergänzt die gewollten Wiederholungen für die öffentliche Wiedergabe. Bei späteren Änderungen an Home im Admin muss auch diese Reihenfolge angepasst werden; sie ist eine Momentaufnahme, keine laufende Home-Synchronisation.
+
+Mr. DJ beginnt mit Home in Next (vollständige 103 Einträge), Deck A/B sind I Love You und Altes Gift. Search behält Top 100. Neue Albumpositionen: Home, Wenn die Nacht über die Stadt fällt, Departure, Out There, Crossroads; danach bisherige relative Reihenfolge unverändert. Drag-and-drop nutzt weiterhin die normalen Albumfunktionen.
+
+Validiert: gespeicherte Albumdaten zurückgelesen, exakte Reihenfolge inklusive Wiederholungen, Next-Voreinstellung/Deckauswahl und erste fünf Albumpositionen geprüft; Inline-JS-Syntax und git diff --check erfolgreich. Lokale Browseransicht mit Produktions-Lesedaten bestätigt 103 Next-Zeilen und die Albumreihenfolge.

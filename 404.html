@@ -5548,6 +5548,7 @@ body.album-open #hjPlayerSpacer{
 <!-- Zeit-Labels: unsichtbar, JS braucht die IDs -->
 <span id="tElapsed" style="display:none">0:00</span><span id="tRemain" style="display:none">—</span>
 </div>
+<script src="assets/home-album.js?v=1"></script>
 <script>
 // ── SUPABASE CONFIG ──
 const SB_URL  = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -5566,7 +5567,7 @@ const PLAYLIST_MAP = {
 };
 
 // Reihenfolge der Alben im Player
-const ALBUM_ORDER = ['hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
+const ALBUM_ORDER = ['home','wenn-die-nacht-ueber-die-stadt-faellt','departure','out-there','crossroads','hallOfFame','top100','top50','grad30','stories30','grosseLiebe','poesie','buriedDiamonds'];
 
 // In diesen Alben zeigt der Player SoundCloud-Metriken. top50 ist ein Sonderfall:
 // default = Albumreihenfolge, optional Streams/Likes per Button.
@@ -5691,6 +5692,8 @@ async function loadFromSupabase() {
   });
 
   console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
+
+  window.hjApplyHomeAlbumSequence(ALBUMS, SUPABASE_SONGS);
 
   // 4. Home-Layout laden
   try {
