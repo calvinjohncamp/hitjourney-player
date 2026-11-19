@@ -101,3 +101,10 @@ Ersetzt die obige Regel zu Wiederholungen: Home enthält 96 unterschiedliche Son
 Mr. DJ: Deck A = I Love You, Deck B = Altes Gift; die beiden Songs sind aus Next entnommen. Next enthält die übrigen 94 Songs ab When I go. Beim Start läuft Deck A, danach das vorbereitete Deck B und anschließend der Rest. Albumauswahl bleibt Home → Wenn die Nacht über die Stadt fällt → Departure → Out There → Crossroads, danach bisherige Reihenfolge.
 
 Prüfung: 96 eindeutige Songs in Erstvorkommensreihenfolge, Decks und Next zusammen exakt vollständiges Album, 94 Next-Einträge, Albumpositionen, Datenbank-Readback, Inline-Syntax und git diff --check erfolgreich.
+
+
+### 19. November 2026 · Veraltete DJ-Seite im Fokusrahmen
+
+Im geöffneten Chrome-Tab war trotz harter Neuladungen die alte DJ-Voreinstellung sichtbar, während der Server bereits den neuen Code auslieferte. Der Fokusrahmen lädt Dokumente jetzt bei Einstieg und interner Navigation mit `__hj_load` als frischer Request-URL. Das eingebettete Dokument entfernt den technischen Parameter sofort wieder aus seiner sichtbaren URL. Resize/Fokuswechsel laden weiterhin nicht neu. Fokus-JS/Entry und Hostversion auf v5; CSS unverändert v4.
+
+Validiert: bestehende scripts/test_focus.cjs erfolgreich (Fullscreen, Resize, Audio-/DOM-Erhalt, Navigation/History, Direktaufruf, Mobile/Fallbacks). Neuer scripts/test_focus_cache.cjs bestätigt frische iframe-Anfragen bei Host-Neuladen und saubere öffentliche URLs inklusive erhaltener Query/Hash.

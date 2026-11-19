@@ -88,13 +88,20 @@
     } catch (_) { notice = 'Fokus im Browserfenster · Browser erlaubt kein Vollbild'; reveal(); }
     finally { pending = false; render(); }
   }
+  // A hard reload of the host does not reliably bypass the iframe HTTP cache.
+  // Give each document navigation a fresh request URL, without reloading on resize.
+  function freshPageUrl(value) {
+    const url = new URL(value, location.href);
+    url.searchParams.set("__hj_load", String(Date.now()));
+    return url.href;
+  }
   function navigate(value) {
     const url = new URL(value, location.href);
     if (host || !ownedFrame || url.origin !== location.origin) {
       location.assign(url.href);
       return;
     }
-    ownedFrame.src = url.href;
+    ownedFrame.src = freshPageUrl(url.href);
     ownedFrame.focus();
   }
   function updateWidth() {
@@ -135,7 +142,7 @@
     });
     let initial = new URL(new URLSearchParams(location.search).get('page') || '/', location.origin);
     if (initial.origin !== location.origin || initial.pathname === '/focus.html') initial = new URL('/', location.origin);
-    ownedFrame.src = initial.href;
+    ownedFrame.src = freshPageUrl(initial.href);
     viewport.append(ownedFrame);
     for (const side of ['left', 'right']) {
       const grip = document.createElement('div');
