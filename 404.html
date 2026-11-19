@@ -5548,6 +5548,7 @@ body.album-open #hjPlayerSpacer{
 <!-- Zeit-Labels: unsichtbar, JS braucht die IDs -->
 <span id="tElapsed" style="display:none">0:00</span><span id="tRemain" style="display:none">—</span>
 </div>
+<script src="assets/data-loader.js?v=1"></script>
 <script src="assets/home-album.js?v=2"></script>
 <script>
 // ── SUPABASE CONFIG ──
@@ -5617,7 +5618,7 @@ async function loadFromSupabase() {
   // klickbare Albumziele verfügbar sein, sonst ist das Bild sichtbar, aber der Klick läuft ins Leere.
   const [playlistsRes, tracksRes] = await Promise.all([
     fetch(SB_URL + '/rest/v1/playlists?select=slug,title,cover_url&order=title.asc', { headers }),
-    fetch(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position', { headers })
+    window.hjFetchAllRowsResponse(SB_URL + '/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position,song_slug', { headers })
   ]);
   if (!playlistsRes.ok) throw new Error('Playlists fetch failed: ' + playlistsRes.status);
   if (!tracksRes.ok) throw new Error('Tracks fetch failed: ' + tracksRes.status);

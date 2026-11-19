@@ -9297,6 +9297,7 @@ document.addEventListener('keydown', overlayEditorKeydown);
 <!-- Toast -->
 <div id="toast" class="">Startseite importiert (Z1–Z13) — jetzt Speichern klicken ✓</div>
 
+<script src="assets/data-loader.js?v=1"></script>
 <script>
 /* ── CONFIG ── */
 const SB_URL = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -10243,7 +10244,7 @@ async function loadPlaylists(){
     // Load all playlists + track counts in parallel
     const [plR, trR, promoR, vinylR] = await Promise.all([
       fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'), {headers:hdrs()}),
-      fetch(sbUrl('/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position'), {headers:hdrs()}),
+      window.hjFetchAllRowsResponse(sbUrl('/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position,song_slug'), {headers:hdrs()}),
       fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-5&limit=1'), {headers:hdrs()}),
       fetch(sbUrl('/rest/v1/home_layout?select=*&row_order=eq.-6&limit=1'), {headers:hdrs()}),
     ]);
@@ -16095,7 +16096,7 @@ async function makeSnapshot(){
       [songsRes, playlistsRes, tracksRes, layoutRes] = await Promise.all([
         fetch(sbUrl('/rest/v1/songs?select=*&order=title.asc&limit=2000'), {headers:h, signal:ctrl.signal}),
         fetch(sbUrl('/rest/v1/playlists?select=*&order=title.asc'),        {headers:h, signal:ctrl.signal}),
-        fetch(sbUrl('/rest/v1/playlist_tracks?select=*&order=playlist_slug,position'), {headers:h, signal:ctrl.signal}),
+        window.hjFetchAllRowsResponse(sbUrl('/rest/v1/playlist_tracks?select=*&order=playlist_slug,position,song_slug'), {headers:h, signal:ctrl.signal}),
         fetch(sbUrl('/rest/v1/home_layout?select=*&order=row_order.asc'),  {headers:h, signal:ctrl.signal}),
       ]);
     } finally {

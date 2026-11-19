@@ -108,3 +108,12 @@ Prüfung: 96 eindeutige Songs in Erstvorkommensreihenfolge, Decks und Next zusam
 Im geöffneten Chrome-Tab war trotz harter Neuladungen die alte DJ-Voreinstellung sichtbar, während der Server bereits den neuen Code auslieferte. Der Fokusrahmen lädt Dokumente jetzt bei Einstieg und interner Navigation mit `__hj_load` als frischer Request-URL. Das eingebettete Dokument entfernt den technischen Parameter sofort wieder aus seiner sichtbaren URL. Resize/Fokuswechsel laden weiterhin nicht neu. Fokus-JS/Entry und Hostversion auf v5; CSS unverändert v4.
 
 Validiert: bestehende scripts/test_focus.cjs erfolgreich (Fullscreen, Resize, Audio-/DOM-Erhalt, Navigation/History, Direktaufruf, Mobile/Fallbacks). Neuer scripts/test_focus_cache.cjs bestätigt frische iframe-Anfragen bei Host-Neuladen und saubere öffentliche URLs inklusive erhaltener Query/Hash.
+
+
+### 19. November 2026 · Alle Albumzuordnungen laden
+
+Ursache der nur acht sichtbaren Songs in Wenn die Nacht über die Stadt fällt: unpaginierte globale playlist_tracks-Abfragen wurden vom Supabase-Limit bei 1.000 von 1.035 Zuordnungen abgeschnitten. Das Album enthält tatsächlich 43 gespeicherte Songs. Kein SoundCloud-Import; Inhalte/Reihenfolge unverändert.
+
+Gemeinsamer assets/data-loader.js liest 500er-Seiten mit count=exact und stabiler Sortierung playlist_slug,position,song_slug. Eingebunden in index/404, dj und admin; Admin-Sicherungsexport lädt ebenfalls alle Zuordnungen. Fehler einer späteren Seite werden nicht als erfolgreiche Teilliste ausgegeben. Die limit=1-Abfrage für neue Songpositionen bleibt unverändert.
+
+Prüfung: scripts/test_data_loader.cjs deckt Serverlimits, fehlende Gesamtzahl, leere/exakte Seiten, Header und spätere Fehler ab. Browserprüfung aller drei Oberflächen mit echten Produktions-Lesedaten bestätigt 43 Songs von Sommernacht bis I Love You; Home bleibt 96 Songs und Next 94. Keine Datenbank-Schreibzugriffe während der Korrektur.

@@ -964,6 +964,7 @@ body.drag-reordering{cursor:grabbing}
   <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
 <audio id="audA" preload="auto"></audio><audio id="audB" preload="auto"></audio>
+<script src="assets/data-loader.js?v=1"></script>
 <script src="assets/home-album.js?v=2"></script>
 <script>
 'use strict';
@@ -1214,7 +1215,7 @@ async function loadData(){
   }
   const [pr,tr]=await Promise.all([
     fetch(SB_URL+'/rest/v1/playlists?select=slug,title,cover_url&order=title.asc',{headers:HDR}),
-    fetch(SB_URL+'/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position',{headers:HDR})
+    window.hjFetchAllRowsResponse(SB_URL+'/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position,song_slug',{headers:HDR})
   ]);
   if(!sr.ok)throw new Error('Songs fetch failed: '+sr.status);
   if(!pr.ok)throw new Error('Playlists fetch failed: '+pr.status);
