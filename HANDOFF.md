@@ -92,3 +92,12 @@ Home wurde mit dem Originalcover `Home - Cover Bro.jpg` und der aktuellen Home-A
 Mr. DJ beginnt mit Home in Next (vollständige 103 Einträge), Deck A/B sind I Love You und Altes Gift. Search behält Top 100. Neue Albumpositionen: Home, Wenn die Nacht über die Stadt fällt, Departure, Out There, Crossroads; danach bisherige relative Reihenfolge unverändert. Drag-and-drop nutzt weiterhin die normalen Albumfunktionen.
 
 Validiert: gespeicherte Albumdaten zurückgelesen, exakte Reihenfolge inklusive Wiederholungen, Next-Voreinstellung/Deckauswahl und erste fünf Albumpositionen geprüft; Inline-JS-Syntax und git diff --check erfolgreich. Lokale Browseransicht mit Produktions-Lesedaten bestätigt 103 Next-Zeilen und die Albumreihenfolge.
+
+
+### Präzisierung 19. November 2026 · Home ohne Dopplungen
+
+Ersetzt die obige Regel zu Wiederholungen: Home enthält 96 unterschiedliche Songs, jeder an seiner ersten Home-Position. Spätere Wiederholungen entfernt. Gemeinsame Reihenfolgedatei `assets/home-album.js?v=2`, Datenbankpositionen 1–96 lückenlos und zurückgelesen.
+
+Mr. DJ: Deck A = I Love You, Deck B = Altes Gift; die beiden Songs sind aus Next entnommen. Next enthält die übrigen 94 Songs ab When I go. Beim Start läuft Deck A, danach das vorbereitete Deck B und anschließend der Rest. Albumauswahl bleibt Home → Wenn die Nacht über die Stadt fällt → Departure → Out There → Crossroads, danach bisherige Reihenfolge.
+
+Prüfung: 96 eindeutige Songs in Erstvorkommensreihenfolge, Decks und Next zusammen exakt vollständiges Album, 94 Next-Einträge, Albumpositionen, Datenbank-Readback, Inline-Syntax und git diff --check erfolgreich.

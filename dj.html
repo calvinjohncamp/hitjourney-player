@@ -964,7 +964,7 @@ body.drag-reordering{cursor:grabbing}
   <section class="panel search-panel"><div class="title-row"><div class="title">Search</div><button class="btn-sort-abc" id="btnSortSearch" title="Angezeigtes Album alphabetisch sortieren">ABC</button></div><div class="search-wrap"><svg></svg><input class="search-inp" id="searchInp" placeholder="Song suchen …" autocomplete="off" spellcheck="false" type="search"/></div><div class="sr-list" id="srList"></div></section>
 </div>
 <audio id="audA" preload="auto"></audio><audio id="audB" preload="auto"></audio>
-<script src="assets/home-album.js?v=1"></script>
+<script src="assets/home-album.js?v=2"></script>
 <script>
 'use strict';
 const SB_URL  = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -1800,8 +1800,8 @@ function setupDefaultStartState(){
     if(cueA)loadDeck('A',cueA);
     if(cueB)loadDeck('B',cueB);
 
-    // Next zeigt das komplette vorausgewählte Album inklusive der beiden Songs, die in den Decks vorliegen — in Original-Reihenfolge.
-    djQueue=original.slice();
+    // Home tracks 1 and 2 are already cued; Next continues with track 3.
+    djQueue=ALBUMS.home ? original.slice(2) : original.slice();
   }else{
     const original=(ALBUMS.top100&&ALBUMS.top100.songs&&ALBUMS.top100.songs.length) ? ALBUMS.top100.songs.slice() : ALL_SONGS.slice();
     const cueA=original[0], cueB=original[1]||original[0];
