@@ -625,6 +625,7 @@ select.ai{cursor:pointer;appearance:none;-webkit-appearance:none;background-imag
 /* Move bar — below each cell in editing mode */
 .he-cell-movebar{display:flex;justify-content:center;gap:6px;padding:3px 0;flex-shrink:0}
 .he-cell-wrap{display:flex;flex-direction:column}
+.he-cell-wrap:has(> .he-cell:is(.span-4,.panorama-4x1,.span-slide)){grid-column:1/-1}
 .he-cell-movebar-btn{background:rgba(133,172,201,.15);border:1px solid rgba(133,172,201,.2);border-radius:5px;color:#85ACC9;font-size:12px;font-weight:700;cursor:pointer;padding:2px 10px;line-height:1.4;transition:background .15s}
 .he-cell-movebar-btn:hover{background:rgba(133,172,201,.35);color:#cfe5f5}
 .he-cell-movebar-btn:disabled{opacity:.2;cursor:default}
@@ -11652,6 +11653,10 @@ function normalizeHomeRow(row){
   row = row || {};
   const cells = (row.cells && row.cells.length===4) ? row.cells : [emptyCell(),emptyCell(),emptyCell(),emptyCell()];
   const normalized = cells.map(normalizeHomeCell);
+  // Ältere Viererzeilen haben das Format nur auf angeklickten Kacheln gespeichert.
+  if(normalized.some(c => c.type === '1x1') && normalized.every(c => c.type === '1x1' || c.type === 'empty')){
+    normalized.forEach(c => { c.type = '1x1'; });
+  }
   if(Array.isArray(row.overlays) && row.overlays.length && !normalized.some(c => Array.isArray(c.overlays) && c.overlays.length)){
     const target = normalized.find(c => c && c.type !== 'hidden' && c.type !== 'empty' && (c.imageUrl || c.customImageUrl || c.cover21Url || c.bgUrl));
     if(target) target.overlays = row.overlays.map(normalizeOverlay);
@@ -13893,7 +13898,7 @@ function buildCell(row, cellIdx, extraClass, editing){
       openCellEdit(row.id, cellIdx);
     } else {
       // No layout yet — open layout picker
-      toggleTypeMenu(el, row.id, cellIdx);
+      openLpm(row.id);
     }
   };
 
@@ -13933,11 +13938,9 @@ function buildCell(row, cellIdx, extraClass, editing){
 /* ══ LAYOUT PICKER MODAL (LPM) ══════════════════════════════════════════ */
 
 let lpmTargetRowId   = null;
-let lpmTargetCellIdx = null;  // which cell was clicked (used for 1:1 and mixed layouts)
 
-function openLpm(rowId, cellIdx){
+function openLpm(rowId){
   lpmTargetRowId   = rowId;
-  lpmTargetCellIdx = cellIdx ?? 0;
   // Reset selection
   document.querySelectorAll('.lpm-option').forEach(o=>o.classList.remove('selected'));
   document.getElementById('layoutPickerModal').classList.add('open');
@@ -13946,7 +13949,6 @@ function openLpm(rowId, cellIdx){
 function closeLpm(){
   document.getElementById('layoutPickerModal').classList.remove('open');
   lpmTargetRowId = null;
-  lpmTargetCellIdx = null;
 }
 
 // Map layout key → applyType key
@@ -13970,24 +13972,21 @@ function lpmPick(optionEl){
   optionEl.classList.add('selected');
   const layout  = optionEl.dataset.layout;
   const rowId   = lpmTargetRowId;
-  const cellIdx = lpmTargetCellIdx;
   closeLpm();
   if(layout === '1x2x1-plus2'){
     // Show arrangement step instead of applying directly
-    setTimeout(()=> openArrangementModal(rowId, cellIdx), 60);
+    setTimeout(()=> openArrangementModal(rowId), 60);
   } else {
-    setTimeout(()=> applyType(rowId, cellIdx, LPM_TYPE_MAP[layout]||layout), 60);
+    setTimeout(()=> applyType(rowId, LPM_TYPE_MAP[layout]||layout), 60);
   }
 }
 
 /* ── 2x1plus2 Arrangement Modal ── */
 let armTargetRowId   = null;
-let armTargetCellIdx = null;
 let armSelection     = 'left'; // 'left' | 'center' | 'right'
 
-function openArrangementModal(rowId, cellIdx){
+function openArrangementModal(rowId){
   armTargetRowId   = rowId;
-  armTargetCellIdx = cellIdx;
   armSelection     = 'left';
   // Reset selection to first option
   document.querySelectorAll('.arm-option').forEach(o=>o.classList.remove('selected'));
@@ -13999,7 +13998,6 @@ function openArrangementModal(rowId, cellIdx){
 function closeArrangementModal(){
   document.getElementById('arrangementModal').classList.remove('open');
   armTargetRowId   = null;
-  armTargetCellIdx = null;
 }
 
 function armSelect(optionEl){
@@ -14010,18 +14008,16 @@ function armSelect(optionEl){
 
 function armBack(){
   const rowId   = armTargetRowId;
-  const cellIdx = armTargetCellIdx;
   closeArrangementModal();
   // Re-open the layout picker
-  setTimeout(()=> openLpm(rowId, cellIdx), 60);
+  setTimeout(()=> openLpm(rowId), 60);
 }
 
 function armConfirm(){
   const rowId   = armTargetRowId;
-  const cellIdx = armTargetCellIdx;
   const pos     = armSelection;
   closeArrangementModal();
-  setTimeout(()=> applyType(rowId, cellIdx, '2x1plus2', pos), 60);
+  setTimeout(()=> applyType(rowId, '2x1plus2', pos), 60);
 }
 
 // Backdrop click closes arrangement modal
@@ -14040,24 +14036,18 @@ document.getElementById('layoutPickerModal').addEventListener('click', e=>{
   if(hm) hm.addEventListener('click', e=>{ if(e.target === hm) closeHeadingModal(); });
 })();
 
-/* ── Type menu (appears on click on empty cell in edit mode) ── */
-function toggleTypeMenu(cellEl, rowId, cellIdx){
-  // Open the new layout picker modal instead of the old dropdown menu
-  openLpm(rowId, cellIdx);
-}
-
-
 /* ── Apply a layout type to a row ── */
-function applyType(rowId, cellIdx, type, pos){
+function applyType(rowId, type, pos){
   const row = rowById(rowId);
   if(!type || !row) return;
 
   markHomeAction();
 
   if(type === '1x1'){
-    // Single 1:1 cell — just update this cell's type, leave others as-is
-    const keep = {...row.cells[cellIdx]};
-    row.cells[cellIdx] = {...emptyCell(), ...keep, type:'1x1'};
+    row.cells = row.cells.map(cell => ({
+      ...(cell.type === 'hidden' ? emptyCell() : cell),
+      type:'1x1'
+    }));
 
   } else if(type === '2big'){
     // 2× large 1:1 (each spans 2 columns) — reset row to 2 big cells
@@ -14418,6 +14408,8 @@ function htmInitStep2(){
   htmRenderSongList('');
   // Populate album dropdown
   htmPopulateAlbumSelect();
+  htmRenderSelectedSong();
+  htmRenderSelectedAlbum();
   // Update preview strip
   htmUpdateMotifPreview();
   // Show/hide Song+Album tabs based on cell type
@@ -15067,6 +15059,9 @@ function openHomeTileModal(rowId, cellIdx){
         htmChosenSource = 'song';
         htmSelectedSong = { slug:cell.slug, title:cell.alt||cell.slug, artist:cell.artist||'', coverUrl:cell.imageUrl, cover21Url:cell.cover21Url||cell.imageUrl };
       }
+    } else if(!cellHasContent(cell) && !cell.slug && !cell.url &&
+              (HTM_SQUARE_TYPES.has(cell.type) || HTM_WIDE_TYPES.has(cell.type))){
+      htmChosenSource = 'song';
     }
   }
 
