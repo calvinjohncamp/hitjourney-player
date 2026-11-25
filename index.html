@@ -5549,7 +5549,7 @@ body.album-open #hjPlayerSpacer{
 <span id="tElapsed" style="display:none">0:00</span><span id="tRemain" style="display:none">—</span>
 </div>
 <script src="assets/data-loader.js?v=1"></script>
-<script src="assets/home-album.js?v=2"></script>
+<script src="assets/home-album.js?v=3"></script>
 <script>
 // ── SUPABASE CONFIG ──
 const SB_URL  = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -5584,11 +5584,11 @@ async function loadFromSupabase() {
   const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON };
 
   // 1. Alle Songs laden
-  let songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,describe_url,lyrics_url,lyrics21_url&order=title', { headers });
+  let songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,describe_url,lyrics_url,lyrics21_url&order=title.asc,slug.asc', { headers, cache:'no-store' });
   // Robust: Falls die Spalte describe_url in Supabase noch nicht angelegt ist, ohne sie laden,
   // damit die App auch vor dem Anlegen der Spalte normal funktioniert.
   if (!songsRes.ok) {
-    songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title', { headers });
+    songsRes = await fetch(SB_URL + '/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title.asc,slug.asc', { headers, cache:'no-store' });
   }
   if (!songsRes.ok) throw new Error('Songs fetch failed: ' + songsRes.status);
   const songsRaw = await songsRes.json();
@@ -5654,7 +5654,7 @@ async function loadFromSupabase() {
   tracksRaw.forEach(row => {
     const playlistSlug = row.playlist_slug;
     const info = playlistInfoBySlug[playlistSlug];
-    if (!info) return;
+    if (!info || playlistSlug === 'home') return;
     const song = songMap[row.song_slug];
     if (!song) return;
 
@@ -5694,14 +5694,10 @@ async function loadFromSupabase() {
 
   console.log('[hitjourney] Supabase geladen:', Object.entries(ALBUMS).map(([k,v])=>k+':'+v.songs.length).join(', '));
 
-  window.hjApplyHomeAlbumSequence(ALBUMS, SUPABASE_SONGS);
-
-  // 4. Home-Layout laden
-  try {
-    const hlRes = await fetch(SB_URL + '/rest/v1/home_layout?select=*&order=row_order.asc', { headers, cache:'no-store' });
-    if(hlRes.ok) window._homeLayoutRows = await hlRes.json();
-    else window._homeLayoutRows = [];
-  } catch(e){ window._homeLayoutRows = []; }
+  // 4. Home-Layout und die daraus abgeleitete Albumfolge laden
+  const homeRows = await window.HJHome.loadLayout(SB_URL, headers);
+  window._homeLayoutRows = homeRows || [];
+  window.HJHome.applyAlbum(ALBUMS, playlistInfoBySlug.home, homeRows, SUPABASE_SONGS, PLAYLIST_MAP);
 
   const promotionRow = (window._homeLayoutRows || []).find(r =>
     r && r.cells && r.cells[0] && r.cells[0].type === 'albumPromotions');
@@ -8996,12 +8992,7 @@ function renderHomeLayout(){
   const grid = document.getElementById('homeGrid');
   if(!grid) return;
 
-  const allRows = window._homeLayoutRows || [];
-  const hasNormalVinylRow = allRows.some(r => r && Number(r.row_order) >= 0 && r.cells && r.cells[0] && r.cells[0].type === 'vinylPromotion');
-  // About-/Info-Sonderzeile (type 'about') gehört nicht ins Home-Grid → herausfiltern.
-  // Die alte geschützte Vinyl-Sonderzeile bleibt nur als Kompatibilitäts-Fallback sichtbar.
-  const rows = allRows.filter(r =>
-    !(r && r.cells && r.cells[0] && (r.cells[0].type === 'headerLogo' || r.cells[0].type === 'about' || r.cells[0].type === 'landing' || r.cells[0].type === 'landingPages' || r.cells[0].type === 'subpages' || r.cells[0].type === 'overlayLibrary' || r.cells[0].type === 'albumPromotions' || (r.cells[0].type === 'vinylPromotion' && Number(r.row_order) < 0 && hasNormalVinylRow))));
+  const rows = window.HJHome.rowsForGrid(window._homeLayoutRows || []);
 
   // Fallback: wenn noch kein Layout in Supabase gespeichert → alten hardcoded Look zeigen
   if(rows.length === 0){
@@ -9025,8 +9016,6 @@ function renderHomeLayout(){
 // Rendert EINE Home-Zeile in den übergebenen Container. Gemeinsam genutzt von
 // renderHomeLayout (Home-Grid) und renderLandingPage (freie Landing-Zeilen).
 function renderHomeRowInto(grid, row){
-    // isFinalJustThisDanceCell: nur noch no-op — der Admin entscheidet selbst.
-    const isFinalJustThisDanceCell = (cell)=>false;
     const cells = row.cells || [];
     if(row && Array.isArray(row.overlays) && row.overlays.length && !cells.some(c => c && Array.isArray(c.overlays) && c.overlays.length)){
       const target = cells.find(c => c && c.type !== 'hidden' && c.type !== 'empty' && (c.imageUrl || c.customImageUrl || c.cover21Url || c.bgUrl));
@@ -9120,39 +9109,21 @@ function renderHomeRowInto(grid, row){
       return;
     }
 
-    // ── volle Breite: 2:1 oder echtes 4:1 Panorama ─────────────────
-    if(t0 === 'span-4' || t0 === 'lyrics21' || t0 === '4x1' || t0 === 'free-full'){
-      const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
-      if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, t0 === '4x1' ? 'wide panorama-4x1' : (t0 === 'free-full' ? 'wide free-full' : 'wide'));
-      grid.appendChild(el);
+    const visibleCells = window.HJHome.cardsForRow(cells);
+    if(!visibleCells.length) return;
+
+    // ── Einzelkachel über die volle Breite ──────────────────────
+    if(['span-4','lyrics21','4x1','free-full','span-2','2x1','2x1-full'].includes(t0)){
+      const cls = t0 === '4x1' ? 'wide panorama-4x1' : (t0 === 'free-full' ? 'wide free-full' : 'wide');
+      grid.appendChild(buildHomeCard(visibleCells[0], cls));
       return;
     }
 
-    // ── 2:1 ───────────────────────────────────────────────────────
-    if(t0 === 'span-2' || t0 === '2x1'){
-      const cell = cells[0];
-      if(isFinalJustThisDanceCell(cell)) return;
-      if(!cell.imageUrl) return;
-      const el = buildHomeCard(cell, 'wide');
-      grid.appendChild(el);
-      return;
-    }
-
-    // ── 3er Trio (trio-a/b/c) ────────────────────────────────────────
+    // ── Drei gleich breite Hochformatkacheln ────────────────────
     if(t0 === 'trio-a'){
-      const cellA = cells[0];
-      const cellB = cells[1];
-      const cellC = cells[2];
-      if(!cellA.imageUrl && !cellB.imageUrl && !cellC.imageUrl) return;
       const trio = document.createElement('div');
-      // Always equal 3-column portrait layout for admin-managed trios
       trio.className = 'home-trio home-trio--equal wide';
-      if(cellA && cellA.imageUrl) trio.appendChild(buildHomeCard({...cellA, _isTrio:true}, ''));
-      if(cellB && cellB.imageUrl) trio.appendChild(buildHomeCard({...cellB, _isTrio:true}, ''));
-      if(cellC && cellC.imageUrl) trio.appendChild(buildHomeCard({...cellC, _isTrio:true}, ''));
-      // Caption block (from row.caption in Supabase)
+      visibleCells.forEach(cell => trio.appendChild(buildHomeCard({...cell, _isTrio:true}, '')));
       if(row.caption){
         const cap = document.createElement('div');
         cap.className = 'home-trio-caption';
@@ -9163,13 +9134,10 @@ function renderHomeRowInto(grid, row){
       return;
     }
 
-    // ── 2× 1:1 groß (1x1-big) — je 2 Spalten breit ──────────────────
+    // ── Große Quadrate und Album-Promotions ─────────────────────
     if(t0 === '1x1-big'){
-      const visibleCells = cells.filter(cell =>
-        cell && cell.imageUrl && cell.type !== 'hidden' && !isFinalJustThisDanceCell(cell));
-      const hasPromotion = visibleCells.some(cell => albumPromotionForCell(cell));
       const isAlbumPair = visibleCells.length === 2 && visibleCells.every(cell => cell.fn === 'album');
-      if(isAlbumPair && hasPromotion){
+      if(isAlbumPair && visibleCells.some(cell => albumPromotionForCell(cell))){
         grid.appendChild(buildTwoAlbumPromotionRow(visibleCells));
       }else{
         visibleCells.forEach(cell => grid.appendChild(buildHomeCard(cell, 'big-square')));
@@ -9177,99 +9145,41 @@ function renderHomeRowInto(grid, row){
       return;
     }
 
-    // ── 3× 1:1 Quadrate nebeneinander (1x1-third) ───────────────────
     if(t0 === '1x1-third'){
       const row3 = document.createElement('div');
       row3.className = 'home-row3sq';
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        row3.appendChild(buildHomeCard(cell, 'square'));
-      });
-      if(row3.children.length) grid.appendChild(row3);
+      visibleCells.forEach(cell => row3.appendChild(buildHomeCard(cell, 'square')));
+      grid.appendChild(row3);
       return;
     }
 
-    // ── 2:1 volle Breite (2x1-full) ──────────────────────────────────
-    if(t0 === '2x1-full'){
-      const cell = cells[0];
-      if(!cell || !cell.imageUrl || isFinalJustThisDanceCell(cell)) return;
-      grid.appendChild(buildHomeCard(cell, 'wide'));
+    const t1 = cells[1]?.type;
+    if(t0 === '2x1-half' && t1 === '2x1-half'){
+      visibleCells.forEach(cell => grid.appendChild(buildHomeCard(cell, 'span-2col')));
       return;
     }
 
-    // ── 2x1-half: entweder 2× 2:1 nebeneinander ODER 2:1 + 2× 1:1 (left) ──
-    if(t0 === '2x1-half'){
-      const t1 = cells[1] && cells[1].type;
-      if(t1 === '2x1-half'){
-        // 2× 2:1 nebeneinander (2x2half)
-        cells.forEach(cell => {
-          if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-          grid.appendChild(buildHomeCard(cell, 'span-2col'));
-        });
-      } else {
-        // left: [2:1][1:1][1:1]
-        const row2 = document.createElement('div');
-        row2.className = 'home-plus2 plus2-left';
-        cells.forEach(cell => {
-          if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-          const cls = cell.type === '2x1-half' ? 'p2-wide' : 'p2-sq';
-          row2.appendChild(buildHomeCard(cell, cls));
-        });
-        grid.appendChild(row2);
-      }
-      return;
-    }
-
-    // ── 2x1plus2 center: [1:1][2:1][1:1] ────────────────────────────
-    if(t0 === '1x1' && cells[1] && cells[1].type === '2x1-half'){
+    const widePosition = t0 === '2x1-half' ? 'left'
+      : t0 === '1x1' && t1 === '2x1-half' ? 'center'
+      : t0 === '1x1' && t1 === '1x1' && cells[2]?.type === '2x1-half' ? 'right'
+      : '';
+    if(widePosition){
       const row2 = document.createElement('div');
-      row2.className = 'home-plus2 plus2-center';
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        const cls = cell.type === '2x1-half' ? 'p2-wide' : 'p2-sq';
-        row2.appendChild(buildHomeCard(cell, cls));
-      });
+      row2.className = 'home-plus2 plus2-' + widePosition;
+      visibleCells.forEach(cell => row2.appendChild(buildHomeCard(cell, cell.type === '2x1-half' ? 'p2-wide' : 'p2-sq')));
       grid.appendChild(row2);
       return;
     }
 
-    // ── 2x1plus2 right: [1:1][1:1][2:1] ─────────────────────────────
-    if(t0 === '1x1' && cells[1] && cells[1].type === '1x1' && cells[2] && cells[2].type === '2x1-half'){
-      const row2 = document.createElement('div');
-      row2.className = 'home-plus2 plus2-right';
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        const cls = cell.type === '2x1-half' ? 'p2-wide' : 'p2-sq';
-        row2.appendChild(buildHomeCard(cell, cls));
-      });
-      grid.appendChild(row2);
-      return;
-    }
-
-    // ── 1:1 (vier nebeneinander) ───────────────────────────────────
-    if(t0 === '1x1' || t0 === 'empty'){
-      cells.forEach(cell => {
-        if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-        grid.appendChild(buildHomeCard(cell, 'square'));
-      });
-      return;
-    }
-
-    // ── default: alle nicht-hidden cells als 1:1 ───────────────────
-    cells.forEach(cell => {
-      if(!cell || !cell.imageUrl || cell.type === 'hidden' || isFinalJustThisDanceCell(cell)) return;
-      grid.appendChild(buildHomeCard(cell, 'square'));
-    });
+    visibleCells.forEach(cell => grid.appendChild(buildHomeCard(cell, 'square')));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
    HOME-CHAIN PLAYER (v203)
    Auto-Playlist für die Homeseite mit demselben Equal-Power-Crossfade wie im DJ.
-   • Home: alle Einzel-Song-Kacheln in DOM-Reihenfolge, zirkulär ab Klick,
-           jeder Song genau einmal, endet beim Song direkt VOR dem geklickten.
-           Kein Endlosloop. Neuer Klick = Playlist startet an neuer Stelle.
-   • Diashow/Silbertablett: eigene, getrennte Kette aus den Diashow-Songs in
-           vorhandener Reihenfolge, ebenfalls zirkulär ab sichtbarem Slide.
+   • Home: Einzel-Song-Kacheln in DOM-Reihenfolge ab der angeklickten Kachel.
+           Nach dem letzten Eintrag beginnt die Kette wieder von vorn.
+   • Diashow/Silbertablett: eigene Kette aus den Slides, ab dem sichtbaren Slide.
    • Kein Mini-Player, keine PlayerBar. Reines Durchlaufen (EarPods unterwegs).
    • Eigene Audio-Elemente (#hjChainA/#hjChainB) – #hjAudio und dj.html bleiben
      unberührt. iPhone: WebAudio-Gain-Fade (iOS ignoriert audio.volume),
@@ -9654,14 +9564,7 @@ const HJChain = (function(){
 
   // ── Quellen ───────────────────────────────────────────────────────────
   function resolveChainSong(slug){
-    if(!slug) return null;
-    let s=SUPABASE_SONGS.find(x=>x.slug===slug);
-    if(s) return s;
-    const norm=(v)=> (typeof normalizeTeaserSlug==='function') ? normalizeTeaserSlug(v) : String(v||'').toLowerCase();
-    const n=norm(slug);
-    s=SUPABASE_SONGS.find(x=>norm(x.slug)===n); if(s) return s;
-    s=SUPABASE_SONGS.find(x=>norm(x.title||'')===n);
-    return s||null;
+    return window.HJHome.resolveSong(slug, SUPABASE_SONGS);
   }
   function buildHomeItems(){
     const grid=document.getElementById('homeGrid'); if(!grid) return [];
@@ -10355,38 +10258,22 @@ function buildHomeCard(cell, extraClass){
   const el = document.createElement('div');
   el.className = 'home-card ' + (extraClass||'');
 
-  // Special slugs get their own subpage — do NOT set data-album (prevents wireHomeGrid double-listener)
-  const _specialSlugs = ['kurs-nordwest', 'songwriters-picks'];
-  // Explizite Song-/Link-/Unterseiten-Aktionen niemals als Album interpretieren.
-  const _fnOverride = cell.fn === 'album' || cell.fn === 'link' || cell.fn === 'subpage';
-  const targetSlug = cell.albumSlug || cell.album_slug || cell.playlist_slug || cell.playlistSlug || cell.slug;
-  const albumKey = (['play','link','subpage'].includes(cell.fn) || (!_fnOverride && _specialSlugs.includes((targetSlug||'').toLowerCase()))) ? null : resolveAlbumKey(targetSlug);
+  const targetSlug = window.HJHome.albumTarget(cell);
+  const albumKey = window.HJHome.cardAlbumKey(cell, ALBUMS, PLAYLIST_MAP);
   if(albumKey) el.dataset.album = albumKey;
-  el._wired = true; // prevent wireHomeGrid from adding a second showAlbum() listener
-  // Home-Chain (v203): Einzel-Song-Kacheln für die Auto-Playlist markieren.
-  // Alben, Unterseiten, Links, Sonderslugs und Sprach-Teaser sind ausgenommen.
-  try{
-    const _isNav     = (cell.fn === 'album' || cell.fn === 'subpage' || cell.fn === 'link');
-    const _isSpecial = ['kurs-nordwest','songwriters-picks'].includes((cell.slug||'').toLowerCase());
-    const _isLyr     = (cell.fn === 'play' && (cell.lyricsCycle || cell.useCover21));
-    const _isTeaser  = (typeof isStandaloneHomeAudioTeaser === 'function') && isStandaloneHomeAudioTeaser(cell);
-    const _isPlain   = (!_isNav && !_isSpecial && !albumKey && !!cell.slug);
-    if(_isLyr || _isTeaser || _isPlain){
-      el.dataset.chainHome = '1';
-      el.dataset.chainSlug = cell.slug || '';
-      // 3-Seiten-Modus dieser Kachel an den Bild-Zyklus weiterreichen:
-      // '1' = Beschreibung nach den Lyrics zeigen (Cover→Lyrics→Beschreibung), '0' = nur Cover→Lyrics.
-      el.dataset.chainDescribe = cell.describeCycle ? '1' : '0';
-      if(cell.type === 'lyrics21' || cell.useCover21){
-        el.dataset.chainViewMode = 'lyrics21';
-        el.dataset.chainLyrics21 = cell.cover21Url || cell.lyrics21Url || cell.customImageUrl || cell.imageUrl || '';
-      } else if(cell.lyricsCycle){
-        // 2:1-/4:1-/Vollbreiten-Teaser mit ausdrücklichem Cover+Lyrics-Zyklus:
-        // NICHT als einseitiges Lyric-Sheet behandeln, sondern Cover → Lyrics → (Beschreibung) zeigen.
-        el.dataset.chainViewMode = 'cover-lyrics';
-      }
+  el._wired = true;
+  const chainSlug = window.HJHome.chainSlug(cell, albumKey);
+  if(chainSlug){
+    el.dataset.chainHome = '1';
+    el.dataset.chainSlug = chainSlug;
+    el.dataset.chainDescribe = cell.describeCycle ? '1' : '0';
+    if(cell.type === 'lyrics21' || cell.useCover21){
+      el.dataset.chainViewMode = 'lyrics21';
+      el.dataset.chainLyrics21 = cell.cover21Url || cell.lyrics21Url || cell.customImageUrl || cell.imageUrl || '';
+    }else if(cell.lyricsCycle){
+      el.dataset.chainViewMode = 'cover-lyrics';
     }
-  }catch(e){}
+  }
 
   const img = document.createElement('img');
   img.alt = cell.alt || '';
@@ -10477,7 +10364,7 @@ function buildHomeCard(cell, extraClass){
     // Home-Sonderfall: einzelne Audio-Teaser wie oben „Tante Paula“
     // verhalten sich wie „Just This Dance“: Klick 1 = Play, Klick 2 = Pause,
     // ohne die untere Player-Bar einzublenden.
-    if(isStandaloneHomeAudioTeaser(cell)){
+    if(chainSlug && isStandaloneHomeAudioTeaser(cell)){
       HJChain.startHomeFrom(el); return;
     }
 
@@ -10500,13 +10387,13 @@ function buildHomeCard(cell, extraClass){
     if(specialSlug === 'songwriters-picks'){ showSongwritersFavorites(); return; }
 
     if(albumKey) showAlbum(albumKey);
-    else if(cell.slug) HJChain.startHomeFrom(el);
+    else if(chainSlug) HJChain.startHomeFrom(el);
   });
   return el;
 }
 
 function normalizeTeaserSlug(v){
-  return String(v||'').toLowerCase().trim().replace(/_/g,'-').replace(/\s+/g,'-');
+  return window.HJHome.normalizeSlug(v);
 }
 
 function isStandaloneHomeAudioTeaser(cell){
@@ -11176,27 +11063,7 @@ function initDynamicSlideshow(id, slides){
 
 /* ── Resolve playlist slug → ALBUMS key ── */
 function resolveAlbumKey(slug){
-  if(!slug) return null;
-  const raw = String(slug).trim();
-  const norm = raw.toLowerCase();
-
-  // Direct key match (dynamic Admin albums often use slug === key)
-  if(ALBUMS[raw]) return raw;
-  if(ALBUMS[norm]) return norm;
-
-  // Via fixed PLAYLIST_MAP
-  const info = PLAYLIST_MAP[raw] || PLAYLIST_MAP[norm];
-  if(info && ALBUMS[info.key]) return info.key;
-
-  // Robust fallback: compare against the playlist slug stored inside every album.
-  // This fixes Admin-created 4:1 panorama album teasers where the visible tile is
-  // saved correctly, but the click target is a playlist slug that is not one of
-  // the old hardcoded album keys.
-  const found = Object.entries(ALBUMS || {}).find(([key, album]) => {
-    const aSlug = String((album && album.slug) || '').toLowerCase();
-    return aSlug && aSlug === norm;
-  });
-  return found ? found[0] : null;
+  return window.HJHome.resolveAlbumKey(slug, ALBUMS, PLAYLIST_MAP);
 }
 
 /* ── Play song or album based on cell config ── */

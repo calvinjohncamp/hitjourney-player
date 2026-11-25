@@ -965,7 +965,7 @@ body.drag-reordering{cursor:grabbing}
 </div>
 <audio id="audA" preload="auto"></audio><audio id="audB" preload="auto"></audio>
 <script src="assets/data-loader.js?v=1"></script>
-<script src="assets/home-album.js?v=2"></script>
+<script src="assets/home-album.js?v=3"></script>
 <script>
 'use strict';
 const SB_URL  = 'https://ywfpzdniicfrhnrvfqfe.supabase.co';
@@ -1209,13 +1209,14 @@ function resetTonearm(id){
 }
 
 async function loadData(){
-  let sr=await fetch(SB_URL+'/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,describe_url,lyrics_url,lyrics21_url&order=title',{headers:HDR});
+  let sr=await fetch(SB_URL+'/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,describe_url,lyrics_url,lyrics21_url&order=title.asc,slug.asc',{headers:HDR,cache:'no-store'});
   if(!sr.ok){
-    sr=await fetch(SB_URL+'/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title',{headers:HDR});
+    sr=await fetch(SB_URL+'/rest/v1/songs?select=slug,title,artist,language,mp3_url,cover_url,lyrics_url,lyrics21_url&order=title.asc,slug.asc',{headers:HDR,cache:'no-store'});
   }
-  const [pr,tr]=await Promise.all([
+  const [pr,tr,homeRows]=await Promise.all([
     fetch(SB_URL+'/rest/v1/playlists?select=slug,title,cover_url&order=title.asc',{headers:HDR}),
-    window.hjFetchAllRowsResponse(SB_URL+'/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position,song_slug',{headers:HDR})
+    window.hjFetchAllRowsResponse(SB_URL+'/rest/v1/playlist_tracks?select=song_slug,playlist_slug,position&order=playlist_slug,position,song_slug',{headers:HDR}),
+    window.HJHome.loadLayout(SB_URL, HDR)
   ]);
   if(!sr.ok)throw new Error('Songs fetch failed: '+sr.status);
   if(!pr.ok)throw new Error('Playlists fetch failed: '+pr.status);
@@ -1227,7 +1228,6 @@ async function loadData(){
     const s={slug:r.slug,title:r.title,artist:r.artist||'',language:r.language||'english',mp3:r.mp3_url,cover:r.cover_url,describe:r.describe_url||'',lyrics:r.lyrics_url||'',lyrics21:r.lyrics21_url||''};
     smap[r.slug]=s;ALL_SONGS.push(s);
   });
-  ALL_SONGS.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
 
   const piBySlug={};
   Object.entries(PLAYLIST_MAP).forEach(([sl,info])=>{piBySlug[sl]={...info,slug:sl}});
@@ -1239,7 +1239,7 @@ async function loadData(){
   ALBUMS={};
   tracks.forEach(r=>{
     const info=piBySlug[r.playlist_slug],song=smap[r.song_slug];
-    if(!info||!song)return;
+    if(!info||!song||r.playlist_slug==='home')return;
     if(!ALBUMS[info.key])ALBUMS[info.key]={title:info.title,meta:info.meta,cover:info.cover,slug:info.slug,songs:[]};
     ALBUMS[info.key].songs.push({...song,_position:Number(r.position)||0});
   });
@@ -1248,7 +1248,8 @@ async function loadData(){
     ALBUMS[k].songs.sort((a,b)=>(Number(a._position)||0)-(Number(b._position)||0));
     if(!ALBUMS[k].meta)ALBUMS[k].meta=ALBUMS[k].songs.length+' Songs';
   });
-  window.hjApplyHomeAlbumSequence(ALBUMS, ALL_SONGS);
+  window.HJHome.applyAlbum(ALBUMS, piBySlug.home, homeRows, ALL_SONGS, PLAYLIST_MAP);
+  ALL_SONGS.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
   if(ALBUMS.buriedDiamonds)ALBUMS.buriedDiamonds.songs.sort((a,b)=>a.title.localeCompare(b.title,'de',{sensitivity:'base'}));
 }
 
@@ -1797,7 +1798,7 @@ function setupDefaultStartState(){
     const original=defaultAlbum.songs.slice();
 
     const cueA=ALBUMS.home ? original[0] : (findSongInList(original,'Just this Dance') || original[0]);
-    const cueB=ALBUMS.home ? (original[1] || original[0]) : (findSongInList(original,'What if tonight') || original[1] || original[0]);
+    const cueB=ALBUMS.home ? original[1] : (findSongInList(original,'What if tonight') || original[1] || original[0]);
     if(cueA)loadDeck('A',cueA);
     if(cueB)loadDeck('B',cueB);
 
@@ -1876,7 +1877,8 @@ function renderABC(){
   });
 }
 function drawSearchList(list){
-  SEARCH_VISIBLE=Array.isArray(list)?list.slice(0,150):[];
+  const showsHomeAlbum = currentSearchSource.type === 'album' && currentSearchSource.key === 'home' && !abcFilter && !searchQ;
+  SEARCH_VISIBLE = Array.isArray(list) ? list.slice(0, showsHomeAlbum ? list.length : 150) : [];
   srList.innerHTML='';
   if(!SEARCH_VISIBLE.length){srList.innerHTML='<div style="padding:16px 12px;font-size:11px;color:rgba(133,172,201,.3);text-align:center">Keine Songs</div>';return;}
   SEARCH_VISIBLE.forEach((song,i)=>{

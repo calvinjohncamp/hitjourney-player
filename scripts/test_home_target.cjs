@@ -9,6 +9,7 @@ const c=vm.createContext({document:{createElement:node},ALBUMS:{'out-there':{}},
   showAlbum:key=>calls.push(['album',key]),playSongBySlug:slug=>calls.push(['song',slug]),
   setTimeout:fn=>fn(),window:{open:u=>calls.push(['link',u])},showArchive(){}});
 function load(start,end){vm.runInContext(source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start))),c);}
+vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../assets/home-album.js'),'utf8'),c);
 load('function resolveAlbumKey(', '/* ── Play song or album');
 load('function buildHomeCard(', 'function normalizeTeaserSlug(');
 load('function playSongOrAlbum(', '/* ── Play a single song');
